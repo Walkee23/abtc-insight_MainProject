@@ -95,21 +95,18 @@
     <nav class="fixed top-0 w-full z-50 bg-slate-50/85 backdrop-blur-md shadow-sm shadow-blue-900/5 transition-all duration-300 ease-in-out font-sans antialiased tracking-tight">
         <div class="flex justify-between items-center px-8 py-4 max-w-full mx-auto">
             <!-- Brand -->
-            <div class="flex items-center gap-3">
+            <a href="{{ url('/') }}" class="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
                 <div class="w-8 h-8 clinical-gradient rounded-lg flex items-center justify-center text-white">
                     <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">health_metrics</span>
                 </div>
                 <span class="text-xl font-bold tracking-tighter text-blue-900">ABTC-Insight</span>
-            </div>
+            </a>
             <!-- Links & Actions -->
             <div class="flex items-center gap-8">
                 <div class="hidden md:flex items-center gap-8">
                     <a class="text-slate-600 hover:text-blue-600 transition-colors text-sm font-medium" href="#">Patient Registration</a>
                     <a class="text-slate-600 hover:text-blue-600 transition-colors text-sm font-medium" href="#">Tracking Portal</a>
                 </div>
-                <button class="px-5 py-2 clinical-gradient text-white text-sm font-semibold rounded-lg shadow-md shadow-primary/10 hover:shadow-lg transition-all active:scale-95">
-                    Login
-                </button>
             </div>
         </div>
     </nav>

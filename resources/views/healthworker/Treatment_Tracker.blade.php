@@ -6,12 +6,12 @@
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Treatment Tracker | ABTC-Insight</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap"
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap"
         rel="stylesheet" />
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
         rel="stylesheet" />
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -19,56 +19,57 @@
                 extend: {
                     "colors": {
                         "surface-container-low": "#f2f4f6",
-                        "on-error": "#ffffff",
-                        "primary-container": "#0b61bb",
-                        "outline-variant": "#c1c7d3",
-                        "surface-container-high": "#e6e8ea",
-                        "surface-bright": "#f7f9fb",
-                        "on-primary-fixed-variant": "#00468c",
-                        "on-secondary": "#ffffff",
-                        "inverse-surface": "#2d3133",
-                        "background": "#f7f9fb",
-                        "tertiary-container": "#9e4b00",
-                        "tertiary-fixed-dim": "#ffb689",
-                        "secondary-container": "#c1d9fd",
-                        "surface-container": "#eceef0",
-                        "tertiary-fixed": "#ffdbc8",
-                        "secondary": "#49607f",
-                        "on-tertiary": "#ffffff",
-                        "on-surface": "#191c1e",
-                        "surface-tint": "#005db6",
-                        "secondary-fixed": "#d3e4ff",
-                        "on-tertiary-fixed": "#311300",
-                        "on-primary-fixed": "#001b3d",
-                        "on-secondary-fixed": "#011c38",
                         "tertiary": "#7a3800",
-                        "primary": "#004a93",
-                        "on-secondary-container": "#485f7e",
-                        "on-background": "#191c1e",
-                        "on-secondary-fixed-variant": "#314866",
-                        "on-tertiary-fixed-variant": "#743500",
-                        "inverse-primary": "#a9c7ff",
-                        "surface-container-lowest": "#ffffff",
-                        "on-error-container": "#93000a",
                         "surface-variant": "#e0e3e5",
-                        "on-surface-variant": "#414751",
-                        "inverse-on-surface": "#eff1f3",
-                        "error-container": "#ffdad6",
-                        "surface": "#f7f9fb",
-                        "on-primary-container": "#d0dfff",
-                        "surface-container-highest": "#e0e3e5",
-                        "outline": "#717782",
+                        "primary-container": "#0b61bb",
+                        "on-secondary-container": "#485f7e",
                         "error": "#ba1a1a",
-                        "secondary-fixed-dim": "#b1c8ec",
-                        "on-primary": "#ffffff",
-                        "surface-dim": "#d8dadc",
                         "primary-fixed": "#d6e3ff",
-                        "primary-fixed-dim": "#a9c7ff"
+                        "tertiary-fixed": "#ffdbc8",
+                        "surface": "#f7f9fb",
+                        "on-surface-variant": "#414751",
+                        "surface-container-highest": "#e0e3e5",
+                        "secondary-fixed": "#d3e4ff",
+                        "primary-fixed-dim": "#a9c7ff",
+                        "inverse-primary": "#a9c7ff",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-container": "#ffd7c0",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-fixed": "#311300",
+                        "on-secondary-fixed-variant": "#314866",
+                        "tertiary-fixed-dim": "#ffb689",
+                        "secondary-fixed-dim": "#b1c8ec",
+                        "secondary": "#49607f",
+                        "error-container": "#ffdad6",
+                        "on-primary-fixed-variant": "#00468c",
+                        "on-primary-fixed": "#001b3d",
+                        "tertiary-container": "#9e4b00",
+                        "on-surface": "#191c1e",
+                        "on-secondary-fixed": "#011c38",
+                        "surface-tint": "#005db6",
+                        "secondary-container": "#c1d9fd",
+                        "on-background": "#191c1e",
+                        "inverse-on-surface": "#eff1f3",
+                        "primary": "#004a93",
+                        "surface-container": "#eceef0",
+                        "on-tertiary-fixed-variant": "#743500",
+                        "on-primary": "#ffffff",
+                        "surface-bright": "#f7f9fb",
+                        "on-secondary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "outline-variant": "#c1c7d3",
+                        "outline": "#717782",
+                        "on-primary-container": "#d0dfff",
+                        "surface-dim": "#d8dadc",
+                        "inverse-surface": "#2d3133",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-high": "#e6e8ea",
+                        "background": "#f7f9fb"
                     },
                     "borderRadius": {
                         "DEFAULT": "0.25rem",
                         "lg": "1rem",
-                        "xl": "0.75rem",
+                        "xl": "1.25rem",
                         "full": "9999px"
                     },
                     "fontFamily": {
@@ -77,39 +78,26 @@
                         "label": ["Inter"]
                     }
                 },
-            }
+            },
         }
     </script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f7f9fb;
+            -webkit-font-smoothing: antialiased;
         }
 
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
 
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #f2f4f6;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #c1c7d3;
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #717782;
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
         }
     </style>
 </head>
 
-<body class="text-on-surface">
+<body class="bg-surface text-on-surface">
     <!-- SIDEBAR -->
     <aside
         class="h-screen w-64 fixed left-0 top-0 bg-slate-50 dark:bg-slate-900 flex flex-col border-r border-slate-200/50 dark:border-slate-800/50 py-6 font-['Inter'] tracking-tight z-50">
@@ -150,20 +138,29 @@
             </a>
         </nav>
     </aside>
-    <!-- MAIN CONTENT AREA -->
-    <main class="ml-64 min-h-screen flex flex-col relative">
-        <!-- TOP APP BAR (Updated to match SCREEN_12 layout) -->
-        <header
-            class="w-full sticky top-0 z-40 bg-slate-50/85 dark:bg-slate-900/85 backdrop-blur-md flex items-center justify-between px-8 py-4 shadow-sm">
-            <div class="flex items-center gap-8">
-                <div class="relative group">
+    <header
+        class="fixed top-0 w-full h-16 bg-slate-50/85 dark:bg-slate-900/85 backdrop-blur-md shadow-sm shadow-blue-900/5 z-40">
+        <div class="flex justify-between items-center px-8 h-16 w-full">
+            <!-- Logo on the far left -->
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white shadow-md">
+                    <span class="material-symbols-outlined text-[18px]"
+                        style="font-variation-settings: 'FILL' 1;">health_and_safety</span>
+                </div>
+                <h1 class="text-blue-900 dark:text-blue-50 font-bold text-sm tracking-tight leading-none">ABTC-Insight
+                </h1>
+            </div>
+            <!-- Search Bar -->
+            <div class="flex items-center flex-1 max-w-md ml-12">
+                <div class="relative w-full group">
                     <span
-                        class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
+                        class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm group-focus-within:text-blue-700 transition-colors">search</span>
                     <input
-                        class="pl-10 pr-4 py-2 bg-surface-container-highest/50 border-none rounded-full text-sm w-64 focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                        class="w-full bg-slate-100 dark:bg-slate-800/50 border-none rounded-full py-2 pl-9 pr-4 text-xs focus:ring-2 focus:ring-blue-700/20 placeholder:text-slate-400 font-['Inter']"
                         placeholder="Search records..." type="text" />
                 </div>
             </div>
+            <!-- Right Side Actions (Notifications, Help, Vertical Divider, Profile) -->
             <div class="flex items-center gap-4">
                 <button
                     class="relative w-9 h-9 flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all rounded-full">
@@ -181,7 +178,7 @@
                         <p class="text-[10px] text-on-surface-variant font-['Inter']">Senior Health Worker</p>
                     </div>
                     <img alt="Health Worker Profile"
-                        class="w-9 h-9 rounded-full object-cover ring-2 ring-primary/10 group:ring-primary/30 transition-all"
+                        class="w-9 h-9 rounded-full object-cover ring-2 ring-primary/10 group-hover:ring-primary/30 transition-all"
                         src="https://lh3.googleusercontent.com/aida-public/AB6AXuAzuEzGuKhuDJKI44bu6U1YzFdI7z5disX1FjUVLwgq07xpkF1vi2q1RQg1lWnbbzx-97qaEaUE0wHwrsBEDnQdIf8whoLOPKyx4AYqvvB-lfqq-SS3OBugICvjWAE_JcAHe0Vi0CwgldGbMzdKqqq-JDxrvKkK7FcZlxsnNKgOhrLZQUJ0ev2rjCkC13g53yP7Tgqv7JJmgsQFbx1nOvxapzia3kkgWKs_FBVNJ7u5msUyUkju3OqnpM2i3ofnQDyojEEc-LEA3xlD" />
                     <div
                         class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
@@ -204,7 +201,11 @@
                     </div>
                 </div>
             </div>
-        </header>
+        </div>
+    </header>
+    <!-- MAIN CONTENT AREA -->
+    <main class="ml-64 pt-24 min-h-screen flex flex-col relative">
+        <!-- TOP APP BAR (Updated to match SCREEN_12 layout) -->
         <!-- DASHBOARD BODY -->
         <div class="p-8 space-y-8">
             <!-- HEADER SECTION -->

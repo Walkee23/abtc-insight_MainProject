@@ -47,11 +47,46 @@ Route::get('/staff/dashboard', function () {
     return view('staff.dashboard');
 })->name('staff.dashboard');
 
-Route::get('/healthworker/dashboard', function () {
-    return view('healthworker.dashboard');
-})->name('healthworker.dashboard');
+Route::prefix('healthworker')->group(function () {
+    // 1. Dashboard
+    Route::get('/dashboard', function () {
+        return view('healthworker.dashboard');
+    })->name('healthworker.dashboard');
+
+    // 2. Clinical Encoding (main wizard entry point, Sections VI-IX)
+    Route::get('/clinical-encoding', function () {
+        return view('healthworker.CE_VI');
+    })->name('healthworker.clinical-encoding');
+
+    // 2b. Clinical Encoding individual sections (kept accessible directly)
+    Route::get('/clinical-encoding/section-vii', function () {
+        return view('healthworker.CE_VII');
+    })->name('healthworker.ce-vii');
+
+    Route::get('/clinical-encoding/section-viii', function () {
+        return view('healthworker.CE_VIII');
+    })->name('healthworker.ce-viii');
+
+    Route::get('/clinical-encoding/section-ix', function () {
+        return view('healthworker.CE_IX');
+    })->name('healthworker.ce-ix');
+
+    // 3. Treatment Tracker
+    Route::get('/treatment-tracker', function () {
+        return view('healthworker.Treatment_Tracker');
+    })->name('healthworker.treatment-tracker');
+
+    // 4. Patient Database
+    Route::get('/patient-database', function () {
+        return view('healthworker.Patient_Lookup&DB');
+    })->name('healthworker.patient-database');
+
+    // 5. Compliance (PEP Compliance & SMS Logs)
+    Route::get('/compliance', function () {
+        return view('healthworker.PEP_Compliance_&_SMS_Logs');
+    })->name('healthworker.compliance');
+});
 
 Route::get('/bhw/dashboard', function () {
     return view('bhw.dashboard');
 })->name('bhw.dashboard');
-

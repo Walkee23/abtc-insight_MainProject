@@ -339,7 +339,6 @@
                     </div>
                     <!-- Wizard Body -->
                     <div class="flex-1 p-8 overflow-y-auto">
-                        <!-- STEP 1: SECTION VI -->
                         <div class="step-content active" id="step1">
                             <div class="flex items-center gap-3 mb-8">
                                 <span
@@ -407,126 +406,6 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- STEP 2: SECTION VII (Hidden) -->
-                        <div class="step-content" id="step2">
-                            <div class="flex items-center gap-3 mb-8">
-                                <span
-                                    class="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center font-bold text-sm">VII</span>
-                                <h3 class="text-sm font-extrabold uppercase tracking-widest text-on-surface-variant">
-                                    Immunization Schedule</h3>
-                            </div>
-                            <div class="grid grid-cols-3 gap-6 mb-8">
-                                <div>
-                                    <label
-                                        class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Vaccine
-                                        Brand</label>
-                                    <select
-                                        class="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/20 font-medium">
-                                        <option>VERORAB</option>
-                                        <option>SPEEDA</option>
-                                        <option>VAXIRAB</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label
-                                        class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Route</label>
-                                    <select
-                                        class="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/20 font-medium">
-                                        <option>ID (Intradermal)</option>
-                                        <option>IM (Intramuscular)</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label
-                                        class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Passive
-                                        Immunization</label>
-                                    <div class="flex items-center bg-surface-container-low rounded-lg p-1">
-                                        <button
-                                            class="flex-1 py-2 text-xs font-bold bg-white text-primary rounded-md shadow-sm">ERIG</button>
-                                        <button
-                                            class="flex-1 py-2 text-xs font-bold text-outline hover:text-on-surface transition-colors">HRIG</button>
-                                        <button
-                                            class="flex-1 py-2 text-xs font-bold text-outline hover:text-on-surface transition-colors">NO</button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="bg-surface-container-low rounded-xl p-6">
-                                <p class="text-xs font-extrabold text-outline uppercase tracking-widest mb-4">Dose
-                                    Tracking Grid</p>
-                                <div class="grid grid-cols-4 gap-4">
-                                    <div class="bg-white p-4 rounded-lg border border-primary/20">
-                                        <p class="text-[10px] font-bold text-primary uppercase mb-1">Day 0</p>
-                                        <div class="flex items-center justify-between">
-                                            <span class="text-sm font-bold text-on-surface">Oct 24</span>
-                                            <span class="material-symbols-outlined text-primary"
-                                                style="font-variation-settings: 'FILL' 1;">check_circle</span>
-                                        </div>
-                                    </div>
-                                    <div class="bg-white p-4 rounded-lg border border-outline-variant/30">
-                                        <p class="text-[10px] font-bold text-outline uppercase mb-1">Day 3</p>
-                                        <div class="flex items-center justify-between">
-                                            <span class="text-sm font-bold text-on-surface">Oct 27</span>
-                                            <input class="rounded text-primary focus:ring-primary/20" type="checkbox" />
-                                        </div>
-                                    </div>
-                                    <div
-                                        class="bg-surface-container-low/50 p-4 rounded-lg border border-dashed border-outline-variant">
-                                        <p class="text-[10px] font-bold text-outline uppercase mb-1">Day 7</p>
-                                        <span class="text-sm font-medium text-outline-variant">Oct 31</span>
-                                    </div>
-                                    <div
-                                        class="bg-surface-container-low/50 p-4 rounded-lg border border-dashed border-outline-variant">
-                                        <p class="text-[10px] font-bold text-outline uppercase mb-1">Day 28</p>
-                                        <span class="text-sm font-medium text-outline-variant">Nov 21</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- STEP 3: SECTION VIII (Hidden) -->
-                        <div class="step-content" id="step3">
-                            <div class="flex items-center gap-3 mb-8">
-                                <span
-                                    class="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center font-bold text-sm">VIII</span>
-                                <h3 class="text-sm font-extrabold uppercase tracking-widest text-on-surface-variant">
-                                    Remarks &amp; Clinical Observations</h3>
-                            </div>
-                            <div class="space-y-6">
-                                <div>
-                                    <label
-                                        class="block text-xs font-bold text-outline uppercase tracking-wider mb-3">Clinical
-                                        Remarks</label>
-                                    <textarea
-                                        class="w-full bg-surface-container-low border-none rounded-xl p-4 focus:ring-2 focus:ring-primary/20 text-sm resize-none h-48"
-                                        placeholder="Enter medical advice or initial assessment notes..."></textarea>
-                                </div>
-                                <div class="p-4 bg-primary-container/10 border border-primary/10 rounded-lg flex gap-3">
-                                    <span class="material-symbols-outlined text-primary">info</span>
-                                    <p class="text-xs text-primary font-medium leading-relaxed">
-                                        Remarks entered here will be visible on the patient's vaccination certificate
-                                        and clinical history.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- STEP 4: SECTION IX (Hidden) -->
-                        <div class="step-content" id="step4">
-                            <div class="flex items-center gap-3 mb-8">
-                                <span
-                                    class="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center font-bold text-sm">IX</span>
-                                <h3 class="text-sm font-extrabold uppercase tracking-widest text-on-surface-variant">
-                                    Progress Notes</h3>
-                            </div>
-                            <div class="space-y-6">
-                                <div>
-                                    <label
-                                        class="block text-xs font-bold text-outline uppercase tracking-wider mb-3">Evolution
-                                        &amp; Follow-up Notes</label>
-                                    <textarea
-                                        class="w-full bg-surface-container-low border-none rounded-xl p-4 focus:ring-2 focus:ring-primary/20 text-sm resize-none h-48"
-                                        placeholder="Enter notes for succeeding doses, adverse reactions, or wound evolution..."></textarea>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                     <!-- Wizard Footer Actions -->
                     <div
@@ -559,6 +438,7 @@
             </section>
         </div>
     </main>
+    <!--
     <div
         class="fixed bottom-8 right-8 bg-surface-bright/90 backdrop-blur shadow-2xl rounded-2xl p-4 border border-outline-variant/15 w-64 hidden xl:block">
         <div class="flex items-center gap-3 mb-3">
@@ -569,6 +449,7 @@
             Wizard Mode: Authorized for encoding levels VI-IX. Progression is tracked per section.
         </p>
     </div>
+    -->
     <script>
         // Simple Wizard Logic for Demo Purposes
         let currentStep = 1;
@@ -603,10 +484,7 @@
         }
 
         nextBtn.addEventListener('click', () => {
-            if (currentStep < totalSteps) {
-                currentStep++;
-                updateWizard(currentStep);
-            }
+            window.location.href = "{{ route('healthworker.ce-vii') }}";
         });
 
         backBtn.addEventListener('click', () => {

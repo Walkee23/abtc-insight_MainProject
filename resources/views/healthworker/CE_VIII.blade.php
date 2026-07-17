@@ -338,54 +338,32 @@
                     </div>
                     <!-- Wizard Body (Section VIII) -->
                     <div class="flex-1 p-8 overflow-y-auto">
-                        <div class="step-content active" id="step8">
+                        <div class="step-content" id="step3">
                             <div class="flex items-center gap-3 mb-8">
                                 <span
                                     class="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center font-bold text-sm">VIII</span>
                                 <h3 class="text-sm font-extrabold uppercase tracking-widest text-on-surface-variant">
-                                    Remarks &amp; Clinical Information</h3>
+                                    Remarks &amp; Clinical Observations</h3>
                             </div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div class="md:col-span-2">
+                            <div class="space-y-6">
+                                <div>
                                     <label
-                                        class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Patient
-                                        Weight (kg)</label>
-                                    <div class="relative w-48">
-                                        <input
-                                            class="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/20 text-on-surface font-medium"
-                                            placeholder="0.0" step="0.1" type="number" />
-                                        <span
-                                            class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-outline">kg</span>
-                                    </div>
-                                </div>
-                                <div class="md:col-span-1">
-                                    <label
-                                        class="block text-xs font-bold text-outline uppercase tracking-wider mb-3">Medication
-                                        (Prescriptions)</label>
+                                        class="block text-xs font-bold text-outline uppercase tracking-wider mb-3">Clinical
+                                        Remarks</label>
                                     <textarea
-                                        class="w-full bg-surface-container-low border-none rounded-xl p-4 focus:ring-2 focus:ring-primary/20 text-sm resize-none h-40"
-                                        placeholder="List medications prescribed to the patient..."></textarea>
+                                        class="w-full bg-surface-container-low border-none rounded-xl p-4 focus:ring-2 focus:ring-primary/20 text-sm resize-none h-48"
+                                        placeholder="Enter medical advice or initial assessment notes..."></textarea>
                                 </div>
-                                <div class="md:col-span-1">
-                                    <label
-                                        class="block text-xs font-bold text-outline uppercase tracking-wider mb-3">Medical
-                                        Advice / Instructions</label>
-                                    <textarea
-                                        class="w-full bg-surface-container-low border-none rounded-xl p-4 focus:ring-2 focus:ring-primary/20 text-sm resize-none h-40"
-                                        placeholder="Enter clinical advice or post-treatment instructions..."></textarea>
+                                <div class="p-4 bg-primary-container/10 border border-primary/10 rounded-lg flex gap-3">
+                                    <span class="material-symbols-outlined text-primary">info</span>
+                                    <p class="text-xs text-primary font-medium leading-relaxed">
+                                        Remarks entered here will be visible on the patient's vaccination certificate
+                                        and clinical history.
+                                    </p>
                                 </div>
-                            </div>
-                            <div
-                                class="mt-8 p-4 bg-primary-container/10 border border-primary/10 rounded-lg flex gap-3">
-                                <span class="material-symbols-outlined text-primary">info</span>
-                                <p class="text-xs text-primary font-medium leading-relaxed">
-                                    Information recorded in Section VIII will be automatically included in the patient's
-                                    Clinical History and Discharge Summary.
-                                </p>
                             </div>
                         </div>
                     </div>
-                    <!-- Wizard Footer Actions -->
                     <div
                         class="p-6 bg-surface-container-low border-t border-outline-variant/20 flex justify-between items-center px-8">
                         <button
@@ -394,13 +372,14 @@
                         </button>
                         <div class="flex gap-4">
                             <button
-                                class="px-8 py-2.5 bg-white border border-outline-variant/30 text-on-surface text-sm font-bold rounded-lg hover:bg-slate-50 active:scale-[0.98] transition-all"
-                                id="backBtn">
+                                class="px-8 py-2.5 text-sm font-bold text-outline hover:bg-slate-200/50 rounded-lg transition-all flex items-center gap-2"
+                                onclick="window.location.href=`{{ route('healthworker.ce-vii') }}`">
+                                <span class="material-symbols-outlined text-[18px]">chevron_left</span>
                                 Back
                             </button>
                             <button
                                 class="px-8 py-2.5 bg-primary text-on-primary text-sm font-bold rounded-lg shadow-md shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-2"
-                                id="nextBtn">
+                                onclick="window.location.href=`{{ route('healthworker.ce-ix') }}`">
                                 Next: Section IX
                                 <span class="material-symbols-outlined text-[18px]">chevron_right</span>
                             </button>

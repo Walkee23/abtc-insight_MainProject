@@ -293,32 +293,37 @@
                         <!-- Horizontal Wizard Steps -->
                         <div class="px-8 pb-4">
                             <div class="flex items-center w-full">
-                                <!-- Step 1 (VI) -->
+                                <!-- Step 1 (Completed) -->
                                 <div class="flex flex-col items-center flex-1 relative group">
                                     <div
                                         class="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold z-10">
-                                        VI</div>
-                                    <span
-                                        class="text-[10px] font-bold text-outline mt-2 absolute -bottom-6 w-max opacity-0">Wound
+                                        <span class="material-symbols-outlined text-[16px]"
+                                            style="font-variation-settings: 'wght' 700;">check</span>
+                                    </div>
+                                    <span class="text-[10px] font-bold text-outline mt-2 absolute -bottom-6 w-max">Wound
                                         Desc.</span>
                                 </div>
-                                <div class="flex-1 h-0.5 bg-primary/20 -mt-4"></div>
-                                <!-- Step 2 (VII) -->
+                                <div class="flex-1 h-0.5 bg-primary/40 -mt-4"></div>
+                                <!-- Step 2 (Completed) -->
                                 <div class="flex flex-col items-center flex-1 relative group">
                                     <div
                                         class="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold z-10">
-                                        VII</div>
+                                        <span class="material-symbols-outlined text-[16px]"
+                                            style="font-variation-settings: 'wght' 700;">check</span>
+                                    </div>
                                     <span
-                                        class="text-[10px] font-bold text-outline mt-2 absolute -bottom-6 w-max opacity-0">Immunization</span>
+                                        class="text-[10px] font-bold text-outline mt-2 absolute -bottom-6 w-max">Immunization</span>
                                 </div>
-                                <div class="flex-1 h-0.5 bg-primary/20 -mt-4"></div>
-                                <!-- Step 3 (VIII) -->
+                                <div class="flex-1 h-0.5 bg-primary/40 -mt-4"></div>
+                                <!-- Step 3 (Completed) -->
                                 <div class="flex flex-col items-center flex-1 relative group">
                                     <div
                                         class="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold z-10">
-                                        VIII</div>
+                                        <span class="material-symbols-outlined text-[16px]"
+                                            style="font-variation-settings: 'wght' 700;">check</span>
+                                    </div>
                                     <span
-                                        class="text-[10px] font-bold text-outline mt-2 absolute -bottom-6 w-max opacity-0">Remarks</span>
+                                        class="text-[10px] font-bold text-outline mt-2 absolute -bottom-6 w-max">Remarks</span>
                                 </div>
                                 <div class="flex-1 h-0.5 bg-primary -mt-4"></div>
                                 <!-- Step 4 (IX) -->
@@ -335,82 +340,42 @@
                     </div>
                     <!-- Wizard Body -->
                     <div class="flex-1 p-8 overflow-y-auto">
-                        <!-- SECTION IX: PROGRESS NOTES -->
-                        <div class="step-content block" id="step4">
+                        <div class="step-content" id="step4">
                             <div class="flex items-center gap-3 mb-8">
                                 <span
                                     class="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center font-bold text-sm">IX</span>
                                 <h3 class="text-sm font-extrabold uppercase tracking-widest text-on-surface-variant">
-                                    Progress Notes &amp; Outcome</h3>
+                                    Progress Notes</h3>
                             </div>
-                            <div class="space-y-8">
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    <div>
-                                        <label
-                                            class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Day
-                                            3 Progress</label>
-                                        <textarea
-                                            class="w-full bg-surface-container-low border-none rounded-lg p-3 focus:ring-2 focus:ring-primary/20 text-sm resize-none h-32"
-                                            placeholder="Notes for Day 3..."></textarea>
-                                    </div>
-                                    <div>
-                                        <label
-                                            class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Day
-                                            7 Progress</label>
-                                        <textarea
-                                            class="w-full bg-surface-container-low border-none rounded-lg p-3 focus:ring-2 focus:ring-primary/20 text-sm resize-none h-32"
-                                            placeholder="Notes for Day 7..."></textarea>
-                                    </div>
-                                    <div>
-                                        <label
-                                            class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Day
-                                            28 Progress</label>
-                                        <textarea
-                                            class="w-full bg-surface-container-low border-none rounded-lg p-3 focus:ring-2 focus:ring-primary/20 text-sm resize-none h-32"
-                                            placeholder="Notes for Day 28..."></textarea>
-                                    </div>
-                                </div>
-                                <div class="pt-6 border-t border-outline-variant/20">
-                                    <div class="max-w-md">
-                                        <label
-                                            class="block text-xs font-bold text-outline uppercase tracking-wider mb-3">Case
-                                            Outcome</label>
-                                        <div class="relative">
-                                            <select
-                                                class="w-full bg-surface-container-low border-none rounded-lg py-3.5 px-4 focus:ring-2 focus:ring-primary/20 text-on-surface font-bold appearance-none">
-                                                <option disabled="" selected="" value="">Select Final Outcome</option>
-                                                <option>Completed</option>
-                                                <option>Incomplete</option>
-                                                <option>Discharged (Cat. I)</option>
-                                                <option>Lost to Follow-up</option>
-                                            </select>
-                                            <span
-                                                class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-outline pointer-events-none">expand_more</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="p-4 bg-primary-container/10 border border-primary/10 rounded-lg flex gap-3">
-                                    <span class="material-symbols-outlined text-primary">verified</span>
-                                    <p class="text-xs text-primary font-medium leading-relaxed">
-                                        Completing this section will finalize the record for this incident. Please
-                                        ensure all progress notes are accurate before saving.
-                                    </p>
+                            <div class="space-y-6">
+                                <div>
+                                    <label
+                                        class="block text-xs font-bold text-outline uppercase tracking-wider mb-3">Evolution
+                                        &amp; Follow-up Notes</label>
+                                    <textarea
+                                        class="w-full bg-surface-container-low border-none rounded-xl p-4 focus:ring-2 focus:ring-primary/20 text-sm resize-none h-48"
+                                        placeholder="Enter notes for succeeding doses, adverse reactions, or wound evolution..."></textarea>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <!-- Wizard Footer Actions -->
                     <div
-                        class="p-6 bg-surface-container-low border-t border-outline-variant/20 flex justify-end items-center px-8">
+                        class="p-6 bg-surface-container-low border-t border-outline-variant/20 flex justify-between items-center px-8">
+                        <button
+                            class="px-6 py-2.5 text-sm font-bold text-outline hover:text-on-surface transition-all flex items-center gap-2">
+                            Save as Draft
+                        </button>
                         <div class="flex gap-4">
                             <button
-                                class="px-6 py-2.5 text-sm font-bold text-outline hover:bg-slate-200/50 rounded-lg transition-all"
-                                id="backBtn">
+                                class="px-8 py-2.5 text-sm font-bold text-outline hover:bg-slate-200/50 rounded-lg transition-all flex items-center gap-2"
+                                onclick="window.location.href=`{{ route('healthworker.ce-viii') }}`">
+                                <span class="material-symbols-outlined text-[18px]">chevron_left</span>
                                 Back
                             </button>
                             <button
                                 class="px-8 py-2.5 bg-gradient-to-r from-primary to-primary-container text-on-primary text-sm font-bold rounded-lg shadow-md shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-2"
-                                id="finalizeBtn">
+                                id="finalizeBtn" onclick="window.location.href=`{{ route('healthworker.dashboard') }}`">
                                 <span class="material-symbols-outlined text-[18px]">verified_user</span>
                                 Save and Finalize Record
                             </button>

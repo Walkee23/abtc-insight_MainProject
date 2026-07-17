@@ -87,9 +87,15 @@
     ABTC-Insight
 </div>
 <nav class="hidden md:flex items-center gap-8">
+  
 <a class="text-primary border-b-2 border-primary pb-1 font-semibold transition-all duration-200 text-sm" href="#">Registration</a>
-<a class="text-on-surface-variant font-medium hover:text-primary transition-all duration-200 text-sm" href="#">Tracking Portal</a>
+<a class="text-on-surface-variant font-medium hover:text-primary transition-all duration-200 text-sm" href="{{ route('patient.tracking.portal') }}">Tracking Portal</a>
+
+<a href="{{ route('login') }}">
 <button class="bg-primary text-white px-6 py-2 rounded-full font-semibold hover:opacity-90 transition-all scale-95 active:opacity-80 text-sm shadow-md shadow-primary/20 hover:shadow-lg">Login</button>
+</a>
+
+
 </nav>
 </div>
 </header>

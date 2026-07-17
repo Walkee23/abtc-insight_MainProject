@@ -103,12 +103,15 @@
 <!-- Right Side: Navigation Links & Login -->
 <div class="flex items-center gap-8">
 <div class="flex items-center gap-6">
-<a class="text-slate-600 hover:text-blue-600 transition-colors" href="#" style="">Patient Registration</a>
+<a class="text-slate-600 hover:text-blue-600 transition-colors" href="{{ route('patient.register') }}">Patient Registration</a>
 <a class="text-slate-600 hover:text-blue-600 transition-colors" href="#" style="">Tracking Portal</a>
 </div>
+
+<a href="{{ route('login') }}">
 <button class="bg-primary text-on-primary px-5 py-2 rounded-full font-semibold active:scale-95 transition-transform" style="">
                 Login
             </button>
+</a>
 </div>
 </div>
 <!-- Separation Line -->

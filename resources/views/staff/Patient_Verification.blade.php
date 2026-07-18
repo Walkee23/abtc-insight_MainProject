@@ -89,32 +89,36 @@
 </head>
 <body class="text-on-surface antialiased">
 <!-- SideNavBar -->
-<aside class="h-screen w-64 flex flex-col fixed left-0 top-0 bg-slate-50 dark:bg-slate-900 z-40">
-<div class="p-6">
-<div class="text-xl font-bold tracking-tighter text-blue-900 dark:text-blue-100 mb-1">ABTC-Insight</div>
-<div class="text-xs font-medium text-slate-500 uppercase tracking-widest">Staff Portal</div>
-</div>
-<nav class="flex-1 mt-4">
-<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors duration-200 cursor-pointer active:scale-95 transition-transform" href="#">
-<span class="material-symbols-outlined" data-icon="clinical_notes">clinical_notes</span>
-<span class="text-sm font-medium">Queue Management</span>
-</a>
-<a class="flex items-center gap-3 px-4 py-3 text-blue-700 dark:text-blue-300 font-semibold border-l-4 border-blue-700 dark:border-blue-400 bg-blue-50/50 dark:bg-blue-900/20 cursor-pointer active:scale-95 transition-transform" href="#">
-<span class="material-symbols-outlined" data-icon="how_to_reg">how_to_reg</span>
-<span class="text-sm font-medium">Patient Verification</span>
-</a>
-<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors duration-200 cursor-pointer active:scale-95 transition-transform" href="#">
-<span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
-<span class="text-sm font-medium">Case Encoding</span>
-</a>
-<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors duration-200 cursor-pointer active:scale-95 transition-transform" href="#">
-<span class="material-symbols-outlined" data-icon="person_search">person_search</span>
-<span class="text-sm font-medium">Patient Lookup</span>
-</a>
-</nav>
+<aside class="fixed left-0 top-0 h-full z-40 h-screen w-72 flex flex-col border-r border-outline-variant/10 bg-white dark:bg-slate-900 font-sans Inter antialiased">
+    <div class="p-8 flex items-center gap-3">
+        <div class="w-10 h-10 bg-primary-container rounded-xl flex items-center justify-center text-white shadow-md">
+            <span class="material-symbols-outlined" data-icon="shield">shield</span>
+        </div>
+        <div>
+            <h1 class="text-xl font-bold tracking-tight text-primary dark:text-blue-200">ABTC-Insight</h1>
+        </div>
+    </div>
+    <nav class="flex-1 mt-4 space-y-1 px-4">
+        <a class="flex items-center gap-3 px-4 py-3.5 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors" href="{{ route('staff.dashboard') }}">
+            <span class="material-symbols-outlined" data-icon="queue">queue</span>
+            <span>Queue Management</span>
+        </a>
+        <a class="flex items-center gap-3 px-4 py-3.5 text-primary dark:text-blue-400 font-semibold border-l-4 border-primary dark:border-blue-400 bg-primary/5 transition-all" href="#">
+            <span class="material-symbols-outlined" data-icon="verified_user">verified_user</span>
+            <span>Patient Verification</span>
+        </a>
+        <a class="flex items-center gap-3 px-4 py-3.5 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors" href="{{ route('staff.case-encoding') }}">
+            <span class="material-symbols-outlined" data-icon="clinical_notes">clinical_notes</span>
+            <span>Case Encoding</span>
+        </a>
+        <a class="flex items-center gap-3 px-4 py-3.5 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors" href="{{ route('staff.patient-lookup') }}">
+            <span class="material-symbols-outlined" data-icon="person_search">person_search</span>
+            <span>Patient Lookup</span>
+        </a>
+    </nav>
 </aside>
 <!-- Main Content Wrapper -->
-<div class="pl-64 min-h-screen flex flex-col">
+<div class="pl-72 min-h-screen flex flex-col">
 <!-- TopNavBar -->
 <header class="flex justify-between items-center h-16 w-full pl-8 pr-8 sticky top-0 bg-white/85 dark:bg-slate-950/85 backdrop-blur-md z-30 shadow-sm shadow-slate-200/50 dark:shadow-none border-b border-slate-100/50">
 <div class="flex items-center flex-1 max-w-xl">

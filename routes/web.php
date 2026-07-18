@@ -43,9 +43,24 @@ Route::prefix('admin')->group(function () {
 });
 
 // Other Role Fallbacks
-Route::get('/staff/dashboard', function () {
-    return view('staff.dashboard');
-})->name('staff.dashboard');
+// Staff Routes
+Route::prefix('staff')->group(function () {
+    Route::get('/dashboard', function () {
+        return view('staff.dashboard');
+    })->name('staff.dashboard');
+
+    Route::get('/case-encoding', function () {
+        return view('staff.Case_Encoding');
+    })->name('staff.case-encoding');
+
+    Route::get('/patient-lookup', function () {
+        return view('staff.Patient_Lookup');
+    })->name('staff.patient-lookup');
+
+    Route::get('/patient-verification', function () {
+        return view('staff.Patient_Verification');
+    })->name('staff.patient-verification');
+});
 
 Route::get('/healthworker/dashboard', function () {
     return view('healthworker.dashboard');

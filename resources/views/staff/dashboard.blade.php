@@ -111,25 +111,23 @@
                 <h1 class="text-xl font-bold tracking-tight text-primary dark:text-blue-200">ABTC-Insight</h1>
             </div>
         </div>
-        <nav class="flex-1 mt-4 space-y-1 px-4">
-            <!-- Queue Management - Active -->
-            <a class="flex items-center gap-3 px-4 py-3.5 text-primary dark:text-blue-400 font-semibold border-l-4 border-primary dark:border-blue-400 bg-primary/5 transition-all" href="#">
-                <span class="material-symbols-outlined" data-icon="queue">queue</span>
-                <span>Queue Management</span>
-            </a>
-            <!-- Inactive Items -->
-            <a class="flex items-center gap-3 px-4 py-3.5 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors" href="#">
-                <span class="material-symbols-outlined" data-icon="verified_user">verified_user</span>
-                <span>Patient Verification</span>
-            </a>
-            <a class="flex items-center gap-3 px-4 py-3.5 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors" href="#">
-                <span class="material-symbols-outlined" data-icon="clinical_notes">clinical_notes</span>
-                <span>Case Encoding</span>
-            </a>
-            <a class="flex items-center gap-3 px-4 py-3.5 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors" href="#">
-                <span class="material-symbols-outlined" data-icon="person_search">person_search</span>
-                <span>Patient Lookup</span>
-            </a>
+            <nav class="flex-1 mt-4 space-y-1 px-4">
+                  <a class="flex items-center gap-3 px-4 py-3.5 text-primary dark:text-blue-400 font-semibold border-l-4 border-primary dark:border-blue-400 bg-primary/5 transition-all" href="#">
+                  <span class="material-symbols-outlined" data-icon="queue">queue</span>
+                  <span>Queue Management</span>
+               </a>
+                  <a class="flex items-center gap-3 px-4 py-3.5 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors" href="{{ route('staff.patient-verification') }}">
+                  <span class="material-symbols-outlined" data-icon="verified_user">verified_user</span>
+                  <span>Patient Verification</span>
+               </a>
+                  <a class="flex items-center gap-3 px-4 py-3.5 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors" href="{{ route('staff.case-encoding') }}">
+                  <span class="material-symbols-outlined" data-icon="clinical_notes">clinical_notes</span>
+                  <span>Case Encoding</span>
+               </a>
+                  <a class="flex items-center gap-3 px-4 py-3.5 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors" href="{{ route('staff.patient-lookup') }}">
+                  <span class="material-symbols-outlined" data-icon="person_search">person_search</span>
+                  <span>Patient Lookup</span>
+               </a>
         </nav>
     </aside>
     <!-- Main Content Area -->

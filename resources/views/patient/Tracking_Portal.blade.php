@@ -103,26 +103,27 @@
 </head>
 
 <body class="bg-surface font-body text-on-background min-h-screen flex flex-col selection:bg-primary-fixed">
-  <!-- TopNavBar Strategy: Transactional View (Suppressed nav links as per Focus Journey rule) -->
-  <nav class="fixed top-0 w-full z-50 bg-slate-50/85 backdrop-blur-md shadow-sm">
-    <div class="flex justify-between items-center px-6 py-4 max-w-7xl mx-auto font-sans antialiased text-sm font-medium tracking-tight">
-      <!-- Left Side: Brand Logo -->
-      <div class="text-xl font-bold tracking-tighter text-blue-900" style="">
-        ABTC-Insight
-      </div>
-      <!-- Right Side: Navigation Links & Login -->
-      <div class="flex items-center gap-8">
-        <div class="flex items-center gap-6">
-          <a class="text-slate-600 hover:text-blue-600 transition-colors" href="{{ route('patient.register') }}">Patient Registration</a>
-          <a class="text-slate-600 hover:text-blue-600 transition-colors" href="{{ route('patient.tracking.portal') }}">Tracking Portal</a>
+  <!-- TopNavBar (Updated to match Patient Portal style) -->
+  <nav class="fixed top-0 w-full z-50 bg-slate-50/85 backdrop-blur-md shadow-sm shadow-blue-900/5 transition-all duration-300 ease-in-out font-sans antialiased tracking-tight">
+    <div class="flex justify-between items-center px-8 py-4 max-w-full mx-auto">
+      <!-- Brand -->
+      <a href="{{ url('/') }}" class="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
+        <div class="w-8 h-8 clinical-gradient rounded-lg flex items-center justify-center text-white">
+          <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">health_metrics</span>
         </div>
-        <button class="bg-primary text-on-primary px-5 py-2 rounded-full font-semibold active:scale-95 transition-transform" style="">
-          Login
-        </button>
+        <span class="text-xl font-bold tracking-tighter text-blue-900">ABTC-Insight</span>
+      </a>
+      <!-- Links & Actions -->
+      <div class="flex items-center gap-8">
+        <div class="hidden md:flex items-center gap-8">
+          <a class="text-slate-600 hover:text-blue-600 transition-colors text-sm font-medium" href="{{ route('patient.register') }}">Patient Registration</a>
+          <a class="text-slate-600 hover:text-blue-600 transition-colors text-sm font-medium" href="{{ route('patient.tracking.portal') }}">Tracking Portal</a>
+          <button type="button" class="bg-primary text-on-primary px-5 py-2 rounded-full font-semibold active:scale-95 transition-transform" onclick="window.location.href=`{{ route('login') }}`;">
+            Login
+          </button>
+        </div>
       </div>
     </div>
-    <!-- Separation Line -->
-    <div class="bg-slate-200/50 h-[1px] w-full absolute bottom-0"></div>
   </nav>
   <main class="flex-grow flex items-center justify-center px-4 pt-20 pb-12">
     <!-- Background Ethereal Elements -->

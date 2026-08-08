@@ -85,19 +85,29 @@
 </head>
 
 <body class="bg-surface text-on-surface selection:bg-primary-fixed">
-  <!-- Top Navigation -->
-  <header class="w-full top-0 sticky z-50 bg-surface/80 backdrop-blur-md border-b border-outline-variant/30">
-    <div class="flex justify-between items-center max-w-7xl mx-auto px-8 py-5 max-w-7xl mx-auto px-8 py-5 flex justify-between items-center">
-      <div class="text-xl font-bold tracking-tighter text-primary font-display flex items-center gap-2 select-none pointer-events-none">
-        <span class="material-symbols-outlined text-2xl">health_metrics</span>
-        ABTC-Insight
+  <!-- TopNavBar (Updated to match Patient Portal style) -->
+  <nav class="fixed top-0 w-full z-50 bg-slate-50/85 backdrop-blur-md shadow-sm shadow-blue-900/5 transition-all duration-300 ease-in-out font-sans antialiased tracking-tight">
+    <div class="flex justify-between items-center px-8 py-4 max-w-full mx-auto">
+      <!-- Brand -->
+      <a href="{{ url('/') }}" class="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
+        <div class="w-8 h-8 clinical-gradient rounded-lg flex items-center justify-center text-white">
+          <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">health_metrics</span>
+        </div>
+        <span class="text-xl font-bold tracking-tighter text-blue-900">ABTC-Insight</span>
+      </a>
+      <!-- Links & Actions -->
+      <div class="flex items-center gap-8">
+        <div class="hidden md:flex items-center gap-8">
+          <a class="text-slate-600 hover:text-blue-600 transition-colors text-sm font-medium" href="{{ route('patient.register') }}">Patient Registration</a>
+          <a class="text-slate-600 hover:text-blue-600 transition-colors text-sm font-medium" href="{{ route('patient.tracking.portal') }}">Tracking Portal</a>
+          <button type="button" class="bg-primary text-on-primary px-5 py-2 rounded-full font-semibold active:scale-95 transition-transform" onclick="window.location.href=`{{ route('login') }}`;">
+            Login
+          </button>
+        </div>
       </div>
-      <nav class="hidden md:flex items-center gap-8">
-        <a class="text-slate-600 hover:text-blue-600 transition-colors" href="{{ route('patient.register') }}">Patient Registration</a>
-        <a class="text-slate-600 hover:text-blue-600 transition-colors" href="{{ route('patient.tracking.portal') }}">Tracking Portal</a>
-        <button class="bg-primary text-white px-6 py-2 rounded-full font-semibold hover:opacity-90 transition-all scale-95 active:opacity-80 text-sm shadow-md shadow-primary/20 hover:shadow-lg">Login</button>
-      </nav>
     </div>
+  </nav>
+  </div>
   </header>
   <main class="min-h-screen flex flex-col items-center px-4 py-12">
     <!-- Breadcrumb -->
@@ -136,7 +146,11 @@
         </div>
       </div>
       <!-- Form Content -->
-      <form class="space-y-12">
+      <form action="{{ route('patient.submit') }}" method="POST" class="space-y-12">
+        @csrf
+
+        <!-- Add this hidden input right below the form tag -->
+        <input type="hidden" name="priority_status" id="priorityInput" value="none">
         <!-- Section 1: Priority Status -->
         <section>
           <div class="flex items-center gap-2 mb-6">
@@ -145,7 +159,7 @@
           </div>
           <div class="grid grid-cols-2 gap-4">
             <!-- Card: None -->
-            <div class="border-2 border-surface-container-high p-4 rounded-lg cursor-pointer hover:bg-surface-container transition-all flex flex-col gap-3 group">
+            <div class="priority-option border-2 border-surface-container-high p-4 rounded-lg cursor-pointer hover:bg-surface-container transition-all flex flex-col gap-3 group" data-priority="none">
               <div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant">
                 <span class="material-symbols-outlined">block</span>
               </div>
@@ -155,7 +169,7 @@
               </div>
             </div>
             <!-- Card: PWD -->
-            <div class="border-2 border-primary p-4 rounded-lg cursor-pointer bg-primary-fixed/20 transition-all flex flex-col gap-3 relative overflow-hidden">
+            <div class="priority-option border-2 border-surface-container-high p-4 rounded-lg cursor-pointer hover:bg-surface-container transition-all flex flex-col gap-3 relative overflow-hidden" data-priority="priority">
               <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white">
                 <span class="material-symbols-outlined" data-icon="accessible">accessible</span>
               </div>
@@ -167,7 +181,7 @@
               </div>
             </div>
             <!-- Card: Senior Citizen -->
-            <div class="border-2 border-surface-container-high p-4 rounded-lg cursor-pointer hover:bg-surface-container transition-all flex flex-col gap-3">
+            <div class="priority-option border-2 border-surface-container-high p-4 rounded-lg cursor-pointer hover:bg-surface-container transition-all flex flex-col gap-3" data-priority="priority">
               <div class="w-10 h-10 rounded-full bg-tertiary-fixed flex items-center justify-center text-on-tertiary-fixed-variant">
                 <span class="material-symbols-outlined" data-icon="elderly">elderly</span>
               </div>
@@ -179,7 +193,7 @@
               </div>
             </div>
             <!-- Card: Pregnant -->
-            <div class="border-2 border-surface-container-high p-4 rounded-lg cursor-pointer hover:bg-surface-container transition-all flex flex-col gap-3">
+            <div class="priority-option border-2 border-surface-container-high p-4 rounded-lg cursor-pointer hover:bg-surface-container transition-all flex flex-col gap-3" data-priority="priority">
               <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-800">
                 <span class="material-symbols-outlined" data-icon="pregnant_woman">pregnant_woman</span>
               </div>
@@ -328,6 +342,32 @@
       </div>
     </footer>
   </main>
+
+  <script>
+    // Get the hidden input
+    const priorityInput = document.getElementById('priorityInput');
+    const priorityOptions = document.querySelectorAll('.priority-option');
+
+    priorityOptions.forEach(option => {
+      option.addEventListener('click', function(e) {
+        // Prevent the button from submitting the form immediately
+        e.preventDefault();
+
+        // Set the hidden input value
+        priorityInput.value = this.getAttribute('data-priority');
+
+        // 1. Remove the blue highlight from ALL cards
+        priorityOptions.forEach(opt => {
+          opt.classList.remove('border-primary', 'bg-primary/5', 'ring-2', 'ring-primary/20');
+          opt.classList.add('border-surface-container-high');
+        });
+
+        // 2. Add the blue highlight to the CLICKED card
+        this.classList.remove('border-surface-container-high');
+        this.classList.add('border-primary', 'bg-primary/5', 'ring-2', 'ring-primary/20');
+      });
+    });
+  </script>
 </body>
 
 </html>

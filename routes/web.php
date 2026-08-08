@@ -90,3 +90,11 @@ Route::prefix('healthworker')->group(function () {
 Route::get('/bhw/dashboard', function () {
     return view('bhw.dashboard');
 })->name('bhw.dashboard');
+
+Route::get('/patient/register', function () {
+    return view('patient.New_Record_Registration');
+})->name('patient.register');
+
+Route::get('/patient/tracking-portal', function () {
+    return view('patient.Tracking_Portal');
+})->name('patient.tracking.portal');

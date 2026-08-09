@@ -104,8 +104,11 @@
             <!-- Links & Actions -->
             <div class="flex items-center gap-8">
                 <div class="hidden md:flex items-center gap-8">
-                    <a class="text-slate-600 hover:text-blue-600 transition-colors text-sm font-medium" href="#">Patient Registration</a>
-                    <a class="text-slate-600 hover:text-blue-600 transition-colors text-sm font-medium" href="#">Tracking Portal</a>
+                    <a class="text-slate-600 hover:text-blue-600 transition-colors text-sm font-medium" href="{{ route('patient.register') }}">Patient Registration</a>
+                    <a class="text-slate-600 hover:text-blue-600 transition-colors text-sm font-medium" href="{{ route('patient.tracking.portal') }}">Tracking Portal</a>
+                    <button type="button" class="bg-primary text-on-primary px-5 py-2 rounded-full font-semibold active:scale-95 transition-transform" onclick="window.location.href=`{{ route('login') }}`;">
+                        Login
+                    </button>
                 </div>
             </div>
         </div>

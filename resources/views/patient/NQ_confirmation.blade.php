@@ -98,11 +98,27 @@
 <span class="material-symbols-outlined text-2xl">health_metrics</span>
     ABTC-Insight
 </div>
-<nav class="hidden md:flex items-center gap-8">
-<a class="text-primary border-b-2 border-primary pb-1 font-semibold transition-all duration-200 text-sm" href="#">Registration</a>
-<a class="text-on-surface-variant font-medium hover:text-primary transition-all duration-200 text-sm" href="#">Tracking Portal</a>
-<button class="bg-primary text-white px-6 py-2 rounded-full font-semibold hover:opacity-90 transition-all scale-95 active:opacity-80 text-sm shadow-md shadow-primary/20 hover:shadow-lg">Login</button>
-</nav>
+<!-- Top Navigation Bar -->
+    <nav class="fixed top-0 w-full z-50 bg-slate-50/85 backdrop-blur-md shadow-sm">
+        <div class="flex justify-between items-center px-6 py-4 max-w-7xl mx-auto font-sans antialiased text-sm font-medium tracking-tight">
+            <!-- Left Side: Brand Logo -->
+            <div class="text-xl font-bold tracking-tighter text-blue-900">
+                ABTC-Insight
+            </div>
+            <!-- Right Side: Navigation Links & Login -->
+            <div class="flex items-center gap-8">
+                <div class="flex items-center gap-6">
+                    <a class="text-slate-600 hover:text-blue-600 transition-colors" href="{{ route('patient.register') }}">Patient Registration</a>
+                    <a class="text-slate-600 hover:text-blue-600 transition-colors" href="{{ route('patient.tracking.portal') }}">Tracking Portal</a>
+                </div>
+                <button type="button" class="bg-primary text-on-primary px-5 py-2 rounded-full font-semibold active:scale-95 transition-transform" onclick="window.location.href=`{{ route('login') }}`;">
+                    Login
+                </button>
+            </div>
+        </div>
+        <!-- Separation Line -->
+        <div class="bg-slate-200/50 h-[1px] w-full absolute bottom-0"></div>
+    </nav>
 </div>
 </header>
 <main class="flex-grow w-full max-w-4xl px-6 py-12 flex flex-col">

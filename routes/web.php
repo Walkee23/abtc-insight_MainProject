@@ -103,9 +103,15 @@ Route::prefix('healthworker')->group(function () {
     })->name('healthworker.compliance');
 });
 
-Route::get('/bhw/dashboard', function () {
-    return view('bhw.dashboard');
-})->name('bhw.dashboard');
+Route::prefix('bhw')->group(function () {
+    Route::get('/dashboard', function () {
+        return view('bhw.dashboard');
+    })->name('bhw.dashboard');
+
+    Route::get('/referral-form', function () {
+        return view('bhw.referral_form');
+    })->name('bhw.referral-form');
+});
 
 Route::get('/patient/register', function () {
     return view('patient.Patient_Registration_Dashboard');

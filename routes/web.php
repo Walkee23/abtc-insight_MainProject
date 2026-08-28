@@ -92,40 +92,40 @@ Route::get('/bhw/dashboard', function () {
     return view('bhw.dashboard');
 })->name('bhw.dashboard');
 
-Route::get('/patient/register', function () {
-    return view('patient.Patient_Registration_Dashboard');
-})->name('patient.register');
+// Public Patient-Facing Pages
+Route::prefix('patient')->group(function () {
+    // 1. Registration choice screen (New vs Returning Patient)
+    Route::get('/register', function () {
+        return view('patient.Patient_Registration_Dashboard');
+    })->name('patient.register');
 
-Route::get('/patient/New_patient', function () {
-    return view('patient.New_Record_Registration');
-})->name('patient.new-patient');
+    // 2. New Patient registration form
+    Route::get('/new-patient', function () {
+        return view('patient.New_Record_Registration');
+    })->name('patient.new-patient');
 
-Route::get('/patient/Returning_Patient', function () {
-    return view('patient.Returning_Patient_Registration');
-})->name('patient.returning-patient');
+    // 3. Returning Patient (placeholder - no page built yet, sends back to the choice screen)
+    Route::get('/returning-patient', function () {
+        return view('patient.Patient_Registration_Dashboard');
+    })->name('patient.returning-patient');
 
-Route::get('/patient/tracking-portal', function () {
-    return view('patient.Tracking_Portal');
-})->name('patient.tracking.portal');
+    // 4. Tracking portal (placeholder - no page built yet, sends back to the choice screen)
+    Route::get('/tracking', function () {
+        return view('patient.Patient_Registration_Dashboard');
+    })->name('patient.tracking.portal');
 
-// Routes to show the success pages
-Route::get('/patient/queue/normal', function () {
-    return view('patient.NQ_confirmation');
-})->name('patient.queue.normal');
+    // 5. Handle form submission: assign a queue number and show the right confirmation page
+    Route::post('/submit', function (Request $request) {
+        $isPriority = $request->input('priority_status') !== 'none';
 
-Route::get('/patient/queue/priority', function () {
-    return view('patient.PQ_confirmation');
-})->name('patient.queue.priority');
+        if ($isPriority) {
+            $number = cache()->increment('pq_counter');
+            $queueNumber = 'P' . str_pad($number, 2, '0', STR_PAD_LEFT);
+            return view('patient.PQ_confirmation', ['queueNumber' => $queueNumber]);
+        }
 
-// Route to handle the form submission
-Route::post('/patient/submit-registration', function (Request $request) {
-    // Check the hidden input we will add to the form
-    $priority = $request->input('priority_status');
-
-    // Redirect based on the priority value
-    if ($priority === 'none' || empty($priority)) {
-        return redirect()->route('patient.queue.normal');
-    } else {
-        return redirect()->route('patient.queue.priority');
-    }
-})->name('patient.submit');
+        $number = cache()->increment('nq_counter');
+        $queueNumber = 'N' . str_pad($number, 2, '0', STR_PAD_LEFT);
+        return view('patient.NQ_confirmation', ['queueNumber' => $queueNumber]);
+    })->name('patient.submit');
+});

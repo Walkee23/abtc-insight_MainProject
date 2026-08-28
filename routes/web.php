@@ -117,15 +117,16 @@ Route::prefix('patient')->group(function () {
     // 5. Handle form submission: assign a queue number and show the right confirmation page
     Route::post('/submit', function (Request $request) {
         $isPriority = $request->input('priority_status') !== 'none';
+        $counterKey = $isPriority ? 'pq_counter' : 'nq_counter';
+        $prefix = $isPriority ? 'P' : 'N';
 
-        if ($isPriority) {
-            $number = cache()->increment('pq_counter');
-            $queueNumber = 'P' . str_pad($number, 2, '0', STR_PAD_LEFT);
-            return view('patient.PQ_confirmation', ['queueNumber' => $queueNumber]);
-        }
+        $number = (int) cache()->get($counterKey, 0) + 1;
+        cache()->put($counterKey, $number);
 
-        $number = cache()->increment('nq_counter');
-        $queueNumber = 'N' . str_pad($number, 2, '0', STR_PAD_LEFT);
-        return view('patient.NQ_confirmation', ['queueNumber' => $queueNumber]);
+        $queueNumber = $prefix . str_pad($number, 2, '0', STR_PAD_LEFT);
+
+        return $isPriority
+            ? view('patient.PQ_confirmation', ['queueNumber' => $queueNumber])
+            : view('patient.NQ_confirmation', ['queueNumber' => $queueNumber]);
     })->name('patient.submit');
 });

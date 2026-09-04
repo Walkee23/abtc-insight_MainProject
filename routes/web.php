@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
 
@@ -104,29 +105,61 @@ Route::prefix('patient')->group(function () {
         return view('patient.New_Record_Registration');
     })->name('patient.new-patient');
 
-    // 3. Returning Patient (placeholder - no page built yet, sends back to the choice screen)
+    // 3. Returning Patient — report a new bite incident using an existing record
     Route::get('/returning-patient', function () {
-        return view('patient.Patient_Registration_Dashboard');
+        return view('patient.Returning_Patient_Registration');
     })->name('patient.returning-patient');
 
-    // 4. Tracking portal (placeholder - no page built yet, sends back to the choice screen)
+    // 4. Tracking portal — look up an existing record by Tracking ID + DOB
     Route::get('/tracking', function () {
-        return view('patient.Patient_Registration_Dashboard');
+        return view('patient.Tracking_Portal');
     })->name('patient.tracking.portal');
 
-    // 5. Handle form submission: assign a queue number and show the right confirmation page
+    // 4b. Handle tracking portal search (no real lookup yet — shows the demo record page)
+    Route::post('/tracking/search', function (Request $request) {
+        return view('patient.Track_Record');
+    })->name('patient.track.submit');
+
+    // 5. Handle walk-in self-registration: Section I + Section II per the manuscript's schema
     Route::post('/submit', function (Request $request) {
         $isPriority = $request->input('priority_status') !== 'none';
-        $counterKey = $isPriority ? 'pq_counter' : 'nq_counter';
         $prefix = $isPriority ? 'P' : 'N';
+        $queueDate = now()->toDateString();
 
-        $number = (int) cache()->get($counterKey, 0) + 1;
-        cache()->put($counterKey, $number);
+        // Count today's registrations with this prefix to build the next queue number (resets daily)
+        $countToday = DB::table('inflow_general_particulars')
+            ->where('queue_date', $queueDate)
+            ->where('queue_id', 'LIKE', $prefix . '%')
+            ->count();
+        $queueId = $prefix . ($countToday + 1);
 
-        $queueNumber = $prefix . str_pad($number, 2, '0', STR_PAD_LEFT);
+        // Section I: General Particulars
+        $inflowRecordId = DB::table('inflow_general_particulars')->insertGetId([
+            'queue_id' => $queueId,
+            'queue_date' => $queueDate,
+            'id_number' => $request->input('valid_id_number'),
+            'patient_name' => $request->input('full_name'),
+            'age' => $request->input('age'),
+            'sex' => ucfirst($request->input('sex')),
+            'date_of_birth' => $request->input('date_of_birth'),
+            'civil_status' => ucfirst($request->input('civil_status')),
+            'contact_num' => $request->input('contact_number'),
+            'barangay' => $request->input('barangay_of_incidence'),
+            'philhealth_member' => $request->input('philhealth_member') === 'yes' ? 1 : 0,
+            'philhealth_name' => $request->input('philhealth_member_name'),
+            'philhealth_dob' => $request->input('philhealth_member_dob'),
+            'status' => 'Pending',
+        ]);
+
+        // Section II: Other Personal Data (illness/allergy history)
+        DB::table('inflow_other_personal_data')->insert([
+            'inflow_record_id' => $inflowRecordId,
+            'illness_history' => $request->input('current_illnesses'),
+            'allergy_history' => $request->input('known_allergies'),
+        ]);
 
         return $isPriority
-            ? view('patient.PQ_confirmation', ['queueNumber' => $queueNumber])
-            : view('patient.NQ_confirmation', ['queueNumber' => $queueNumber]);
+            ? view('patient.PQ_confirmation', ['queueNumber' => $queueId])
+            : view('patient.NQ_confirmation', ['queueNumber' => $queueId]);
     })->name('patient.submit');
 });

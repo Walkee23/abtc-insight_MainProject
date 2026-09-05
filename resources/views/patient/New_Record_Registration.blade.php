@@ -309,100 +309,19 @@
             <div class="col-span-2">
               <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5 ml-1">BARANGAY OF INCIDENCE</label>
               <div class="relative">
-                <input
+                <input autocomplete="off"
                   class="w-full bg-surface-container-highest border-none rounded-lg p-3 pl-10 text-sm focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
-                  list="barangayList" name="barangay_of_incidence" placeholder="Search your barangay..." required
+                  id="barangayInput" name="barangay_of_incidence" placeholder="Search your barangay..." required
                   type="text" />
                 <span
                   class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">search</span>
-                <datalist id="barangayList">
-                  <option value="Adlaon"></option>
-                  <option value="Agsungot"></option>
-                  <option value="Apas"></option>
-                  <option value="Babag"></option>
-                  <option value="Bacayan"></option>
-                  <option value="Banawa"></option>
-                  <option value="Banilad"></option>
-                  <option value="Basak Pardo"></option>
-                  <option value="Basak San Nicolas"></option>
-                  <option value="Binaliw"></option>
-                  <option value="Barrio Luz"></option>
-                  <option value="Bonbon"></option>
-                  <option value="Buot-Taup"></option>
-                  <option value="Budlaan"></option>
-                  <option value="Buhisan"></option>
-                  <option value="Bulacao"></option>
-                  <option value="Busay"></option>
-                  <option value="Calamba"></option>
-                  <option value="Cambinocot"></option>
-                  <option value="Capitol"></option>
-                  <option value="Carreta"></option>
-                  <option value="Cogon Pardo"></option>
-                  <option value="Cogon Ramos"></option>
-                  <option value="Day-as"></option>
-                  <option value="Duljo"></option>
-                  <option value="Ermita"></option>
-                  <option value="Guadalupe"></option>
-                  <option value="Guba"></option>
-                  <option value="Hipodromo"></option>
-                  <option value="Inayawan"></option>
-                  <option value="Kalubihan"></option>
-                  <option value="Kalunasan"></option>
-                  <option value="Kamagayan"></option>
-                  <option value="Kamputhaw"></option>
-                  <option value="Kasambagan"></option>
-                  <option value="Kinasang-an"></option>
-                  <option value="Labangon"></option>
-                  <option value="Lahug"></option>
-                  <option value="Lorega"></option>
-                  <option value="Lusaran"></option>
-                  <option value="Mabini"></option>
-                  <option value="Mabolo"></option>
-                  <option value="Malubog"></option>
-                  <option value="Mambaling"></option>
-                  <option value="Pahina Central"></option>
-                  <option value="Pamutan"></option>
-                  <option value="Pardo"></option>
-                  <option value="Pari-an"></option>
-                  <option value="Paril"></option>
-                  <option value="Pasil"></option>
-                  <option value="Pit-os"></option>
-                  <option value="Pulangbato"></option>
-                  <option value="Pung-ol"></option>
-                  <option value="Punta Princesa"></option>
-                  <option value="Quiot"></option>
-                  <option value="Sambag I"></option>
-                  <option value="Sambag II"></option>
-                  <option value="San Antonio"></option>
-                  <option value="San Jose"></option>
-                  <option value="San Nicolas Pahina"></option>
-                  <option value="San Nicolas Proper"></option>
-                  <option value="San Roque"></option>
-                  <option value="Sapangdaku"></option>
-                  <option value="Sawang Calero"></option>
-                  <option value="Sinsin"></option>
-                  <option value="Sirao"></option>
-                  <option value="Sta. Cruz"></option>
-                  <option value="Sto. Niño"></option>
-                  <option value="Suba"></option>
-                  <option value="Sudlon I"></option>
-                  <option value="Sudlon II"></option>
-                  <option value="T. Padilla"></option>
-                  <option value="Tabunan"></option>
-                  <option value="Tagbao"></option>
-                  <option value="Talamban"></option>
-                  <option value="TapTap"></option>
-                  <option value="Tejero"></option>
-                  <option value="Tinago"></option>
-                  <option value="Tisa"></option>
-                  <option value="Toong"></option>
-                  <option value="Zapatera"></option>
-                </datalist>
+                <div
+                  class="hidden absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-surface-container-lowest rounded-lg shadow-lg border border-outline-variant/20 z-20"
+                  id="barangayDropdown"></div>
               </div>
             </div>
             <div class="col-span-2">
-              <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5 ml-1">Valid ID
-                Number</label>
+              <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5 ml-1">Valid ID Number</label>
               <input
                 class="w-full bg-surface-container-highest border-none rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
                 name="valid_id_number" placeholder="Precinct no. / Senior Citizen ID / PWD card no." type="text" />
@@ -556,6 +475,46 @@
           alert('Age cannot be more than 125 years old. Please check the date of birth.');
           dobInput.focus();
         }
+      }
+    });
+
+    // Barangay search dropdown (custom, so it always renders below the input)
+    const barangayList = ['Adlaon', 'Agsungot', 'Apas', 'Babag', 'Bacayan', 'Banawa', 'Banilad', 'Basak Pardo', 'Basak San Nicolas', 'Binaliw', 'Barrio Luz', 'Bonbon', 'Buot-Taup', 'Budlaan', 'Buhisan', 'Bulacao', 'Busay', 'Calamba', 'Cambinocot', 'Capitol', 'Carreta', 'Cogon Pardo', 'Cogon Ramos', 'Day-as', 'Duljo', 'Ermita', 'Guadalupe', 'Guba', 'Hipodromo', 'Inayawan', 'Kalubihan', 'Kalunasan', 'Kamagayan', 'Kamputhaw', 'Kasambagan', 'Kinasang-an', 'Labangon', 'Lahug', 'Lorega', 'Lusaran', 'Mabini', 'Mabolo', 'Malubog', 'Mambaling', 'Pahina Central', 'Pamutan', 'Pardo', 'Pari-an', 'Paril', 'Pasil', 'Pit-os', 'Pulangbato', 'Pung-ol', 'Punta Princesa', 'Quiot', 'Sambag I', 'Sambag II', 'San Antonio', 'San Jose', 'San Nicolas Pahina', 'San Nicolas Proper', 'San Roque', 'Sapangdaku', 'Sawang Calero', 'Sinsin', 'Sirao', 'Sta. Cruz', 'Sto. Niño', 'Suba', 'Sudlon I', 'Sudlon II', 'T. Padilla', 'Tabunan', 'Tagbao', 'Talamban', 'TapTap', 'Tejero', 'Tinago', 'Tisa', 'Toong', 'Zapatera'];
+    const barangayInput = document.getElementById('barangayInput');
+    const barangayDropdown = document.getElementById('barangayDropdown');
+
+    function renderBarangayOptions(filterText) {
+      const filtered = barangayList.filter(b => b.toLowerCase().includes(filterText.toLowerCase()));
+      if (filtered.length === 0) {
+        barangayDropdown.classList.add('hidden');
+        barangayDropdown.innerHTML = '';
+        return;
+      }
+      barangayDropdown.innerHTML = filtered.map(b =>
+        `<div class="px-4 py-2.5 text-sm cursor-pointer hover:bg-surface-container transition-colors barangay-option">${b}</div>`
+      ).join('');
+      barangayDropdown.classList.remove('hidden');
+    }
+
+    barangayInput.addEventListener('focus', function () {
+      renderBarangayOptions(this.value);
+    });
+
+    barangayInput.addEventListener('input', function () {
+      renderBarangayOptions(this.value);
+    });
+
+    barangayDropdown.addEventListener('click', function (e) {
+      if (e.target.classList.contains('barangay-option')) {
+        barangayInput.value = e.target.textContent;
+        barangayDropdown.classList.add('hidden');
+        barangayDropdown.innerHTML = '';
+      }
+    });
+
+    document.addEventListener('click', function (e) {
+      if (!barangayInput.contains(e.target) && !barangayDropdown.contains(e.target)) {
+        barangayDropdown.classList.add('hidden');
       }
     });
 

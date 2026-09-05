@@ -307,14 +307,97 @@
                 name="contact_number" placeholder="+63 000 000 0000" required type="tel" />
             </div>
             <div class="col-span-2">
-              <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5 ml-1">BARANGAY OF
-                INCIDENCE</label>
+              <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5 ml-1">BARANGAY OF INCIDENCE</label>
               <div class="relative">
                 <input
                   class="w-full bg-surface-container-highest border-none rounded-lg p-3 pl-10 text-sm focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
-                  name="barangay_of_incidence" placeholder="Search your barangay..." required type="text" />
+                  list="barangayList" name="barangay_of_incidence" placeholder="Search your barangay..." required
+                  type="text" />
                 <span
                   class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">search</span>
+                <datalist id="barangayList">
+                  <option value="Adlaon"></option>
+                  <option value="Agsungot"></option>
+                  <option value="Apas"></option>
+                  <option value="Babag"></option>
+                  <option value="Bacayan"></option>
+                  <option value="Banawa"></option>
+                  <option value="Banilad"></option>
+                  <option value="Basak Pardo"></option>
+                  <option value="Basak San Nicolas"></option>
+                  <option value="Binaliw"></option>
+                  <option value="Barrio Luz"></option>
+                  <option value="Bonbon"></option>
+                  <option value="Buot-Taup"></option>
+                  <option value="Budlaan"></option>
+                  <option value="Buhisan"></option>
+                  <option value="Bulacao"></option>
+                  <option value="Busay"></option>
+                  <option value="Calamba"></option>
+                  <option value="Cambinocot"></option>
+                  <option value="Capitol"></option>
+                  <option value="Carreta"></option>
+                  <option value="Cogon Pardo"></option>
+                  <option value="Cogon Ramos"></option>
+                  <option value="Day-as"></option>
+                  <option value="Duljo"></option>
+                  <option value="Ermita"></option>
+                  <option value="Guadalupe"></option>
+                  <option value="Guba"></option>
+                  <option value="Hipodromo"></option>
+                  <option value="Inayawan"></option>
+                  <option value="Kalubihan"></option>
+                  <option value="Kalunasan"></option>
+                  <option value="Kamagayan"></option>
+                  <option value="Kamputhaw"></option>
+                  <option value="Kasambagan"></option>
+                  <option value="Kinasang-an"></option>
+                  <option value="Labangon"></option>
+                  <option value="Lahug"></option>
+                  <option value="Lorega"></option>
+                  <option value="Lusaran"></option>
+                  <option value="Mabini"></option>
+                  <option value="Mabolo"></option>
+                  <option value="Malubog"></option>
+                  <option value="Mambaling"></option>
+                  <option value="Pahina Central"></option>
+                  <option value="Pamutan"></option>
+                  <option value="Pardo"></option>
+                  <option value="Pari-an"></option>
+                  <option value="Paril"></option>
+                  <option value="Pasil"></option>
+                  <option value="Pit-os"></option>
+                  <option value="Pulangbato"></option>
+                  <option value="Pung-ol"></option>
+                  <option value="Punta Princesa"></option>
+                  <option value="Quiot"></option>
+                  <option value="Sambag I"></option>
+                  <option value="Sambag II"></option>
+                  <option value="San Antonio"></option>
+                  <option value="San Jose"></option>
+                  <option value="San Nicolas Pahina"></option>
+                  <option value="San Nicolas Proper"></option>
+                  <option value="San Roque"></option>
+                  <option value="Sapangdaku"></option>
+                  <option value="Sawang Calero"></option>
+                  <option value="Sinsin"></option>
+                  <option value="Sirao"></option>
+                  <option value="Sta. Cruz"></option>
+                  <option value="Sto. Niño"></option>
+                  <option value="Suba"></option>
+                  <option value="Sudlon I"></option>
+                  <option value="Sudlon II"></option>
+                  <option value="T. Padilla"></option>
+                  <option value="Tabunan"></option>
+                  <option value="Tagbao"></option>
+                  <option value="Talamban"></option>
+                  <option value="TapTap"></option>
+                  <option value="Tejero"></option>
+                  <option value="Tinago"></option>
+                  <option value="Tisa"></option>
+                  <option value="Toong"></option>
+                  <option value="Zapatera"></option>
+                </datalist>
               </div>
             </div>
             <div class="col-span-2">

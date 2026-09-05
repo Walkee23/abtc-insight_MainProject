@@ -265,8 +265,7 @@
                 name="full_name" placeholder="Surname, Given Name, Middle Initial" required type="text" />
             </div>
             <div>
-              <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5 ml-1">Date of
-                Birth</label>
+              <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5 ml-1">Date of Birth</label>
               <input
                 class="w-full bg-surface-container-highest border-none rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
                 id="dobInput" name="date_of_birth" required type="date" />
@@ -427,22 +426,54 @@
   </main>
 
   <script>
-    // Auto-calculate age from date of birth
+    // Auto-calculate age from date of birth, and cap at 125 years old
     const dobInput = document.getElementById('dobInput');
     const ageInput = document.getElementById('ageInput');
-    dobInput.addEventListener('change', function () {
-      if (!this.value) {
-        ageInput.value = '';
-        return;
-      }
-      const dob = new Date(this.value);
+
+    // Restrict the date picker itself: no future dates, no more than 125 years ago
+    const today = new Date();
+    const maxDob = today.toISOString().split('T')[0];
+    const minDobDate = new Date(today.getFullYear() - 125, today.getMonth(), today.getDate());
+    const minDob = minDobDate.toISOString().split('T')[0];
+    dobInput.setAttribute('max', maxDob);
+    dobInput.setAttribute('min', minDob);
+
+    function calculateAge(dobValue) {
+      const dob = new Date(dobValue);
       const today = new Date();
       let age = today.getFullYear() - dob.getFullYear();
       const monthDiff = today.getMonth() - dob.getMonth();
       if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
         age--;
       }
+      return age;
+    }
+
+    dobInput.addEventListener('change', function () {
+      if (!this.value) {
+        ageInput.value = '';
+        return;
+      }
+      const age = calculateAge(this.value);
+      if (age > 125) {
+        alert('Age cannot be more than 125 years old. Please check the date of birth.');
+        this.value = '';
+        ageInput.value = '';
+        return;
+      }
       ageInput.value = age >= 0 ? age : '';
+    });
+
+    // Also guard on submit in case a value slipped through
+    document.querySelector('form').addEventListener('submit', function (e) {
+      if (dobInput.value) {
+        const age = calculateAge(dobInput.value);
+        if (age > 125) {
+          e.preventDefault();
+          alert('Age cannot be more than 125 years old. Please check the date of birth.');
+          dobInput.focus();
+        }
+      }
     });
 
     // Get the hidden input

@@ -309,7 +309,8 @@
             <div class="col-span-2">
               <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5 ml-1">BARANGAY OF INCIDENCE</label>
               <div class="relative">
-                <input autocomplete="off"
+                <input
+                  autocomplete="off"
                   class="w-full bg-surface-container-highest border-none rounded-lg p-3 pl-10 text-sm focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
                   id="barangayInput" name="barangay_of_incidence" placeholder="Search your barangay..." required
                   type="text" />
@@ -451,19 +452,25 @@
       return age;
     }
 
-    dobInput.addEventListener('change', function () {
+    // Update the age display live as the user types or picks a date
+    dobInput.addEventListener('input', function () {
       if (!this.value) {
         ageInput.value = '';
         return;
       }
       const age = calculateAge(this.value);
+      ageInput.value = age >= 0 ? age : '';
+    });
+
+    // Only validate once the user has finished with the field (on blur), not while typing
+    dobInput.addEventListener('blur', function () {
+      if (!this.value) return;
+      const age = calculateAge(this.value);
       if (age > 125) {
         alert('Age cannot be more than 125 years old. Please check the date of birth.');
         this.value = '';
         ageInput.value = '';
-        return;
       }
-      ageInput.value = age >= 0 ? age : '';
     });
 
     // Also guard on submit in case a value slipped through
@@ -496,15 +503,15 @@
       barangayDropdown.classList.remove('hidden');
     }
 
-    barangayInput.addEventListener('focus', function () {
+    barangayInput.addEventListener('focus', function() {
       renderBarangayOptions(this.value);
     });
 
-    barangayInput.addEventListener('input', function () {
+    barangayInput.addEventListener('input', function() {
       renderBarangayOptions(this.value);
     });
 
-    barangayDropdown.addEventListener('click', function (e) {
+    barangayDropdown.addEventListener('click', function(e) {
       if (e.target.classList.contains('barangay-option')) {
         barangayInput.value = e.target.textContent;
         barangayDropdown.classList.add('hidden');
@@ -512,7 +519,7 @@
       }
     });
 
-    document.addEventListener('click', function (e) {
+    document.addEventListener('click', function(e) {
       if (!barangayInput.contains(e.target) && !barangayDropdown.contains(e.target)) {
         barangayDropdown.classList.add('hidden');
       }

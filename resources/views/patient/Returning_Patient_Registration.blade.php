@@ -175,20 +175,21 @@
         <form action="{{ route('patient.submit') }}" method="POST">
           @csrf
           <input type="hidden" name="priority_status" id="priorityInput" value="none">
+          <input type="hidden" name="patient_id" id="patientIdInput" value="">
 
           <!-- Section 1: Record Summary (Collapsed) -->
-          <div class="mb-10">
-            <div class="bg-emerald-50/50 border border-dashed border-emerald-200 rounded-lg p-6 opacity-40 flex items-center justify-between mb-4">
-              <div class="flex items-center gap-4">
-                <span class="material-symbols-outlined text-3xl text-emerald-600">qr_code_2</span>
-                <span class="font-semibold text-emerald-800">Look up record</span>
-              </div>
-              <button class="text-emerald-700 font-bold underline text-sm">Change</button>
+          <div class="mb-10" id="lookupSection">
+            <div class="flex gap-3 mb-4">
+              <input type="text" id="searchInput" placeholder="Enter Patient ID or Full Name..." class="flex-1 bg-surface-container-highest border-0 focus:ring-2 focus:ring-primary/20 rounded-lg px-4 py-3.5 font-medium" />
+                 <button type="button" id="searchBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 rounded-lg transition-all">Search</button>
             </div>
-            <div class="bg-emerald-600 text-white px-6 py-4 rounded-lg flex items-center gap-3 shadow-md">
-              <span class="material-symbols-outlined">person_check</span>
-              <div class="text-sm">
-                <span class="font-bold">Record found:</span> Juan Dela Cruz · <span class="font-mono text-emerald-100">CEB-20250110-19980305-001</span>
+           <div id="notFoundMsg" class="hidden bg-red-50 text-red-700 px-6 py-4 rounded-lg text-sm font-medium mb-4">
+             No matching patient record found. Please check the ID or name and try again.
+           </div>
+           <div id="recordFoundBox" class="hidden bg-emerald-600 text-white px-6 py-4 rounded-lg items-center gap-3 shadow-md">
+                <span class="material-symbols-outlined">person_check</span>
+                <div class="text-sm">
+                  <span class="font-bold">Record found:</span> <span id="foundName"></span> · <span class="font-mono text-emerald-100" id="foundId"></span>
               </div>
             </div>
           </div>
@@ -207,41 +208,41 @@
               <div class="space-y-1.5">
                 <label class="text-xs font-bold text-on-surface-variant uppercase ml-1">Full Name</label>
                 <div class="flex items-center justify-between bg-surface-container-low px-4 py-3.5 rounded-lg text-on-surface-variant cursor-not-allowed">
-                  <span class="font-medium">Juan Dela Cruz</span>
+                  <span class="font-medium" id="lockedName">—</span>
                   <span class="material-symbols-outlined text-lg opacity-40">lock</span>
                 </div>
               </div>
               <div class="space-y-1.5">
                 <label class="text-xs font-bold text-on-surface-variant uppercase ml-1">Date of Birth</label>
-                <div class="bg-surface-container-low px-4 py-3.5 rounded-lg text-on-surface-variant cursor-not-allowed font-medium">
-                  March 05, 1998
+                <div class="bg-surface-container-low px-4 py-3.5 rounded-lg text-on-surface-variant cursor-not-allowed font-medium" id="lockedDob">
+                  -
                 </div>
               </div>
               <div class="space-y-1.5">
                 <label class="text-xs font-bold text-on-surface-variant uppercase ml-1">Sex</label>
-                <div class="bg-surface-container-low px-4 py-3.5 rounded-lg text-on-surface-variant cursor-not-allowed font-medium">
-                  Male
+                <div class="bg-surface-container-low px-4 py-3.5 rounded-lg text-on-surface-variant cursor-not-allowed font-medium" id="lockedSex">
+                  -
                 </div>
               </div>
               <!-- Editable Fields -->
               <div class="space-y-1.5">
                 <label class="text-xs font-bold text-emerald-700 uppercase ml-1">Contact Number</label>
-                <input class="w-full bg-emerald-50/30 border-0 border-b-2 border-emerald-500/30 focus:border-emerald-500 focus:ring-0 text-on-surface font-medium px-4 py-3.5 rounded-t-lg transition-all" type="text" value="09171234567" />
+                <input name="contact_num" class="w-full bg-emerald-50/30 border-0 border-b-2 border-emerald-500/30 focus:border-emerald-500 focus:ring-0 text-on-surface font-medium px-4 py-3.5 rounded-t-lg transition-all" type="text" placeholder="09XX XXX XXXX" />
               </div>
               <div class="space-y-1.5">
                 <label class="text-xs font-bold text-on-surface-variant uppercase ml-1">Civil Status</label>
-                <select class="w-full bg-surface-container-highest border-0 focus:ring-2 focus:ring-primary/20 rounded-lg px-4 py-3.5 font-medium">
-                  <option selected="">Single</option>
-                  <option>Married</option>
-                  <option>Widowed</option>
-                  <option>Separated</option>
+                <select name="civil_status" class="w-full bg-surface-container-highest border-0 focus:ring-2 focus:ring-primary/20 rounded-lg px-4 py-3.5 font-medium">
+                  <option value="Single" selected>Single</option>
+                  <option value="Married">Married</option>
+                  <option value="Widowed">Widowed</option>
+                  <option value="Separated">Separated</option>
                 </select>
               </div>
               <div class="space-y-1.5">
                 <label class="text-xs font-bold text-on-surface-variant uppercase ml-1">PhilHealth Member?</label>
-                <select class="w-full bg-surface-container-highest border-0 focus:ring-2 focus:ring-primary/20 rounded-lg px-4 py-3.5 font-medium">
-                  <option selected="">Yes</option>
-                  <option>No</option>
+                <select name="philhealth_member" class="w-full bg-surface-container-highest border-0 focus:ring-2 focus:ring-primary/20 rounded-lg px-4 py-3.5 font-medium">
+                  <option value="1" selected>Yes</option>
+                  <option value="0">No</option>
                 </select>
               </div>
             </div>
@@ -253,12 +254,12 @@
                   <span class="material-symbols-outlined text-base text-on-surface-variant/40 ml-1">info</span>
                 </label>
               </div>
-              <select class="w-full bg-white border-2 border-amber-200 focus:border-amber-500 focus:ring-0 rounded-lg px-4 py-4 text-on-surface font-medium shadow-sm">
-                <option disabled="" selected="" value="">Select Barangay...</option>
-                <option>Guadalupe</option>
-                <option>Lahug</option>
-                <option>Mabolo</option>
-                <option>Tisa</option>
+              <select name="barangay" class="w-full bg-white border-2 border-amber-200 focus:border-amber-500 focus:ring-0 rounded-lg px-4 py-4 text-on-surface font-medium shadow-sm">
+                <option disabled selected value="">Select Barangay...</option>
+                <option value="Guadalupe">Guadalupe</option>
+                <option value="Lahug">Lahug</option>
+                <option value="Mabolo">Mabolo</option>
+                <option value="Tisa">Tisa</option>
               </select>
               <p class="text-[11px] text-amber-700 font-medium flex items-center gap-1">
                 <span class="material-symbols-outlined text-sm">priority_high</span>
@@ -318,6 +319,51 @@
       <a class="text-[#414751] dark:text-slate-500 hover:text-[#004a93] dark:hover:text-blue-300 transition-colors duration-200" href="#">Terms of Service</a>
     </div>
   </footer>
+ 
+ <script>
+    document.getElementById('searchBtn').addEventListener('click', async function() {
+        const query = document.getElementById('searchInput').value.trim();
+        if (!query) return;
+
+        const notFoundMsg = document.getElementById('notFoundMsg');
+        const recordFoundBox = document.getElementById('recordFoundBox');
+
+        try {
+            const response = await fetch(`/patient/search?query=${encodeURIComponent(query)}`);
+            const data = await response.json();
+
+            if (!data.found) {
+                notFoundMsg.classList.remove('hidden');
+                recordFoundBox.classList.add('hidden');
+                recordFoundBox.classList.remove('flex');
+                return;
+            }
+
+            notFoundMsg.classList.add('hidden');
+            recordFoundBox.classList.remove('hidden');
+            recordFoundBox.classList.add('flex');
+
+            const patient = data.patient;
+
+            // Fill in locked fields
+            document.getElementById('lockedName').textContent = patient.patient_name;
+            document.getElementById('lockedDob').textContent = patient.date_of_birth;
+            document.getElementById('lockedSex').textContent = patient.sex;
+
+            // Fill in record found box
+            document.getElementById('foundName').textContent = patient.patient_name;
+            document.getElementById('foundId').textContent = patient.patient_id;
+
+            // Set hidden input for form submission
+            document.getElementById('patientIdInput').value = patient.patient_id;
+
+        } catch (error) {
+            console.error('Search failed:', error);
+            notFoundMsg.textContent = 'Something went wrong. Please try again.';
+            notFoundMsg.classList.remove('hidden');
+        }
+    });
+</script>
 
   <script>
     // Get the hidden input

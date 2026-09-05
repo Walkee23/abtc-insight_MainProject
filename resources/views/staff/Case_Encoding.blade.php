@@ -86,38 +86,36 @@
 </head>
 <body class="bg-surface text-on-surface min-h-screen flex">
 <!-- SideNavBar -->
-<aside class="h-screen w-64 fixed left-0 top-0 bg-slate-100 dark:bg-slate-950 flex flex-col border-r border-slate-200 dark:border-slate-800 z-50">
-<div class="px-6 py-8">
-<div class="flex items-center gap-3 mb-8">
-<div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg">
-<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">health_and_safety</span>
-</div>
-<div>
-<h1 class="text-blue-900 dark:text-blue-50 font-bold text-sm tracking-tight leading-none">ABTC-Insight</h1>
-</div>
-</div>
-<nav class="space-y-1.5">
-<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 rounded-lg transition-all duration-200" href="#">
-<span class="material-symbols-outlined text-[20px]" data-icon="group">group</span>
-<span class="font-medium text-sm">Queue Management</span>
-</a>
-<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 rounded-lg transition-all duration-200" href="#">
-<span class="material-symbols-outlined text-[20px]" data-icon="verified_user">verified_user</span>
-<span class="font-medium text-sm">Patient Verification</span>
-</a>
-<a class="flex items-center gap-3 px-4 py-3 text-blue-700 dark:text-blue-400 bg-white dark:bg-slate-900 shadow-sm border-l-4 border-blue-700 dark:border-blue-500 rounded-r-lg transition-all duration-200" href="#">
-<span class="material-symbols-outlined text-[20px]" data-icon="edit_note" style="font-variation-settings: 'FILL' 1;">edit_note</span>
-<span class="font-medium text-sm">Case Encoding</span>
-</a>
-<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 rounded-lg transition-all duration-200" href="#">
-<span class="material-symbols-outlined text-[20px]" data-icon="person_search">person_search</span>
-<span class="font-medium text-sm">Patient Lookup</span>
-</a>
-</nav>
-</div>
+<aside class="fixed left-0 top-0 h-full z-40 h-screen w-72 flex flex-col border-r border-outline-variant/10 bg-white dark:bg-slate-900 font-sans Inter antialiased">
+    <div class="p-8 flex items-center gap-3">
+        <div class="w-10 h-10 bg-primary-container rounded-xl flex items-center justify-center text-white shadow-md">
+            <span class="material-symbols-outlined" data-icon="shield">shield</span>
+        </div>
+        <div>
+            <h1 class="text-xl font-bold tracking-tight text-primary dark:text-blue-200">ABTC-Insight</h1>
+        </div>
+    </div>
+    <nav class="flex-1 mt-4 space-y-1 px-4">
+        <a class="flex items-center gap-3 px-4 py-3.5 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors" href="{{ route('staff.dashboard') }}">
+            <span class="material-symbols-outlined" data-icon="queue">queue</span>
+            <span>Queue Management</span>
+        </a>
+        <a class="flex items-center gap-3 px-4 py-3.5 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors" href="{{ route('staff.patient-verification') }}">
+            <span class="material-symbols-outlined" data-icon="verified_user">verified_user</span>
+            <span>Patient Verification</span>
+        </a>
+        <a class="flex items-center gap-3 px-4 py-3.5 text-primary dark:text-blue-400 font-semibold border-l-4 border-primary dark:border-blue-400 bg-primary/5 transition-all" href="#">
+            <span class="material-symbols-outlined" data-icon="clinical_notes">clinical_notes</span>
+            <span>Case Encoding</span>
+        </a>
+        <a class="flex items-center gap-3 px-4 py-3.5 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors" href="{{ route('staff.patient-lookup') }}">
+            <span class="material-symbols-outlined" data-icon="person_search">person_search</span>
+            <span>Patient Lookup</span>
+        </a>
+    </nav>
 </aside>
 <!-- Main Content Area -->
-<main class="ml-64 flex-1 flex flex-col min-h-screen">
+<main class="ml-72 flex-1 flex flex-col min-h-screen">
 <!-- TopAppBar -->
 <header class="w-full sticky top-0 z-40 bg-slate-50/85 dark:bg-slate-900/85 backdrop-blur-md flex items-center justify-between px-8 py-4 shadow-sm">
 <div class="flex items-center gap-8">

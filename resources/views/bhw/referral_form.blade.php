@@ -92,26 +92,34 @@
 </head>
 <body class="text-on-surface">
 <!-- Sidebar Navigation -->
-<aside class="h-screen w-72 fixed left-0 top-0 overflow-y-auto bg-white border-r border-slate-100 flex flex-col z-50">
-<div class="p-8 pb-12">
-<div class="flex items-center gap-3 text-primary mb-10">
-<span class="material-symbols-outlined text-3xl font-bold">shield</span>
-<span class="text-xl font-black tracking-tight">ABTC-Insight</span>
+<aside class="h-screen w-64 fixed left-0 top-0 overflow-y-auto bg-surface-container-low flex flex-col py-8 z-50 border-r border-outline-variant/10">
+<div class="px-6 mb-8 flex items-center gap-3">
+<div class="w-10 h-10 bg-primary-container rounded-xl flex items-center justify-center text-white shadow-md">
+<span class="material-symbols-outlined" data-icon="shield">shield</span>
 </div>
-<nav class="space-y-2">
-<a class="flex items-center gap-4 px-4 py-3 text-slate-500 hover:bg-slate-50 rounded-xl transition-all group" href="#">
-<span class="material-symbols-outlined text-2xl">assignment_turned_in</span>
-<span class="font-semibold">My Referrals</span>
+<div>
+<h1 class="text-xl font-bold tracking-tight text-primary">ABTC-Insight</h1>
+</div>
+</div>
+<nav class="flex-1 mt-4 space-y-1 px-4">
+<a class="flex items-center gap-3 px-4 py-3.5 text-on-surface-variant hover:text-primary hover:bg-slate-50 rounded-lg transition-all" href="{{ route('bhw.dashboard') }}">
+<span class="material-symbols-outlined">assignment_turned_in</span>
+<span class="text-sm font-medium">My Referrals</span>
 </a>
-<a class="flex items-center gap-4 px-4 py-3 bg-primary/10 text-primary rounded-xl transition-all" href="#">
-<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">add_circle</span>
-<span class="font-bold">Create New Referral</span>
+<a class="flex items-center gap-3 px-4 py-3.5 text-primary font-bold bg-primary/5 border-l-4 border-primary rounded-r-lg transition-all" href="#">
+<span class="material-symbols-outlined font-variation-settings-fill">add_circle</span>
+<span class="text-sm">Create New Referral</span>
 </a>
 </nav>
+<div class="mt-auto px-4 pb-4">
+<a href="{{ route('bhw.dashboard') }}" class="w-full py-4 bg-primary text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:bg-primary-container transition-all">
+<span class="material-symbols-outlined">arrow_back</span>
+<span class="text-sm">Back to Referrals</span>
+</a>
 </div>
 </aside>
 <!-- Top App Bar -->
-<header class="fixed top-0 right-0 w-[calc(100%-18rem)] z-40 bg-white/80 backdrop-blur-md border-b border-slate-100 flex justify-between items-center h-20 px-10">
+<<header class="fixed top-0 right-0 w-[calc(100%-16rem)] z-40 bg-surface-bright/85 backdrop-blur-xl border-b border-outline-variant/10 flex justify-between items-center h-20 px-8 shadow-sm">
 <div class="flex items-center gap-4">
 <div class="relative">
 <span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400">search</span>
@@ -141,7 +149,7 @@
 </div>
 </header>
 <!-- Main Content Canvas -->
-<main class="pt-24 pb-20 px-12 min-h-screen bg-surface ml-72">
+<main class="pt-24 pb-20 px-12 min-h-screen bg-surface ml-64">
 <!-- Header & Breadcrumbs -->
 <div class="mb-10">
 <a class="text-primary flex items-center gap-2 text-sm font-medium hover:underline mb-4 group" href="#">

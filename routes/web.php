@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PatientController;
 use Illuminate\Http\Request;
 
 Route::get('/', function () {
@@ -44,9 +45,24 @@ Route::prefix('admin')->group(function () {
 });
 
 // Other Role Fallbacks
-Route::get('/staff/dashboard', function () {
-    return view('staff.dashboard');
-})->name('staff.dashboard');
+// Staff Routes
+Route::prefix('staff')->group(function () {
+    Route::get('/dashboard', function () {
+        return view('staff.dashboard');
+    })->name('staff.dashboard');
+
+    Route::get('/case-encoding', function () {
+        return view('staff.Case_Encoding');
+    })->name('staff.case-encoding');
+
+    Route::get('/patient-lookup', function () {
+        return view('staff.Patient_Lookup');
+    })->name('staff.patient-lookup');
+
+    Route::get('/patient-verification', function () {
+        return view('staff.Patient_Verification');
+    })->name('staff.patient-verification');
+});
 
 Route::prefix('healthworker')->group(function () {
     // 1. Dashboard
@@ -88,9 +104,15 @@ Route::prefix('healthworker')->group(function () {
     })->name('healthworker.compliance');
 });
 
-Route::get('/bhw/dashboard', function () {
-    return view('bhw.dashboard');
-})->name('bhw.dashboard');
+Route::prefix('bhw')->group(function () {
+    Route::get('/dashboard', function () {
+        return view('bhw.dashboard');
+    })->name('bhw.dashboard');
+
+    Route::get('/referral-form', function () {
+        return view('bhw.referral_form');
+    })->name('bhw.referral-form');
+});
 
 Route::get('/patient/register', function () {
     return view('patient.Patient_Registration_Dashboard');
@@ -117,15 +139,8 @@ Route::get('/patient/queue/priority', function () {
     return view('patient.PQ_confirmation');
 })->name('patient.queue.priority');
 
-// Route to handle the form submission
-Route::post('/patient/submit-registration', function (Request $request) {
-    // Check the hidden input we will add to the form
-    $priority = $request->input('priority_status');
+// Route to search for an existing patient (used by Returning Patient form)
+Route::get('/patient/search', [PatientController::class, 'search'])->name('patient.search');
 
-    // Redirect based on the priority value
-    if ($priority === 'none' || empty($priority)) {
-        return redirect()->route('patient.queue.normal');
-    } else {
-        return redirect()->route('patient.queue.priority');
-    }
-})->name('patient.submit');
+// Route to handle the returning patient form submission
+Route::post('/patient/submit-registration', [PatientController::class, 'storeReturning'])->name('patient.submit');

@@ -92,15 +92,20 @@
 <body class="bg-surface text-on-surface antialiased">
 <!-- SideNavBar Component -->
 <aside class="h-screen w-64 fixed left-0 top-0 overflow-y-auto bg-surface-container-low flex flex-col py-8 z-50 border-r border-outline-variant/10">
-<div class="px-6 mb-8">
-<p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Main Menu</p>
+<div class="px-6 mb-8 flex items-center gap-3">
+<div class="w-10 h-10 bg-primary-container rounded-xl flex items-center justify-center text-white shadow-md">
+<span class="material-symbols-outlined" data-icon="shield">shield</span>
 </div>
-<nav class="flex-1 space-y-1">
-<a class="flex items-center gap-3 px-6 py-4 text-primary font-bold bg-primary/10 border-r-4 border-primary transition-all" href="#">
+<div>
+<h1 class="text-xl font-bold tracking-tight text-primary">ABTC-Insight</h1>
+</div>
+</div>
+<nav class="flex-1 mt-4 space-y-1 px-4">
+<a class="flex items-center gap-3 px-4 py-3.5 text-primary font-bold bg-primary/5 border-l-4 border-primary rounded-r-lg transition-all" href="#">
 <span class="material-symbols-outlined font-variation-settings-fill">assignment_turned_in</span>
 <span class="text-sm">My Referrals</span>
 </a>
-<a class="flex items-center gap-3 px-6 py-4 text-on-surface-variant hover:bg-surface-container-highest transition-all" href="#">
+<a class="flex items-center gap-3 px-4 py-3.5 text-on-surface-variant hover:text-primary hover:bg-slate-50 rounded-lg transition-all" href="{{ route('bhw.referral-form') }}">
 <span class="material-symbols-outlined">add_circle</span>
 <span class="text-sm font-medium">Create New Referral</span>
 </a>
@@ -117,11 +122,6 @@
 <!-- TopAppBar Component -->
 <header class="fixed top-0 right-0 w-[calc(100%-16rem)] z-40 bg-surface-bright/85 backdrop-blur-xl flex justify-between items-center h-20 px-8 border-b border-outline-variant/10 shadow-sm">
 <div class="flex items-center gap-6">
-<div class="flex items-center gap-2 text-primary font-bold text-xl tracking-tighter">
-<span class="material-symbols-outlined">shield</span>
-            ABTC-Insight
-        </div>
-<div class="h-8 w-[1px] bg-outline-variant/30 mx-2"></div>
 <div class="flex items-center gap-4 bg-surface-container-highest px-4 py-2 rounded-full w-80">
 <span class="material-symbols-outlined text-on-surface-variant text-xl">search</span>
 <input class="bg-transparent border-none focus:ring-0 text-sm w-full placeholder:text-on-surface-variant/60" placeholder="Search Reference No. or Patient..." type="text"/>

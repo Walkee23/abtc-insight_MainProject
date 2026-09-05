@@ -7,9 +7,14 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Registration Successful - Cebu Health Portal</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -101,47 +106,57 @@
 
 <body class="bg-surface text-on-surface min-h-screen flex flex-col items-center">
     <!-- TopNavBar (Updated to match Patient Portal style) -->
-    <nav class="fixed top-0 w-full z-50 bg-slate-50/85 backdrop-blur-md shadow-sm shadow-blue-900/5 transition-all duration-300 ease-in-out font-sans antialiased tracking-tight">
+    <nav
+        class="fixed top-0 w-full z-50 bg-slate-50/85 backdrop-blur-md shadow-sm shadow-blue-900/5 transition-all duration-300 ease-in-out font-sans antialiased tracking-tight">
         <div class="flex justify-between items-center px-8 py-4 max-w-full mx-auto">
             <!-- Brand -->
             <a href="{{ url('/') }}" class="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
                 <div class="w-8 h-8 clinical-gradient rounded-lg flex items-center justify-center text-white">
-                    <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">health_metrics</span>
+                    <span class="material-symbols-outlined text-sm"
+                        style="font-variation-settings: 'FILL' 1;">health_metrics</span>
                 </div>
                 <span class="text-xl font-bold tracking-tighter text-blue-900">ABTC-Insight</span>
             </a>
             <!-- Links & Actions -->
             <div class="flex items-center gap-8">
                 <div class="hidden md:flex items-center gap-8">
-                    <a class="text-slate-600 hover:text-blue-600 transition-colors text-sm font-medium" href="{{ route('patient.register') }}">Patient Registration</a>
-                    <a class="text-slate-600 hover:text-blue-600 transition-colors text-sm font-medium" href="{{ route('patient.tracking.portal') }}">Tracking Portal</a>
-                    <button type="button" class="bg-primary text-on-primary px-5 py-2 rounded-full font-semibold active:scale-95 transition-transform" onclick="window.location.href=`{{ route('login') }}`;">
+                    <a class="text-slate-600 hover:text-blue-600 transition-colors text-sm font-medium"
+                        href="{{ route('patient.register') }}">Patient Registration</a>
+                    <a class="text-slate-600 hover:text-blue-600 transition-colors text-sm font-medium"
+                        href="{{ route('patient.tracking.portal') }}">Tracking Portal</a>
+                    <button type="button"
+                        class="bg-primary text-on-primary px-5 py-2 rounded-full font-semibold active:scale-95 transition-transform"
+                        onclick="window.location.href=`{{ route('login') }}`;">
                         Login
                     </button>
                 </div>
             </div>
         </div>
     </nav>
-    </div>
-    </header>
     <main class="flex-grow w-full max-w-4xl px-6 py-12 flex flex-col">
         <div class="mb-8 self-start">
-            <a class="inline-flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors group" href="#">
+            <a class="inline-flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors group"
+                href="{{ route('patient.register') }}">
                 <span class="material-symbols-outlined text-[18px]">arrow_back</span>
                 <span class="text-sm font-medium tracking-wide">Back to selection</span>
             </a>
         </div>
         <div class="flex-grow flex items-center justify-center">
-            <div class="bg-surface-container-lowest rounded-lg p-10 md:p-16 w-full max-w-xl tonal-elevation text-center relative overflow-hidden">
+            <div
+                class="bg-surface-container-lowest rounded-lg p-10 md:p-16 w-full max-w-xl tonal-elevation text-center relative overflow-hidden">
                 <div class="absolute top-0 left-0 w-full h-1.5 clinical-gradient"></div>
-                <div class="mb-10 inline-flex items-center justify-center w-20 h-20 rounded-full bg-secondary-fixed text-primary-container">
-                    <span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                <div
+                    class="mb-10 inline-flex items-center justify-center w-20 h-20 rounded-full bg-secondary-fixed text-primary-container">
+                    <span class="material-symbols-outlined text-4xl"
+                        style="font-variation-settings: 'FILL' 1;">check_circle</span>
                 </div>
                 <h1 class="text-3xl font-extrabold tracking-tight text-on-surface mb-2">Registration Successful</h1>
-                <p class="text-on-surface-variant text-sm font-medium uppercase tracking-widest mb-12">Priority Priority Queue</p>
+                <p class="text-on-surface-variant text-sm font-medium uppercase tracking-widest mb-12">Priority Queue
+                </p>
                 <div class="relative inline-block mb-12">
                     <div class="bg-surface-container-low rounded-xl px-12 py-8 relative z-10">
-                        <span class="block text-7xl md:text-8xl font-black text-primary tracking-tighter">P12</span>
+                        <span
+                            class="block text-7xl md:text-8xl font-black text-primary tracking-tighter">{{ $queueNumber ?? 'P--' }}</span>
                     </div>
                     <div class="absolute inset-0 bg-primary/5 blur-2xl rounded-full scale-110"></div>
                 </div>
@@ -149,7 +164,8 @@
                     <p class="text-on-surface leading-relaxed font-medium">
                         Please wait for your number to be called at the triage station.
                     </p>
-                    <p class="text-primary font-semibold mt-6 px-4 py-3 bg-primary/5 rounded-lg border border-primary/10">
+                    <p
+                        class="text-primary font-semibold mt-6 px-4 py-3 bg-primary/5 rounded-lg border border-primary/10">
                         Please take a screenshot of this page to save your queue number for verification.
                     </p>
                 </div>
@@ -163,9 +179,12 @@
                 © 2024 CEBU CITY HEALTH CENTER. CLINICAL PRECISION SYSTEM.
             </div>
             <div class="flex gap-8">
-                <a class="text-xs font-medium uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors" href="#">PRIVACY POLICY</a>
-                <a class="text-xs font-medium uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors" href="#">TERMS OF SERVICE</a>
-                <a class="text-xs font-medium uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors" href="#">SUPPORT</a>
+                <a class="text-xs font-medium uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors"
+                    href="#">PRIVACY POLICY</a>
+                <a class="text-xs font-medium uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors"
+                    href="#">TERMS OF SERVICE</a>
+                <a class="text-xs font-medium uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors"
+                    href="#">SUPPORT</a>
             </div>
         </div>
     </footer>

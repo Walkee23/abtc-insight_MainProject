@@ -279,26 +279,33 @@
             </div>
             <div>
               <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5 ml-1">Sex</label>
-              <select
-                class="w-full bg-surface-container-highest border-none rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
-                name="sex" required>
-                <option value="">Select</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-              </select>
+              <div class="relative">
+                <div
+                  class="w-full bg-surface-container-highest border-none rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 cursor-pointer flex items-center justify-between"
+                  id="sexDisplay" tabindex="0">
+                  <span class="text-on-surface-variant" id="sexDisplayText">Select</span>
+                  <span class="material-symbols-outlined text-on-surface-variant text-lg">expand_more</span>
+                </div>
+                <input type="hidden" id="sexInput" name="sex" value="" />
+                <div
+                  class="hidden absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-surface-container-lowest rounded-lg shadow-lg border border-outline-variant/20 z-20"
+                  id="sexDropdown"></div>
+              </div>
             </div>
             <div>
-              <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5 ml-1">Civil
-                Status</label>
-              <select
-                class="w-full bg-surface-container-highest border-none rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
-                name="civil_status" required>
-                <option value="">Select</option>
-                <option value="single">Single</option>
-                <option value="married">Married</option>
-                <option value="widowed">Widowed</option>
-                <option value="separated">Separated</option>
-              </select>
+              <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5 ml-1">Civil Status</label>
+              <div class="relative">
+                <div
+                  class="w-full bg-surface-container-highest border-none rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 cursor-pointer flex items-center justify-between"
+                  id="civilStatusDisplay" tabindex="0">
+                  <span class="text-on-surface-variant" id="civilStatusDisplayText">Select</span>
+                  <span class="material-symbols-outlined text-on-surface-variant text-lg">expand_more</span>
+                </div>
+                <input type="hidden" id="civilStatusInput" name="civil_status" value="" />
+                <div
+                  class="hidden absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-surface-container-lowest rounded-lg shadow-lg border border-outline-variant/20 z-20"
+                  id="civilStatusDropdown"></div>
+              </div>
             </div>
             <div class="col-span-2">
               <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5 ml-1">Contact
@@ -483,6 +490,73 @@
           alert('Age cannot be more than 125 years old. Please check the date of birth.');
           dobInput.focus();
         }
+      }
+    });
+
+    // Sex and Civil Status custom dropdowns (same pattern as barangay dropdown)
+    function setupSimpleDropdown(displayId, displayTextId, hiddenInputId, dropdownId, options, fieldLabel) {
+      const display = document.getElementById(displayId);
+      const displayText = document.getElementById(displayTextId);
+      const hiddenInput = document.getElementById(hiddenInputId);
+      const dropdown = document.getElementById(dropdownId);
+
+      function renderOptions() {
+        dropdown.innerHTML = options.map(opt =>
+          `<div class="px-4 py-2.5 text-sm cursor-pointer hover:bg-surface-container transition-colors simple-option" data-value="${opt.value}">${opt.label}</div>`
+        ).join('');
+        dropdown.classList.remove('hidden');
+      }
+
+      display.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (dropdown.classList.contains('hidden')) {
+          renderOptions();
+        } else {
+          dropdown.classList.add('hidden');
+        }
+      });
+
+      dropdown.addEventListener('click', function (e) {
+        if (e.target.classList.contains('simple-option')) {
+          hiddenInput.value = e.target.getAttribute('data-value');
+          displayText.textContent = e.target.textContent;
+          displayText.classList.remove('text-on-surface-variant');
+          displayText.classList.add('text-on-surface');
+          dropdown.classList.add('hidden');
+        }
+      });
+
+      document.addEventListener('click', function (e) {
+        if (!display.contains(e.target) && !dropdown.contains(e.target)) {
+          dropdown.classList.add('hidden');
+        }
+      });
+
+      return () => {
+        if (!hiddenInput.value) {
+          alert(`Please select a ${fieldLabel}.`);
+          return false;
+        }
+        return true;
+      };
+    }
+
+    const validateSex = setupSimpleDropdown('sexDisplay', 'sexDisplayText', 'sexInput', 'sexDropdown', [
+      { value: 'male', label: 'Male' },
+      { value: 'female', label: 'Female' },
+    ], 'Sex');
+
+    const validateCivilStatus = setupSimpleDropdown('civilStatusDisplay', 'civilStatusDisplayText', 'civilStatusInput', 'civilStatusDropdown', [
+      { value: 'single', label: 'Single' },
+      { value: 'married', label: 'Married' },
+      { value: 'widowed', label: 'Widowed' },
+      { value: 'separated', label: 'Separated' },
+    ], 'Civil Status');
+
+    // Guard on submit: Sex and Civil Status must be picked (hidden inputs can't use native 'required')
+    document.querySelector('form').addEventListener('submit', function (e) {
+      if (!validateSex() || !validateCivilStatus()) {
+        e.preventDefault();
       }
     });
 

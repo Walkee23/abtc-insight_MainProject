@@ -120,9 +120,10 @@
       </div>
     </div>
   </nav>
-  <main class="min-h-screen flex flex-col items-center px-4 py-12">
+  <main class="min-h-screen flex flex-col items-center px-4 pt-24 pb-12">
     <!-- Breadcrumb -->
-    <div class="w-full max-w-[680px] mb-6 flex items-center gap-2 group cursor-pointer">
+    <div class="w-full max-w-[680px] mb-6 flex items-center gap-2 group cursor-pointer"
+      onclick="window.location.href='{{ route('patient.register') }}'">
       <span class="material-symbols-outlined text-on-surface-variant text-sm">arrow_back</span>
       <span class="text-on-surface-variant text-sm font-medium group-hover:text-primary transition-colors">Back to
         selection</span>

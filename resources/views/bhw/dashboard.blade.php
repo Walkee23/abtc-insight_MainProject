@@ -111,10 +111,10 @@
 </a>
 </nav>
 <div class="mt-auto px-4 pb-4">
-<button class="w-full py-4 bg-primary text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:bg-primary-container transition-all">
+<a href="{{ route('bhw.referral-form') }}" class="w-full py-4 bg-primary text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:bg-primary-container transition-all">
 <span class="material-symbols-outlined">add</span>
 <span class="text-sm">New Referral</span>
-</button>
+</a>
 </div>
 </aside>
 <!-- Main Canvas Area -->
@@ -158,10 +158,10 @@
 <h1 class="text-3xl font-extrabold tracking-tight text-on-surface mb-2">My Referrals</h1>
 <p class="text-on-surface-variant text-sm font-medium">Track and manage your submitted patient referrals to CHD-ABTC.</p>
 </div>
-<button class="px-6 py-3 bg-primary text-white rounded-xl font-bold flex items-center gap-2 shadow-xl shadow-primary/25 hover:bg-primary-container transition-all hover:-translate-y-0.5 active:translate-y-0">
+<a href="{{ route('bhw.referral-form') }}" class="px-6 py-3 bg-primary text-white rounded-xl font-bold flex items-center gap-2 shadow-xl shadow-primary/25 hover:bg-primary-container transition-all hover:-translate-y-0.5 active:translate-y-0">
 <span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
                     + New Referral
-                </button>
+                </a>
 </div>
 <!-- Dashboard Statistics Bento Grid (Modern Insight Layer) -->
 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">

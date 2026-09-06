@@ -135,9 +135,6 @@
         <!-- TopNavBar -->
         <header class="flex justify-between items-center w-full h-16 px-8 sticky top-0 z-30 bg-white/85 dark:bg-slate-900/85 backdrop-blur-md border-b border-outline-variant/10 font-sans Inter tracking-tight">
             <div class="flex items-center gap-8">
-                <div class="flex items-center gap-2 text-primary font-bold text-lg tracking-tight">
-                    ABTC-Insight
-                </div>
                 <div class="relative group">
                     <span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 text-lg">search</span>
                     <input class="pl-10 pr-4 py-1.5 bg-surface-container-low rounded-full text-sm focus:ring-2 focus:ring-primary/20 border-none outline-none w-72 transition-all" placeholder="Search analytics or case IDs..." type="text" />

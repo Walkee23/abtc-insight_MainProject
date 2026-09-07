@@ -96,11 +96,11 @@
 <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Main Menu</p>
 </div>
 <nav class="flex-1 space-y-1">
-<a class="flex items-center gap-3 px-6 py-4 text-primary font-bold bg-primary/10 border-r-4 border-primary transition-all" href="#">
+<a class="flex items-center gap-3 px-6 py-4 text-primary font-bold bg-primary/10 border-r-4 border-primary transition-all" href="{{ route('bhw.dashboard') }}">
 <span class="material-symbols-outlined font-variation-settings-fill">assignment_turned_in</span>
 <span class="text-sm">My Referrals</span>
 </a>
-<a class="flex items-center gap-3 px-6 py-4 text-on-surface-variant hover:bg-surface-container-highest transition-all" href="#">
+<a class="flex items-center gap-3 px-6 py-4 text-on-surface-variant hover:bg-surface-container-highest transition-all" href="{{ route('bhw.referral') }}">
 <span class="material-symbols-outlined">add_circle</span>
 <span class="text-sm font-medium">Create New Referral</span>
 </a>

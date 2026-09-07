@@ -374,17 +374,17 @@
                 </label>
               </div>
             </div>
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-2 gap-4 hidden" id="philhealthDetails">
               <div class="col-span-2 md:col-span-1">
                 <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5">Member Full
                   Name</label>
                 <input class="w-full bg-surface-container-lowest border-none rounded-lg p-3 text-sm"
-                  name="philhealth_member_name" type="text" />
+                  id="philhealthMemberNameInput" name="philhealth_member_name" type="text" />
               </div>
               <div class="col-span-2 md:col-span-1">
                 <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5">Member DOB</label>
                 <input class="w-full bg-surface-container-lowest border-none rounded-lg p-3 text-sm"
-                  name="philhealth_member_dob" type="date" />
+                  id="philhealthMemberDobInput" name="philhealth_member_dob" type="date" />
               </div>
             </div>
           </div>
@@ -735,10 +735,24 @@
     }
 
     const philhealthRadios = document.querySelectorAll('input[name="philhealth_member"]');
+    const philhealthDetails = document.getElementById('philhealthDetails');
+    const philhealthMemberNameInput = document.getElementById('philhealthMemberNameInput');
+    const philhealthMemberDobInput = document.getElementById('philhealthMemberDobInput');
+
     philhealthRadios.forEach(radio => {
       radio.addEventListener('focus', function () {
         markStepDone(2);
         markStepActive(3);
+      });
+
+      radio.addEventListener('change', function () {
+        if (this.value === 'yes') {
+          philhealthDetails.classList.remove('hidden');
+        } else {
+          philhealthDetails.classList.add('hidden');
+          philhealthMemberNameInput.value = '';
+          philhealthMemberDobInput.value = '';
+        }
       });
     });
 

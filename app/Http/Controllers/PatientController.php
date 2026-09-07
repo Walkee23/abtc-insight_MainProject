@@ -28,7 +28,7 @@ class PatientController extends Controller
         ]);
     }
 
-       public function storeReturning(Request $request)
+    public function storeReturning(Request $request)
     {
         $validated = $request->validate([
             'patient_id'         => 'required|string',
@@ -39,15 +39,12 @@ class PatientController extends Controller
             'priority_status'    => 'nullable|string',
         ]);
 
-        // Get the existing patient record to copy locked fields
         $patient = DB::table('patients')->where('patient_id', $validated['patient_id'])->first();
 
         if (!$patient) {
             return back()->withErrors(['patient_id' => 'Patient record not found.']);
         }
 
-        // Use the SAME queue numbering logic as the New Patient walk-in flow,
-        // so both forms share one continuous N/P sequence per day.
         $isPriority = ($validated['priority_status'] ?? 'none') !== 'none';
         $prefix = $isPriority ? 'P' : 'N';
         $queueDate = now()->toDateString();
@@ -77,5 +74,47 @@ class PatientController extends Controller
         return $isPriority
             ? view('patient.PQ_confirmation', ['queueNumber' => $queueId])
             : view('patient.NQ_confirmation', ['queueNumber' => $queueId]);
+    }
+
+    // BHW-referral registration (from main)
+    public function registerPatient(Request $request)
+    {
+        $referralCode = $request->input('reference_no');
+
+        $validReferral = DB::table('bhw_referral_info')
+            ->where('reference_no', $referralCode)
+            ->where('status', 'Pending')
+            ->first();
+
+        if (!$validReferral) {
+            return back()->withErrors(['reference_no' => 'Referral code is invalid or has already been used.']);
+        }
+
+        $patientId = DB::table('patients')->insertGetId([
+            'patient_name' => $request->input('patient_name'),
+            'barangay' => $request->input('barangay'),
+            'date_registered' => now(),
+        ]);
+
+        DB::table('bhw_referral_info')
+            ->where('referral_id', $validReferral->referral_id)
+            ->update([
+                'status' => 'Received',
+                'updated_at' => now()
+            ]);
+
+        DB::table('bite_cases')->insert([
+            'patient_id' => $patientId,
+            'bhw_referral_id' => $validReferral->referral_id,
+            'date_verified' => now(),
+        ]);
+
+        $priority = $request->input('priority_status');
+
+        if ($priority === 'none' || empty($priority)) {
+            return redirect()->route('patient.queue.normal');
+        } else {
+            return redirect()->route('patient.queue.priority');
+        }
     }
 }

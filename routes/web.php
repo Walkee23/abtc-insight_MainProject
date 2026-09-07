@@ -1,10 +1,11 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PatientController;
 use Illuminate\Http\Request;
+use App\Http\Controllers\BhwController;
+
 
 Route::get('/', function () {
     return view('welcome_portal');
@@ -115,79 +116,44 @@ Route::prefix('bhw')->group(function () {
     })->name('bhw.referral-form');
 });
 
-// Public Patient-Facing Pages
-Route::prefix('patient')->group(function () {
-    // 1. Registration choice screen (New vs Returning Patient)
-    Route::get('/register', function () {
-        return view('patient.Patient_Registration_Dashboard');
-    })->name('patient.register');
+Route::get('bhw/referral', function () {
+    return view('bhw.referral_form');
+})->name('bhw.referral');
 
-    // 2. New Patient registration form
-    Route::get('/new-patient', function () {
-        return view('patient.New_Record_Registration');
-    })->name('patient.new-patient');
+// Add this line for the referral form submission
+Route::post('/bhw/referral/store', [BhwController::class, 'storeReferral'])->name('bhw.store');
 
-    // 3. Returning Patient — report a new bite incident using an existing record
-    Route::get('/returning-patient', function () {
-        return view('patient.Returning_Patient_Registration');
-    })->name('patient.returning-patient');
 
-    // 4. Tracking portal — look up an existing record by Tracking ID + DOB
-    Route::get('/tracking', function () {
-        return view('patient.Tracking_Portal');
-    })->name('patient.tracking.portal');
+Route::get('/patient/register', function () {
+    return view('patient.Patient_Registration_Dashboard');
+})->name('patient.register');
 
-    // 4b. Handle tracking portal search (no real lookup yet — shows the demo record page)
-    Route::post('/tracking/search', function (Request $request) {
-        return view('patient.Track_Record');
-    })->name('patient.track.submit');
+Route::get('/patient/New_patient', function () {
+    return view('patient.New_Record_Registration');
+})->name('patient.new-patient');
 
-    // 5. Handle walk-in self-registration: Section I + Section II per the manuscript's schema
-    Route::post('/submit', function (Request $request) {
-        $isPriority = $request->input('priority_status') !== 'none';
-        $prefix = $isPriority ? 'P' : 'N';
-        $queueDate = now()->toDateString();
+Route::get('/patient/Returning_Patient', function () {
+    return view('patient.Returning_Patient_Registration');
+})->name('patient.returning-patient');
 
-        // Count today's registrations with this prefix to build the next queue number (resets daily)
-        $countToday = DB::table('inflow_general_particulars')
-            ->where('queue_date', $queueDate)
-            ->where('queue_id', 'LIKE', $prefix . '%')
-            ->count();
-        $queueId = $prefix . ($countToday + 1);
+Route::get('/patient/tracking-portal', function () {
+    return view('patient.Tracking_Portal');
+})->name('patient.tracking.portal');
 
-        // Section I: General Particulars
-        $inflowRecordId = DB::table('inflow_general_particulars')->insertGetId([
-            'queue_id' => $queueId,
-            'queue_date' => $queueDate,
-            'id_number' => $request->input('valid_id_number'),
-            'patient_name' => $request->input('full_name'),
-            'age' => $request->input('age'),
-            'sex' => ucfirst($request->input('sex')),
-            'date_of_birth' => $request->input('date_of_birth'),
-            'civil_status' => ucfirst($request->input('civil_status')),
-            'contact_num' => $request->input('contact_number'),
-            'barangay' => $request->input('barangay_of_incidence'),
-            'philhealth_member' => $request->input('philhealth_member') === 'yes' ? 1 : 0,
-            'philhealth_name' => $request->input('philhealth_member_name'),
-            'philhealth_dob' => $request->input('philhealth_member_dob'),
-            'status' => 'Pending',
-        ]);
+// Routes to show the success pages
+Route::get('/patient/queue/normal', function () {
+    return view('patient.NQ_confirmation');
+})->name('patient.queue.normal');
 
-        // Section II: Other Personal Data (illness/allergy history)
-        DB::table('inflow_other_personal_data')->insert([
-            'inflow_record_id' => $inflowRecordId,
-            'illness_history' => $request->input('current_illnesses'),
-            'allergy_history' => $request->input('known_allergies'),
-        ]);
+Route::get('/patient/queue/priority', function () {
+    return view('patient.PQ_confirmation');
+})->name('patient.queue.priority');
 
-        return $isPriority
-            ? view('patient.PQ_confirmation', ['queueNumber' => $queueId])
-            : view('patient.NQ_confirmation', ['queueNumber' => $queueId]);
-    })->name('patient.submit');
+// Returning Patient — search for an existing patient record
+Route::get('/patient/search', [PatientController::class, 'search'])->name('patient.search');
 
-    // 6. Returning Patient — search for an existing patient record
-    Route::get('/search', [PatientController::class, 'search'])->name('patient.search');
+// Returning Patient — handle the returning patient form submission
+Route::post('/patient/submit-registration-returning', [PatientController::class, 'storeReturning'])->name('patient.submit.returning');
 
-    // 7. Returning Patient — handle the returning patient form submission
-    Route::post('/submit-registration', [PatientController::class, 'storeReturning'])->name('patient.submit.returning');
-});
+// New Patient (via BHW referral) — handle the form submission using the controller
+Route::post('/patient/submit-registration', [PatientController::class, 'registerPatient'])->name('patient.submit');

@@ -105,7 +105,7 @@
 <span class="material-symbols-outlined font-variation-settings-fill">assignment_turned_in</span>
 <span class="text-sm">My Referrals</span>
 </a>
-<a class="flex items-center gap-3 px-4 py-3.5 text-on-surface-variant hover:text-primary hover:bg-slate-50 rounded-lg transition-all" href="{{ route('bhw.referral-form') }}">
+<a class="flex items-center gap-3 px-6 py-4 text-on-surface-variant hover:bg-surface-container-highest transition-all" href="{{ route('bhw.referral') }}">
 <span class="material-symbols-outlined">add_circle</span>
 <span class="text-sm font-medium">Create New Referral</span>
 </a>

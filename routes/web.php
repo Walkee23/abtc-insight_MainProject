@@ -127,5 +127,44 @@ Route::get('/patient/queue/priority', function () {
     return view('patient.PQ_confirmation');
 })->name('patient.queue.priority');
 
-// Route to handle the form submission using the controller
-Route::post('/patient/submit-registration', [PatientController::class, 'registerPatient'])->name('patient.submit');
+Route::post('/patient/submit-registration', function (Request $request) {
+    $isPriority = $request->input('priority_status') !== 'none';
+    $prefix = $isPriority ? 'P' : 'N';
+    $queueDate = now()->toDateString();
+
+    // Count today's registrations with this prefix to build the next queue number (resets daily)
+    $countToday = DB::table('inflow_general_particulars')
+        ->where('queue_date', $queueDate)
+        ->where('queue_id', 'LIKE', $prefix . '%')
+        ->count();
+    $queueId = $prefix . ($countToday + 1);
+
+    // Section I: General Particulars
+    $inflowRecordId = DB::table('inflow_general_particulars')->insertGetId([
+        'queue_id' => $queueId,
+        'queue_date' => $queueDate,
+        'id_number' => $request->input('valid_id_number'),
+        'patient_name' => $request->input('full_name'),
+        'age' => $request->input('age'),
+        'sex' => ucfirst($request->input('sex')),
+        'date_of_birth' => $request->input('date_of_birth'),
+        'civil_status' => ucfirst($request->input('civil_status')),
+        'contact_num' => $request->input('contact_number'),
+        'barangay' => $request->input('barangay_of_incidence'),
+        'philhealth_member' => $request->input('philhealth_member') === 'yes' ? 1 : 0,
+        'philhealth_name' => $request->input('philhealth_member_name'),
+        'philhealth_dob' => $request->input('philhealth_member_dob'),
+        'status' => 'Pending',
+    ]);
+
+    // Section II: Other Personal Data (illness/allergy history)
+    DB::table('inflow_other_personal_data')->insert([
+        'inflow_record_id' => $inflowRecordId,
+        'illness_history' => $request->input('current_illnesses'),
+        'allergy_history' => $request->input('known_allergies'),
+    ]);
+
+    return $isPriority
+        ? view('patient.PQ_confirmation', ['queueNumber' => $queueId])
+        : view('patient.NQ_confirmation', ['queueNumber' => $queueId]);
+})->name('patient.submit');

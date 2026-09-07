@@ -257,11 +257,27 @@
               <p class="mt-1.5 ml-1 text-[10px] text-on-surface-variant/80 italic">Enter the referral ID provided by
                 your Barangay Health Worker.</p>
             </div>
-            <div class="col-span-2">
-              <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5 ml-1">Full Name</label>
-              <input
-                class="w-full bg-surface-container-highest border-none rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
-                name="full_name" placeholder="Surname, Given Name, Middle Initial" required type="text" />
+            <div class="col-span-2 grid grid-cols-[1fr_1fr_70px] gap-3">
+              <div>
+                <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5 ml-1">Surname</label>
+                <input
+                  class="w-full bg-surface-container-highest border-none rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
+                  id="surnameInput" placeholder="e.g., Dela Cruz" required type="text" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5 ml-1">Given
+                  Name</label>
+                <input
+                  class="w-full bg-surface-container-highest border-none rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
+                  id="givenNameInput" placeholder="e.g., Juan" required type="text" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5 ml-1">M.I.</label>
+                <input
+                  class="w-full bg-surface-container-highest border-none rounded-lg p-3 text-sm text-center focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
+                  id="middleInitialInput" maxlength="2" placeholder="M." type="text" />
+              </div>
+              <input type="hidden" id="fullNameHidden" name="full_name" />
             </div>
             <div>
               <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5 ml-1">Date of Birth</label>
@@ -542,6 +558,38 @@
         setStepState(stepNum, 'active');
       }
     }
+
+    // Full Name split: Surname, Given Name, Middle Initial -> combined into one hidden field
+    const surnameInput = document.getElementById('surnameInput');
+    const givenNameInput = document.getElementById('givenNameInput');
+    const middleInitialInput = document.getElementById('middleInitialInput');
+    const fullNameHidden = document.getElementById('fullNameHidden');
+
+    function updateFullNameHidden() {
+      const surname = surnameInput.value.trim();
+      const given = givenNameInput.value.trim();
+      const mi = middleInitialInput.value.trim();
+
+      const parts = [surname, given].filter(Boolean);
+      let combined = parts.join(', ');
+      if (mi) {
+        combined += (combined ? ', ' : '') + mi;
+      }
+      fullNameHidden.value = combined;
+    }
+
+    // Middle initial: only ever a single letter followed by a period, max 2 characters
+    middleInitialInput.addEventListener('input', function () {
+      const letter = this.value.replace(/[^a-zA-Z]/g, '').charAt(0);
+      this.value = letter ? letter.toUpperCase() + '.' : '';
+      updateFullNameHidden();
+    });
+
+    surnameInput.addEventListener('input', updateFullNameHidden);
+    givenNameInput.addEventListener('input', updateFullNameHidden);
+
+    // Safety net: make sure full_name is synced even if autofill skipped the input events
+    document.querySelector('form').addEventListener('submit', updateFullNameHidden);
 
     // Sex and Civil Status custom dropdowns (same pattern as barangay dropdown)
     function setupSimpleDropdown(displayId, displayTextId, hiddenInputId, dropdownId, options, fieldLabel) {

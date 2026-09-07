@@ -142,29 +142,31 @@
         <p class="text-on-surface-variant text-sm font-medium">Cebu City Animal Bite Treatment Center — CCHD</p>
       </div>
       <!-- 4-step Progress Indicator -->
-      <div class="flex items-center mb-12 px-2" id="progressIndicator">
-        <div class="flex flex-col items-center gap-2 shrink-0" id="stepWrap-1">
-          <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold shadow-lg shadow-primary/20 transition-all"
-            id="stepCircle-1">1</div>
-          <span class="text-[10px] uppercase font-bold tracking-tighter text-primary transition-colors" id="stepLabel-1">Priority Status</span>
+      <div class="flex items-center justify-between mb-12 relative px-2">
+        <div class="absolute top-1/2 left-0 w-full h-[2px] bg-surface-container-high -z-10 -translate-y-1/2"></div>
+        <div class="flex flex-col items-center gap-2">
+          <div
+            class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold shadow-lg shadow-primary/20">
+            1</div>
+          <span class="text-[10px] uppercase font-bold tracking-tighter text-primary">Priority Status</span>
         </div>
-        <div class="flex-1 h-[2px] bg-surface-container-high mx-1 -mt-6 transition-colors" id="stepLine-1"></div>
-        <div class="flex flex-col items-center gap-2 shrink-0" id="stepWrap-2">
-          <div class="w-8 h-8 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center text-xs font-bold transition-all"
-            id="stepCircle-2">2</div>
-          <span class="text-[10px] uppercase font-bold tracking-tighter text-on-surface-variant transition-colors" id="stepLabel-2">Personal Info</span>
+        <div class="flex flex-col items-center gap-2">
+          <div
+            class="w-8 h-8 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center text-xs font-bold">
+            2</div>
+          <span class="text-[10px] uppercase font-bold tracking-tighter text-on-surface-variant">Personal Info</span>
         </div>
-        <div class="flex-1 h-[2px] bg-surface-container-high mx-1 -mt-6 transition-colors" id="stepLine-2"></div>
-        <div class="flex flex-col items-center gap-2 shrink-0" id="stepWrap-3">
-          <div class="w-8 h-8 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center text-xs font-bold transition-all"
-            id="stepCircle-3">3</div>
-          <span class="text-[10px] uppercase font-bold tracking-tighter text-on-surface-variant transition-colors" id="stepLabel-3">PhilHealth</span>
+        <div class="flex flex-col items-center gap-2">
+          <div
+            class="w-8 h-8 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center text-xs font-bold">
+            3</div>
+          <span class="text-[10px] uppercase font-bold tracking-tighter text-on-surface-variant">Medical History</span>
         </div>
-        <div class="flex-1 h-[2px] bg-surface-container-high mx-1 -mt-6 transition-colors" id="stepLine-3"></div>
-        <div class="flex flex-col items-center gap-2 shrink-0" id="stepWrap-4">
-          <div class="w-8 h-8 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center text-xs font-bold transition-all"
-            id="stepCircle-4">4</div>
-          <span class="text-[10px] uppercase font-bold tracking-tighter text-on-surface-variant transition-colors" id="stepLabel-4">Medical History</span>
+        <div class="flex flex-col items-center gap-2">
+          <div
+            class="w-8 h-8 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center text-xs font-bold">
+            4</div>
+          <span class="text-[10px] uppercase font-bold tracking-tighter text-on-surface-variant">Confirm</span>
         </div>
       </div>
       <!-- Form Content -->
@@ -174,7 +176,7 @@
         <!-- Add this hidden input right below the form tag -->
         <input type="hidden" name="priority_status" id="priorityInput" value="none">
         <!-- Section 1: Priority Status -->
-        <section id="section1">
+        <section>
           <div class="flex items-center gap-2 mb-6">
             <div class="w-1 h-5 bg-primary rounded-full"></div>
             <h2 class="text-sm font-bold uppercase tracking-widest text-on-surface">Step 1: Priority Status</h2>
@@ -242,7 +244,7 @@
           </div>
         </section>
         <!-- Section 2: Personal Info -->
-        <section id="section2">
+        <section>
           <div class="flex items-center gap-2 mb-6">
             <div class="w-1 h-5 bg-primary rounded-full"></div>
             <h2 class="text-sm font-bold uppercase tracking-widest text-on-surface">Step 2: Personal Information</h2>
@@ -253,31 +255,15 @@
                 <span class="text-error">*</span></label>
               <input
                 class="w-full bg-surface-container-highest border-none rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
-                name="bhw_referral_id" id="bhwReferralInput" placeholder="e.g., BRY-001-20250501-0023" required="" type="text" />
+                name="bhw_referral_id" placeholder="e.g., BRY-001-20250501-0023" required="" type="text" />
               <p class="mt-1.5 ml-1 text-[10px] text-on-surface-variant/80 italic">Enter the referral ID provided by
                 your Barangay Health Worker.</p>
             </div>
-            <div class="col-span-2 grid grid-cols-[1fr_1fr_70px] gap-3">
-              <div>
-                <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5 ml-1">Surname</label>
-                <input
-                  class="w-full bg-surface-container-highest border-none rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
-                  id="surnameInput" placeholder="e.g., Dela Cruz" required type="text" />
-              </div>
-              <div>
-                <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5 ml-1">Given
-                  Name</label>
-                <input
-                  class="w-full bg-surface-container-highest border-none rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
-                  id="givenNameInput" placeholder="e.g., Juan" required type="text" />
-              </div>
-              <div>
-                <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5 ml-1">M.I.</label>
-                <input
-                  class="w-full bg-surface-container-highest border-none rounded-lg p-3 text-sm text-center focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
-                  id="middleInitialInput" maxlength="2" placeholder="M." type="text" />
-              </div>
-              <input type="hidden" id="fullNameHidden" name="full_name" />
+            <div class="col-span-2">
+              <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5 ml-1">Full Name</label>
+              <input
+                class="w-full bg-surface-container-highest border-none rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
+                name="full_name" placeholder="Surname, Given Name, Middle Initial" required type="text" />
             </div>
             <div>
               <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5 ml-1">Date of Birth</label>
@@ -307,8 +293,7 @@
               </div>
             </div>
             <div>
-              <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5 ml-1">Civil
-                Status</label>
+              <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5 ml-1">Civil Status</label>
               <div class="relative">
                 <div
                   class="w-full bg-surface-container-highest border-none rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 cursor-pointer flex items-center justify-between"
@@ -355,7 +340,7 @@
           </div>
         </section>
         <!-- Section 3: PhilHealth -->
-        <section id="section3">
+        <section>
           <div class="flex items-center gap-2 mb-6">
             <div class="w-1 h-5 bg-primary rounded-full"></div>
             <h2 class="text-sm font-bold uppercase tracking-widest text-on-surface">Step 3: PhilHealth Coverage</h2>
@@ -369,28 +354,28 @@
                   <span class="text-sm">Yes</span>
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer">
-                  <input class="text-primary focus:ring-0" name="philhealth_member" type="radio" value="no" />
+                  <input checked class="text-primary focus:ring-0" name="philhealth_member" type="radio" value="no" />
                   <span class="text-sm">No</span>
                 </label>
               </div>
             </div>
-            <div class="grid grid-cols-2 gap-4 hidden" id="philhealthDetails">
+            <div class="grid grid-cols-2 gap-4">
               <div class="col-span-2 md:col-span-1">
                 <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5">Member Full
                   Name</label>
                 <input class="w-full bg-surface-container-lowest border-none rounded-lg p-3 text-sm"
-                  id="philhealthMemberNameInput" name="philhealth_member_name" type="text" />
+                  name="philhealth_member_name" type="text" />
               </div>
               <div class="col-span-2 md:col-span-1">
                 <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5">Member DOB</label>
                 <input class="w-full bg-surface-container-lowest border-none rounded-lg p-3 text-sm"
-                  id="philhealthMemberDobInput" name="philhealth_member_dob" type="date" />
+                  name="philhealth_member_dob" type="date" />
               </div>
             </div>
           </div>
         </section>
         <!-- Section 4: Medical History -->
-        <section id="section4">
+        <section>
           <div class="flex items-center gap-2 mb-6">
             <div class="w-1 h-5 bg-primary rounded-full"></div>
             <h2 class="text-sm font-bold uppercase tracking-widest text-on-surface">Step 4: Medical History</h2>
@@ -402,7 +387,6 @@
               <textarea
                 class="w-full bg-surface-container-highest border-none rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
                 name="current_illnesses"
-                id="currentIllnessesInput"
                 placeholder="Please list any ongoing health conditions or medications you are currently taking..."
                 rows="3"></textarea>
             </div>
@@ -509,88 +493,6 @@
       }
     });
 
-    // Interactive progress indicator: a step gets checked off once its
-    // completing action happens (e.g. picking a priority option), or as soon
-    // as the user moves on to the next step's first field.
-    const totalSteps = 4;
-    const stepDone = { 1: false, 2: false, 3: false, 4: false };
-
-    const ACTIVE_CIRCLE = 'w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold shadow-lg shadow-primary/20 transition-all';
-    const DONE_CIRCLE = 'w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold transition-all';
-    const UPCOMING_CIRCLE = 'w-8 h-8 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center text-xs font-bold transition-all';
-
-    function setStepState(stepNum, state) {
-      const circle = document.getElementById(`stepCircle-${stepNum}`);
-      const label = document.getElementById(`stepLabel-${stepNum}`);
-      const line = document.getElementById(`stepLine-${stepNum}`);
-
-      if (state === 'done') {
-        circle.className = DONE_CIRCLE;
-        circle.innerHTML = '<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: \'FILL\' 1;">check</span>';
-        label.className = 'text-[10px] uppercase font-bold tracking-tighter text-primary transition-colors';
-        if (line) line.className = 'flex-1 h-[2px] bg-primary/40 mx-1 -mt-6 transition-colors';
-      } else if (state === 'active') {
-        circle.className = ACTIVE_CIRCLE;
-        circle.textContent = stepNum;
-        label.className = 'text-[10px] uppercase font-bold tracking-tighter text-primary transition-colors';
-      } else {
-        circle.className = UPCOMING_CIRCLE;
-        circle.textContent = stepNum;
-        label.className = 'text-[10px] uppercase font-bold tracking-tighter text-on-surface-variant transition-colors';
-      }
-    }
-
-    // Mark a step done, and make the next not-yet-done step the active one
-    function markStepDone(stepNum) {
-      if (stepDone[stepNum]) return;
-      stepDone[stepNum] = true;
-      setStepState(stepNum, 'done');
-
-      const nextStep = stepNum + 1;
-      if (nextStep <= totalSteps && !stepDone[nextStep]) {
-        setStepState(nextStep, 'active');
-      }
-    }
-
-    // Focusing into a step's field also marks it active (in case it isn't already)
-    function markStepActive(stepNum) {
-      if (!stepDone[stepNum]) {
-        setStepState(stepNum, 'active');
-      }
-    }
-
-    // Full Name split: Surname, Given Name, Middle Initial -> combined into one hidden field
-    const surnameInput = document.getElementById('surnameInput');
-    const givenNameInput = document.getElementById('givenNameInput');
-    const middleInitialInput = document.getElementById('middleInitialInput');
-    const fullNameHidden = document.getElementById('fullNameHidden');
-
-    function updateFullNameHidden() {
-      const surname = surnameInput.value.trim();
-      const given = givenNameInput.value.trim();
-      const mi = middleInitialInput.value.trim();
-
-      const parts = [surname, given].filter(Boolean);
-      let combined = parts.join(', ');
-      if (mi) {
-        combined += (combined ? ', ' : '') + mi;
-      }
-      fullNameHidden.value = combined;
-    }
-
-    // Middle initial: only ever a single letter followed by a period, max 2 characters
-    middleInitialInput.addEventListener('input', function () {
-      const letter = this.value.replace(/[^a-zA-Z]/g, '').charAt(0);
-      this.value = letter ? letter.toUpperCase() + '.' : '';
-      updateFullNameHidden();
-    });
-
-    surnameInput.addEventListener('input', updateFullNameHidden);
-    givenNameInput.addEventListener('input', updateFullNameHidden);
-
-    // Safety net: make sure full_name is synced even if autofill skipped the input events
-    document.querySelector('form').addEventListener('submit', updateFullNameHidden);
-
     // Sex and Civil Status custom dropdowns (same pattern as barangay dropdown)
     function setupSimpleDropdown(displayId, displayTextId, hiddenInputId, dropdownId, options, fieldLabel) {
       const display = document.getElementById(displayId);
@@ -651,18 +553,9 @@
       { value: 'separated', label: 'Separated' },
     ], 'Civil Status');
 
-    function validatePhilhealthSelected() {
-      const selected = document.querySelector('input[name="philhealth_member"]:checked');
-      if (!selected) {
-        alert('Please select whether you are a PhilHealth Member (Yes or No).');
-        return false;
-      }
-      return true;
-    }
-
-    // Guard on submit: Sex, Civil Status, and PhilHealth selection must be picked
+    // Guard on submit: Sex and Civil Status must be picked (hidden inputs can't use native 'required')
     document.querySelector('form').addEventListener('submit', function (e) {
-      if (!validateSex() || !validateCivilStatus() || !validatePhilhealthSelected()) {
+      if (!validateSex() || !validateCivilStatus()) {
         e.preventDefault();
       }
     });
@@ -728,50 +621,8 @@
         // 2. Add the blue highlight to the CLICKED card
         this.classList.remove('border-surface-container-high');
         this.classList.add('border-primary', 'bg-primary/5', 'ring-2', 'ring-primary/20');
-
-        // Step 1 is done once a priority option is picked
-        markStepDone(1);
       });
     });
-
-    // Focusing the first field of the next step also completes the step before it
-    const bhwReferralInput = document.getElementById('bhwReferralInput');
-    if (bhwReferralInput) {
-      bhwReferralInput.addEventListener('focus', function () {
-        markStepDone(1);
-        markStepActive(2);
-      });
-    }
-
-    const philhealthRadios = document.querySelectorAll('input[name="philhealth_member"]');
-    const philhealthDetails = document.getElementById('philhealthDetails');
-    const philhealthMemberNameInput = document.getElementById('philhealthMemberNameInput');
-    const philhealthMemberDobInput = document.getElementById('philhealthMemberDobInput');
-
-    philhealthRadios.forEach(radio => {
-      radio.addEventListener('focus', function () {
-        markStepDone(2);
-        markStepActive(3);
-      });
-
-      radio.addEventListener('change', function () {
-        if (this.value === 'yes') {
-          philhealthDetails.classList.remove('hidden');
-        } else {
-          philhealthDetails.classList.add('hidden');
-          philhealthMemberNameInput.value = '';
-          philhealthMemberDobInput.value = '';
-        }
-      });
-    });
-
-    const currentIllnessesInput = document.getElementById('currentIllnessesInput');
-    if (currentIllnessesInput) {
-      currentIllnessesInput.addEventListener('focus', function () {
-        markStepDone(3);
-        markStepActive(4);
-      });
-    }
   </script>
 </body>
 

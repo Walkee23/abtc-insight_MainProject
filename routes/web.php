@@ -1,10 +1,12 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PatientController;
 use Illuminate\Http\Request;
+use App\Http\Controllers\BhwController;
+use App\Http\Controllers\PatientController;
+
 
 Route::get('/', function () {
     return view('welcome_portal');
@@ -191,3 +193,41 @@ Route::prefix('patient')->group(function () {
     // 7. Returning Patient — handle the returning patient form submission
     Route::post('/submit-registration', [PatientController::class, 'storeReturning'])->name('patient.submit.returning');
 });
+Route::get('/bhw/dashboard', [App\Http\Controllers\BhwController::class, 'dashboard'])->name('bhw.dashboard');
+
+Route::get('bhw/referral', function () {
+    return view('bhw.referral_form');
+})->name('bhw.referral');
+
+// Add this line for the referral form submission
+Route::post('/bhw/referral/store', [BhwController::class, 'storeReferral'])->name('bhw.store');
+
+Route::get('/bhw/referral/{id}/print', [App\Http\Controllers\BhwController::class, 'printReferral'])->name('bhw.print');
+
+Route::get('/patient/register', function () {
+    return view('patient.Patient_Registration_Dashboard');
+})->name('patient.register');
+
+Route::get('/patient/New_patient', function () {
+    return view('patient.New_Record_Registration');
+})->name('patient.new-patient');
+
+Route::get('/patient/Returning_Patient', function () {
+    return view('patient.Returning_Patient_Registration');
+})->name('patient.returning-patient');
+
+Route::get('/patient/tracking-portal', function () {
+    return view('patient.Tracking_Portal');
+})->name('patient.tracking.portal');
+
+// Routes to show the success pages
+Route::get('/patient/queue/normal', function () {
+    return view('patient.NQ_confirmation');
+})->name('patient.queue.normal');
+
+Route::get('/patient/queue/priority', function () {
+    return view('patient.PQ_confirmation');
+})->name('patient.queue.priority');
+
+// Route to handle the form submission using the controller
+Route::post('/patient/submit-registration', [PatientController::class, 'registerPatient'])->name('patient.submit');

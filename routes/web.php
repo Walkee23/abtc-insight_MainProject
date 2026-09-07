@@ -91,9 +91,7 @@ Route::prefix('healthworker')->group(function () {
     })->name('healthworker.compliance');
 });
 
-Route::get('/bhw/dashboard', function () {
-    return view('bhw.dashboard');
-})->name('bhw.dashboard');
+Route::get('/bhw/dashboard', [App\Http\Controllers\BhwController::class, 'dashboard'])->name('bhw.dashboard');
 
 Route::get('bhw/referral', function () {
     return view('bhw.referral_form');
@@ -102,6 +100,7 @@ Route::get('bhw/referral', function () {
 // Add this line for the referral form submission
 Route::post('/bhw/referral/store', [BhwController::class, 'storeReferral'])->name('bhw.store');
 
+Route::get('/bhw/referral/{id}/print', [App\Http\Controllers\BhwController::class, 'printReferral'])->name('bhw.print');
 
 Route::get('/patient/register', function () {
     return view('patient.Patient_Registration_Dashboard');

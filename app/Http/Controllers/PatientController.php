@@ -28,8 +28,7 @@ class PatientController extends Controller
         ]);
     }
 
-    // Save the returning patient's new inflow record
-    public function storeReturning(Request $request)
+       public function storeReturning(Request $request)
     {
         $validated = $request->validate([
             'patient_id'         => 'required|string',
@@ -47,12 +46,21 @@ class PatientController extends Controller
             return back()->withErrors(['patient_id' => 'Patient record not found.']);
         }
 
-        // Generate a simple queue ID (you can adjust the format later)
-        $queueId = 'Q-' . strtoupper(substr(uniqid(), -6));
+        // Use the SAME queue numbering logic as the New Patient walk-in flow,
+        // so both forms share one continuous N/P sequence per day.
+        $isPriority = ($validated['priority_status'] ?? 'none') !== 'none';
+        $prefix = $isPriority ? 'P' : 'N';
+        $queueDate = now()->toDateString();
+
+        $countToday = DB::table('inflow_general_particulars')
+            ->where('queue_date', $queueDate)
+            ->where('queue_id', 'LIKE', $prefix . '%')
+            ->count();
+        $queueId = $prefix . ($countToday + 1);
 
         DB::table('inflow_general_particulars')->insert([
             'queue_id'          => $queueId,
-            'queue_date'        => now()->toDateString(),
+            'queue_date'        => $queueDate,
             'id_number'         => $patient->id_number,
             'patient_name'      => $patient->patient_name,
             'age'               => $patient->age,
@@ -66,13 +74,8 @@ class PatientController extends Controller
             'status'            => 'Pending',
         ]);
 
-        // Redirect based on priority, same logic as before
-        $priority = $validated['priority_status'] ?? 'none';
-
-        if ($priority === 'none' || empty($priority)) {
-            return redirect()->route('patient.queue.normal');
-        } else {
-            return redirect()->route('patient.queue.priority');
-        }
+        return $isPriority
+            ? view('patient.PQ_confirmation', ['queueNumber' => $queueId])
+            : view('patient.NQ_confirmation', ['queueNumber' => $queueId]);
     }
 }

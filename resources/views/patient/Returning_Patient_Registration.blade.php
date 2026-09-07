@@ -172,7 +172,7 @@
           </div>
         </div>
 
-        <form action="{{ route('patient.submit') }}" method="POST">
+        <form action="{{ route('patient.submit.returning') }}" method="POST">
           @csrf
           <input type="hidden" name="priority_status" id="priorityInput" value="none">
           <input type="hidden" name="patient_id" id="patientIdInput" value="">

@@ -8,6 +8,28 @@ use Carbon\Carbon;
 
 class BhwController extends Controller
 {
+    public function dashboard()
+    {
+        // 1. Get the currently logged-in BHW ID
+        $userId = auth()->id();
+
+        // 2. Count the metrics for the cards
+        $totalSubmissions = DB::table('bhw_referral_info')->where('bhw_user_id', $userId)->count();
+        $pending = DB::table('bhw_referral_info')->where('bhw_user_id', $userId)->where('status', 'Pending')->count();
+        $received = DB::table('bhw_referral_info')->where('bhw_user_id', $userId)->where('status', 'Received')->count();
+        $completed = DB::table('bhw_referral_info')->where('bhw_user_id', $userId)->where('status', 'Completed')->count();
+
+        // 3. Get the list of referrals and join with exposure table to get the exposure type
+        $referrals = DB::table('bhw_referral_info')
+            ->leftJoin('bhw_referral_exposure', 'bhw_referral_info.referral_id', '=', 'bhw_referral_exposure.referral_id')
+            ->where('bhw_user_id', $userId)
+            ->orderBy('bhw_referral_info.submitted_at', 'desc')
+            ->get();
+
+        // 4. Send the data to the view
+        return view('bhw.dashboard', compact('totalSubmissions', 'pending', 'received', 'completed', 'referrals'));
+    }
+
     public function storeReferral(Request $request)
     {
         $barangayName = $request->input('patient_barangay');
@@ -70,4 +92,25 @@ class BhwController extends Controller
         // Redirect back with a success message
         return back()->with('success', 'Referral created successfully! Your code is: ' . $referenceNo);
     }
+
+    
+
+    public function printReferral($id)
+    {
+        // Fetch the referral and join the vitals and exposure tables
+        $referral = DB::table('bhw_referral_info')
+            ->leftJoin('bhw_referral_vitals', 'bhw_referral_info.referral_id', '=', 'bhw_referral_vitals.referral_id')
+            ->leftJoin('bhw_referral_exposure', 'bhw_referral_info.referral_id', '=', 'bhw_referral_exposure.referral_id')
+            ->where('bhw_referral_info.referral_id', $id)
+            ->where('bhw_referral_info.bhw_user_id', auth()->id()) // Ensure they own it
+            ->first();
+
+        if (!$referral) {
+            return redirect()->route('bhw.dashboard')->with('error', 'Referral not found.');
+        }
+
+        return view('bhw.print_referral', compact('referral'));
+    }
 }
+
+ 

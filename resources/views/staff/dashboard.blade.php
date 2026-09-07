@@ -142,10 +142,10 @@
             </div>
             <div class="flex items-center gap-4">
                 <!-- Status/Live indicator moved or kept subtle -->
-                <button class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold shadow-sm hover:shadow-md hover:bg-primary/90 transition-all active:scale-95 mr-2">
+                <a href="{{ route('patient.new-patient') }}" class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold shadow-sm hover:shadow-md hover:bg-primary/90 transition-all active:scale-95 mr-2">
                     <span class="material-symbols-outlined text-[20px]" data-icon="person_add">person_add</span>
                     <span>Register New Patient</span>
-                </button>
+                </a>
                 <div class="hidden lg:flex items-center gap-2 px-3 py-1 bg-green-50 text-green-700 rounded-full text-[10px] font-bold uppercase tracking-wider">
                     <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
                     12 Active

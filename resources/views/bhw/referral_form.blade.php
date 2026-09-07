@@ -89,59 +89,64 @@
     </style>
 </head>
 <body class="text-on-surface">
-  <!-- Sidebar Navigation -->
-    <aside class="h-screen w-64 fixed left-0 top-0 overflow-y-auto bg-surface-container-low flex flex-col py-8 z-50 border-r border-outline-variant/10">
-        <div class="px-6 mb-8 flex items-center gap-3">
-            <div class="w-10 h-10 bg-primary-container rounded-xl flex items-center justify-center text-white shadow-md">
-                <span class="material-symbols-outlined" data-icon="shield">shield</span>
-            </div>
-            <div>
-                <h1 class="text-xl font-bold tracking-tight text-primary">ABTC-Insight</h1>
-            </div>
-        </div>
-        <nav class="flex-1 space-y-1">
-            <a class="flex items-center gap-3 px-6 py-4 text-on-surface-variant hover:bg-surface-container-highest transition-all" href="{{ route('bhw.dashboard') }}">
-                <span class="material-symbols-outlined">assignment_turned_in</span>
-                <span class="text-sm font-medium">My Referrals</span>
-            </a>
-            <a class="flex items-center gap-3 px-6 py-4 text-primary font-bold bg-primary/10 border-r-4 border-primary transition-all" href="#">
-                <span class="material-symbols-outlined font-variation-settings-fill">add_circle</span>
-                <span class="text-sm">Create New Referral</span>
-                </a>
-            </nav>
-        </div>
-    </aside>
+<!-- Sidebar Navigation -->
+<aside class="h-screen w-64 fixed left-0 top-0 overflow-y-auto bg-surface-container-low flex flex-col py-8 z-50 border-r border-outline-variant/10">
+<div class="px-6 mb-8 flex items-center gap-3">
+<div class="w-10 h-10 bg-primary-container rounded-xl flex items-center justify-center text-white shadow-md">
+<span class="material-symbols-outlined" data-icon="shield">shield</span>
+</div>
+<div>
+<h1 class="text-xl font-bold tracking-tight text-primary">ABTC-Insight</h1>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-6 py-4 text-on-surface-variant hover:bg-surface-container-highest transition-all" href="{{ route('bhw.dashboard') }}">
+<span class="material-symbols-outlined">assignment_turned_in</span>
+<span class="text-sm font-medium">My Referrals</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3.5 text-primary font-bold bg-primary/5 border-l-4 border-primary transition-all" href="#">
+<span class="material-symbols-outlined font-variation-settings-fill">add_circle</span>
+<span class="text-sm">Create New Referral</span>
+</a>
+</nav>
+<div class="mt-auto px-4 pb-4">
+<a href="{{ route('bhw.dashboard') }}" class="w-full py-4 bg-primary text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:bg-primary-container transition-all">
+<span class="material-symbols-outlined">arrow_back</span>
+<span class="text-sm">Back to Referrals</span>
+</a>
+</div>
+</aside>
 
-    <!-- Top App Bar -->
-    <header class="fixed top-0 right-0 w-[calc(100%-16rem)] z-40 bg-surface-bright/85 backdrop-blur-xl border-b border-outline-variant/10 flex justify-between items-center h-20 px-8 shadow-sm">
-        <div class="flex items-center gap-4">
-            <div class="relative">
-                <span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400">search</span>
-                <input class="pl-12 pr-6 py-2.5 bg-slate-100 border-none rounded-full text-sm focus:ring-2 focus:ring-primary/20 w-96 transition-all" placeholder="Search referrals, patients..." type="text"/>
-            </div>
-        </div>
-        <div class="flex items-center gap-8">
-            <div class="flex items-center gap-2">
-                <button class="p-2 text-slate-400 hover:text-primary transition-colors">
-                    <span class="material-symbols-outlined">help</span>
-                </button>
-                <button class="p-2 text-slate-400 hover:text-primary transition-colors relative">
-                    <span class="material-symbols-outlined">notifications</span>
-                    <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-                </button>
-            </div>
-            <div class="h-8 w-px bg-slate-200"></div>
-            <div class="flex items-center gap-4">
-                <div class="text-right">
-                    <p class="text-sm font-bold text-slate-900">{{ auth()->user()->full_name ?? 'Maria Santos' }}</p>
-                    <p class="text-xs font-medium text-slate-500">BHW - {{ auth()->user()->barangay_assignment ?? 'Guadalupe' }}</p>
-                </div>
-                <div class="w-10 h-10 rounded-full bg-primary/10 border-2 border-white overflow-hidden shadow-sm">
-                    <img alt="User Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA8qvDV4dnbcoh8b4wEmWnL4jHIhPAzh0g6mS9cPqml8C2faIENYr7AA6MrWbeIhv7N3hxbsu9b16h_l6SmZnD2HYvqzz4vrHs766G_9JtppNHqJkzqXj7e5c4fgN8VUEB2fFhQDkEB2_uek3RldeGw61qJYdq_6bh17_Cp2bYJzyfGc2LKzsd0LcquIWrBLIsKZ2WeoG6ED9Ma3QxTkwWPrJZk4CfPTSaFtb1pmRJncjMncS19eeSwYdpBwUpP-czxD1ujkjn4V4IN"/>
-                </div>
-            </div>
-        </div>
-    </header>
+<!-- Top App Bar -->
+<header class="fixed top-0 right-0 w-[calc(100%-16rem)] z-40 bg-surface-bright/85 backdrop-blur-xl border-b border-outline-variant/10 flex justify-between items-center h-20 px-8 shadow-sm">
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400">search</span>
+<input class="pl-12 pr-6 py-2.5 bg-slate-100 border-none rounded-full text-sm focus:ring-2 focus:ring-primary/20 w-96 transition-all" placeholder="Search referrals, patients..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-2">
+<button class="p-2 text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">help</span>
+</button>
+<button class="p-2 text-slate-400 hover:text-primary transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+</button>
+</div>
+<div class="h-8 w-px bg-slate-200"></div>
+<div class="flex items-center gap-4">
+<div class="text-right">
+<p class="text-sm font-bold text-slate-900">{{ auth()->user()->full_name ?? 'Maria Santos' }}</p>
+<p class="text-xs font-medium text-slate-500">BHW - {{ auth()->user()->barangay_assignment ?? 'Guadalupe' }}</p>
+</div>
+<div class="w-10 h-10 rounded-full bg-primary/10 border-2 border-white overflow-hidden shadow-sm">
+<img alt="User Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA8qvDV4dnbcoh8b4wEmWnL4jHIhPAzh0g6mS9cPqml8C2faIENYr7AA6MrWbeIhv7N3hxbsu9b16h_l6SmZnD2HYvqzz4vrHs766G_9JtppNHqJkzqXj7e5c4fgN8VUEB2fFhQDkEB2_uek3RldeGw61qJYdq_6bh17_Cp2bYJzyfGc2LKzsd0LcquIWrBLIsKZ2WeoG6ED9Ma3QxTkwWPrJZk4CfPTSaFtb1pmRJncjMncS19eeSwYdpBwUpP-czxD1ujkjn4V4IN"/>
+</div>
+</div>
+</div>
+</header>
 
     <!-- Main Content Canvas -->
     <main class="pt-24 pb-20 px-12 min-h-screen bg-surface ml-64">

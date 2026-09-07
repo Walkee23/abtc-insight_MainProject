@@ -369,7 +369,7 @@
                   <span class="text-sm">Yes</span>
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer">
-                  <input checked class="text-primary focus:ring-0" name="philhealth_member" type="radio" value="no" />
+                  <input class="text-primary focus:ring-0" name="philhealth_member" type="radio" value="no" />
                   <span class="text-sm">No</span>
                 </label>
               </div>
@@ -651,9 +651,18 @@
       { value: 'separated', label: 'Separated' },
     ], 'Civil Status');
 
-    // Guard on submit: Sex and Civil Status must be picked (hidden inputs can't use native 'required')
+    function validatePhilhealthSelected() {
+      const selected = document.querySelector('input[name="philhealth_member"]:checked');
+      if (!selected) {
+        alert('Please select whether you are a PhilHealth Member (Yes or No).');
+        return false;
+      }
+      return true;
+    }
+
+    // Guard on submit: Sex, Civil Status, and PhilHealth selection must be picked
     document.querySelector('form').addEventListener('submit', function (e) {
-      if (!validateSex() || !validateCivilStatus()) {
+      if (!validateSex() || !validateCivilStatus() || !validatePhilhealthSelected()) {
         e.preventDefault();
       }
     });

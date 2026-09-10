@@ -101,6 +101,7 @@
 <span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
 <span class="text-sm font-medium font-['Inter']">Dashboard</span>
 </a>
+
 <!-- Clinical Encoding -->
 <a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:translate-x-1 hover:text-blue-600 dark:hover:text-blue-300 transition-all duration-300 ease-out" href="#">
 <span class="material-symbols-outlined" data-icon="medical_services">medical_services</span>
@@ -137,10 +138,16 @@
 </div>
 <!-- Search Bar -->
 <div class="flex items-center flex-1 max-w-md ml-12">
-<div class="relative w-full group">
-<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm group-focus-within:text-blue-700 transition-colors">search</span>
-<input class="w-full bg-slate-100 dark:bg-slate-800/50 border-none rounded-full py-2 pl-9 pr-4 text-xs focus:ring-2 focus:ring-blue-700/20 placeholder:text-slate-400 font-['Inter']" placeholder="Search for patients..." type="text"/>
-</div>
+    <div class="relative w-full group">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm group-focus-within:text-blue-700 transition-colors">search</span>
+        <input 
+            id="patientSearchInput"
+            class="w-full bg-slate-100 dark:bg-slate-800/50 border-none rounded-full py-2 pl-9 pr-4 text-xs focus:ring-2 focus:ring-blue-700/20 placeholder:text-slate-400 font-['Inter']" 
+            placeholder="Search for patients..." 
+            type="text"
+            autocomplete="off"
+        />
+    </div>
 </div>
 <!-- Right Side Actions (Notifications, Help, Vertical Divider, Profile) -->
 <div class="flex items-center gap-4">
@@ -152,44 +159,13 @@
 <span class="material-symbols-outlined" data-icon="help">help</span>
 </button>
 <div class="h-8 w-[1px] bg-slate-200 dark:bg-slate-800 mx-2"></div>
-
-<!-- User Profile Section with Dropdown (Identical to Admin Dashboard) -->
-<div class="relative group cursor-pointer pl-4 border-l border-slate-200 dark:border-slate-800">
-    <div class="flex items-center gap-3">
-        <div class="text-right hidden lg:block">
-            <p class="text-xs font-bold text-slate-900 dark:text-slate-100">
-                {{ Auth::user()->name ?? (Auth::user()->full_name ?? 'Dr. Elena Santos') }}
-            </p>
-            <p class="text-[10px] text-slate-500 font-medium">
-                {{ Auth::user()->role ?? 'Senior Health Worker' }}
-            </p>
-        </div>
-        <div class="w-9 h-9 rounded-full overflow-hidden ring-2 ring-slate-100 border border-slate-200">
-            <img alt="Health Worker Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAzuEzGuKhuDJKI44bu6U1YzFdI7z5disX1FjUVLwgq07xpkF1vi2q1RQg1lWnbbzx-97qaEaUE0wHwrsBEDnQdIf8whoLOPKyx4AYqvvB-lfqq-SS3OBugICvjWAE_JcAHe0Vi0CwgldGbMzdKqqq-JDxrvKkK7FcZlxsnNKgOhrLZQUJ0ev2rjCkC13g53yP7Tgqv7JJmgsQFbx1nOvxapzia3kkgWKs_FBVNJ7u5msUyUkju3OqnpM2i3ofnQDyojEEc-LEA3xlD" />
-        </div>
-    </div>
-
-    <!-- Hover Dropdown Menu -->
-    <div class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-        <div class="p-2">
-            <a href="#" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary rounded-lg transition-colors">
-                <span class="material-symbols-outlined text-[18px]">person</span>
-                My Profile
-            </a>
-            <div class="h-px bg-slate-100 my-1"></div>
-
-            <!-- Secure Logout Form -->
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors text-left cursor-pointer">
-                    <span class="material-symbols-outlined text-[18px]">logout</span>
-                    Log Out
-                </button>
-            </form>
-        </div>
-    </div>
+<div class="flex items-center gap-3 cursor-pointer group">
+<div class="text-right hidden lg:block">
+<p class="text-xs font-bold text-on-surface leading-tight font-['Inter']">Dr. Elena Santos</p>
+<p class="text-[10px] text-on-surface-variant font-['Inter']">Senior Health Worker</p>
 </div>
-
+<img alt="Health Worker Profile" class="w-9 h-9 rounded-full object-cover ring-2 ring-primary/10 group-hover:ring-primary/30 transition-all" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAzuEzGuKhuDJKI44bu6U1YzFdI7z5disX1FjUVLwgq07xpkF1vi2q1RQg1lWnbbzx-97qaEaUE0wHwrsBEDnQdIf8whoLOPKyx4AYqvvB-lfqq-SS3OBugICvjWAE_JcAHe0Vi0CwgldGbMzdKqqq-JDxrvKkK7FcZlxsnNKgOhrLZQUJ0ev2rjCkC13g53yP7Tgqv7JJmgsQFbx1nOvxapzia3kkgWKs_FBVNJ7u5msUyUkju3OqnpM2i3ofnQDyojEEc-LEA3xlD"/>
+</div>
 </div>
 </div>
 </header>
@@ -202,56 +178,76 @@
 </header>
 <!-- Stats Bento Grid -->
 <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+
 <!-- Stat Card 1 -->
+<!-- Pending Section-->
 <div class="bg-surface-container-lowest p-6 rounded-xl relative overflow-hidden group hover:bg-surface-bright transition-all duration-300">
-<div class="flex items-start justify-between mb-4">
-<div class="p-2 bg-blue-50 rounded-lg text-primary">
-<span class="material-symbols-outlined" data-icon="pending_actions">pending_actions</span>
+    <div class="flex items-start justify-between mb-4">
+        <div class="p-2 bg-blue-50 rounded-lg text-primary">
+            <span class="material-symbols-outlined" data-icon="pending_actions">pending_actions</span>
+        </div>
+        <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Encoding Phase</span>
+    </div>
+    <h3 class="text-label-md text-on-surface-variant mb-1">Pending Section VI-IX Encoding</h3>
+    <div class="flex items-baseline gap-2">
+        <!-- Dynamic Count -->
+        <span class="text-4xl font-extrabold tracking-tighter text-on-surface">
+            {{ $pendingEncodingCount }}
+        </span>
+        <span class="text-xs font-semibold text-error px-2 py-0.5 bg-error-container/30 rounded-full">High Priority</span>
+    </div>
+    <div class="absolute -bottom-4 -right-4 opacity-5 group-hover:opacity-10 transition-opacity">
+        <span class="material-symbols-outlined text-8xl" data-icon="clinical_notes">clinical_notes</span>
+    </div>
 </div>
-<span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Encoding Phase</span>
-</div>
-<h3 class="text-label-md text-on-surface-variant mb-1">Pending Section VI-IX Encoding</h3>
-<div class="flex items-baseline gap-2">
-<span class="text-4xl font-extrabold tracking-tighter text-on-surface">24</span>
-<span class="text-xs font-semibold text-error px-2 py-0.5 bg-error-container/30 rounded-full">High Priority</span>
-</div>
-<div class="absolute -bottom-4 -right-4 opacity-5 group-hover:opacity-10 transition-opacity">
-<span class="material-symbols-outlined text-8xl" data-icon="clinical_notes">clinical_notes</span>
-</div>
-</div>
-<!-- Stat Card 2 -->
+
+<!-- for Status Card 2 -->
+<!-- Active PEP series  -->
+
 <div class="bg-surface-container-lowest p-6 rounded-xl relative overflow-hidden group hover:bg-surface-bright transition-all duration-300">
-<div class="flex items-start justify-between mb-4">
-<div class="p-2 bg-orange-50 rounded-lg text-tertiary">
-<span class="material-symbols-outlined" data-icon="vaccines">vaccines</span>
+    <div class="flex items-start justify-between mb-4">
+        <div class="p-2 bg-orange-50 rounded-lg text-tertiary">
+            <span class="material-symbols-outlined" data-icon="vaccines">vaccines</span>
+        </div>
+        <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Active Cases</span>
+    </div>
+    <h3 class="text-label-md text-on-surface-variant mb-1">Active PEP Series</h3>
+    <div class="flex items-baseline gap-2">
+        <!-- Dynamic Count -->
+        <span class="text-4xl font-extrabold tracking-tighter text-on-surface">
+            {{ $activePepCount }}
+        </span>
+        <span class="text-xs font-semibold text-secondary-container text-on-secondary-container px-2 py-0.5 bg-secondary-container/20 rounded-full">
+            +{{ $todayActiveCount }} Today
+        </span>
+    </div>
+    <div class="absolute -bottom-4 -right-4 opacity-5 group-hover:opacity-10 transition-opacity">
+        <span class="material-symbols-outlined text-8xl" data-icon="monitoring">monitoring</span>
+    </div>
 </div>
-<span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Active Cases</span>
-</div>
-<h3 class="text-label-md text-on-surface-variant mb-1">Active PEP Series</h3>
-<div class="flex items-baseline gap-2">
-<span class="text-4xl font-extrabold tracking-tighter text-on-surface">142</span>
-<span class="text-xs font-semibold text-secondary-container text-on-secondary-container px-2 py-0.5 bg-secondary-container/20 rounded-full">+12 Today</span>
-</div>
-<div class="absolute -bottom-4 -right-4 opacity-5 group-hover:opacity-10 transition-opacity">
-<span class="material-symbols-outlined text-8xl" data-icon="monitoring">monitoring</span>
-</div>
-</div>
-<!-- Stat Card 3 -->
+
+<!-- Stat Card 3: Validation Hub -->
 <div class="bg-primary p-6 rounded-xl relative overflow-hidden group shadow-lg shadow-blue-900/10 transition-all duration-300">
-<div class="flex items-start justify-between mb-4 text-primary-container">
-<div class="p-2 bg-white/10 rounded-lg">
-<span class="material-symbols-outlined" data-icon="verified_user" style="font-variation-settings: 'FILL' 1;">verified_user</span>
-</div>
-<span class="text-[10px] font-bold uppercase tracking-widest text-primary-fixed-dim">Validation Hub</span>
-</div>
-<h3 class="text-label-md text-white/80 mb-1">Today's Verified Cases</h3>
-<div class="flex items-baseline gap-2">
-<span class="text-4xl font-extrabold tracking-tighter text-white">44</span>
-<span class="text-xs font-semibold text-primary-fixed bg-white/10 px-2 py-0.5 rounded-full">92% Compliance</span>
-</div>
-<div class="absolute -bottom-4 -right-4 opacity-10 group-hover:opacity-20 transition-opacity text-white">
-<span class="material-symbols-outlined text-8xl" data-icon="check_circle">check_circle</span>
-</div>
+    <div class="flex items-start justify-between mb-4 text-primary-container">
+        <div class="p-2 bg-white/10 rounded-lg">
+            <span class="material-symbols-outlined" data-icon="verified_user" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+        </div>
+        <span class="text-[10px] font-bold uppercase tracking-widest text-primary-fixed-dim">Validation Hub</span>
+    </div>
+    <h3 class="text-label-md text-white/80 mb-1">Today's Verified Cases</h3>
+    <div class="flex items-baseline gap-2">
+        <!-- Dynamic Verified Count -->
+        <span class="text-4xl font-extrabold tracking-tighter text-white">
+            {{ $verifiedTodayCount }}
+        </span>
+        <!-- Dynamic Compliance Rate -->
+        <span class="text-xs font-semibold text-primary-fixed bg-white/10 px-2 py-0.5 rounded-full">
+            {{ $complianceRate }}% Compliance
+        </span>
+    </div>
+    <div class="absolute -bottom-4 -right-4 opacity-10 group-hover:opacity-20 transition-opacity text-white">
+        <span class="material-symbols-outlined text-8xl" data-icon="check_circle">check_circle</span>
+    </div>
 </div>
 </section>
 <!-- Main Content Layout -->
@@ -263,12 +259,25 @@
 <h2 class="text-xl font-bold tracking-tight text-on-surface">Priority Clinical Queue</h2>
 <p class="text-sm text-on-surface-variant">Patients awaiting Section VI-IX Clinical Encoding</p>
 </div>
-<div class="flex gap-2">
-<button class="px-4 py-2 text-sm font-semibold bg-surface-container-high text-on-surface-variant rounded-full hover:bg-surface-variant transition-colors">Filter</button>
-<button class="px-4 py-2 text-sm font-semibold bg-surface-container-high text-on-surface-variant rounded-full hover:bg-surface-variant transition-colors">Export</button>
+
+<div class="relative inline-block">
+    <select id="statusFilter" class="appearance-none px-4 py-2 pr-8 text-xs font-semibold bg-surface-container-high text-on-surface-variant rounded-full hover:bg-surface-variant border-none focus:ring-2 focus:ring-primary/20 cursor-pointer font-['Inter']">
+        <option value="all">All Status</option>
+        <option value="pending">Pending</option>
+        <option value="verified">Verified</option>
+    </select>
+    <span class="material-symbols-outlined pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
+        expand_more
+    </span>
 </div>
+<button id="exportQueueBtn" type="button" class="flex items-center gap-1 px-4 py-2 text-xs font-semibold bg-surface-container-high text-on-surface-variant rounded-full hover:bg-surface-variant transition-colors">
+    <span class="material-symbols-outlined text-[16px]">download</span>
+    Export CSV
+</button>
+
 </div>
 <div class="overflow-x-auto no-scrollbar">
+
 <table class="w-full text-left">
 <thead>
 <tr class="text-[11px] uppercase tracking-widest text-slate-400 font-bold border-b border-surface-container-low">
@@ -279,77 +288,62 @@
 <th class="pb-4 text-right pr-4">Action</th>
 </tr>
 </thead>
-<tbody class="divide-y divide-surface-container-low">
-<!-- Row 1 -->
-<tr class="group hover:bg-surface/50 transition-colors">
-<td class="py-5 pl-4">
-<span class="text-sm font-bold text-blue-700 bg-blue-50 px-3 py-1 rounded-lg">#0824</span>
-</td>
-<td class="py-5">
-<div>
-<p class="text-sm font-bold text-on-surface">Mateo Dela Cruz</p>
-<p class="text-[11px] text-on-surface-variant">ID: 294-ABTC-2023</p>
-</div>
-</td>
-<td class="py-5">
-<span class="text-xs font-medium text-slate-600 bg-slate-100 px-3 py-1 rounded-full">Returning Case #2</span>
-</td>
-<td class="py-5">
-<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-error-container text-on-error-container">
-<span class="w-1.5 h-1.5 rounded-full bg-error"></span> Urgent
-                                    </span>
-</td>
-<td class="py-5 text-right pr-4">
-<button class="text-xs font-bold text-primary hover:bg-primary/5 px-4 py-2 rounded-lg transition-colors border border-primary/10">Start Clinical Encoding</button>
-</td>
-</tr>
-<!-- Row 2 -->
-<tr class="group hover:bg-surface/50 transition-colors">
-<td class="py-5 pl-4">
-<span class="text-sm font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-lg">#0825</span>
-</td>
-<td class="py-5">
-<div>
-<p class="text-sm font-bold text-on-surface">Isabella Montenegro</p>
-<p class="text-[11px] text-on-surface-variant">ID: 882-ABTC-2023</p>
-</div>
-</td>
-<td class="py-5">
-<span class="text-xs font-medium text-slate-600 bg-slate-100 px-3 py-1 rounded-full">New Exposure</span>
-</td>
-<td class="py-5">
-<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-secondary-container text-on-secondary-container">
-<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> Standard
-                                    </span>
-</td>
-<td class="py-5 text-right pr-4">
-<button class="text-xs font-bold text-primary hover:bg-primary/5 px-4 py-2 rounded-lg transition-colors border border-primary/10">Start Clinical Encoding</button>
-</td>
-</tr>
-<!-- Row 3 -->
-<tr class="group hover:bg-surface/50 transition-colors">
-<td class="py-5 pl-4">
-<span class="text-sm font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-lg">#0826</span>
-</td>
-<td class="py-5">
-<div>
-<p class="text-sm font-bold text-on-surface">Ricardo Lopez</p>
-<p class="text-[11px] text-on-surface-variant">ID: 105-ABTC-2023</p>
-</div>
-</td>
-<td class="py-5">
-<span class="text-xs font-medium text-slate-600 bg-slate-100 px-3 py-1 rounded-full">Returning Case #1</span>
-</td>
-<td class="py-5">
-<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-secondary-container text-on-secondary-container">
-<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> Standard
-                                    </span>
-</td>
-<td class="py-5 text-right pr-4">
-<button class="text-xs font-bold text-primary hover:bg-primary/5 px-4 py-2 rounded-lg transition-colors border border-primary/10">Start Clinical Encoding</button>
-</td>
-</tr>
+
+<tbody id="patientQueueTableBody" class="divide-y divide-surface-container-low">
+    @forelse($priorityQueue as $patient)
+        <tr class="patient-row group hover:bg-surface/50 transition-colors">
+            <!-- Queue ID -->
+            <td class="py-5 pl-4">
+                <span class="text-sm font-bold text-blue-700 bg-blue-50 px-3 py-1 rounded-lg">
+                    #{{ $patient->queue_id }}
+                </span>
+            </td>
+            <!-- Patient Name & ID -->
+            <td class="py-5">
+                <div>
+                    <p class="text-sm font-bold text-on-surface patient-name">
+                        {{ $patient->patient_name }}
+                    </p>
+                    <p class="text-[11px] text-on-surface-variant patient-id">
+                        ID: {{ $patient->id_number }}
+                    </p>
+                </div>
+            </td>
+            <!-- Barangay -->
+            <td class="py-5">
+                <span class="text-xs font-medium text-slate-600 bg-slate-100 px-3 py-1 rounded-full">
+                    Brgy. {{ $patient->barangay }}
+                </span>
+            </td>
+            <!-- Status Badge -->
+            <td class="py-5">
+                @if($patient->status === 'Pending')
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-error-container text-on-error-container">
+                        <span class="w-1.5 h-1.5 rounded-full bg-error"></span> Pending
+                    </span>
+                @else
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-secondary-container text-on-secondary-container">
+                        <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> Verified
+                    </span>
+                @endif
+            </td>
+            <!-- Action Button -->
+            <td class="py-5 text-right pr-4">
+                <a href="{{ url('/clinical-encoding/' . $patient->inflow_record_id) }}" 
+                   class="text-xs font-bold text-primary hover:bg-primary/5 px-4 py-2 rounded-lg transition-colors border border-primary/10">
+                    Start Clinical Encoding
+                </a>
+            </td>
+        </tr>
+    @empty
+        <tr id="emptyQueueRow">
+            <td colspan="5" class="py-8 text-center text-sm text-slate-400">
+                No patients currently in the queue.
+            </td>
+        </tr>
+    @endforelse
 </tbody>
+
 </table>
 </div>
 </section>
@@ -423,4 +417,94 @@
 </section>
 </div>
 </main>
-</body></html>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const searchInput = document.getElementById('patientSearchInput');
+        const rows = document.querySelectorAll('#patientQueueTableBody tr.patient-row');
+
+        if (!searchInput) return;
+
+        searchInput.addEventListener('input', function () {
+            const query = this.value.toLowerCase().trim();
+
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                // Matches against name, ID number, barangay, or queue ID
+                if (text.includes(query)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    });
+</script>
+
+    <!--this script is for filter and export-->
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const filterSelect = document.getElementById('statusFilter');
+    const searchInput = document.getElementById('patientSearchInput');
+    const exportBtn = document.getElementById('exportQueueBtn');
+    const rows = document.querySelectorAll('#patientQueueTableBody tr.patient-row');
+
+    // Combined Live Search & Filter Logic
+    function applyFilters() {
+        const query = (searchInput ? searchInput.value : '').toLowerCase().trim();
+        const selectedStatus = (filterSelect ? filterSelect.value : 'all').toLowerCase();
+
+        rows.forEach(row => {
+            const rowText = row.textContent.toLowerCase();
+            const statusMatch = selectedStatus === 'all' || rowText.includes(selectedStatus);
+            const searchMatch = !query || rowText.includes(query);
+
+            if (statusMatch && searchMatch) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    if (filterSelect) {
+        filterSelect.addEventListener('change', applyFilters);
+    }
+    if (searchInput) {
+        searchInput.addEventListener('input', applyFilters);
+    }
+
+    // CSV Exporter for Visible Records
+    if (exportBtn) {
+        exportBtn.addEventListener('click', () => {
+            const visibleRows = Array.from(rows).filter(r => r.style.display !== 'none');
+            
+            if (visibleRows.length === 0) {
+                alert('No queue records available to export.');
+                return;
+            }
+
+            let csv = ['Queue ID,Patient Name,ABTC ID,Barangay,Status'];
+
+            visibleRows.forEach(row => {
+                const queueId = row.querySelector('td:nth-child(1)')?.innerText.trim().replace('#', '') || '';
+                const name = row.querySelector('.patient-name')?.innerText.trim() || '';
+                const idNum = row.querySelector('.patient-id')?.innerText.trim().replace('ID:', '').trim() || '';
+                const barangay = row.querySelector('td:nth-child(3)')?.innerText.trim().replace('Brgy.', '').trim() || '';
+                const status = row.querySelector('td:nth-child(4)')?.innerText.trim() || '';
+
+                csv.push(`"${queueId}","${name}","${idNum}","${barangay}","${status}"`);
+            });
+
+            const blob = new Blob([csv.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `Priority_Clinical_Queue_${new Date().toISOString().slice(0,10)}.csv`;
+            link.click();
+        });
+    }
+});
+</script>
+</body>
+</html>

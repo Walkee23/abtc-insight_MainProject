@@ -137,12 +137,14 @@ Route::post('/patient/new-submit', function (Request $request) {
     $prefix = $isPriority ? 'P' : 'N';
     $queueDate = now()->toDateString();
 
+    // Count today's registrations with this prefix to build the next queue number (resets daily)
     $countToday = DB::table('inflow_general_particulars')
         ->where('queue_date', $queueDate)
         ->where('queue_id', 'LIKE', $prefix . '%')
         ->count();
     $queueId = $prefix . ($countToday + 1);
 
+    // Section I: General Particulars
     $inflowRecordId = DB::table('inflow_general_particulars')->insertGetId([
         'queue_id' => $queueId,
         'queue_date' => $queueDate,
@@ -160,6 +162,7 @@ Route::post('/patient/new-submit', function (Request $request) {
         'status' => 'Pending',
     ]);
 
+    // Section II: Other Personal Data (illness/allergy history)
     DB::table('inflow_other_personal_data')->insert([
         'inflow_record_id' => $inflowRecordId,
         'illness_history' => $request->input('current_illnesses'),

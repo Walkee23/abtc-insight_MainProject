@@ -65,7 +65,7 @@
                     "borderRadius": {
                         "DEFAULT": "0.25rem",
                         "lg": "1rem",
-                        "xl": "0.75rem",
+                        "xl": "1.25rem",
                         "full": "9999px"
                     },
                     "fontFamily": {
@@ -128,19 +128,23 @@
 </div>
 </div>
 <div class="flex items-center gap-4">
-<button class="hover:bg-slate-50 dark:hover:bg-slate-800 rounded-full p-2 transition-all duration-300">
-<span class="material-symbols-outlined text-slate-600" data-icon="notifications">notifications</span>
+<div class="flex items-center gap-1 border-r border-outline-variant/20 pr-4">
+<button class="p-2 text-slate-500 hover:bg-surface-container-high rounded-full transition-colors relative">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-white"></span>
 </button>
-<button class="hover:bg-slate-50 dark:hover:bg-slate-800 rounded-full p-2 transition-all duration-300">
-<span class="material-symbols-outlined text-slate-600" data-icon="help">help</span>
+<button class="p-2 text-slate-500 hover:bg-surface-container-high rounded-full transition-colors">
+<span class="material-symbols-outlined" data-icon="help">help</span>
 </button>
-<div class="h-8 w-px bg-slate-200 mx-2"></div>
-<div class="flex items-center gap-3 cursor-pointer">
-<div class="text-right">
-<div class="text-xs font-bold text-slate-900">Staff_01</div>
-<div class="text-[10px] text-slate-500 uppercase tracking-tighter">Duty Officer</div>
 </div>
-<img alt="Staff_01 Profile" class="w-9 h-9 rounded-full object-cover border-2 border-white shadow-sm" data-alt="portrait of a professional medical staff member in a clean white laboratory coat smiling in a modern bright clinical environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMPRqhKKVF_1yQwDf3jiK5jQAF993SE0DwTi03JN0jYzi2KOFBd9hvjLlgruwhYr8bcEbOkzyziXYOv7VzDdOXTKmr9ZHklhhtzrgdmFdbtM5KMy6mC4rQvXqp8fBb2R0F9rT7EuijJkInTKpGAt2n_FNSmjzUGU_gvyLe8slz-BZxohxUmY4bks5zqqWp0FyMHrv8FrFDd68kpwvrUd0hSktqwIBrmMX3kVu3bqOFbETybq_JEwMfhvCYFzSWoi0P9bmqXcpMl5Ux"/>
+<div class="flex items-center gap-3 pl-2">
+<div class="text-right hidden sm:block">
+<p class="text-xs font-bold text-on-surface leading-tight">Staff_01</p>
+<p class="text-[10px] text-on-surface-variant leading-tight">Duty Officer</p>
+</div>
+<div class="relative">
+<img alt="Staff_01 Profile" class="w-9 h-9 rounded-full border border-outline-variant/20 object-cover" data-alt="portrait of a professional medical staff member in a clean white laboratory coat smiling in a modern bright clinical environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMPRqhKKVF_1yQwDf3jiK5jQAF993SE0DwTi03JN0jYzi2KOFBd9hvjLlgruwhYr8bcEbOkzyziXYOv7VzDdOXTKmr9ZHklhhtzrgdmFdbtM5KMy6mC4rQvXqp8fBb2R0F9rT7EuijJkInTKpGAt2n_FNSmjzUGU_gvyLe8slz-BZxohxUmY4bks5zqqWp0FyMHrv8FrFDd68kpwvrUd0hSktqwIBrmMX3kVu3bqOFbETybq_JEwMfhvCYFzSWoi0P9bmqXcpMl5Ux"/>
+<div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
 </div>
 </div>
 </header>

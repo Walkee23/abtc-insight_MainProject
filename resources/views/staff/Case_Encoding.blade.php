@@ -64,7 +64,7 @@
                     "borderRadius": {
                         "DEFAULT": "0.25rem",
                         "lg": "1rem",
-                        "xl": "0.75rem",
+                        "xl": "1.25rem",
                         "full": "9999px"
                     },
                     "fontFamily": {
@@ -135,10 +135,12 @@
 <div class="h-8 w-[1px] bg-slate-200 mx-2"></div>
 <div class="flex items-center gap-3 cursor-pointer group">
 <div class="text-right">
-<p class="text-xs font-bold text-on-surface leading-tight">Dr. Arnel Ramos</p>
+<p class="text-xs font-bold text-on-surface leading-tight">Staff_01</p>
 <p class="text-[10px] text-on-surface-variant">Attending Staff</p>
 </div>
-<img alt="Medical Staff Profile" class="w-9 h-9 rounded-full object-cover ring-2 ring-primary/10 group-hover:ring-primary/30 transition-all" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9f3RaLjMq70dUf6V8ufMkAlJ1NrwDBGgDI7p5JN9E_XNc6xyb-68sYtzlWLHvq-Us3Vk0uCMemlZTbGnBOVf0wYNas_bQTwsAw_upH601REHiqPy-985CpLl14MWrSiY8IUoAsjv7uSiv31eO2uXAPBG5XRiK7Bpjwtm1TDXzzG3cSF2gF9mORW3mUu4gCHnl1izwU3lglVLIKmJjCK8WBmiBUE7YZlhsuEV2VMpwmk9ktUnUxMJEAIzVB3tvDrYKVET9NEBHg_j5"/>
+<div class="relative">
+<img alt="Medical Staff Profile" class="w-9 h-9 rounded-full border border-outline-variant/20 object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9f3RaLjMq70dUf6V8ufMkAlJ1NrwDBGgDI7p5JN9E_XNc6xyb-68sYtzlWLHvq-Us3Vk0uCMemlZTbGnBOVf0wYNas_bQTwsAw_upH601REHiqPy-985CpLl14MWrSiY8IUoAsjv7uSiv31eO2uXAPBG5XRiK7Bpjwtm1TDXzzG3cSF2gF9mORW3mUu4gCHnl1izwU3lglVLIKmJjCK8WBmiBUE7YZlhsuEV2VMpwmk9ktUnUxMJEAIzVB3tvDrYKVET9NEBHg_j5"/>
+<div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
 </div>
 </div>
 </header>

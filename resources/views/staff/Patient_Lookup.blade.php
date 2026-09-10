@@ -121,24 +121,11 @@
 <span>Patient Lookup</span>
 </a>
 </nav>
-<div class="mt-auto mb-4 space-y-1 px-4 border-t border-outline-variant/10 pt-4">
-<a class="flex items-center gap-3 px-4 py-3.5 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors" href="#">
-<span class="material-symbols-outlined" data-icon="settings">settings</span>
-<span>Settings</span>
-</a>
-<a class="flex items-center gap-3 px-4 py-3.5 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors" href="#">
-<span class="material-symbols-outlined" data-icon="logout">logout</span>
-<span>Logout</span>
-</a>
-</div>
 </aside>
 <main class="flex-1 flex flex-col ml-72">
 <!-- TopNavBar -->
 <header class="flex justify-between items-center w-full h-16 px-8 sticky top-0 z-30 bg-white/85 dark:bg-slate-900/85 backdrop-blur-md border-b border-outline-variant/10 font-sans Inter tracking-tight">
 <div class="flex items-center gap-8">
-<div class="flex items-center gap-2 text-primary font-bold text-lg tracking-tight">
-                    ABTC-Insight
-                </div>
 <div class="relative group">
 <span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 text-lg">search</span>
 <input class="pl-10 pr-4 py-1.5 bg-surface-container-low rounded-full text-sm focus:ring-2 focus:ring-primary/20 border-none outline-none w-72 transition-all" placeholder="Search analytics or case IDs..." type="text"/>
@@ -160,7 +147,7 @@
 </div>
 <div class="flex items-center gap-3 pl-2">
 <div class="text-right hidden sm:block">
-<p class="text-xs font-bold text-on-surface leading-tight">Dr. Elena Santos</p>
+<p class="text-xs font-bold text-on-surface leading-tight">Staff_01</p>
 <p class="text-[10px] text-on-surface-variant leading-tight">Senior Staff Physician</p>
 </div>
 <div class="relative">

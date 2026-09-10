@@ -140,7 +140,7 @@
 <div class="flex items-center gap-3 pl-2">
 <div class="text-right hidden sm:block">
 <p class="text-xs font-bold text-on-surface leading-tight">Staff_01</p>
-<p class="text-[10px] text-on-surface-variant leading-tight">Duty Officer</p>
+<p class="text-[10px] text-on-surface-variant leading-tight">ABTC Staff</p>
 </div>
 <div class="relative">
 <img alt="Staff_01 Profile" class="w-9 h-9 rounded-full border border-outline-variant/20 object-cover" data-alt="portrait of a professional medical staff member in a clean white laboratory coat smiling in a modern bright clinical environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMPRqhKKVF_1yQwDf3jiK5jQAF993SE0DwTi03JN0jYzi2KOFBd9hvjLlgruwhYr8bcEbOkzyziXYOv7VzDdOXTKmr9ZHklhhtzrgdmFdbtM5KMy6mC4rQvXqp8fBb2R0F9rT7EuijJkInTKpGAt2n_FNSmjzUGU_gvyLe8slz-BZxohxUmY4bks5zqqWp0FyMHrv8FrFDd68kpwvrUd0hSktqwIBrmMX3kVu3bqOFbETybq_JEwMfhvCYFzSWoi0P9bmqXcpMl5Ux"/>

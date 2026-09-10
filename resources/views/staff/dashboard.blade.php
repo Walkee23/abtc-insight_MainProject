@@ -133,7 +133,7 @@
     <!-- Main Content Area -->
     <main class="ml-72 min-h-screen">
         <!-- TopNavBar -->
-        <header class="flex justify-between items-center w-full h-16 px-8 sticky top-0 z-30 bg-white/85 dark:bg-slate-900/85 backdrop-blur-md border-b border-outline-variant/10 font-sans Inter tracking-tight">
+        <header class="flex justify-between items-center w-full h-16 px-8 sticky top-0 z-30 bg-white/85 dark:bg-slate-950/85 backdrop-blur-md z-30 shadow-sm shadow-slate-200/50 dark:shadow-none border-b border-slate-100/50">
             <div class="flex items-center gap-8">
                 <div class="relative group">
                     <span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 text-lg">search</span>
@@ -164,8 +164,8 @@
 <div class="relative group cursor-pointer pl-4 border-l border-slate-200">
     <div class="flex items-center gap-3">
         <div class="text-right hidden sm:block">
-            <p class="text-xs font-bold text-slate-900"> Staff_01 </p>
-            <p class="text-[10px] text-slate-500 font-medium capitalize"> ABTC Staff </p>
+            <p class="text-xs font-bold text-on-surface leading-tight"> Staff_01 </p>
+            <p class="text-[10px] text-on-surface-variant leading-tight"> ABTC Staff </p>
         </div>
         <div class="w-9 h-9 rounded-full overflow-hidden ring-2 ring-slate-100 border border-slate-200">
             <img alt="Staff Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCG2nKFZGyYwHKRYoCQT3e-DFv4lhmbOaefZN_pNQ6HkWmU6VSYzY9h1P_RiS1yqN4hdqhLCiP4K6Ea7gARSWG6HK0qt5boVFtv4S1YiWv2O1vutB_s88IrPG_wB7x02LuJj9pA0d9mKcPXNHWbCr_BIg-CKtC_tZCmVz1DmJURoecp6Re7uXEhv9FI1dvVxhWIOr9RdMIXbtQRUjsSOkEc-i5gI18j8iBFPISCiDNXnFP_TQidoFnFp1cFnCO6SpZTN3UK4BIZ1wd1" />

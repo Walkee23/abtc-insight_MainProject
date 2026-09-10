@@ -124,7 +124,7 @@
 </aside>
 <main class="flex-1 flex flex-col ml-72">
 <!-- TopNavBar -->
-<header class="flex justify-between items-center w-full h-16 px-8 sticky top-0 z-30 bg-white/85 dark:bg-slate-900/85 backdrop-blur-md border-b border-outline-variant/10 font-sans Inter tracking-tight">
+<header class="flex justify-between items-center w-full h-16 px-8 sticky top-0 z-30 bg-white/85 dark:bg-slate-950/85 backdrop-blur-md z-30 shadow-sm shadow-slate-200/50 dark:shadow-none border-b border-slate-100/50">
 <div class="flex items-center gap-8">
 <div class="relative group">
 <span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 text-lg">search</span>
@@ -148,7 +148,7 @@
 <div class="flex items-center gap-3 pl-2">
 <div class="text-right hidden sm:block">
 <p class="text-xs font-bold text-on-surface leading-tight">Staff_01</p>
-<p class="text-[10px] text-on-surface-variant leading-tight">Senior Staff Physician</p>
+<p class="text-[10px] text-on-surface-variant leading-tight">ABTC Staff</p>
 </div>
 <div class="relative">
 <img alt="Staff Profile" class="w-9 h-9 rounded-full border border-outline-variant/20 object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC9XatGr4YAEN_U5F59LpiJuLypk1UE84qqND4HiNol0XC4NMhmT9nOhPZnG0ln0Nkd6-utpH-7Pvp4n39JXuYGM_aN7nshF7sO3ilVSg9Cf-OrQGfOTWSNuYavMvjMAqJvQyRrztYipPWBnMSFBASZ7ESZ9K-0cA1KQ_Fc-2JGK2S7RYYNMWDaUaON2vJpa1qMKCY8FA_-DWpGqbi6oX1EFG-YLGJcqW2vJ3qinM5W98E-0WG1esArKi5jG2gzajKi_x5jZKCs8VoC"/>

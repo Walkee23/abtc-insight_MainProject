@@ -117,7 +117,7 @@
 <!-- Main Content Area -->
 <main class="ml-72 flex-1 flex flex-col min-h-screen">
 <!-- TopAppBar -->
-<header class="w-full sticky top-0 z-40 bg-slate-50/85 dark:bg-slate-900/85 backdrop-blur-md flex items-center justify-between px-8 py-4 shadow-sm">
+<header class="flex justify-between items-center w-full h-16 px-8 sticky top-0 z-30 bg-white/85 dark:bg-slate-950/85 backdrop-blur-md z-30 shadow-sm shadow-slate-200/50 dark:shadow-none border-b border-slate-100/50">
 <div class="flex items-center gap-8">
 <div class="relative group">
 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
@@ -136,7 +136,7 @@
 <div class="flex items-center gap-3 cursor-pointer group">
 <div class="text-right">
 <p class="text-xs font-bold text-on-surface leading-tight">Staff_01</p>
-<p class="text-[10px] text-on-surface-variant">Attending Staff</p>
+<p class="text-[10px] text-on-surface-variant leading-tight">ABTC Staff</p>
 </div>
 <div class="relative">
 <img alt="Medical Staff Profile" class="w-9 h-9 rounded-full border border-outline-variant/20 object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9f3RaLjMq70dUf6V8ufMkAlJ1NrwDBGgDI7p5JN9E_XNc6xyb-68sYtzlWLHvq-Us3Vk0uCMemlZTbGnBOVf0wYNas_bQTwsAw_upH601REHiqPy-985CpLl14MWrSiY8IUoAsjv7uSiv31eO2uXAPBG5XRiK7Bpjwtm1TDXzzG3cSF2gF9mORW3mUu4gCHnl1izwU3lglVLIKmJjCK8WBmiBUE7YZlhsuEV2VMpwmk9ktUnUxMJEAIzVB3tvDrYKVET9NEBHg_j5"/>

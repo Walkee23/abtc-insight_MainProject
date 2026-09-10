@@ -164,11 +164,12 @@
 <div class="relative group cursor-pointer pl-4 border-l border-slate-200">
     <div class="flex items-center gap-3">
         <div class="text-right hidden sm:block">
-            <p class="text-xs font-bold text-slate-900">{{ Auth::user()->full_name ?? (Auth::user()->name ?? 'Staff_01') }}</p>
-            <p class="text-[10px] text-slate-500 font-medium capitalize">{{ Auth::user()->role ?? 'ABTC Staff' }}</p>
+            <p class="text-xs font-bold text-slate-900"> Staff_01 </p>
+            <p class="text-[10px] text-slate-500 font-medium capitalize"> ABTC Staff </p>
         </div>
         <div class="w-9 h-9 rounded-full overflow-hidden ring-2 ring-slate-100 border border-slate-200">
             <img alt="Staff Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCG2nKFZGyYwHKRYoCQT3e-DFv4lhmbOaefZN_pNQ6HkWmU6VSYzY9h1P_RiS1yqN4hdqhLCiP4K6Ea7gARSWG6HK0qt5boVFtv4S1YiWv2O1vutB_s88IrPG_wB7x02LuJj9pA0d9mKcPXNHWbCr_BIg-CKtC_tZCmVz1DmJURoecp6Re7uXEhv9FI1dvVxhWIOr9RdMIXbtQRUjsSOkEc-i5gI18j8iBFPISCiDNXnFP_TQidoFnFp1cFnCO6SpZTN3UK4BIZ1wd1" />
+            <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
         </div>
     </div>
 

@@ -10,12 +10,28 @@ class PatientController extends Controller
     // Search for an existing patient by name or ID
     public function search(Request $request)
     {
-        $query = $request->input('query');
+        $query = trim($request->input('query', ''));
+
+        // Names are stored as "Surname, Given Name, M.I." but people naturally
+        // type them as "Given Name M.I. Surname" - so split into words and
+        // require each one to appear somewhere in patient_name, regardless of order.
+        $words = array_filter(
+            preg_split('/[\s,]+/', $query),
+            fn($w) => mb_strlen($w) >= 2
+        );
 
         // Walk-in registrations live in inflow_general_particulars, not patients
         // (patients only gets a row once ABTC staff verifies the record)
         $patient = DB::table('inflow_general_particulars')
-            ->where('patient_name', 'LIKE', "%{$query}%")
+            ->where(function ($q) use ($words, $query) {
+                if (count($words) > 0) {
+                    foreach ($words as $word) {
+                        $q->where('patient_name', 'LIKE', "%{$word}%");
+                    }
+                } else {
+                    $q->where('patient_name', 'LIKE', "%{$query}%");
+                }
+            })
             ->orWhere('inflow_record_id', $query)
             ->orWhere('id_number', $query)
             ->orderBy('reg_date', 'desc')

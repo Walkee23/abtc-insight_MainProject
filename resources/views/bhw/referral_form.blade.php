@@ -136,16 +136,34 @@
 </button>
 </div>
 <div class="h-8 w-px bg-slate-200"></div>
-<div class="flex items-center gap-4">
-<div class="text-right">
-<p class="text-xs font-bold text-on-surface leading-tight">{{ auth()->user()->full_name ?? 'Test BHW' }}</p>
-<p class="text-[10px] text-on-surface-variant font-semibold">BHW - {{ auth()->user()->barangay_assignment ?? 'Guadalupe' }}</p>
-</div>
-<div class="relative">
-    <img alt="Test BHW Profile" class="w-10 h-10 rounded-full object-cover border-2 border-primary/10" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYXEfbdf1WqBtOmi-7pBaGEzvLw0ec1xSc8n2gxOR_x-J3wdc6kf9vnZ85PaHPIQCh1kv_tVfhn4Rnh61XmI4c6xTOgh7JBQwsuwAvfnnZUe9RXB8MhAI80cZskKvKdKAJZ5k7jnYHili_iuKnZkftjZN3qq74m80X9kjK0qI6g2oqTanqlzZnmzay0Z3RCJlCI04rRH-O2Hxp6Hc061pjAUy_7LOK9etgaYMxprFXpanaIhoYgcdEiaWYUEUrcuw2_cVQ3jnM9k-K" />
-    <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
-</div>
-</div>
+<div class="relative group cursor-pointer">
+    <div class="flex items-center gap-4">
+        <div class="text-right">
+            <p class="text-xs font-bold text-on-surface leading-tight">{{ auth()->user()->full_name ?? 'Test BHW' }}</p>
+            <p class="text-[10px] text-on-surface-variant font-semibold">BHW - {{ auth()->user()->barangay_assignment ?? 'Guadalupe' }}</p>
+        </div>
+        <div class="relative">
+            <img alt="Test BHW Profile" class="w-10 h-10 rounded-full object-cover border-2 border-primary/10" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYXEfbdf1WqBtOmi-7pBaGEzvLw0ec1xSc8n2gxOR_x-J3wdc6kf9vnZ85PaHPIQCh1kv_tVfhn4Rnh61XmI4c6xTOgh7JBQwsuwAvfnnZUe9RXB8MhAI80cZskKvKdKAJZ5k7jnYHili_iuKnZkftjZN3qq74m80X9kjK0qI6g2oqTanqlzZnmzay0Z3RCJlCI04rRH-O2Hxp6Hc061pjAUy_7LOK9etgaYMxprFXpanaIhoYgcdEiaWYUEUrcuw2_cVQ3jnM9k-K" />
+            <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+        </div>
+    </div>
+    <!-- Hover Dropdown Menu -->
+    <div class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+        <div class="p-2">
+            <a href="#" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary rounded-lg transition-colors">
+                <span class="material-symbols-outlined text-[18px]">person</span>
+                My Profile
+            </a>
+            <div class="h-px bg-slate-100 my-1"></div>
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors text-left cursor-pointer">
+                    <span class="material-symbols-outlined text-[18px]">logout</span>
+                    Log Out
+                </button>
+            </form>
+        </div>
+    </div>
 </div>
 </header>
 

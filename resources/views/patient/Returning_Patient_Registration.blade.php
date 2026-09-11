@@ -151,24 +151,24 @@
           <div class="absolute top-1/2 left-0 w-full h-[2px] bg-surface-container-high -translate-y-1/2 z-0"></div>
           <!-- Step 1 -->
           <div class="relative z-10 flex flex-col items-center gap-2">
-            <div class="w-10 h-10 rounded-full step-complete flex items-center justify-center shadow-md">
-              <span class="material-symbols-outlined text-xl">check</span>
+            <div class="w-10 h-10 rounded-full step-active flex items-center justify-center shadow-lg ring-4 ring-primary-container/20" id="returningStepCircle-1">
+              <span class="font-bold">1</span>
             </div>
-            <span class="text-xs font-bold text-emerald-600 uppercase tracking-wider">Find Record</span>
+            <span class="text-xs font-bold text-primary uppercase tracking-wider" id="returningStepLabel-1">Find Record</span>
           </div>
           <!-- Step 2 -->
           <div class="relative z-10 flex flex-col items-center gap-2">
-            <div class="w-10 h-10 rounded-full step-active flex items-center justify-center shadow-lg ring-4 ring-primary-container/20">
+            <div class="w-10 h-10 rounded-full step-inactive flex items-center justify-center" id="returningStepCircle-2">
               <span class="font-bold">2</span>
             </div>
-            <span class="text-xs font-bold text-primary uppercase tracking-wider">Confirm Details</span>
+            <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider" id="returningStepLabel-2">Confirm Details</span>
           </div>
           <!-- Step 3 -->
           <div class="relative z-10 flex flex-col items-center gap-2">
-            <div class="w-10 h-10 rounded-full step-inactive flex items-center justify-center">
+            <div class="w-10 h-10 rounded-full step-inactive flex items-center justify-center" id="returningStepCircle-3">
               <span class="font-bold">3</span>
             </div>
-            <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Priority + Confirm</span>
+            <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider" id="returningStepLabel-3">Priority + Confirm</span>
           </div>
         </div>
 
@@ -357,6 +357,10 @@
             // Set hidden input for form submission
             document.getElementById('patientIdInput').value = patient.patient_id;
 
+            // Step 1 is now done, Step 2 becomes active
+            markReturningStep(1, 'done');
+            markReturningStep(2, 'active');
+
         } catch (error) {
             console.error('Search failed:', error);
             notFoundMsg.textContent = 'Something went wrong. Please try again.';
@@ -366,6 +370,31 @@
 </script>
 
   <script>
+    // Helper to update the 3-step progress indicator
+    function markReturningStep(stepNum, state) {
+      const circle = document.getElementById(`returningStepCircle-${stepNum}`);
+      const label = document.getElementById(`returningStepLabel-${stepNum}`);
+
+      circle.classList.remove('step-active', 'step-complete', 'step-inactive', 'shadow-lg', 'ring-4', 'ring-primary-container/20', 'shadow-md');
+
+      if (state === 'done') {
+        circle.classList.add('step-complete', 'shadow-md');
+        circle.innerHTML = '<span class="material-symbols-outlined text-xl">check</span>';
+        label.classList.remove('text-primary', 'text-on-surface-variant');
+        label.classList.add('text-emerald-600');
+      } else if (state === 'active') {
+        circle.classList.add('step-active', 'shadow-lg', 'ring-4', 'ring-primary-container/20');
+        circle.innerHTML = `<span class="font-bold">${stepNum}</span>`;
+        label.classList.remove('text-emerald-600', 'text-on-surface-variant');
+        label.classList.add('text-primary');
+      } else {
+        circle.classList.add('step-inactive');
+        circle.innerHTML = `<span class="font-bold">${stepNum}</span>`;
+        label.classList.remove('text-emerald-600', 'text-primary');
+        label.classList.add('text-on-surface-variant');
+      }
+    }
+
     // Get the hidden input
     const priorityInput = document.getElementById('priorityInput');
     const priorityOptions = document.querySelectorAll('.priority-option');
@@ -387,6 +416,10 @@
         // 2. Add the blue highlight to the CLICKED card
         this.classList.remove('border-surface-container-high');
         this.classList.add('border-primary', 'bg-primary/5', 'ring-2', 'ring-primary/20');
+
+        // Step 2 is now done, Step 3 becomes active
+        markReturningStep(2, 'done');
+        markReturningStep(3, 'active');
       });
     });
   </script>

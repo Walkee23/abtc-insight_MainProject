@@ -144,7 +144,7 @@
             <h1 class="text-3xl font-extrabold tracking-tight text-on-surface">Returning Patient</h1>
             <p class="text-on-surface-variant mt-2 text-lg">Report a new bite incident using your existing ABTC record</p>
           </div>
-          <span class="bg-emerald-100 text-emerald-700 px-4 py-1.5 rounded-full text-xs font-bold tracking-wide uppercase">Existing Record</span>
+          <span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-[12px] font-bold tracking-wide uppercase whitespace-nowrap shrink-0">Existing Record</span>
         </div>
         <!-- Step Indicator -->
         <div class="flex items-center mb-12">

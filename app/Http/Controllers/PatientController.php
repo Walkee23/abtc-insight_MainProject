@@ -12,10 +12,13 @@ class PatientController extends Controller
     {
         $query = $request->input('query');
 
-        $patient = DB::table('patients')
+        // Walk-in registrations live in inflow_general_particulars, not patients
+        // (patients only gets a row once ABTC staff verifies the record)
+        $patient = DB::table('inflow_general_particulars')
             ->where('patient_name', 'LIKE', "%{$query}%")
-            ->orWhere('patient_id', $query)
+            ->orWhere('inflow_record_id', $query)
             ->orWhere('id_number', $query)
+            ->orderBy('reg_date', 'desc')
             ->first();
 
         if (!$patient) {
@@ -24,14 +27,22 @@ class PatientController extends Controller
 
         return response()->json([
             'found' => true,
-            'patient' => $patient,
+            'patient' => [
+                // aliased to patient_id so the existing frontend JS doesn't need changes
+                'patient_id' => $patient->inflow_record_id,
+                'patient_name' => $patient->patient_name,
+                'date_of_birth' => $patient->date_of_birth,
+                'sex' => $patient->sex,
+                'age' => $patient->age,
+                'id_number' => $patient->id_number,
+            ],
         ]);
     }
 
     public function storeReturning(Request $request)
     {
         $validated = $request->validate([
-            'patient_id'         => 'required|string',
+            'patient_id'         => 'required|string', // actually an inflow_record_id, see search() above
             'contact_num'        => 'required|string|max:20',
             'civil_status'       => 'nullable|string|max:20',
             'philhealth_member'  => 'required|boolean',
@@ -39,7 +50,7 @@ class PatientController extends Controller
             'priority_status'    => 'nullable|string',
         ]);
 
-        $patient = DB::table('patients')->where('patient_id', $validated['patient_id'])->first();
+        $patient = DB::table('inflow_general_particulars')->where('inflow_record_id', $validated['patient_id'])->first();
 
         if (!$patient) {
             return back()->withErrors(['patient_id' => 'Patient record not found.']);

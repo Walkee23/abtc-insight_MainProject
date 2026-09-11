@@ -147,24 +147,25 @@
           <span class="bg-emerald-100 text-emerald-700 px-4 py-1.5 rounded-full text-xs font-bold tracking-wide uppercase">Existing Record</span>
         </div>
         <!-- Step Indicator -->
-        <div class="flex items-center justify-between mb-12 relative">
-          <div class="absolute top-1/2 left-0 w-full h-[2px] bg-surface-container-high -translate-y-1/2 z-0"></div>
+        <div class="flex items-center mb-12">
           <!-- Step 1 -->
-          <div class="relative z-10 flex flex-col items-center gap-2">
+          <div class="flex flex-col items-center gap-2 shrink-0">
             <div class="w-10 h-10 rounded-full step-active flex items-center justify-center shadow-lg ring-4 ring-primary-container/20" id="returningStepCircle-1">
               <span class="font-bold">1</span>
             </div>
             <span class="text-xs font-bold text-primary uppercase tracking-wider" id="returningStepLabel-1">Find Record</span>
           </div>
+          <div class="flex-1 h-[2px] bg-surface-container-high mx-1 -mt-6 transition-colors" id="returningStepLine-1"></div>
           <!-- Step 2 -->
-          <div class="relative z-10 flex flex-col items-center gap-2">
+          <div class="flex flex-col items-center gap-2 shrink-0">
             <div class="w-10 h-10 rounded-full step-inactive flex items-center justify-center" id="returningStepCircle-2">
               <span class="font-bold">2</span>
             </div>
             <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider" id="returningStepLabel-2">Confirm Details</span>
           </div>
+          <div class="flex-1 h-[2px] bg-surface-container-high mx-1 -mt-6 transition-colors" id="returningStepLine-2"></div>
           <!-- Step 3 -->
-          <div class="relative z-10 flex flex-col items-center gap-2">
+          <div class="flex flex-col items-center gap-2 shrink-0">
             <div class="w-10 h-10 rounded-full step-inactive flex items-center justify-center" id="returningStepCircle-3">
               <span class="font-bold">3</span>
             </div>
@@ -374,6 +375,7 @@
     function markReturningStep(stepNum, state) {
       const circle = document.getElementById(`returningStepCircle-${stepNum}`);
       const label = document.getElementById(`returningStepLabel-${stepNum}`);
+      const line = document.getElementById(`returningStepLine-${stepNum}`);
 
       circle.classList.remove('step-active', 'step-complete', 'step-inactive', 'shadow-lg', 'ring-4', 'ring-primary-container/20', 'shadow-md');
 
@@ -382,6 +384,7 @@
         circle.innerHTML = '<span class="material-symbols-outlined text-xl">check</span>';
         label.classList.remove('text-primary', 'text-on-surface-variant');
         label.classList.add('text-emerald-600');
+        if (line) line.className = 'flex-1 h-[2px] bg-primary/40 mx-1 -mt-6 transition-colors';
       } else if (state === 'active') {
         circle.classList.add('step-active', 'shadow-lg', 'ring-4', 'ring-primary-container/20');
         circle.innerHTML = `<span class="font-bold">${stepNum}</span>`;

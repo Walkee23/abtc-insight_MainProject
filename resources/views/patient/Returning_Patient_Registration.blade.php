@@ -194,6 +194,8 @@
               </div>
             </div>
           </div>
+          <!-- Details + Priority + Footer: only usable once a record has been found -->
+          <div id="detailsSection" class="hidden">
           <!-- Section 2: Details -->
           <div class="space-y-8">
             <div class="flex items-center gap-3">
@@ -255,13 +257,13 @@
                   <span class="material-symbols-outlined text-base text-on-surface-variant/40 ml-1">info</span>
                 </label>
               </div>
-              <select name="barangay" class="w-full bg-white border-2 border-amber-200 focus:border-amber-500 focus:ring-0 rounded-lg px-4 py-4 text-on-surface font-medium shadow-sm">
-                <option disabled selected value="">Select Barangay...</option>
-                <option value="Guadalupe">Guadalupe</option>
-                <option value="Lahug">Lahug</option>
-                <option value="Mabolo">Mabolo</option>
-                <option value="Tisa">Tisa</option>
-              </select>
+              <div class="relative">
+                <input autocomplete="off" type="text" id="returningBarangayInput" name="barangay"
+                  class="w-full bg-white border-2 border-amber-200 focus:border-amber-500 focus:ring-0 rounded-lg px-4 py-4 text-on-surface font-medium shadow-sm"
+                  placeholder="Search your barangay..." required />
+                <div id="returningBarangayDropdown"
+                  class="hidden absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-surface-container-lowest rounded-lg shadow-lg border border-outline-variant/20 z-20"></div>
+              </div>
               <p class="text-[11px] text-amber-700 font-medium flex items-center gap-1">
                 <span class="material-symbols-outlined text-sm">priority_high</span>
                 Required for every new incident report to map local outbreaks.
@@ -284,10 +286,10 @@
                 <span class="text-xs font-bold uppercase tracking-tighter">PWD</span>
                 <span class="absolute -top-2 -right-1 bg-surface-container-highest text-[9px] px-2 py-0.5 rounded-full font-bold">PERMANENT</span>
               </button>
-              <button class="priority-option flex flex-col items-center justify-center p-4 rounded-xl border-2 border-surface-container-high hover:border-primary-container transition-all gap-2 relative" data-priority="priority">
-                <span class="material-symbols-outlined text-2xl text-primary" data-weight="fill">elderly</span>
-                <span class="text-xs font-bold uppercase tracking-tighter text-primary">Senior</span>
-                <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-[9px] px-2 py-1 rounded-full font-bold whitespace-nowrap shadow-sm">AUTO-DETECTED</div>
+              <button id="seniorPriorityOption" class="priority-option flex flex-col items-center justify-center p-4 rounded-xl border-2 border-surface-container-high hover:border-primary-container transition-all gap-2 relative group" data-priority="priority">
+                <span id="seniorIcon" class="material-symbols-outlined text-2xl text-on-surface-variant group-hover:text-primary">elderly</span>
+                <span id="seniorLabel" class="text-xs font-bold uppercase tracking-tighter">Senior</span>
+                <div id="seniorAutoDetectedBadge" class="hidden absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-[9px] px-2 py-1 rounded-full font-bold whitespace-nowrap shadow-sm">AUTO-DETECTED</div>
               </button>
               <button class="priority-option flex flex-col items-center justify-center p-4 rounded-xl border-2 border-surface-container-high hover:border-primary-container transition-all gap-2 group" data-priority="priority">
                 <span class="material-symbols-outlined text-2xl text-on-surface-variant group-hover:text-primary">pregnant_woman</span>
@@ -302,6 +304,7 @@
               Confirm and Get Queue Number
               <span class="material-symbols-outlined">arrow_forward</span>
             </button>
+          </div>
           </div>
 
         </form>
@@ -358,9 +361,30 @@
             // Set hidden input for form submission
             document.getElementById('patientIdInput').value = patient.patient_id;
 
+            // Reveal the Details + Priority + Footer section now that a record was found
+            document.getElementById('detailsSection').classList.remove('hidden');
+
             // Step 1 is now done, Step 2 becomes active
             markReturningStep(1, 'done');
             markReturningStep(2, 'active');
+
+            // Auto-detect Senior Citizen status from date of birth (age 60+)
+            const dob = new Date(patient.date_of_birth);
+            const today = new Date();
+            let computedAge = today.getFullYear() - dob.getFullYear();
+            const monthDiff = today.getMonth() - dob.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+                computedAge--;
+            }
+
+            const seniorAutoDetectedBadge = document.getElementById('seniorAutoDetectedBadge');
+            const seniorPriorityOption = document.getElementById('seniorPriorityOption');
+            if (computedAge >= 60) {
+                seniorAutoDetectedBadge.classList.remove('hidden');
+                seniorPriorityOption.click();
+            } else {
+                seniorAutoDetectedBadge.classList.add('hidden');
+            }
 
         } catch (error) {
             console.error('Search failed:', error);
@@ -371,6 +395,46 @@
 </script>
 
   <script>
+    // Barangay search dropdown (same pattern as New Patient Registration)
+    const returningBarangayList = ['Adlaon', 'Agsungot', 'Apas', 'Babag', 'Bacayan', 'Banawa', 'Banilad', 'Basak Pardo', 'Basak San Nicolas', 'Binaliw', 'Barrio Luz', 'Bonbon', 'Buot-Taup', 'Budlaan', 'Buhisan', 'Bulacao', 'Busay', 'Calamba', 'Cambinocot', 'Capitol', 'Carreta', 'Cogon Pardo', 'Cogon Ramos', 'Day-as', 'Duljo', 'Ermita', 'Guadalupe', 'Guba', 'Hipodromo', 'Inayawan', 'Kalubihan', 'Kalunasan', 'Kamagayan', 'Kamputhaw', 'Kasambagan', 'Kinasang-an', 'Labangon', 'Lahug', 'Lorega', 'Lusaran', 'Mabini', 'Mabolo', 'Malubog', 'Mambaling', 'Pahina Central', 'Pamutan', 'Pardo', 'Pari-an', 'Paril', 'Pasil', 'Pit-os', 'Pulangbato', 'Pung-ol', 'Punta Princesa', 'Quiot', 'Sambag I', 'Sambag II', 'San Antonio', 'San Jose', 'San Nicolas Pahina', 'San Nicolas Proper', 'San Roque', 'Sapangdaku', 'Sawang Calero', 'Sinsin', 'Sirao', 'Sta. Cruz', 'Sto. Niño', 'Suba', 'Sudlon I', 'Sudlon II', 'T. Padilla', 'Tabunan', 'Tagbao', 'Talamban', 'TapTap', 'Tejero', 'Tinago', 'Tisa', 'Toong', 'Zapatera'];
+    const returningBarangayInput = document.getElementById('returningBarangayInput');
+    const returningBarangayDropdown = document.getElementById('returningBarangayDropdown');
+
+    function renderReturningBarangayOptions(filterText) {
+      const filtered = returningBarangayList.filter(b => b.toLowerCase().includes(filterText.toLowerCase()));
+      if (filtered.length === 0) {
+        returningBarangayDropdown.classList.add('hidden');
+        returningBarangayDropdown.innerHTML = '';
+        return;
+      }
+      returningBarangayDropdown.innerHTML = filtered.map(b =>
+        `<div class="px-4 py-2.5 text-sm cursor-pointer hover:bg-surface-container transition-colors returning-barangay-option">${b}</div>`
+      ).join('');
+      returningBarangayDropdown.classList.remove('hidden');
+    }
+
+    returningBarangayInput.addEventListener('focus', function () {
+      renderReturningBarangayOptions(this.value);
+    });
+
+    returningBarangayInput.addEventListener('input', function () {
+      renderReturningBarangayOptions(this.value);
+    });
+
+    returningBarangayDropdown.addEventListener('click', function (e) {
+      if (e.target.classList.contains('returning-barangay-option')) {
+        returningBarangayInput.value = e.target.textContent;
+        returningBarangayDropdown.classList.add('hidden');
+        returningBarangayDropdown.innerHTML = '';
+      }
+    });
+
+    document.addEventListener('click', function (e) {
+      if (!returningBarangayInput.contains(e.target) && !returningBarangayDropdown.contains(e.target)) {
+        returningBarangayDropdown.classList.add('hidden');
+      }
+    });
+
     // Helper to update the 3-step progress indicator
     function markReturningStep(stepNum, state) {
       const circle = document.getElementById(`returningStepCircle-${stepNum}`);
@@ -424,6 +488,30 @@
         markReturningStep(2, 'done');
         markReturningStep(3, 'active');
       });
+    });
+
+    // Clear Form: native reset only clears input/select values, so this cleans up
+    // everything else that JS controls (locked fields, badges, highlighted cards, steps)
+    document.querySelector('form').addEventListener('reset', function () {
+      setTimeout(function () {
+        document.getElementById('detailsSection').classList.add('hidden');
+        document.getElementById('notFoundMsg').classList.add('hidden');
+        document.getElementById('recordFoundBox').classList.add('hidden');
+        document.getElementById('recordFoundBox').classList.remove('flex');
+        document.getElementById('lockedName').textContent = '—';
+        document.getElementById('lockedDob').textContent = '—';
+        document.getElementById('lockedSex').textContent = '—';
+        document.getElementById('seniorAutoDetectedBadge').classList.add('hidden');
+
+        document.querySelectorAll('.priority-option').forEach(opt => {
+          opt.classList.remove('border-primary', 'bg-primary/5', 'ring-2', 'ring-primary/20');
+          opt.classList.add('border-surface-container-high');
+        });
+
+        markReturningStep(1, 'active');
+        markReturningStep(2, 'inactive');
+        markReturningStep(3, 'inactive');
+      }, 0);
     });
   </script>
 </body>

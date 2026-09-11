@@ -64,7 +64,7 @@
                     "borderRadius": {
                         "DEFAULT": "0.25rem",
                         "lg": "1rem",
-                        "xl": "0.75rem",
+                        "xl": "1.25rem",
                         "full": "9999px"
                     },
                     "fontFamily": {
@@ -86,40 +86,38 @@
 </head>
 <body class="bg-surface text-on-surface min-h-screen flex">
 <!-- SideNavBar -->
-<aside class="h-screen w-64 fixed left-0 top-0 bg-slate-100 dark:bg-slate-950 flex flex-col border-r border-slate-200 dark:border-slate-800 z-50">
-<div class="px-6 py-8">
-<div class="flex items-center gap-3 mb-8">
-<div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg">
-<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">health_and_safety</span>
-</div>
-<div>
-<h1 class="text-blue-900 dark:text-blue-50 font-bold text-sm tracking-tight leading-none">ABTC-Insight</h1>
-</div>
-</div>
-<nav class="space-y-1.5">
-<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 rounded-lg transition-all duration-200" href="#">
-<span class="material-symbols-outlined text-[20px]" data-icon="group">group</span>
-<span class="font-medium text-sm">Queue Management</span>
-</a>
-<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 rounded-lg transition-all duration-200" href="#">
-<span class="material-symbols-outlined text-[20px]" data-icon="verified_user">verified_user</span>
-<span class="font-medium text-sm">Patient Verification</span>
-</a>
-<a class="flex items-center gap-3 px-4 py-3 text-blue-700 dark:text-blue-400 bg-white dark:bg-slate-900 shadow-sm border-l-4 border-blue-700 dark:border-blue-500 rounded-r-lg transition-all duration-200" href="#">
-<span class="material-symbols-outlined text-[20px]" data-icon="edit_note" style="font-variation-settings: 'FILL' 1;">edit_note</span>
-<span class="font-medium text-sm">Case Encoding</span>
-</a>
-<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 rounded-lg transition-all duration-200" href="#">
-<span class="material-symbols-outlined text-[20px]" data-icon="person_search">person_search</span>
-<span class="font-medium text-sm">Patient Lookup</span>
-</a>
-</nav>
-</div>
+<aside class="fixed left-0 top-0 h-full z-40 h-screen w-72 flex flex-col border-r border-outline-variant/10 bg-white dark:bg-slate-900 font-sans Inter antialiased">
+    <div class="p-8 flex items-center gap-3">
+        <div class="w-10 h-10 bg-primary-container rounded-xl flex items-center justify-center text-white shadow-md">
+            <span class="material-symbols-outlined" data-icon="shield">shield</span>
+        </div>
+        <div>
+            <h1 class="text-xl font-bold tracking-tight text-primary dark:text-blue-200">ABTC-Insight</h1>
+        </div>
+    </div>
+    <nav class="flex-1 mt-4 space-y-1 px-4">
+        <a class="flex items-center gap-3 px-4 py-3.5 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors" href="{{ route('staff.dashboard') }}">
+            <span class="material-symbols-outlined" data-icon="queue">queue</span>
+            <span>Queue Management</span>
+        </a>
+        <a class="flex items-center gap-3 px-4 py-3.5 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors" href="{{ route('staff.patient-verification') }}">
+            <span class="material-symbols-outlined" data-icon="verified_user">verified_user</span>
+            <span>Patient Verification</span>
+        </a>
+        <a class="flex items-center gap-3 px-4 py-3.5 text-primary dark:text-blue-400 font-semibold border-l-4 border-primary dark:border-blue-400 bg-primary/5 transition-all" href="#">
+            <span class="material-symbols-outlined" data-icon="clinical_notes">clinical_notes</span>
+            <span>Case Encoding</span>
+        </a>
+        <a class="flex items-center gap-3 px-4 py-3.5 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors" href="{{ route('staff.patient-lookup') }}">
+            <span class="material-symbols-outlined" data-icon="person_search">person_search</span>
+            <span>Patient Lookup</span>
+        </a>
+    </nav>
 </aside>
 <!-- Main Content Area -->
-<main class="ml-64 flex-1 flex flex-col min-h-screen">
+<main class="ml-72 flex-1 flex flex-col min-h-screen">
 <!-- TopAppBar -->
-<header class="w-full sticky top-0 z-40 bg-slate-50/85 dark:bg-slate-900/85 backdrop-blur-md flex items-center justify-between px-8 py-4 shadow-sm">
+<header class="flex justify-between items-center w-full h-16 px-8 sticky top-0 z-30 bg-white/85 dark:bg-slate-950/85 backdrop-blur-md z-30 shadow-sm shadow-slate-200/50 dark:shadow-none border-b border-slate-100/50">
 <div class="flex items-center gap-8">
 <div class="relative group">
 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
@@ -135,12 +133,33 @@
 <span class="material-symbols-outlined" data-icon="help">help</span>
 </button>
 <div class="h-8 w-[1px] bg-slate-200 mx-2"></div>
-<div class="flex items-center gap-3 cursor-pointer group">
+<div class="relative group cursor-pointer">
+<div class="flex items-center gap-3">
 <div class="text-right">
-<p class="text-xs font-bold text-on-surface leading-tight">Dr. Arnel Ramos</p>
-<p class="text-[10px] text-on-surface-variant">Attending Staff</p>
+<p class="text-xs font-bold text-on-surface leading-tight">Staff</p>
+<p class="text-[10px] text-on-surface-variant leading-tight">ABTC Staff</p>
 </div>
-<img alt="Medical Staff Profile" class="w-9 h-9 rounded-full object-cover ring-2 ring-primary/10 group-hover:ring-primary/30 transition-all" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9f3RaLjMq70dUf6V8ufMkAlJ1NrwDBGgDI7p5JN9E_XNc6xyb-68sYtzlWLHvq-Us3Vk0uCMemlZTbGnBOVf0wYNas_bQTwsAw_upH601REHiqPy-985CpLl14MWrSiY8IUoAsjv7uSiv31eO2uXAPBG5XRiK7Bpjwtm1TDXzzG3cSF2gF9mORW3mUu4gCHnl1izwU3lglVLIKmJjCK8WBmiBUE7YZlhsuEV2VMpwmk9ktUnUxMJEAIzVB3tvDrYKVET9NEBHg_j5"/>
+<div class="w-9 h-9 rounded-full overflow-hidden ring-2 ring-slate-100 border border-slate-200">
+<img alt="Staff Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCG2nKFZGyYwHKRYoCQT3e-DFv4lhmbOaefZN_pNQ6HkWmU6VSYzY9h1P_RiS1yqN4hdqhLCiP4K6Ea7gARSWG6HK0qt5boVFtv4S1YiWv2O1vutB_s88IrPG_wB7x02LuJj9pA0d9mKcPXNHWbCr_BIg-CKtC_tZCmVz1DmJURoecp6Re7uXEhv9FI1dvVxhWIOr9RdMIXbtQRUjsSOkEc-i5gI18j8iBFPISCiDNXnFP_TQidoFnFp1cFnCO6SpZTN3UK4BIZ1wd1" />
+<div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+</div>
+</div>
+<!-- Hover Dropdown Menu -->
+<div class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+<div class="p-2">
+<a href="#" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary rounded-lg transition-colors">
+<span class="material-symbols-outlined text-[18px]">person</span>
+My Profile
+</a>
+<div class="h-px bg-slate-100 my-1"></div>
+<form method="POST" action="{{ route('logout') }}">
+@csrf
+<button type="submit" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors text-left cursor-pointer">
+<span class="material-symbols-outlined text-[18px]">logout</span>
+Log Out
+</button>
+</form>
+</div>
 </div>
 </div>
 </header>

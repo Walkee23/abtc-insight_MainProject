@@ -139,12 +139,12 @@
 </div>
 <div class="flex items-center gap-3 pl-2">
 <div class="text-right hidden sm:block">
-<p class="text-xs font-bold text-on-surface leading-tight">Staff_01</p>
+<p class="text-xs font-bold text-on-surface leading-tight">Staff</p>
 <p class="text-[10px] text-on-surface-variant leading-tight">ABTC Staff</p>
 </div>
-<div class="relative">
-<img alt="Staff_01 Profile" class="w-9 h-9 rounded-full border border-outline-variant/20 object-cover" data-alt="portrait of a professional medical staff member in a clean white laboratory coat smiling in a modern bright clinical environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMPRqhKKVF_1yQwDf3jiK5jQAF993SE0DwTi03JN0jYzi2KOFBd9hvjLlgruwhYr8bcEbOkzyziXYOv7VzDdOXTKmr9ZHklhhtzrgdmFdbtM5KMy6mC4rQvXqp8fBb2R0F9rT7EuijJkInTKpGAt2n_FNSmjzUGU_gvyLe8slz-BZxohxUmY4bks5zqqWp0FyMHrv8FrFDd68kpwvrUd0hSktqwIBrmMX3kVu3bqOFbETybq_JEwMfhvCYFzSWoi0P9bmqXcpMl5Ux"/>
-<div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+<div class="relative w-9 h-9 rounded-full ring-2 ring-slate-100 border border-slate-200">
+ <img alt="Staff Avatar" class="w-full h-full object-cover rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCG2nKFZGyYwHKRYoCQT3e-DFv4lhmbOaefZN_pNQ6HkWmU6VSYzY9h1P_RiS1yqN4hdqhLCiP4K6Ea7gARSWG6HK0qt5boVFtv4S1YiWv2O1vutB_s88IrPG_wB7x02LuJj9pA0d9mKcPXNHWbCr_BIg-CKtC_tZCmVz1DmJURoecp6Re7uXEhv9FI1dvVxhWIOr9RdMIXbtQRUjsSOkEc-i5gI18j8iBFPISCiDNXnFP_TQidoFnFp1cFnCO6SpZTN3UK4BIZ1wd1" />
+ <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
 </div>
 </div>
 </header>

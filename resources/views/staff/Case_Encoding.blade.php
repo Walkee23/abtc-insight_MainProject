@@ -135,12 +135,12 @@
 <div class="h-8 w-[1px] bg-slate-200 mx-2"></div>
 <div class="flex items-center gap-3 cursor-pointer group">
 <div class="text-right">
-<p class="text-xs font-bold text-on-surface leading-tight">Staff_01</p>
+<p class="text-xs font-bold text-on-surface leading-tight">Staff</p>
 <p class="text-[10px] text-on-surface-variant leading-tight">ABTC Staff</p>
 </div>
-<div class="relative">
-<img alt="Medical Staff Profile" class="w-9 h-9 rounded-full border border-outline-variant/20 object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9f3RaLjMq70dUf6V8ufMkAlJ1NrwDBGgDI7p5JN9E_XNc6xyb-68sYtzlWLHvq-Us3Vk0uCMemlZTbGnBOVf0wYNas_bQTwsAw_upH601REHiqPy-985CpLl14MWrSiY8IUoAsjv7uSiv31eO2uXAPBG5XRiK7Bpjwtm1TDXzzG3cSF2gF9mORW3mUu4gCHnl1izwU3lglVLIKmJjCK8WBmiBUE7YZlhsuEV2VMpwmk9ktUnUxMJEAIzVB3tvDrYKVET9NEBHg_j5"/>
-<div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+<div class="relative w-9 h-9 rounded-full ring-2 ring-slate-100 border border-slate-200">
+ <img alt="Staff Avatar" class="w-full h-full object-cover rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCG2nKFZGyYwHKRYoCQT3e-DFv4lhmbOaefZN_pNQ6HkWmU6VSYzY9h1P_RiS1yqN4hdqhLCiP4K6Ea7gARSWG6HK0qt5boVFtv4S1YiWv2O1vutB_s88IrPG_wB7x02LuJj9pA0d9mKcPXNHWbCr_BIg-CKtC_tZCmVz1DmJURoecp6Re7uXEhv9FI1dvVxhWIOr9RdMIXbtQRUjsSOkEc-i5gI18j8iBFPISCiDNXnFP_TQidoFnFp1cFnCO6SpZTN3UK4BIZ1wd1" />
+ <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
 </div>
 </div>
 </header>

@@ -147,12 +147,12 @@
 </div>
 <div class="flex items-center gap-3 pl-2">
 <div class="text-right hidden sm:block">
-<p class="text-xs font-bold text-on-surface leading-tight">Staff_01</p>
+<p class="text-xs font-bold text-on-surface leading-tight">Staff</p>
 <p class="text-[10px] text-on-surface-variant leading-tight">ABTC Staff</p>
 </div>
-<div class="relative">
-<img alt="Staff Profile" class="w-9 h-9 rounded-full border border-outline-variant/20 object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC9XatGr4YAEN_U5F59LpiJuLypk1UE84qqND4HiNol0XC4NMhmT9nOhPZnG0ln0Nkd6-utpH-7Pvp4n39JXuYGM_aN7nshF7sO3ilVSg9Cf-OrQGfOTWSNuYavMvjMAqJvQyRrztYipPWBnMSFBASZ7ESZ9K-0cA1KQ_Fc-2JGK2S7RYYNMWDaUaON2vJpa1qMKCY8FA_-DWpGqbi6oX1EFG-YLGJcqW2vJ3qinM5W98E-0WG1esArKi5jG2gzajKi_x5jZKCs8VoC"/>
-<div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+<div class="relative w-9 h-9 rounded-full ring-2 ring-slate-100 border border-slate-200">
+ <img alt="Staff Avatar" class="w-full h-full object-cover rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCG2nKFZGyYwHKRYoCQT3e-DFv4lhmbOaefZN_pNQ6HkWmU6VSYzY9h1P_RiS1yqN4hdqhLCiP4K6Ea7gARSWG6HK0qt5boVFtv4S1YiWv2O1vutB_s88IrPG_wB7x02LuJj9pA0d9mKcPXNHWbCr_BIg-CKtC_tZCmVz1DmJURoecp6Re7uXEhv9FI1dvVxhWIOr9RdMIXbtQRUjsSOkEc-i5gI18j8iBFPISCiDNXnFP_TQidoFnFp1cFnCO6SpZTN3UK4BIZ1wd1" />
+ <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
 </div>
 </div>
 </div>

@@ -164,7 +164,7 @@
 <div class="relative group cursor-pointer pl-4 border-l border-slate-200">
     <div class="flex items-center gap-3">
         <div class="text-right hidden sm:block">
-            <p class="text-xs font-bold text-on-surface leading-tight"> Staff_01 </p>
+            <p class="text-xs font-bold text-on-surface leading-tight"> Staff </p>
             <p class="text-[10px] text-on-surface-variant leading-tight"> ABTC Staff </p>
         </div>
         <div class="w-9 h-9 rounded-full overflow-hidden ring-2 ring-slate-100 border border-slate-200">

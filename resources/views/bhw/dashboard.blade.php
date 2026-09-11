@@ -140,8 +140,8 @@
                 <div class="h-8 w-[1px] bg-outline-variant/30"></div>
                 <div class="flex items-center gap-3">
                     <div class="text-right">
-                        <p class="text-xs font-bold text-on-surface leading-tight">Maria Santos</p>
-                        <p class="text-[10px] text-on-surface-variant font-semibold">BHW - GUADALUPE</p>
+                        <p class="text-xs font-bold text-on-surface leading-tight">Test BHW</p>
+                        <p class="text-[10px] text-on-surface-variant font-semibold">BHW-Guadalupe</p>
                     </div>
                     <div class="relative">
                         <img alt="Maria Santos Profile" class="w-10 h-10 rounded-full object-cover border-2 border-primary/10" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYXEfbdf1WqBtOmi-7pBaGEzvLw0ec1xSc8n2gxOR_x-J3wdc6kf9vnZ85PaHPIQCh1kv_tVfhn4Rnh61XmI4c6xTOgh7JBQwsuwAvfnnZUe9RXB8MhAI80cZskKvKdKAJZ5k7jnYHili_iuKnZkftjZN3qq74m80X9kjK0qI6g2oqTanqlzZnmzay0Z3RCJlCI04rRH-O2Hxp6Hc061pjAUy_7LOK9etgaYMxprFXpanaIhoYgcdEiaWYUEUrcuw2_cVQ3jnM9k-K" />

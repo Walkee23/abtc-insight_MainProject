@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-  <title>ABTC-Insight | Returning Patient Registration</title>
+  <title>Returning Patient Registration | ABTC-Insight</title>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
@@ -111,7 +111,8 @@
       <!-- Brand -->
       <a href="{{ url('/') }}" class="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
         <div class="w-8 h-8 clinical-gradient rounded-lg flex items-center justify-center text-white">
-          <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">health_metrics</span>
+          <span class="material-symbols-outlined text-sm"
+            style="font-variation-settings: 'FILL' 1;">health_metrics</span>
         </div>
         <span class="text-xl font-bold tracking-tighter text-blue-900">ABTC-Insight</span>
       </a>
@@ -127,13 +128,13 @@
       </div>
     </div>
   </nav>
-  <main class="flex-grow flex flex-col items-center py-12 px-4">
+  <main class="min-h-screen flex flex-col items-center px-4 pt-24 pb-12">
     <!-- Breadcrumb -->
-    <div class="w-full max-w-[680px] mb-6">
-      <button class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors font-medium">
-        <span class="material-symbols-outlined text-lg">arrow_back</span>
-        Back to selection
-      </button>
+    <div class="w-full max-w-[680px] mb-6 flex items-center gap-2 group cursor-pointer"
+      onclick="window.location.href='{{ route('patient.register') }}'">
+      <span class="material-symbols-outlined text-on-surface-variant text-sm">arrow_back</span>
+      <span class="text-on-surface-variant text-sm font-medium group-hover:text-primary transition-colors">Back to
+        selection</span>
     </div>
     <!-- Main Form Card -->
     <div class="w-full max-w-[680px] bg-surface-container-lowest rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.04)] overflow-hidden">

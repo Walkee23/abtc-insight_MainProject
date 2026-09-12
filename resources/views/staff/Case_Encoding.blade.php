@@ -182,7 +182,7 @@ Log Out
 <div class="lg:col-span-3 space-y-4 h-[calc(100vh-280px)] flex flex-col">
 <div class="flex items-center justify-between px-2">
 <h4 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Verified Queue</h4>
-<span class="text-[10px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full">12 Awaiting</span>
+<span class="text-[10px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full">{{ $verifiedQueue->count() }} Awaiting</span>
 </div>
 <div class="bg-surface-container-low rounded-lg overflow-hidden border border-outline-variant/10 flex-1 overflow-y-auto custom-scrollbar">
 <table class="w-full text-left text-xs border-collapse">
@@ -193,78 +193,21 @@ Log Out
 </tr>
 </thead>
 <tbody class="divide-y divide-outline-variant/10">
-<tr class="bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer border-l-4 border-primary">
+@forelse($verifiedQueue as $index => $row)
+<tr class="{{ $index === 0 ? 'bg-primary/5 hover:bg-primary/10 border-l-4 border-primary' : 'hover:bg-surface-bright' }} transition-colors cursor-pointer">
 <td class="px-4 py-4">
-<p class="font-bold text-on-surface">Cardo Dalisay</p>
-<p class="text-[10px] text-on-surface-variant">#2024-8812</p>
+<p class="font-bold text-on-surface">{{ $row->patient_name }}</p>
+<p class="text-[10px] text-on-surface-variant">#{{ $row->inflow_record_id }}</p>
 </td>
 <td class="px-4 py-4">
-<span class="px-2 py-0.5 bg-error-container text-on-error-container rounded-full text-[9px] font-bold whitespace-nowrap">Sec 3, 5</span>
-</td>
-</tr>
-<tr class="hover:bg-surface-bright transition-colors cursor-pointer">
-<td class="px-4 py-4">
-<p class="font-bold text-on-surface">Juan Luna</p>
-<p class="text-[10px] text-on-surface-variant">#2024-8815</p>
-</td>
-<td class="px-4 py-4">
-<span class="px-2 py-0.5 bg-error-container text-on-error-container rounded-full text-[9px] font-bold whitespace-nowrap">Sec 4</span>
+<span class="px-2 py-0.5 bg-error-container text-on-error-container rounded-full text-[9px] font-bold whitespace-nowrap">Sec 3-5</span>
 </td>
 </tr>
-<tr class="hover:bg-surface-bright transition-colors cursor-pointer">
-<td class="px-4 py-4">
-<p class="font-bold text-on-surface">Bambam Aquas</p>
-<p class="text-[10px] text-on-surface-variant">#2024-8819</p>
-</td>
-<td class="px-4 py-4">
-<span class="px-2 py-0.5 bg-error-container text-on-error-container rounded-full text-[9px] font-bold whitespace-nowrap">Sec 3, 4</span>
-</td>
+@empty
+<tr>
+<td colspan="2" class="px-4 py-8 text-center text-on-surface-variant text-xs">No verified patients awaiting encoding.</td>
 </tr>
-<tr class="hover:bg-surface-bright transition-colors cursor-pointer">
-<td class="px-4 py-4">
-<p class="font-bold text-on-surface">Rita Gomez</p>
-<p class="text-[10px] text-on-surface-variant">#2024-8822</p>
-</td>
-<td class="px-4 py-4">
-<span class="px-2 py-0.5 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full text-[9px] font-bold whitespace-nowrap">Sec 5</span>
-</td>
-</tr>
-<tr class="hover:bg-surface-bright transition-colors cursor-pointer">
-<td class="px-4 py-4">
-<p class="font-bold text-on-surface">Maria Santos</p>
-<p class="text-[10px] text-on-surface-variant">#2024-8825</p>
-</td>
-<td class="px-4 py-4">
-<span class="px-2 py-0.5 bg-error-container text-on-error-container rounded-full text-[9px] font-bold whitespace-nowrap">Sec 3, 4, 5</span>
-</td>
-</tr>
-<tr class="hover:bg-surface-bright transition-colors cursor-pointer">
-<td class="px-4 py-4">
-<p class="font-bold text-on-surface">Elena Vizcara</p>
-<p class="text-[10px] text-on-surface-variant">#2024-8828</p>
-</td>
-<td class="px-4 py-4">
-<span class="px-2 py-0.5 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full text-[9px] font-bold whitespace-nowrap">Sec 3</span>
-</td>
-</tr>
-<tr class="hover:bg-surface-bright transition-colors cursor-pointer">
-<td class="px-4 py-4">
-<p class="font-bold text-on-surface">Rogelio Magno</p>
-<p class="text-[10px] text-on-surface-variant">#2024-8830</p>
-</td>
-<td class="px-4 py-4">
-<span class="px-2 py-0.5 bg-error-container text-on-error-container rounded-full text-[9px] font-bold whitespace-nowrap">Sec 4</span>
-</td>
-</tr>
-<tr class="hover:bg-surface-bright transition-colors cursor-pointer">
-<td class="px-4 py-4">
-<p class="font-bold text-on-surface">Andres Bonifacio</p>
-<p class="text-[10px] text-on-surface-variant">#2024-8835</p>
-</td>
-<td class="px-4 py-4">
-<span class="px-2 py-0.5 bg-error-container text-on-error-container rounded-full text-[9px] font-bold whitespace-nowrap">Sec 3, 5</span>
-</td>
-</tr>
+@endforelse
 </tbody>
 </table>
 </div>

@@ -1,11 +1,11 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\AuthController;
-use Illuminate\Http\Request;
-use App\Http\Controllers\BhwController;
 use App\Http\Controllers\PatientController;
-
+use App\Http\Controllers\BhwController;
+use Illuminate\Http\Request;
 
 Route::get('/', function () {
     return view('welcome_portal');
@@ -20,49 +20,56 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Role Dashboards
 Route::prefix('admin')->group(function () {
-    // 1. Main Overview (Dashboard)
     Route::get('/dashboard', function () {
         return view('admin.dashboard');
     })->name('admin.dashboard');
 
-    // 2. Analytics (V_and_A)
     Route::get('/analytics', function () {
         return view('admin.V_and_A');
     })->name('admin.analytics');
 
-    // 3. PEP Compliance & SMS Logs (pep_comp)
     Route::get('/compliance', function () {
         return view('admin.pep_comp');
     })->name('admin.compliance');
 
-    // 4. Forecasting & Outbreak Detection (F_and_O)
     Route::get('/forecasting', function () {
         return view('admin.F_and_O');
     })->name('admin.forecasting');
 
-    // 5. User & System Management (USM)
     Route::get('/system-management', function () {
         return view('admin.USM');
     })->name('admin.usm');
 });
 
-// Other Role Fallbacks
-Route::get('/staff/dashboard', function () {
-    return view('staff.dashboard');
-})->name('staff.dashboard');
+// Staff Routes
+Route::prefix('staff')->group(function () {
+    Route::get('/dashboard', function () {
+        return view('staff.dashboard');
+    })->name('staff.dashboard');
 
+    Route::get('/case-encoding', function () {
+        return view('staff.Case_Encoding');
+    })->name('staff.case-encoding');
+
+    Route::get('/patient-lookup', function () {
+        return view('staff.Patient_Lookup');
+    })->name('staff.patient-lookup');
+
+    Route::get('/patient-verification', function () {
+        return view('staff.Patient_Verification');
+    })->name('staff.patient-verification');
+});
+
+// Healthworker Routes
 Route::prefix('healthworker')->group(function () {
-    // 1. Dashboard
     Route::get('/dashboard', function () {
         return view('healthworker.dashboard');
     })->name('healthworker.dashboard');
 
-    // 2. Clinical Encoding (main wizard entry point, Sections VI-IX)
     Route::get('/clinical-encoding', function () {
         return view('healthworker.CE_VI');
     })->name('healthworker.clinical-encoding');
 
-    // 2b. Clinical Encoding individual sections (kept accessible directly)
     Route::get('/clinical-encoding/section-vii', function () {
         return view('healthworker.CE_VII');
     })->name('healthworker.ce-vii');
@@ -75,33 +82,31 @@ Route::prefix('healthworker')->group(function () {
         return view('healthworker.CE_IX');
     })->name('healthworker.ce-ix');
 
-    // 3. Treatment Tracker
     Route::get('/treatment-tracker', function () {
         return view('healthworker.Treatment_Tracker');
     })->name('healthworker.treatment-tracker');
 
-    // 4. Patient Database
     Route::get('/patient-database', function () {
         return view('healthworker.Patient_Lookup&DB');
     })->name('healthworker.patient-database');
 
-    // 5. Compliance (PEP Compliance & SMS Logs)
     Route::get('/compliance', function () {
         return view('healthworker.PEP_Compliance_&_SMS_Logs');
     })->name('healthworker.compliance');
 });
 
-Route::get('/bhw/dashboard', [App\Http\Controllers\BhwController::class, 'dashboard'])->name('bhw.dashboard');
+// BHW Routes (referral dashboard, referral form, submission, print)
+Route::get('/bhw/dashboard', [BhwController::class, 'dashboard'])->name('bhw.dashboard');
 
-Route::get('bhw/referral', function () {
+Route::get('/bhw/referral', function () {
     return view('bhw.referral_form');
 })->name('bhw.referral');
 
-// Add this line for the referral form submission
 Route::post('/bhw/referral/store', [BhwController::class, 'storeReferral'])->name('bhw.store');
 
-Route::get('/bhw/referral/{id}/print', [App\Http\Controllers\BhwController::class, 'printReferral'])->name('bhw.print');
+Route::get('/bhw/referral/{id}/print', [BhwController::class, 'printReferral'])->name('bhw.print');
 
+// Public Patient-Facing Pages
 Route::get('/patient/register', function () {
     return view('patient.Patient_Registration_Dashboard');
 })->name('patient.register');
@@ -118,7 +123,6 @@ Route::get('/patient/tracking-portal', function () {
     return view('patient.Tracking_Portal');
 })->name('patient.tracking.portal');
 
-// Routes to show the success pages
 Route::get('/patient/queue/normal', function () {
     return view('patient.NQ_confirmation');
 })->name('patient.queue.normal');
@@ -127,7 +131,8 @@ Route::get('/patient/queue/priority', function () {
     return view('patient.PQ_confirmation');
 })->name('patient.queue.priority');
 
-Route::post('/patient/submit-registration', function (Request $request) {
+// Walk-in New Patient self-registration (Section I + II)
+Route::post('/patient/new-submit', function (Request $request) {
     $isPriority = $request->input('priority_status') !== 'none';
     $prefix = $isPriority ? 'P' : 'N';
     $queueDate = now()->toDateString();
@@ -167,4 +172,13 @@ Route::post('/patient/submit-registration', function (Request $request) {
     return $isPriority
         ? view('patient.PQ_confirmation', ['queueNumber' => $queueId])
         : view('patient.NQ_confirmation', ['queueNumber' => $queueId]);
-})->name('patient.submit');
+})->name('patient.new-submit');
+
+// Returning Patient — search for an existing patient record
+Route::get('/patient/search', [PatientController::class, 'search'])->name('patient.search');
+
+// Returning Patient — handle the returning patient form submission
+Route::post('/patient/submit-registration-returning', [PatientController::class, 'storeReturning'])->name('patient.submit.returning');
+
+// New Patient (via BHW referral) — handle the form submission using the controller
+Route::post('/patient/submit-registration', [PatientController::class, 'registerPatient'])->name('patient.submit');

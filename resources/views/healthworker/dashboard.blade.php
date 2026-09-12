@@ -95,33 +95,39 @@
 </div>
 </div>
 </div>
+
 <nav class="flex-1 space-y-1">
-<!-- Dashboard (Active) -->
-<a class="flex items-center gap-3 px-4 py-3 text-blue-700 dark:text-blue-400 bg-white dark:bg-slate-800 rounded-r-full border-l-4 border-blue-700 transition-all duration-300 ease-out" href="#">
-<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
-<span class="text-sm font-medium font-['Inter']">Dashboard</span>
-</a>
-<!-- Clinical Encoding -->
-<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:translate-x-1 hover:text-blue-600 dark:hover:text-blue-300 transition-all duration-300 ease-out" href="#">
-<span class="material-symbols-outlined" data-icon="medical_services">medical_services</span>
-<span class="text-sm font-medium font-['Inter']">Clinical Encoding</span>
-</a>
-<!-- Treatment Tracker -->
-<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:translate-x-1 hover:text-blue-600 dark:hover:text-blue-300 transition-all duration-300 ease-out" href="#">
-<span class="material-symbols-outlined" data-icon="monitor_heart">monitor_heart</span>
-<span class="text-sm font-medium font-['Inter']">Treatment Tracker</span>
-</a>
-<!-- Patient Database -->
-<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:translate-x-1 hover:text-blue-600 dark:hover:text-blue-300 transition-all duration-300 ease-out" href="#">
-<span class="material-symbols-outlined" data-icon="database">database</span>
-<span class="text-sm font-medium font-['Inter']">Patient Database</span>
-</a>
-<!-- Compliance -->
-<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:translate-x-1 hover:text-blue-600 dark:hover:text-blue-300 transition-all duration-300 ease-out" href="#">
-<span class="material-symbols-outlined" data-icon="verified_user">verified_user</span>
-<span class="text-sm font-medium font-['Inter']">Compliance</span>
-</a>
+    <!-- Dashboard (Active) -->
+    <a class="flex items-center gap-3 px-4 py-3 text-blue-700 bg-white shadow-sm rounded-r-full border-l-4 border-blue-700 font-bold transition-all duration-200" href="{{ route('healthworker.dashboard') }}">
+        <span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+        <span class="text-sm font-['Inter']">Dashboard</span>
+    </a>
+
+    <!-- Clinical Encoding -->
+    <a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-blue-700 hover:bg-white/80 rounded-r-full hover:border-l-4 hover:border-blue-400 hover:translate-x-1 transition-all duration-200" href="{{ route('healthworker.clinical-encoding') }}">
+        <span class="material-symbols-outlined" data-icon="medical_services">medical_services</span>
+        <span class="text-sm font-medium font-['Inter']">Clinical Encoding</span>
+    </a>
+
+    <!-- Treatment Tracker -->
+    <a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-blue-700 hover:bg-white/80 rounded-r-full hover:border-l-4 hover:border-blue-400 hover:translate-x-1 transition-all duration-200" href="{{ route('healthworker.treatment-tracker') }}">
+        <span class="material-symbols-outlined" data-icon="monitor_heart">monitor_heart</span>
+        <span class="text-sm font-medium font-['Inter']">Treatment Tracker</span>
+    </a>
+
+    <!-- Patient Database -->
+    <a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-blue-700 hover:bg-white/80 rounded-r-full hover:border-l-4 hover:border-blue-400 hover:translate-x-1 transition-all duration-200" href="{{ route('healthworker.patient-database') }}">
+        <span class="material-symbols-outlined" data-icon="database">database</span>
+        <span class="text-sm font-medium font-['Inter']">Patient Database</span>
+    </a>
+
+    <!-- Compliance -->
+    <a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-blue-700 hover:bg-white/80 rounded-r-full hover:border-l-4 hover:border-blue-400 hover:translate-x-1 transition-all duration-200" href="{{ route('healthworker.compliance') }}">
+        <span class="material-symbols-outlined" data-icon="verified_user">verified_user</span>
+        <span class="text-sm font-medium font-['Inter']">Compliance</span>
+    </a>
 </nav>
+
 <div class="mt-auto px-6 space-y-1 pt-6 border-t border-slate-200 dark:border-slate-800">
 </div>
 </aside>

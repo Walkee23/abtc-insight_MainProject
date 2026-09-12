@@ -109,34 +109,45 @@
                 <h1 class="text-lg font-bold text-blue-900 dark:text-blue-100 leading-none">ABTC-Insight</h1>
             </div>
         </div>
-        <nav class="flex-1 space-y-1 px-3">
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg border-l-4 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all"
+
+        <nav class="flex-1 space-y-1">
+            <!-- Dashboard (Inactive) -->
+            <a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-blue-700 hover:bg-white/80 rounded-r-full hover:border-l-4 hover:border-blue-400 hover:translate-x-1 transition-all duration-200"
                 href="{{ route('healthworker.dashboard') }}">
                 <span class="material-symbols-outlined">dashboard</span>
-                <span class="text-sm">Dashboard</span>
+                <span class="text-sm font-medium font-['Inter']">Dashboard</span>
             </a>
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg border-l-4 border-blue-700 text-blue-700 bg-blue-50 dark:bg-blue-900/20 font-semibold transition-all"
+
+            <!-- Clinical Encoding (ACTIVE - Flat Left, Rounded Pill Right) -->
+            <a class="flex items-center gap-3 px-4 py-3 text-blue-700 bg-white shadow-sm rounded-r-full border-l-4 border-blue-700 font-bold transition-all duration-200"
                 href="{{ route('healthworker.clinical-encoding') }}">
-                <span class="material-symbols-outlined"
-                    style="font-variation-settings: 'FILL' 1;">medical_services</span>
-                <span class="text-sm">Clinical Encoding</span>
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">medical_services</span>
+                <span class="text-sm font-['Inter']">Clinical Encoding</span>
             </a>
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg border-l-4 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all"
+
+            <!-- Treatment Tracker (Inactive) -->
+            <a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-blue-700 hover:bg-white/80 rounded-r-full hover:border-l-4 hover:border-blue-400 hover:translate-x-1 transition-all duration-200"
                 href="{{ route('healthworker.treatment-tracker') }}">
                 <span class="material-symbols-outlined">monitor_heart</span>
-                <span class="text-sm">Treatment Tracker</span>
+                <span class="text-sm font-medium font-['Inter']">Treatment Tracker</span>
             </a>
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg border-l-4 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all"
+
+            <!-- Patient Database (Inactive) -->
+            <a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-blue-700 hover:bg-white/80 rounded-r-full hover:border-l-4 hover:border-blue-400 hover:translate-x-1 transition-all duration-200"
                 href="{{ route('healthworker.patient-database') }}">
                 <span class="material-symbols-outlined">database</span>
-                <span class="text-sm">Patient Database</span>
+                <span class="text-sm font-medium font-['Inter']">Patient Database</span>
             </a>
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg border-l-4 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all"
+
+            <!-- Compliance (Inactive) -->
+            <a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-blue-700 hover:bg-white/80 rounded-r-full hover:border-l-4 hover:border-blue-400 hover:translate-x-1 transition-all duration-200"
                 href="{{ route('healthworker.compliance') }}">
                 <span class="material-symbols-outlined">verified_user</span>
-                <span class="text-sm">Compliance</span>
+                <span class="text-sm font-medium font-['Inter']">Compliance</span>
             </a>
+            
         </nav>
+        
     </aside>
     <!-- TopNavBar -->
     <header

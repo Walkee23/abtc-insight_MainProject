@@ -202,7 +202,7 @@
 <div class="w-2 h-2 rounded-full bg-green-500"></div>
 <h2 class="text-lg font-bold text-on-surface tracking-tight">Priority Verification Queue (P-Series)</h2>
 </div>
-<span class="text-xs font-medium text-on-surface-variant bg-surface-container px-3 py-1 rounded-full uppercase tracking-wider">3 Pending</span>
+<span class="text-xs font-medium text-on-surface-variant bg-surface-container px-3 py-1 rounded-full uppercase tracking-wider">{{ $priorityQueue->count() }} Pending</span>
 </div>
 <div class="overflow-x-auto">
 <table class="w-full text-left">
@@ -215,42 +215,27 @@
 </tr>
 </thead>
 <tbody class="divide-y divide-slate-50">
+@forelse($priorityQueue as $row)
 <tr class="hover:bg-slate-50/50 transition-colors group">
-<td class="px-6 py-4 font-mono font-bold text-primary">P-1042</td>
-<td class="px-6 py-4 font-medium">Maria Clara De los Santos</td>
+<td class="px-6 py-4 font-mono font-bold text-primary">{{ $row->queue_id }}</td>
+<td class="px-6 py-4 font-medium">{{ $row->patient_name }}</td>
 <td class="px-6 py-4">
-<span class="px-3 py-1 rounded-full text-[10px] font-bold bg-tertiary-fixed text-on-tertiary-fixed-variant uppercase tracking-wider">Senior Citizen</span>
+<span class="px-3 py-1 rounded-full text-[10px] font-bold bg-tertiary-fixed text-on-tertiary-fixed-variant uppercase tracking-wider">Priority</span>
 </td>
 <td class="px-6 py-4 text-right">
-<button class="bg-primary text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-primary-container transition-all active:scale-95 shadow-sm">
-                                        Verify Attendance &amp; Transfer
-                                    </button>
+<form action="{{ route('staff.verify-attendance', $row->inflow_record_id) }}" method="POST">
+@csrf
+<button type="submit" class="bg-primary text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-primary-container transition-all active:scale-95 shadow-sm">
+    Verify Attendance &amp; Transfer
+</button>
+</form>
 </td>
 </tr>
-<tr class="hover:bg-slate-50/50 transition-colors group">
-<td class="px-6 py-4 font-mono font-bold text-primary">P-1045</td>
-<td class="px-6 py-4 font-medium">Elena G. Vicencio</td>
-<td class="px-6 py-4">
-<span class="px-3 py-1 rounded-full text-[10px] font-bold bg-error-container text-on-error-container uppercase tracking-wider">Pregnant</span>
-</td>
-<td class="px-6 py-4 text-right">
-<button class="bg-primary text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-primary-container transition-all active:scale-95 shadow-sm">
-                                        Verify Attendance &amp; Transfer
-                                    </button>
-</td>
+@empty
+<tr>
+<td colspan="4" class="px-6 py-8 text-center text-slate-500">No priority patients pending verification.</td>
 </tr>
-<tr class="hover:bg-slate-50/50 transition-colors group">
-<td class="px-6 py-4 font-mono font-bold text-primary">P-1048</td>
-<td class="px-6 py-4 font-medium">Ricardo P. Dalisay</td>
-<td class="px-6 py-4">
-<span class="px-3 py-1 rounded-full text-[10px] font-bold bg-secondary-container text-on-secondary-container uppercase tracking-wider">PWD</span>
-</td>
-<td class="px-6 py-4 text-right">
-<button class="bg-primary text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-primary-container transition-all active:scale-95 shadow-sm">
-                                        Verify Attendance &amp; Transfer
-                                    </button>
-</td>
-</tr>
+@endforelse
 </tbody>
 </table>
 </div>
@@ -259,7 +244,7 @@
 <section class="bg-surface-container-lowest rounded-lg ghost-border overflow-hidden shadow-sm">
 <div class="p-5 flex items-center justify-between border-b border-slate-50">
 <h2 class="text-lg font-bold text-on-surface tracking-tight">Normal Verification Queue (N-Series)</h2>
-<span class="text-xs font-medium text-on-surface-variant bg-surface-container px-3 py-1 rounded-full uppercase tracking-wider">12 Pending</span>
+<span class="text-xs font-medium text-on-surface-variant bg-surface-container px-3 py-1 rounded-full uppercase tracking-wider">{{ $normalQueue->count() }} Pending</span>
 </div>
 <div class="overflow-x-auto">
 <table class="w-full text-left">
@@ -273,45 +258,28 @@
 </tr>
 </thead>
 <tbody class="divide-y divide-slate-50">
+@forelse($normalQueue as $row)
 <tr class="hover:bg-slate-50/50 transition-colors group">
-<td class="px-6 py-4 font-mono font-bold text-secondary">N-4421</td>
-<td class="px-6 py-4 font-medium">Juan Miguel Ramos</td>
-<td class="px-6 py-4 text-sm text-on-surface-variant">Brgy. Guadalupe</td>
+<td class="px-6 py-4 font-mono font-bold text-secondary">{{ $row->queue_id }}</td>
+<td class="px-6 py-4 font-medium">{{ $row->patient_name }}</td>
+<td class="px-6 py-4 text-sm text-on-surface-variant">Brgy. {{ $row->barangay }}</td>
 <td class="px-6 py-4">
-<span class="px-2 py-1 rounded text-[10px] font-bold bg-blue-50 text-blue-700 uppercase">New Case</span>
+<span class="px-2 py-1 rounded text-[10px] font-bold bg-blue-50 text-blue-700 uppercase">Pending</span>
 </td>
 <td class="px-6 py-4 text-right">
-<button class="bg-primary text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-primary-container transition-all active:scale-95">
-                                        Verify Attendance &amp; Transfer
-                                    </button>
+<form action="{{ route('staff.verify-attendance', $row->inflow_record_id) }}" method="POST">
+@csrf
+<button type="submit" class="bg-primary text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-primary-container transition-all active:scale-95">
+    Verify Attendance &amp; Transfer
+</button>
+</form>
 </td>
 </tr>
-<tr class="hover:bg-slate-50/50 transition-colors group">
-<td class="px-6 py-4 font-mono font-bold text-secondary">N-4422</td>
-<td class="px-6 py-4 font-medium">Sophia Loren Cruz</td>
-<td class="px-6 py-4 text-sm text-on-surface-variant">Brgy. Lahug</td>
-<td class="px-6 py-4">
-<span class="px-2 py-1 rounded text-[10px] font-bold bg-slate-100 text-slate-700 uppercase">Returning</span>
-</td>
-<td class="px-6 py-4 text-right">
-<button class="bg-primary text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-primary-container transition-all active:scale-95">
-                                        Verify Attendance &amp; Transfer
-                                    </button>
-</td>
+@empty
+<tr>
+<td colspan="5" class="px-6 py-8 text-center text-slate-500">No normal patients pending verification.</td>
 </tr>
-<tr class="hover:bg-slate-50/50 transition-colors group">
-<td class="px-6 py-4 font-mono font-bold text-secondary">N-4423</td>
-<td class="px-6 py-4 font-medium">Pedro Manuel Kalaw</td>
-<td class="px-6 py-4 text-sm text-on-surface-variant">Brgy. Labangon</td>
-<td class="px-6 py-4">
-<span class="px-2 py-1 rounded text-[10px] font-bold bg-blue-50 text-blue-700 uppercase">New Case</span>
-</td>
-<td class="px-6 py-4 text-right">
-<button class="bg-primary text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-primary-container transition-all active:scale-95">
-                                        Verify Attendance &amp; Transfer
-                                    </button>
-</td>
-</tr>
+@endforelse
 </tbody>
 </table>
 </div>

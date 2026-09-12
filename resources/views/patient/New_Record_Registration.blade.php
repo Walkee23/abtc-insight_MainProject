@@ -781,6 +781,43 @@
         markStepActive(4);
       });
     }
+
+    // Clear Form: native reset only clears input/select values, so this cleans up
+    // everything else that JS controls (progress steps, dropdown display text,
+    // PhilHealth toggle, and highlighted priority cards)
+    document.querySelector('form').addEventListener('reset', function () {
+      setTimeout(function () {
+        // Reset progress indicator back to step 1
+        stepDone[1] = false;
+        stepDone[2] = false;
+        stepDone[3] = false;
+        stepDone[4] = false;
+        setStepState(1, 'active');
+        setStepState(2, 'upcoming');
+        setStepState(3, 'upcoming');
+        setStepState(4, 'upcoming');
+
+        // Reset Sex and Civil Status dropdown display text
+        const sexDisplayText = document.getElementById('sexDisplayText');
+        sexDisplayText.textContent = 'Select';
+        sexDisplayText.classList.remove('text-on-surface');
+        sexDisplayText.classList.add('text-on-surface-variant');
+
+        const civilStatusDisplayText = document.getElementById('civilStatusDisplayText');
+        civilStatusDisplayText.textContent = 'Select';
+        civilStatusDisplayText.classList.remove('text-on-surface');
+        civilStatusDisplayText.classList.add('text-on-surface-variant');
+
+        // Hide PhilHealth member details again
+        document.getElementById('philhealthDetails').classList.add('hidden');
+
+        // Un-highlight all priority option cards
+        priorityOptions.forEach(opt => {
+          opt.classList.remove('border-primary', 'bg-primary/5', 'ring-2', 'ring-primary/20');
+          opt.classList.add('border-surface-container-high');
+        });
+      }, 0);
+    });
   </script>
 </body>
 

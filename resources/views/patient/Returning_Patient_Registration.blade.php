@@ -101,6 +101,10 @@
       background-color: #e0e3e5;
       color: #717782;
     }
+
+    .clinical-gradient {
+      background: linear-gradient(135deg, #004a93 0%, #0b61bb 100%);
+    }
   </style>
 </head>
 

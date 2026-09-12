@@ -336,7 +336,7 @@
                 Number</label>
               <input
                 class="w-full bg-surface-container-highest border-none rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
-                name="contact_number" placeholder="+63 000 000 0000" required type="tel" />
+                name="contact_number" id="contactNumberInput" placeholder="+63 000 000 0000" required type="tel" />
             </div>
             <div class="col-span-2">
               <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5 ml-1">BARANGAY OF
@@ -518,9 +518,8 @@
       }
     });
 
-    // Interactive progress indicator: a step gets checked off once its
-    // completing action happens (e.g. picking a priority option), or as soon
-    // as the user moves on to the next step's first field.
+    // Interactive progress indicator: a step is only checked off once every
+    // required field within that step is actually filled in.
     const totalSteps = 4;
     const stepDone = { 1: false, 2: false, 3: false, 4: false };
 
@@ -542,29 +541,61 @@
         circle.className = ACTIVE_CIRCLE;
         circle.textContent = stepNum;
         label.className = 'text-[10px] uppercase font-bold tracking-tighter text-primary transition-colors';
+        if (line) line.className = 'flex-1 h-[2px] bg-surface-container-high mx-1 -mt-6 transition-colors';
       } else {
         circle.className = UPCOMING_CIRCLE;
         circle.textContent = stepNum;
         label.className = 'text-[10px] uppercase font-bold tracking-tighter text-on-surface-variant transition-colors';
+        if (line) line.className = 'flex-1 h-[2px] bg-surface-container-high mx-1 -mt-6 transition-colors';
       }
     }
 
-    // Mark a step done, and make the next not-yet-done step the active one
-    function markStepDone(stepNum) {
-      if (stepDone[stepNum]) return;
-      stepDone[stepNum] = true;
-      setStepState(stepNum, 'done');
-
-      const nextStep = stepNum + 1;
-      if (nextStep <= totalSteps && !stepDone[nextStep]) {
-        setStepState(nextStep, 'active');
-      }
+    // Step 2 (Personal Info) is complete only when every required field has a value
+    function isStep2Complete() {
+      return bhwReferralInput.value.trim() !== '' &&
+        surnameInput.value.trim() !== '' &&
+        givenNameInput.value.trim() !== '' &&
+        dobInput.value !== '' &&
+        sexInput.value !== '' &&
+        civilStatusInput.value !== '' &&
+        contactNumberInput.value.trim() !== '' &&
+        barangayInput.value.trim() !== '';
     }
 
-    // Focusing into a step's field also marks it active (in case it isn't already)
-    function markStepActive(stepNum) {
-      if (!stepDone[stepNum]) {
-        setStepState(stepNum, 'active');
+    // Step 3 (PhilHealth) is complete once a Yes/No choice is made -
+    // and if Yes, the member name and DOB must be filled too
+    function isStep3Complete() {
+      const selected = document.querySelector('input[name="philhealth_member"]:checked');
+      if (!selected) return false;
+      if (selected.value === 'yes') {
+        return philhealthMemberNameInput.value.trim() !== '' && philhealthMemberDobInput.value !== '';
+      }
+      return true;
+    }
+
+    // Step 1 (Priority Status) is a single click, tracked directly
+    function isStep1Complete() {
+      return stepDone[1] === true;
+    }
+
+    // Recalculate all 4 steps from scratch every time something relevant changes,
+    // so a step can un-check itself if a required field gets cleared afterward
+    function recalcSteps() {
+      const completions = [isStep1Complete(), isStep2Complete(), isStep3Complete(), false];
+      let activeAssigned = false;
+
+      for (let i = 1; i <= totalSteps; i++) {
+        const done = completions[i - 1];
+        stepDone[i] = done;
+
+        if (done) {
+          setStepState(i, 'done');
+        } else if (!activeAssigned) {
+          setStepState(i, 'active');
+          activeAssigned = true;
+        } else {
+          setStepState(i, 'upcoming');
+        }
       }
     }
 
@@ -739,18 +770,23 @@
         this.classList.add('border-primary', 'bg-primary/5', 'ring-2', 'ring-primary/20');
 
         // Step 1 is done once a priority option is picked
-        markStepDone(1);
+        stepDone[1] = true;
+        recalcSteps();
       });
     });
 
-    // Focusing the first field of the next step also completes the step before it
+    // Step 2 fields: recalculate completion every time any of them change
     const bhwReferralInput = document.getElementById('bhwReferralInput');
-    if (bhwReferralInput) {
-      bhwReferralInput.addEventListener('focus', function () {
-        markStepDone(1);
-        markStepActive(2);
-      });
-    }
+    const contactNumberInput = document.getElementById('contactNumberInput');
+    [bhwReferralInput, surnameInput, givenNameInput, dobInput, contactNumberInput, barangayInput].forEach(field => {
+      if (field) {
+        field.addEventListener('input', recalcSteps);
+      }
+    });
+    // Sex and Civil Status are hidden inputs updated by the custom dropdowns above,
+    // so recalcSteps() also needs to run whenever their dropdown option is picked
+    document.getElementById('sexDropdown').addEventListener('click', recalcSteps);
+    document.getElementById('civilStatusDropdown').addEventListener('click', recalcSteps);
 
     const philhealthRadios = document.querySelectorAll('input[name="philhealth_member"]');
     const philhealthDetails = document.getElementById('philhealthDetails');
@@ -758,11 +794,6 @@
     const philhealthMemberDobInput = document.getElementById('philhealthMemberDobInput');
 
     philhealthRadios.forEach(radio => {
-      radio.addEventListener('focus', function () {
-        markStepDone(2);
-        markStepActive(3);
-      });
-
       radio.addEventListener('change', function () {
         if (this.value === 'yes') {
           philhealthDetails.classList.remove('hidden');
@@ -771,16 +802,16 @@
           philhealthMemberNameInput.value = '';
           philhealthMemberDobInput.value = '';
         }
+        recalcSteps();
       });
     });
 
-    const currentIllnessesInput = document.getElementById('currentIllnessesInput');
-    if (currentIllnessesInput) {
-      currentIllnessesInput.addEventListener('focus', function () {
-        markStepDone(3);
-        markStepActive(4);
-      });
-    }
+    // Step 3 fields: recalculate whenever the member name/DOB change (only relevant when Yes is picked)
+    [philhealthMemberNameInput, philhealthMemberDobInput].forEach(field => {
+      if (field) {
+        field.addEventListener('input', recalcSteps);
+      }
+    });
 
     // Clear Form: native reset only clears input/select values, so this cleans up
     // everything else that JS controls (progress steps, dropdown display text,

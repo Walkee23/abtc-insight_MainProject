@@ -235,7 +235,7 @@
               <!-- Editable Fields -->
               <div class="space-y-1.5">
                 <label class="text-xs font-bold text-emerald-700 uppercase ml-1">Contact Number</label>
-                <input name="contact_num" class="w-full bg-emerald-50/30 border-0 border-b-2 border-emerald-500/30 focus:border-emerald-500 focus:ring-0 text-on-surface font-medium px-4 py-3.5 rounded-t-lg transition-all" type="text" placeholder="09XX XXX XXXX" />
+                <input name="contact_num" id="returningContactNumberInput" class="w-full bg-emerald-50/30 border-0 border-b-2 border-emerald-500/30 focus:border-emerald-500 focus:ring-0 text-on-surface font-medium px-4 py-3.5 rounded-t-lg transition-all" type="text" placeholder="09XX XXX XXXX" />
               </div>
               <div class="space-y-1.5">
                 <label class="text-xs font-bold text-on-surface-variant uppercase ml-1">Civil Status</label>
@@ -471,6 +471,34 @@
     const priorityInput = document.getElementById('priorityInput');
     const priorityOptions = document.querySelectorAll('.priority-option');
 
+    // Step 2 (Confirm Details) is only done once Contact Number and Barangay are actually filled in
+    const returningContactNumberInput = document.getElementById('returningContactNumberInput');
+
+    function isReturningStep2Complete() {
+      return returningContactNumberInput.value.trim() !== '' &&
+        returningBarangayInput.value.trim() !== '';
+    }
+
+    function recalcReturningStep2() {
+      // Only recalculate step 2 once a record has actually been found (step 1 done)
+      if (!document.getElementById('detailsSection') || document.getElementById('detailsSection').classList.contains('hidden')) {
+        return;
+      }
+      if (isReturningStep2Complete()) {
+        markReturningStep(2, 'done');
+        markReturningStep(3, 'active');
+      } else {
+        markReturningStep(2, 'active');
+        markReturningStep(3, 'inactive');
+      }
+    }
+
+    [returningContactNumberInput, returningBarangayInput].forEach(field => {
+      if (field) {
+        field.addEventListener('input', recalcReturningStep2);
+      }
+    });
+
     priorityOptions.forEach(option => {
       option.addEventListener('click', function(e) {
         // Prevent the button from submitting the form immediately
@@ -488,10 +516,6 @@
         // 2. Add the blue highlight to the CLICKED card
         this.classList.remove('border-surface-container-high');
         this.classList.add('border-primary', 'bg-primary/5', 'ring-2', 'ring-primary/20');
-
-        // Step 2 is now done, Step 3 becomes active
-        markReturningStep(2, 'done');
-        markReturningStep(3, 'active');
       });
     });
 

@@ -91,23 +91,28 @@
 </head>
 <body class="bg-surface text-on-surface antialiased">
     <!-- SideNavBar Component -->
-    <aside class="h-screen w-64 fixed left-0 top-0 overflow-y-auto bg-surface-container-low flex flex-col py-8 z-50 border-r border-outline-variant/10">
-    <div class="px-6 mb-8 flex items-center gap-3">
-        <div class="w-10 h-10 bg-primary-container rounded-xl flex items-center justify-center text-white shadow-md">
-            <span class="material-symbols-outlined" data-icon="shield">shield</span>
+    <aside class="h-screen w-64 fixed left-0 top-0 bg-slate-50 dark:bg-slate-900 flex flex-col border-r border-slate-200/80 dark:border-slate-800/50 z-50">
+        <div class="px-6 mb-8 flex items-center gap-3">
+            <div class="w-10 h-10 bg-primary-container rounded-xl flex items-center justify-center text-white shadow-md">
+                <span class="material-symbols-outlined" data-icon="shield">shield</span>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold tracking-tight text-primary">ABTC-Insight</h1>
+            </div>
         </div>
-        <div>
-            <h1 class="text-xl font-bold tracking-tight text-primary">ABTC-Insight</h1>
-        </div>
-    </div>
-        <nav class="flex-1 space-y-1">
-            <a class="flex items-center gap-3 px-4 py-3.5 text-primary font-bold bg-primary/5 border-l-4 border-primary transition-all" href="{{ route('bhw.dashboard') }}">
-                <span class="material-symbols-outlined font-variation-settings-fill">assignment_turned_in</span>
-                <span class="text-sm">My Referrals</span>
+                <nav class="space-y-1 px-4">
+            <!-- My Referrals (Active) -->
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-blue-700 dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600 translate-x-1 duration-150" 
+            href="{{ route('bhw.dashboard') }}">
+                <span class="material-symbols-outlined">assignment_turned_in</span>
+                <span class="font-['Inter'] text-sm tracking-wide">My Referrals</span>
             </a>
-            <a class="flex items-center gap-3 px-6 py-4 text-on-surface-variant hover:bg-surface-container-highest transition-all" href="{{ route('bhw.referral') }}">
+
+            <!-- Create New Referral (Inactive - Off-White Hover) -->
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all duration-150" 
+            href="{{ route('bhw.referral') }}">
                 <span class="material-symbols-outlined">add_circle</span>
-                <span class="text-sm font-medium">Create New Referral</span>
+                <span class="font-['Inter'] text-sm tracking-wide">Create New Referral</span>
             </a>
         </nav>
         <div class="mt-auto px-4 pb-4">
@@ -257,151 +262,72 @@
                                     <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
                                         <span class="w-1.5 h-1.5 rounded-full bg-amber-600"></span> Pending
                                     </span>
-</td>
-<td class="px-6 py-5 text-right">
-<div class="flex justify-end gap-2">
-<button class="p-2 text-on-surface-variant hover:text-primary transition-all">
-<span class="material-symbols-outlined text-lg" data-icon="visibility">visibility</span>
-</button>
-<button class="p-2 text-on-surface-variant hover:text-primary transition-all">
-<span class="material-symbols-outlined text-lg" data-icon="print">print</span>
-</button>
-</div>
-</td>
-</tr>
-<!-- Row 2: Received -->
-<tr class="hover:bg-surface-container-low/50 transition-colors group">
-<td class="px-6 py-5">
-<span class="text-xs font-black font-mono text-primary bg-primary/5 px-2 py-1 rounded">BRY-001-20250428-0019</span>
-</td>
-<td class="px-6 py-5">
-<p class="text-sm font-bold text-on-surface">Maria Clara Ibarra</p>
-</td>
-<td class="px-6 py-5">
-<p class="text-sm text-on-surface-variant">Guadalupe</p>
-</td>
-<td class="px-6 py-5">
-<p class="text-sm text-on-surface-variant">Apr 28, 2025</p>
-</td>
-<td class="px-6 py-5">
-<span class="text-xs font-semibold text-secondary bg-secondary-container/40 px-3 py-1 rounded-full">Non-Bite</span>
-</td>
-<td class="px-6 py-5 text-center">
-<span class="inline-flex items-center rounded-full bg-secondary-fixed px-3 py-1 text-xs font-bold text-on-secondary-fixed-variant">
-<span class="w-1.5 h-1.5 rounded-full bg-secondary mr-2"></span>
-                                        Received
+                                    @elseif($referral->status === 'Received')
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span> Received
                                     </span>
-</td>
-<td class="px-6 py-5 text-right">
-<div class="flex justify-end gap-2">
-<button class="p-2 text-on-surface-variant hover:text-primary transition-all">
-<span class="material-symbols-outlined text-lg" data-icon="visibility">visibility</span>
-</button>
-<button class="p-2 text-on-surface-variant hover:text-primary transition-all">
-<span class="material-symbols-outlined text-lg" data-icon="print">print</span>
-</button>
-</div>
-</td>
-</tr>
-<!-- Row 3: Completed -->
-<tr class="hover:bg-surface-container-low/50 transition-colors group">
-<td class="px-6 py-5">
-<span class="text-xs font-black font-mono text-primary bg-primary/5 px-2 py-1 rounded">BRY-001-20250425-0012</span>
-</td>
-<td class="px-6 py-5">
-<p class="text-sm font-bold text-on-surface">Jose Rizal</p>
-</td>
-<td class="px-6 py-5">
-<p class="text-sm text-on-surface-variant">Guadalupe</p>
-</td>
-<td class="px-6 py-5">
-<p class="text-sm text-on-surface-variant">Apr 25, 2025</p>
-</td>
-<td class="px-6 py-5">
-<span class="text-xs font-semibold text-error bg-error-container/40 px-3 py-1 rounded-full">Bite</span>
-</td>
-<td class="px-6 py-5 text-center">
-<span class="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-800">
-<span class="w-1.5 h-1.5 rounded-full bg-green-600 mr-2"></span>
-                                        Completed
+                                    @elseif($referral->status === 'Completed')
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span> Completed
                                     </span>
-</td>
-<td class="px-6 py-5 text-right">
-<div class="flex justify-end gap-2">
-<button class="p-2 text-on-surface-variant hover:text-primary transition-all">
-<span class="material-symbols-outlined text-lg" data-icon="visibility">visibility</span>
-</button>
-<button class="p-2 text-on-surface-variant hover:text-primary transition-all">
-<span class="material-symbols-outlined text-lg" data-icon="print">print</span>
-</button>
-</div>
-</td>
-</tr>
-<!-- Row 4: Pending -->
-<tr class="hover:bg-surface-container-low/50 transition-colors group">
-<td class="px-6 py-5">
-<span class="text-xs font-black font-mono text-primary bg-primary/5 px-2 py-1 rounded">BRY-001-20250422-0008</span>
-</td>
-<td class="px-6 py-5">
-<p class="text-sm font-bold text-on-surface">Andres Bonifacio</p>
-</td>
-<td class="px-6 py-5">
-<p class="text-sm text-on-surface-variant">Guadalupe</p>
-</td>
-<td class="px-6 py-5">
-<p class="text-sm text-on-surface-variant">Apr 22, 2025</p>
-</td>
-<td class="px-6 py-5">
-<span class="text-xs font-semibold text-error bg-error-container/40 px-3 py-1 rounded-full">Bite</span>
-</td>
-<td class="px-6 py-5 text-center">
-<span class="inline-flex items-center rounded-full bg-tertiary-fixed px-3 py-1 text-xs font-bold text-on-tertiary-fixed-variant">
-<span class="w-1.5 h-1.5 rounded-full bg-tertiary mr-2"></span>
-                                        Pending
+                                    @else
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-800">
+                                        {{ $referral->status }}
                                     </span>
-</td>
-<td class="px-6 py-5 text-right">
-<div class="flex justify-end gap-2">
-<button class="p-2 text-on-surface-variant hover:text-primary transition-all">
-<span class="material-symbols-outlined text-lg" data-icon="visibility">visibility</span>
-</button>
-<button class="p-2 text-on-surface-variant hover:text-primary transition-all">
-<span class="material-symbols-outlined text-lg" data-icon="print">print</span>
-</button>
-</div>
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-<!-- Pagination Footer -->
-<div class="px-6 py-5 bg-surface-container-low/30 border-t border-outline-variant/5 flex justify-between items-center">
-<p class="text-xs font-medium text-on-surface-variant">Showing 1 to 4 of 124 referrals</p>
-<div class="flex gap-2">
-<button class="p-2 rounded-lg border border-outline-variant/30 text-on-surface-variant hover:bg-surface-container-highest transition-all disabled:opacity-30">
-<span class="material-symbols-outlined text-sm" data-icon="chevron_left">chevron_left</span>
-</button>
-<button class="p-2 rounded-lg border border-outline-variant/30 text-on-surface-variant hover:bg-surface-container-highest transition-all">
-<span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
-</button>
-</div>
-</div>
-</div>
-<!-- Contextual Help / Status Legend -->
-<div class="mt-8 flex gap-8">
-<div class="flex items-center gap-2">
-<div class="w-2 h-2 rounded-full bg-tertiary"></div>
-<span class="text-[11px] font-bold text-on-surface-variant uppercase">Pending: Waiting for health center assessment</span>
-</div>
-<div class="flex items-center gap-2">
-<div class="w-2 h-2 rounded-full bg-secondary"></div>
-<span class="text-[11px] font-bold text-on-surface-variant uppercase">Received: Patient has arrived at ABTC</span>
-</div>
-<div class="flex items-center gap-2">
-<div class="w-2 h-2 rounded-full bg-green-600"></div>
-<span class="text-[11px] font-bold text-on-surface-variant uppercase">Completed: Full vaccination series recorded</span>
-</div>
-</div>
-</div>
-</main>
-</body></html>
+                                    @endif
+                                </td>
+                                <!-- Actions -->
+                                <td class="px-6 py-4 text-right">
+                                    <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <a href="{{ route('bhw.print', $referral->referral_id) }}" target="_blank" class="p-1.5 text-slate-400 hover:text-blue-600 transition-colors" title="View">
+                                            <span class="material-symbols-outlined text-sm">visibility</span>
+                                        </a>
+                                        <a href="{{ route('bhw.print', $referral->referral_id) }}?autoprint=true" target="_blank" class="p-1.5 text-slate-400 hover:text-blue-600 transition-colors" title="Print">
+                                            <span class="material-symbols-outlined text-sm">print</span>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="7" class="px-6 py-8 text-center text-slate-500">
+                                    No referrals found. Click "+ New Referral" to create one.
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Pagination Footer -->
+                <div class="px-6 py-5 bg-surface-container-low/30 border-t border-outline-variant/5 flex justify-between items-center">
+                    <p class="text-xs font-medium text-on-surface-variant">Showing 1 to 4 of 124 referrals</p>
+                    <div class="flex gap-2">
+                        <button class="p-2 rounded-lg border border-outline-variant/30 text-on-surface-variant hover:bg-surface-container-highest transition-all disabled:opacity-30">
+                            <span class="material-symbols-outlined text-sm" data-icon="chevron_left">chevron_left</span>
+                        </button>
+                        <button class="p-2 rounded-lg border border-outline-variant/30 text-on-surface-variant hover:bg-surface-container-highest transition-all">
+                            <span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- Contextual Help / Status Legend -->
+            <div class="mt-8 flex gap-8">
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-tertiary"></div>
+                    <span class="text-[11px] font-bold text-on-surface-variant uppercase">Pending: Waiting for health center assessment</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-secondary"></div>
+                    <span class="text-[11px] font-bold text-on-surface-variant uppercase">Received: Patient has arrived at ABTC</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-green-600"></div>
+                    <span class="text-[11px] font-bold text-on-surface-variant uppercase">Completed: Full vaccination series recorded</span>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+
+</html>

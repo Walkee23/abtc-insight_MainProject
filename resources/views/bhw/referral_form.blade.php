@@ -90,25 +90,32 @@
 </head>
 <body class="text-on-surface">
 <!-- Sidebar Navigation -->
-<aside class="h-screen w-64 fixed left-0 top-0 overflow-y-auto bg-surface-container-low flex flex-col py-8 z-50 border-r border-outline-variant/10">
-<div class="px-6 mb-8 flex items-center gap-3">
-<div class="w-10 h-10 bg-primary-container rounded-xl flex items-center justify-center text-white shadow-md">
-<span class="material-symbols-outlined" data-icon="shield">shield</span>
-</div>
-<div>
-<h1 class="text-xl font-bold tracking-tight text-primary">ABTC-Insight</h1>
-</div>
-</div>
-<nav class="flex-1 space-y-1">
-<a class="flex items-center gap-3 px-6 py-4 text-on-surface-variant hover:bg-surface-container-highest transition-all" href="{{ route('bhw.dashboard') }}">
-<span class="material-symbols-outlined">assignment_turned_in</span>
-<span class="text-sm font-medium">My Referrals</span>
-</a>
-<a class="flex items-center gap-3 px-4 py-3.5 text-primary font-bold bg-primary/5 border-l-4 border-primary transition-all" href="#">
-<span class="material-symbols-outlined font-variation-settings-fill">add_circle</span>
-<span class="text-sm">Create New Referral</span>
-</a>
+<aside class="h-screen w-64 fixed left-0 top-0 bg-slate-50 dark:bg-slate-900 flex flex-col border-r border-slate-200/80 dark:border-slate-800/50 z-50">
+    <div class="px-6 mb-8 flex items-center gap-3">
+        <div class="w-10 h-10 bg-primary-container rounded-xl flex items-center justify-center text-white shadow-md">
+            <span class="material-symbols-outlined" data-icon="shield">shield</span>
+        </div>
+        <div>
+            <h1 class="text-xl font-bold tracking-tight text-primary">ABTC-Insight</h1>
+        </div>
+    </div>
+
+    <nav class="space-y-1 px-4">
+        <!-- My Referrals (Inactive - Off-White Hover) -->
+        <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all duration-150" 
+        href="{{ route('bhw.dashboard') }}">
+            <span class="material-symbols-outlined">assignment_turned_in</span>
+            <span class="font-['Inter'] text-sm tracking-wide">My Referrals</span>
+        </a>
+
+        <!-- Create New Referral (Active - Admin Style) -->
+        <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-blue-700 dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600 translate-x-1 duration-150" 
+        href="{{ route('bhw.referral') }}">
+            <span class="material-symbols-outlined">add_circle</span>
+            <span class="font-['Inter'] text-sm tracking-wide">Create New Referral</span>
+        </a>
 </nav>
+
 <div class="mt-auto px-4 pb-4">
 <a href="{{ route('bhw.dashboard') }}" class="w-full py-4 bg-primary text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:bg-primary-container transition-all">
 <span class="material-symbols-outlined">arrow_back</span>

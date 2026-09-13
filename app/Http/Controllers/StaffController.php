@@ -8,25 +8,37 @@ use Illuminate\Support\Facades\DB;
 class StaffController extends Controller
 {
     // Patient Verification page — show Pending walk-ins split into Priority/Normal queues
-    public function patientVerification()
+    public function patientVerification(Request $request)
     {
-        $priorityQueue = DB::table('inflow_general_particulars')
-            ->where('status', 'Pending')
-            ->where('queue_id', 'LIKE', 'P%')
-            ->orderBy('queue_date')
-            ->orderBy('queue_id')
-            ->get();
+        $search = $request->input('search');
 
-        $normalQueue = DB::table('inflow_general_particulars')
-            ->where('status', 'Pending')
-            ->where('queue_id', 'LIKE', 'N%')
-            ->orderBy('queue_date')
-            ->orderBy('queue_id')
-            ->get();
+    $priorityQuery = DB::table('inflow_general_particulars')
+        ->where('status', 'Pending')
+        ->where('queue_id', 'LIKE', 'P%');
 
-        return view('staff.Patient_Verification', compact('priorityQueue', 'normalQueue'));
+    $normalQuery = DB::table('inflow_general_particulars')
+        ->where('status', 'Pending')
+        ->where('queue_id', 'LIKE', 'N%');
+
+    if ($search) {
+        $applySearch = function ($query) use ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('patient_name', 'LIKE', "%{$search}%")
+                  ->orWhere('queue_id', $search)
+                  ->orWhere('id_number', $search)
+                  ->orWhere('inflow_record_id', $search);
+            });
+        };
+        $priorityQuery->where($applySearch);
+        $normalQuery->where($applySearch);
     }
 
+    $priorityQueue = $priorityQuery->orderBy('queue_date')->orderBy('queue_id')->get();
+    $normalQueue = $normalQuery->orderBy('queue_date')->orderBy('queue_id')->paginate(5, ['*'], 'normal_page')
+    ->withQueryString();
+
+    return view('staff.Patient_Verification', compact('priorityQueue', 'normalQueue', 'search'));
+}
     // Verify Attendance & Transfer — flips a Pending record to Verified
     public function verifyAttendance(string $inflow_record_id)
     {

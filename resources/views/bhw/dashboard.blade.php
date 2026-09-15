@@ -90,38 +90,39 @@
     </style>
 </head>
 <body class="bg-surface text-on-surface antialiased">
-    <!-- SideNavBar Component -->
-    <aside class="h-screen w-64 fixed left-0 top-0 bg-slate-50 dark:bg-slate-900 flex flex-col border-r border-slate-200/80 dark:border-slate-800/50 z-50">
-        <div class="px-6 mb-8 flex items-center gap-3">
-            <div class="w-10 h-10 bg-primary-container rounded-xl flex items-center justify-center text-white shadow-md">
-                <span class="material-symbols-outlined" data-icon="shield">shield</span>
+
+       <!-- SideNavBar -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-slate-100 dark:bg-slate-900 flex flex-col pt-6 pb-4 gap-2 z-50">
+    <!-- Brand / Header Section -->
+    <div class="px-6 mb-8">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">health_and_safety</span>
             </div>
             <div>
-                <h1 class="text-xl font-bold tracking-tight text-primary">ABTC-Insight</h1>
+                <h1 class="text-blue-900 dark:text-blue-50 font-bold text-sm tracking-tight leading-none">ABTC-Insight</h1>
             </div>
         </div>
-                <nav class="space-y-1 px-4">
-            <!-- My Referrals (Active) -->
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-blue-700 dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600 translate-x-1 duration-150" 
-            href="{{ route('bhw.dashboard') }}">
-                <span class="material-symbols-outlined">assignment_turned_in</span>
-                <span class="font-['Inter'] text-sm tracking-wide">My Referrals</span>
-            </a>
+    </div>
 
-            <!-- Create New Referral (Inactive - Off-White Hover) -->
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all duration-150" 
-            href="{{ route('bhw.referral') }}">
-                <span class="material-symbols-outlined">add_circle</span>
-                <span class="font-['Inter'] text-sm tracking-wide">Create New Referral</span>
-            </a>
-        </nav>
-        <div class="mt-auto px-4 pb-4">
-            <a href="{{ route('bhw.referral') }}" class="w-full py-4 bg-primary text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:bg-primary-container transition-all">
-                <span class="material-symbols-outlined">add</span>
-                <span class="text-sm">New Referral</span>
-            </a>
-        </div>
-    </aside>
+    <!-- Navigation -->
+    <nav class="space-y-1 px-4 dark:bg-slate-900">
+        <!-- My Referrals (Active - Admin Style) -->
+        <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-blue-700 dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600 translate-x-1 duration-150" 
+           href="{{ route('bhw.dashboard') }}">
+            <span class="material-symbols-outlined">assignment_turned_in</span>
+            <span class="font-['Inter'] text-sm tracking-wide">My Referrals</span>
+        </a>
+
+        <!-- Create New Referral (Inactive) -->
+        <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
+           href="{{ route('bhw.referral') }}">
+            <span class="material-symbols-outlined">add_circle</span>
+            <span class="font-['Inter'] text-sm tracking-wide">Create New Referral</span>
+        </a>
+    </nav>
+</aside>
+
     <!-- Main Canvas Area -->
     <main class="ml-64 min-h-screen relative">
         <!-- TopAppBar Component -->

@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\BhwController;
+use App\Http\Controllers\StaffController;
 use Illuminate\Http\Request;
 
 Route::get('/', function () {
@@ -47,17 +48,15 @@ Route::prefix('staff')->group(function () {
         return view('staff.dashboard');
     })->name('staff.dashboard');
 
-    Route::get('/case-encoding', function () {
-        return view('staff.Case_Encoding');
-    })->name('staff.case-encoding');
+    Route::get('/case-encoding/{inflow_record_id?}', [StaffController::class, 'caseEncoding'])->name('staff.case-encoding');
+    Route::post('/case-encoding/{inflow_record_id}/store', [StaffController::class, 'storeCaseEncoding'])->name('staff.store-case-encoding');
 
     Route::get('/patient-lookup', function () {
         return view('staff.Patient_Lookup');
     })->name('staff.patient-lookup');
 
-    Route::get('/patient-verification', function () {
-        return view('staff.Patient_Verification');
-    })->name('staff.patient-verification');
+    Route::get('/patient-verification', [StaffController::class, 'patientVerification'])->name('staff.patient-verification');
+    Route::post('/verify-attendance/{inflow_record_id}', [StaffController::class, 'verifyAttendance'])->name('staff.verify-attendance');
 });
 
 // Healthworker Routes

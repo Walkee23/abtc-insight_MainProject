@@ -165,16 +165,28 @@ Log Out
 </header>
 <!-- Content Canvas -->
 <div class="p-8 space-y-6">
+     @if(session('success'))
+<div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg text-sm font-semibold flex items-center gap-2">
+<span class="material-symbols-outlined text-green-600">check_circle</span>
+{{ session('success') }}
+</div>
+@endif
+@if($errors->any())
+<div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-sm font-semibold flex items-center gap-2">
+<span class="material-symbols-outlined text-red-600">error</span>
+{{ $errors->first() }}
+</div>
+@endif
 <!-- Page Header & Prominent Search Bar -->
 <section class="flex flex-col md:flex-row md:items-end justify-between gap-6">
 <div>
 <h2 class="text-2xl font-extrabold text-blue-900 tracking-tight">Case Encoding</h2>
 <p class="text-on-surface-variant text-sm mt-1">Complete bite case incident data for verified patients (Sections 3-5)</p>
 </div>
-<div class="w-full md:w-1/2 relative">
+<form action="{{ route('staff.case-encoding') }}" method="GET" class="w-full md:w-1/2 relative">
 <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary text-[24px]">person_search</span>
-<input class="w-full pl-12 pr-6 py-4 bg-white border border-outline-variant rounded-2xl text-base shadow-sm focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none" placeholder="Find verified patient by name or ID..." type="text"/>
-</div>
+<input name="search" value="{{ $search ?? '' }}" class="w-full pl-12 pr-6 py-4 bg-white border border-outline-variant rounded-2xl text-base shadow-sm focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none" placeholder="Find verified patient by name or ID..." type="text"/>
+</form>
 </section>
 <!-- Main Two-Column Layout -->
 <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -182,7 +194,7 @@ Log Out
 <div class="lg:col-span-3 space-y-4 h-[calc(100vh-280px)] flex flex-col">
 <div class="flex items-center justify-between px-2">
 <h4 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Verified Queue</h4>
-<span class="text-[10px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full">12 Awaiting</span>
+<span class="text-[10px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full">{{ $verifiedQueue->count() }} Awaiting</span>
 </div>
 <div class="bg-surface-container-low rounded-lg overflow-hidden border border-outline-variant/10 flex-1 overflow-y-auto custom-scrollbar">
 <table class="w-full text-left text-xs border-collapse">
@@ -193,78 +205,22 @@ Log Out
 </tr>
 </thead>
 <tbody class="divide-y divide-outline-variant/10">
-<tr class="bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer border-l-4 border-primary">
+@forelse($verifiedQueue as $index => $row)
+@php $rowUrl = route('staff.case-encoding', $row->inflow_record_id); @endphp
+<tr onclick="window.location='{{ $rowUrl }}'" class="{{ isset($selectedPatient) && $selectedPatient->inflow_record_id === $row->inflow_record_id ? 'bg-primary/5 hover:bg-primary/10 border-l-4 border-primary' : 'hover:bg-surface-bright' }} transition-colors cursor-pointer">
 <td class="px-4 py-4">
-<p class="font-bold text-on-surface">Cardo Dalisay</p>
-<p class="text-[10px] text-on-surface-variant">#2024-8812</p>
+<p class="font-bold text-on-surface">{{ $row->patient_name }}</p>
+<p class="text-[10px] text-on-surface-variant">#{{ $row->inflow_record_id }}</p>
 </td>
 <td class="px-4 py-4">
-<span class="px-2 py-0.5 bg-error-container text-on-error-container rounded-full text-[9px] font-bold whitespace-nowrap">Sec 3, 5</span>
-</td>
-</tr>
-<tr class="hover:bg-surface-bright transition-colors cursor-pointer">
-<td class="px-4 py-4">
-<p class="font-bold text-on-surface">Juan Luna</p>
-<p class="text-[10px] text-on-surface-variant">#2024-8815</p>
-</td>
-<td class="px-4 py-4">
-<span class="px-2 py-0.5 bg-error-container text-on-error-container rounded-full text-[9px] font-bold whitespace-nowrap">Sec 4</span>
+<span class="px-2 py-0.5 bg-error-container text-on-error-container rounded-full text-[9px] font-bold whitespace-nowrap">Sec 3-5</span>
 </td>
 </tr>
-<tr class="hover:bg-surface-bright transition-colors cursor-pointer">
-<td class="px-4 py-4">
-<p class="font-bold text-on-surface">Bambam Aquas</p>
-<p class="text-[10px] text-on-surface-variant">#2024-8819</p>
-</td>
-<td class="px-4 py-4">
-<span class="px-2 py-0.5 bg-error-container text-on-error-container rounded-full text-[9px] font-bold whitespace-nowrap">Sec 3, 4</span>
-</td>
+@empty
+<tr>
+<td colspan="2" class="px-4 py-8 text-center text-on-surface-variant text-xs">No verified patients awaiting encoding.</td>
 </tr>
-<tr class="hover:bg-surface-bright transition-colors cursor-pointer">
-<td class="px-4 py-4">
-<p class="font-bold text-on-surface">Rita Gomez</p>
-<p class="text-[10px] text-on-surface-variant">#2024-8822</p>
-</td>
-<td class="px-4 py-4">
-<span class="px-2 py-0.5 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full text-[9px] font-bold whitespace-nowrap">Sec 5</span>
-</td>
-</tr>
-<tr class="hover:bg-surface-bright transition-colors cursor-pointer">
-<td class="px-4 py-4">
-<p class="font-bold text-on-surface">Maria Santos</p>
-<p class="text-[10px] text-on-surface-variant">#2024-8825</p>
-</td>
-<td class="px-4 py-4">
-<span class="px-2 py-0.5 bg-error-container text-on-error-container rounded-full text-[9px] font-bold whitespace-nowrap">Sec 3, 4, 5</span>
-</td>
-</tr>
-<tr class="hover:bg-surface-bright transition-colors cursor-pointer">
-<td class="px-4 py-4">
-<p class="font-bold text-on-surface">Elena Vizcara</p>
-<p class="text-[10px] text-on-surface-variant">#2024-8828</p>
-</td>
-<td class="px-4 py-4">
-<span class="px-2 py-0.5 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full text-[9px] font-bold whitespace-nowrap">Sec 3</span>
-</td>
-</tr>
-<tr class="hover:bg-surface-bright transition-colors cursor-pointer">
-<td class="px-4 py-4">
-<p class="font-bold text-on-surface">Rogelio Magno</p>
-<p class="text-[10px] text-on-surface-variant">#2024-8830</p>
-</td>
-<td class="px-4 py-4">
-<span class="px-2 py-0.5 bg-error-container text-on-error-container rounded-full text-[9px] font-bold whitespace-nowrap">Sec 4</span>
-</td>
-</tr>
-<tr class="hover:bg-surface-bright transition-colors cursor-pointer">
-<td class="px-4 py-4">
-<p class="font-bold text-on-surface">Andres Bonifacio</p>
-<p class="text-[10px] text-on-surface-variant">#2024-8835</p>
-</td>
-<td class="px-4 py-4">
-<span class="px-2 py-0.5 bg-error-container text-on-error-container rounded-full text-[9px] font-bold whitespace-nowrap">Sec 3, 5</span>
-</td>
-</tr>
+@endforelse
 </tbody>
 </table>
 </div>
@@ -275,14 +231,21 @@ Log Out
 <div class="p-6 border-b border-surface-container-high flex items-center justify-between bg-primary/5 sticky top-[72px] z-30 backdrop-blur-sm">
 <div>
 <h3 class="text-lg font-bold text-primary">Animal Bite Case Encoding Form</h3>
-<p class="text-xs text-on-surface-variant">Currently encoding: <span class="font-bold text-on-surface">Cardo Dalisay (#2024-8812)</span></p>
+<p class="text-xs text-on-surface-variant">
+@if($selectedPatient)
+Currently encoding: <span class="font-bold text-on-surface">{{ $selectedPatient->patient_name }} (#{{ $selectedPatient->inflow_record_id }})</span>
+@else
+No patient selected — choose one from the Verified Queue.
+@endif
+</p>
 </div>
 <div class="flex gap-2">
-<button class="px-4 py-2 text-xs font-bold text-secondary bg-surface-container-high rounded-full hover:bg-surface-container-highest transition-colors">Discard</button>
-<button class="px-4 py-2 text-xs font-bold text-white bg-primary rounded-full hover:bg-primary-container transition-all shadow-md active:scale-95">Save Progress</button>
+<button type="button" onclick="if(confirm('Discard unsaved changes?')) window.location.reload();" class="px-4 py-2 text-xs font-bold text-secondary bg-surface-container-high rounded-full hover:bg-surface-container-highest transition-colors">Discard</button>
+<button type="submit" form="caseEncodingForm" name="action" value="draft" class="px-4 py-2 text-xs font-bold text-white bg-primary rounded-full hover:bg-primary-container transition-all shadow-md active:scale-95">Save Progress</button>
 </div>
 </div>
-<div class="p-8 space-y-12">
+<form id="caseEncodingForm" action="{{ route('staff.store-case-encoding', $selectedPatient->inflow_record_id ?? 0) }}" method="POST" class="p-8 space-y-12">
+@csrf
 <!-- Section 3: Details of Exposure -->
 <section class="space-y-6">
 <div class="flex items-center gap-3">
@@ -294,42 +257,42 @@ Log Out
 <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Animal Type</label>
 <div class="flex gap-4">
 <label class="flex items-center gap-2 text-sm cursor-pointer">
-<input class="text-primary focus:ring-primary" name="animal_type" type="radio"/> Dog
+<input class="text-primary focus:ring-primary" name="animal_type" value="Dog" type="radio" required/> Dog
                                             </label>
 <label class="flex items-center gap-2 text-sm cursor-pointer">
-<input class="text-primary focus:ring-primary" name="animal_type" type="radio"/> Cat
+<input class="text-primary focus:ring-primary" name="animal_type" value="Cat" type="radio" required/> Cat
                                             </label>
-<label class="flex items-center gap-2 text-sm cursor-pointer">
-<input class="text-primary focus:ring-primary" name="animal_type" type="radio"/> Others
-                                            </label><input class="ml-2 bg-surface-container-highest border-none rounded-lg text-xs px-3 py-1.5 focus:ring-2 focus:ring-primary/20 transition-all outline-none w-32" placeholder="Specify..." type="text"/>
+ <label class="flex items-center gap-2 text-sm cursor-pointer">
+<input class="text-primary focus:ring-primary" name="animal_type" value="Others" type="radio" required/> Others
+                                            </label><input class="ml-2 bg-surface-container-highest border-none rounded-lg text-xs px-3 py-1.5 focus:ring-2 focus:ring-primary/20 transition-all outline-none w-32" name="animal_type_other" placeholder="Specify..." type="text"/>
 </div>
 </div>
 <div class="space-y-4">
-<label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Pet or Stray</label>
+<label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Pet or Stray</label>                                           
 <div class="flex gap-4">
 <label class="flex items-center gap-2 text-sm cursor-pointer">
-<input class="text-primary focus:ring-primary" name="pet_status" type="radio"/> Pet
+<input class="text-primary focus:ring-primary" name="pet_status" value="Pet" type="radio"/> Pet
                                             </label>
 <label class="flex items-center gap-2 text-sm cursor-pointer">
-<input class="text-primary focus:ring-primary" name="pet_status" type="radio"/> Stray
+<input class="text-primary focus:ring-primary" name="pet_status" value="Stray" type="radio"/> Stray
                                             </label>
 </div>
 </div>
 <div class="space-y-2">
 <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Date/Time of Bite</label>
-<input class="w-full bg-surface-container-highest border-none rounded-lg text-sm px-4 py-2.5 focus:ring-2 focus:ring-primary/20 transition-all outline-none" type="datetime-local"/>
+<input class="w-full bg-surface-container-highest border-none rounded-lg text-sm px-4 py-2.5 focus:ring-2 focus:ring-primary/20 transition-all outline-none" name="bite_date_time" type="datetime-local"/>
 </div>
 <div class="space-y-4">
 <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Exposure Type</label>
 <div class="flex gap-4">
 <label class="flex items-center gap-2 text-sm cursor-pointer">
-<input class="rounded text-primary focus:ring-primary" type="checkbox"/> Lick
+<input class="rounded text-primary focus:ring-primary" name="exposure_type[]" value="Lick" type="checkbox"/> Lick
                                             </label>
 <label class="flex items-center gap-2 text-sm cursor-pointer">
-<input class="rounded text-primary focus:ring-primary" type="checkbox"/> Scratch
+<input class="rounded text-primary focus:ring-primary" name="exposure_type[]" value="Scratch" type="checkbox"/> Scratch
                                             </label>
 <label class="flex items-center gap-2 text-sm cursor-pointer">
-<input class="rounded text-primary focus:ring-primary" type="checkbox"/> Bite
+<input class="rounded text-primary focus:ring-primary" name="exposure_type[]" value="Bite" type="checkbox"/> Bite
                                             </label>
 </div>
 </div>
@@ -339,55 +302,55 @@ Log Out
 <div class="flex flex-col gap-2">
 <span class="text-[10px] text-on-surface-variant">Provoked</span>
 <div class="flex gap-3">
-<label class="text-[11px]"><input class="text-primary" name="provoked" type="radio"/> Yes</label>
-<label class="text-[11px]"><input class="text-primary" name="provoked" type="radio"/> No</label>
+<label class="text-[11px]"><input class="text-primary" name="provoked" value="1" type="radio"/> Yes</label>
+<label class="text-[11px]"><input class="text-primary" name="provoked" value="0" type="radio"/> No</label>
 </div>
 </div>
 <div class="flex flex-col gap-2">
 <span class="text-[10px] text-on-surface-variant">On Leash</span>
 <div class="flex gap-3">
-<label class="text-[11px]"><input class="text-primary" name="leash" type="radio"/> Yes</label>
-<label class="text-[11px]"><input class="text-primary" name="leash" type="radio"/> No</label>
+<label class="text-[11px]"><input class="text-primary" name="leash" value="1" type="radio"/> Yes</label>
+<label class="text-[11px]"><input class="text-primary" name="leash" value="0" type="radio"/> No</label>
 </div>
 </div>
 <div class="flex flex-col gap-2">
 <span class="text-[10px] text-on-surface-variant">Gate Status</span>
 <div class="flex gap-3">
-<label class="text-[11px]"><input class="text-primary" name="gate" type="radio"/> With gate</label>
-<label class="text-[11px]"><input class="text-primary" name="gate" type="radio"/> Without gate</label>
+<label class="text-[11px]"><input class="text-primary" name="gate" value="1" type="radio"/> With gate</label>
+<label class="text-[11px]"><input class="text-primary" name="gate" value="0" type="radio"/> Without gate</label>
 </div>
 </div></div>
 </div>
 <div class="space-y-2">
 <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Vax Status &amp; Date</label>
 <div class="flex gap-2">
-<select class="flex-1 bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20">
+<select class="flex-1 bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20" name="animal_vax_status">
 <option>Unknown</option>
 <option>Vaccinated</option>
 <option>Not Vaccinated</option>
 </select>
-<input class="flex-1 bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20" type="date"/>
+<input class="flex-1 bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20" name="animal_vax_date" type="date"/>
 </div>
 </div>
 <div class="md:col-span-2 space-y-2">
 <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Circumstances of Exposure</label>
-<textarea class="w-full bg-surface-container-highest border-none rounded-lg text-sm px-4 py-3 focus:ring-2 focus:ring-primary/20 transition-all outline-none resize-none" placeholder="Brief description of the incident..." rows="3"></textarea>
+<textarea class="w-full bg-surface-container-highest border-none rounded-lg text-sm px-4 py-3 focus:ring-2 focus:ring-primary/20 transition-all outline-none resize-none" name="circumstances" placeholder="Brief description of the incident..." rows="3"></textarea>
 </div>
 <div class="md:col-span-2 grid grid-cols-2 gap-8">
 <div class="space-y-4">
 <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Fate of Animal</label>
 <div class="grid grid-cols-2 gap-2">
-<label class="text-xs flex items-center gap-2"><input class="text-primary" name="fate" type="radio"/> Healthy</label>
-<label class="text-xs flex items-center gap-2"><input class="text-primary" name="fate" type="radio"/> Sick</label>
-<label class="text-xs flex items-center gap-2"><input class="text-primary" name="fate" type="radio"/> Dead</label>
-<label class="text-xs flex items-center gap-2"><input class="text-primary" name="fate" type="radio"/> Lost/Stray</label>
+<label class="text-xs flex items-center gap-2"><input class="text-primary" name="fate" value="Healthy" type="radio"/> Healthy</label>
+<label class="text-xs flex items-center gap-2"><input class="text-primary" name="fate" value="Sick" type="radio"/> Sick</label>
+<label class="text-xs flex items-center gap-2"><input class="text-primary" name="fate" value="Dead" type="radio"/> Dead</label>
+<label class="text-xs flex items-center gap-2"><input class="text-primary" name="fate" value="Lost/Stray" type="radio"/> Lost/Stray</label>
 </div>
 </div>
 <div class="space-y-4">
 <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">14-Day Observation</label>
 <div class="flex flex-col gap-2">
-<label class="text-xs flex items-center gap-2"><input class="text-primary" name="obs" type="radio"/> Under Observation</label>
-<input class="w-full bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20" type="date"/>
+<label class="text-xs flex items-center gap-2"><input class="text-primary" name="obs" value="1" type="radio"/> Under Observation</label>
+<input class="w-full bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20" name="obs_14_days" type="date"/>
 </div>
 </div>
 </div>
@@ -404,25 +367,25 @@ Log Out
 <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Wound washed with</label>
 <div class="flex flex-wrap gap-4">
 <label class="flex items-center gap-2 text-sm cursor-pointer">
-<input class="rounded text-primary focus:ring-primary" type="checkbox"/> Water only
+<input class="rounded text-primary focus:ring-primary" name="wound_washed[]" value="Water only" type="checkbox"/> Water only
                                             </label>
 <label class="flex items-center gap-2 text-sm cursor-pointer">
-<input class="rounded text-primary focus:ring-primary" type="checkbox"/> Soap &amp; Water
+<input class="rounded text-primary focus:ring-primary" name="wound_washed[]" value="Soap & Water" type="checkbox"/> Soap &amp; Water
                                             </label>
 <label class="flex items-center gap-2 text-sm cursor-pointer">
-<input class="rounded text-primary focus:ring-primary" type="checkbox"/> Others
-                                            </label><input class="ml-2 bg-surface-container-highest border-none rounded-lg text-xs px-3 py-1.5 focus:ring-2 focus:ring-primary/20 transition-all outline-none w-40" placeholder="Specify treatment..." type="text"/>
+<input class="rounded text-primary focus:ring-primary" name="wound_washed[]" value="Others" type="checkbox"/> Others
+                                            </label><input class="ml-2 bg-surface-container-highest border-none rounded-lg text-xs px-3 py-1.5 focus:ring-2 focus:ring-primary/20 transition-all outline-none w-40" name="wound_wash_other" placeholder="Specify treatment..." type="text"/>
 </div>
 </div>
 <div class="space-y-4">
 <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Local irritant applied</label>
 <div class="flex flex-col gap-3">
 <label class="relative inline-flex items-center cursor-pointer">
-<input class="sr-only peer" type="checkbox"/>
+<input class="sr-only peer" name="local_irritant_applied" value="1" type="checkbox"/>
 <div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
 <span class="ml-3 text-sm font-medium text-on-surface-variant">Yes, applied</span>
 </label>
-<input class="w-full bg-surface-container-highest border-none rounded-lg text-xs px-4 py-2 focus:ring-2 focus:ring-primary/20 outline-none" placeholder="Specify (e.g., Garlic, Vinegar, etc.)" type="text"/>
+<input class="w-full bg-surface-container-highest border-none rounded-lg text-xs px-4 py-2 focus:ring-2 focus:ring-primary/20 outline-none" name="local_irritant_detail" placeholder="Specify (e.g., Garlic, Vinegar, etc.)" type="text"/>
 </div>
 </div>
 </div>
@@ -437,34 +400,33 @@ Log Out
 <div class="flex items-center gap-8">
 <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Previously Vaccinated?</label>
 <div class="flex gap-4">
-<label class="flex items-center gap-2 text-sm cursor-pointer font-bold text-primary">
-<input checked="" class="text-primary focus:ring-primary" name="prev_vax" type="radio"/> Yes
+<label class="flex items-center gap-2 text-sm cursor-pointer font-bold text-primary"><input class="text-primary focus:ring-primary" id="prev_arv_yes" name="prev_arv_given" value="1" type="radio"/> Yes
                                             </label>
 <label class="flex items-center gap-2 text-sm cursor-pointer">
-<input class="text-primary focus:ring-primary" name="prev_vax" type="radio"/> No
+<input class="text-primary focus:ring-primary" id="prev_arv_no" name="prev_arv_given" value="0" checked type="radio"/> No
                                             </label>
 </div>
 </div>
 <div class="bg-tertiary-fixed p-4 rounded-lg flex gap-3 items-start border-l-4 border-on-tertiary-fixed-variant shadow-sm">
 <span class="material-symbols-outlined text-on-tertiary-fixed-variant" style="font-variation-settings: 'FILL' 1;">info</span>
-<p class="text-xs text-on-tertiary-fixed-variant font-medium">Check with ABTC health worker for history or record patient’s claims if medical documentation is unavailable. Incomplete history may lead to dosage errors.</p>
+<p class="text-xs text-on-tertiary-fixed-variant font-medium">Check with ABTC health worker for history or record patient's claims if medical documentation is unavailable. Incomplete history may lead to dosage errors.</p>
 </div>
-<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+<div id="dose_dates_wrapper" class="grid grid-cols-2 md:grid-cols-4 gap-4 hidden">
 <div class="space-y-2">
 <label class="block text-[10px] font-bold text-on-surface-variant uppercase">Dose 1 Date</label>
-<input class="w-full bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20" type="date"/>
+<input class="w-full bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20" id="dose1_date" name="dose1_date" type="date"/>
 </div>
 <div class="space-y-2">
 <label class="block text-[10px] font-bold text-on-surface-variant uppercase">Dose 2 Date</label>
-<input class="w-full bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20" type="date"/>
+<input class="w-full bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20" id="dose2_date" name="dose2_date" type="date"/>
 </div>
 <div class="space-y-2">
 <label class="block text-[10px] font-bold text-on-surface-variant uppercase">Dose 3 Date</label>
-<input class="w-full bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20" type="date"/>
+<input class="w-full bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20" id="dose3_date" name="dose3_date" type="date"/>
 </div>
 <div class="space-y-2">
 <label class="block text-[10px] font-bold text-on-surface-variant uppercase">Booster Date</label>
-<input class="w-full bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20" type="date"/>
+<input class="w-full bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20" id="booster_date" name="booster_date" type="date"/>
 </div>
 </div>
 </div>
@@ -472,15 +434,35 @@ Log Out
 <!-- Form Submission -->
 <div class="pt-8 border-t border-surface-container-high flex justify-end gap-4">
 <button class="px-8 py-3 text-sm font-bold text-secondary bg-surface-container-low rounded-full hover:bg-surface-container-high transition-all">Cancel Entry</button>
-<button class="px-10 py-3 text-sm font-bold text-white bg-primary rounded-full hover:bg-primary-container transition-all shadow-xl active:scale-95 flex items-center gap-2">
+<button type="submit"name= "action" value="complete" class="px-10 py-3 text-sm font-bold text-white bg-primary rounded-full hover:bg-primary-container transition-all shadow-xl active:scale-95 flex items-center gap-2">
 <span class="material-symbols-outlined text-[18px]">check_circle</span>
                                     Complete Encoding
                                 </button>
 </div>
-</div>
+</form>
 </div>
 </div>
 </div>
 </div>
 </main>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const yesRadio = document.getElementById('prev_arv_yes');
+    const noRadio = document.getElementById('prev_arv_no');
+    const wrapper = document.getElementById('dose_dates_wrapper');
+    const doseInputs = ['dose1_date', 'dose2_date', 'dose3_date', 'booster_date'].map(id => document.getElementById(id));
+
+    function toggleDoseFields() {
+        if (yesRadio.checked) {
+            wrapper.classList.remove('hidden');
+        } else {
+            wrapper.classList.add('hidden');
+            doseInputs.forEach(input => input.value = '');
+        }
+    }
+
+    yesRadio.addEventListener('change', toggleDoseFields);
+    noRadio.addEventListener('change', toggleDoseFields);
+});
+</script>
 </body></html>

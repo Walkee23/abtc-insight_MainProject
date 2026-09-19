@@ -48,7 +48,8 @@ Route::prefix('staff')->group(function () {
         return view('staff.dashboard');
     })->name('staff.dashboard');
 
-    Route::get('/case-encoding', [StaffController::class, 'caseEncoding'])->name('staff.case-encoding');
+    Route::get('/case-encoding/{inflow_record_id?}', [StaffController::class, 'caseEncoding'])->name('staff.case-encoding');
+    Route::post('/case-encoding/{inflow_record_id}/store', [StaffController::class, 'storeCaseEncoding'])->name('staff.store-case-encoding');
 
     Route::get('/patient-lookup', function () {
         return view('staff.Patient_Lookup');

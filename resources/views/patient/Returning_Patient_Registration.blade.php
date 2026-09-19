@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-  <title>ABTC-Insight | Returning Patient Registration</title>
+  <title>Returning Patient Registration | ABTC-Insight</title>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
@@ -101,6 +101,10 @@
       background-color: #e0e3e5;
       color: #717782;
     }
+
+    .clinical-gradient {
+      background: linear-gradient(135deg, #004a93 0%, #0b61bb 100%);
+    }
   </style>
 </head>
 
@@ -111,7 +115,8 @@
       <!-- Brand -->
       <a href="{{ url('/') }}" class="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
         <div class="w-8 h-8 clinical-gradient rounded-lg flex items-center justify-center text-white">
-          <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">health_metrics</span>
+          <span class="material-symbols-outlined text-sm"
+            style="font-variation-settings: 'FILL' 1;">health_metrics</span>
         </div>
         <span class="text-xl font-bold tracking-tighter text-blue-900">ABTC-Insight</span>
       </a>
@@ -127,13 +132,13 @@
       </div>
     </div>
   </nav>
-  <main class="flex-grow flex flex-col items-center py-12 px-4">
+  <main class="min-h-screen flex flex-col items-center px-4 pt-24 pb-12">
     <!-- Breadcrumb -->
-    <div class="w-full max-w-[680px] mb-6">
-      <button class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors font-medium">
-        <span class="material-symbols-outlined text-lg">arrow_back</span>
-        Back to selection
-      </button>
+    <div class="w-full max-w-[680px] mb-6 flex items-center gap-2 group cursor-pointer"
+      onclick="window.location.href='{{ route('patient.register') }}'">
+      <span class="material-symbols-outlined text-on-surface-variant text-sm">arrow_back</span>
+      <span class="text-on-surface-variant text-sm font-medium group-hover:text-primary transition-colors">Back to
+        selection</span>
     </div>
     <!-- Main Form Card -->
     <div class="w-full max-w-[680px] bg-surface-container-lowest rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.04)] overflow-hidden">
@@ -144,31 +149,32 @@
             <h1 class="text-3xl font-extrabold tracking-tight text-on-surface">Returning Patient</h1>
             <p class="text-on-surface-variant mt-2 text-lg">Report a new bite incident using your existing ABTC record</p>
           </div>
-          <span class="bg-emerald-100 text-emerald-700 px-4 py-1.5 rounded-full text-xs font-bold tracking-wide uppercase">Existing Record</span>
+          <span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-[12px] font-bold tracking-wide uppercase whitespace-nowrap shrink-0">Existing Record</span>
         </div>
         <!-- Step Indicator -->
-        <div class="flex items-center justify-between mb-12 relative">
-          <div class="absolute top-1/2 left-0 w-full h-[2px] bg-surface-container-high -translate-y-1/2 z-0"></div>
+        <div class="flex items-center mb-12">
           <!-- Step 1 -->
-          <div class="relative z-10 flex flex-col items-center gap-2">
-            <div class="w-10 h-10 rounded-full step-complete flex items-center justify-center shadow-md">
-              <span class="material-symbols-outlined text-xl">check</span>
+          <div class="flex flex-col items-center gap-2 shrink-0">
+            <div class="w-10 h-10 rounded-full step-active flex items-center justify-center shadow-lg ring-4 ring-primary-container/20" id="returningStepCircle-1">
+              <span class="font-bold">1</span>
             </div>
-            <span class="text-xs font-bold text-emerald-600 uppercase tracking-wider">Find Record</span>
+            <span class="text-xs font-bold text-primary uppercase tracking-wider" id="returningStepLabel-1">Find Record</span>
           </div>
+          <div class="flex-1 h-[2px] bg-surface-container-high mx-1 -mt-6 transition-colors" id="returningStepLine-1"></div>
           <!-- Step 2 -->
-          <div class="relative z-10 flex flex-col items-center gap-2">
-            <div class="w-10 h-10 rounded-full step-active flex items-center justify-center shadow-lg ring-4 ring-primary-container/20">
+          <div class="flex flex-col items-center gap-2 shrink-0">
+            <div class="w-10 h-10 rounded-full step-inactive flex items-center justify-center" id="returningStepCircle-2">
               <span class="font-bold">2</span>
             </div>
-            <span class="text-xs font-bold text-primary uppercase tracking-wider">Confirm Details</span>
+            <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider" id="returningStepLabel-2">Confirm Details</span>
           </div>
+          <div class="flex-1 h-[2px] bg-surface-container-high mx-1 -mt-6 transition-colors" id="returningStepLine-2"></div>
           <!-- Step 3 -->
-          <div class="relative z-10 flex flex-col items-center gap-2">
-            <div class="w-10 h-10 rounded-full step-inactive flex items-center justify-center">
+          <div class="flex flex-col items-center gap-2 shrink-0">
+            <div class="w-10 h-10 rounded-full step-inactive flex items-center justify-center" id="returningStepCircle-3">
               <span class="font-bold">3</span>
             </div>
-            <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Priority + Confirm</span>
+            <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider" id="returningStepLabel-3">Priority + Confirm</span>
           </div>
         </div>
 
@@ -193,6 +199,8 @@
               </div>
             </div>
           </div>
+          <!-- Details + Priority + Footer: only usable once a record has been found -->
+          <div id="detailsSection" class="hidden">
           <!-- Section 2: Details -->
           <div class="space-y-8">
             <div class="flex items-center gap-3">
@@ -227,7 +235,7 @@
               <!-- Editable Fields -->
               <div class="space-y-1.5">
                 <label class="text-xs font-bold text-emerald-700 uppercase ml-1">Contact Number</label>
-                <input name="contact_num" class="w-full bg-emerald-50/30 border-0 border-b-2 border-emerald-500/30 focus:border-emerald-500 focus:ring-0 text-on-surface font-medium px-4 py-3.5 rounded-t-lg transition-all" type="text" placeholder="09XX XXX XXXX" />
+                <input name="contact_num" id="returningContactNumberInput" class="w-full bg-emerald-50/30 border-0 border-b-2 border-emerald-500/30 focus:border-emerald-500 focus:ring-0 text-on-surface font-medium px-4 py-3.5 rounded-t-lg transition-all" type="text" placeholder="09XX XXX XXXX" />
               </div>
               <div class="space-y-1.5">
                 <label class="text-xs font-bold text-on-surface-variant uppercase ml-1">Civil Status</label>
@@ -254,13 +262,13 @@
                   <span class="material-symbols-outlined text-base text-on-surface-variant/40 ml-1">info</span>
                 </label>
               </div>
-              <select name="barangay" class="w-full bg-white border-2 border-amber-200 focus:border-amber-500 focus:ring-0 rounded-lg px-4 py-4 text-on-surface font-medium shadow-sm">
-                <option disabled selected value="">Select Barangay...</option>
-                <option value="Guadalupe">Guadalupe</option>
-                <option value="Lahug">Lahug</option>
-                <option value="Mabolo">Mabolo</option>
-                <option value="Tisa">Tisa</option>
-              </select>
+              <div class="relative">
+                <input autocomplete="off" type="text" id="returningBarangayInput" name="barangay"
+                  class="w-full bg-white border-2 border-amber-200 focus:border-amber-500 focus:ring-0 rounded-lg px-4 py-4 text-on-surface font-medium shadow-sm"
+                  placeholder="Search your barangay..." required />
+                <div id="returningBarangayDropdown"
+                  class="hidden absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-surface-container-lowest rounded-lg shadow-lg border border-outline-variant/20 z-20"></div>
+              </div>
               <p class="text-[11px] text-amber-700 font-medium flex items-center gap-1">
                 <span class="material-symbols-outlined text-sm">priority_high</span>
                 Required for every new incident report to map local outbreaks.
@@ -283,10 +291,10 @@
                 <span class="text-xs font-bold uppercase tracking-tighter">PWD</span>
                 <span class="absolute -top-2 -right-1 bg-surface-container-highest text-[9px] px-2 py-0.5 rounded-full font-bold">PERMANENT</span>
               </button>
-              <button class="priority-option flex flex-col items-center justify-center p-4 rounded-xl border-2 border-surface-container-high hover:border-primary-container transition-all gap-2 relative" data-priority="priority">
-                <span class="material-symbols-outlined text-2xl text-primary" data-weight="fill">elderly</span>
-                <span class="text-xs font-bold uppercase tracking-tighter text-primary">Senior</span>
-                <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-[9px] px-2 py-1 rounded-full font-bold whitespace-nowrap shadow-sm">AUTO-DETECTED</div>
+              <button id="seniorPriorityOption" class="priority-option flex flex-col items-center justify-center p-4 rounded-xl border-2 border-surface-container-high hover:border-primary-container transition-all gap-2 relative group" data-priority="priority">
+                <span id="seniorIcon" class="material-symbols-outlined text-2xl text-on-surface-variant group-hover:text-primary">elderly</span>
+                <span id="seniorLabel" class="text-xs font-bold uppercase tracking-tighter">Senior</span>
+                <div id="seniorAutoDetectedBadge" class="hidden absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-[9px] px-2 py-1 rounded-full font-bold whitespace-nowrap shadow-sm">AUTO-DETECTED</div>
               </button>
               <button class="priority-option flex flex-col items-center justify-center p-4 rounded-xl border-2 border-surface-container-high hover:border-primary-container transition-all gap-2 group" data-priority="priority">
                 <span class="material-symbols-outlined text-2xl text-on-surface-variant group-hover:text-primary">pregnant_woman</span>
@@ -301,6 +309,7 @@
               Confirm and Get Queue Number
               <span class="material-symbols-outlined">arrow_forward</span>
             </button>
+          </div>
           </div>
 
         </form>
@@ -357,6 +366,31 @@
             // Set hidden input for form submission
             document.getElementById('patientIdInput').value = patient.patient_id;
 
+            // Reveal the Details + Priority + Footer section now that a record was found
+            document.getElementById('detailsSection').classList.remove('hidden');
+
+            // Step 1 is now done, Step 2 becomes active
+            markReturningStep(1, 'done');
+            markReturningStep(2, 'active');
+
+            // Auto-detect Senior Citizen status from date of birth (age 60+)
+            const dob = new Date(patient.date_of_birth);
+            const today = new Date();
+            let computedAge = today.getFullYear() - dob.getFullYear();
+            const monthDiff = today.getMonth() - dob.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+                computedAge--;
+            }
+
+            const seniorAutoDetectedBadge = document.getElementById('seniorAutoDetectedBadge');
+            const seniorPriorityOption = document.getElementById('seniorPriorityOption');
+            if (computedAge >= 60) {
+                seniorAutoDetectedBadge.classList.remove('hidden');
+                seniorPriorityOption.click();
+            } else {
+                seniorAutoDetectedBadge.classList.add('hidden');
+            }
+
         } catch (error) {
             console.error('Search failed:', error);
             notFoundMsg.textContent = 'Something went wrong. Please try again.';
@@ -366,9 +400,104 @@
 </script>
 
   <script>
+    // Barangay search dropdown (same pattern as New Patient Registration)
+    const returningBarangayList = ['Adlaon', 'Agsungot', 'Apas', 'Babag', 'Bacayan', 'Banawa', 'Banilad', 'Basak Pardo', 'Basak San Nicolas', 'Binaliw', 'Barrio Luz', 'Bonbon', 'Buot-Taup', 'Budlaan', 'Buhisan', 'Bulacao', 'Busay', 'Calamba', 'Cambinocot', 'Capitol', 'Carreta', 'Cogon Pardo', 'Cogon Ramos', 'Day-as', 'Duljo', 'Ermita', 'Guadalupe', 'Guba', 'Hipodromo', 'Inayawan', 'Kalubihan', 'Kalunasan', 'Kamagayan', 'Kamputhaw', 'Kasambagan', 'Kinasang-an', 'Labangon', 'Lahug', 'Lorega', 'Lusaran', 'Mabini', 'Mabolo', 'Malubog', 'Mambaling', 'Pahina Central', 'Pamutan', 'Pardo', 'Pari-an', 'Paril', 'Pasil', 'Pit-os', 'Pulangbato', 'Pung-ol', 'Punta Princesa', 'Quiot', 'Sambag I', 'Sambag II', 'San Antonio', 'San Jose', 'San Nicolas Pahina', 'San Nicolas Proper', 'San Roque', 'Sapangdaku', 'Sawang Calero', 'Sinsin', 'Sirao', 'Sta. Cruz', 'Sto. Niño', 'Suba', 'Sudlon I', 'Sudlon II', 'T. Padilla', 'Tabunan', 'Tagbao', 'Talamban', 'TapTap', 'Tejero', 'Tinago', 'Tisa', 'Toong', 'Zapatera'];
+    const returningBarangayInput = document.getElementById('returningBarangayInput');
+    const returningBarangayDropdown = document.getElementById('returningBarangayDropdown');
+
+    function renderReturningBarangayOptions(filterText) {
+      const filtered = returningBarangayList.filter(b => b.toLowerCase().includes(filterText.toLowerCase()));
+      if (filtered.length === 0) {
+        returningBarangayDropdown.classList.add('hidden');
+        returningBarangayDropdown.innerHTML = '';
+        return;
+      }
+      returningBarangayDropdown.innerHTML = filtered.map(b =>
+        `<div class="px-4 py-2.5 text-sm cursor-pointer hover:bg-surface-container transition-colors returning-barangay-option">${b}</div>`
+      ).join('');
+      returningBarangayDropdown.classList.remove('hidden');
+    }
+
+    returningBarangayInput.addEventListener('focus', function () {
+      renderReturningBarangayOptions(this.value);
+    });
+
+    returningBarangayInput.addEventListener('input', function () {
+      renderReturningBarangayOptions(this.value);
+    });
+
+    returningBarangayDropdown.addEventListener('click', function (e) {
+      if (e.target.classList.contains('returning-barangay-option')) {
+        returningBarangayInput.value = e.target.textContent;
+        returningBarangayDropdown.classList.add('hidden');
+        returningBarangayDropdown.innerHTML = '';
+      }
+    });
+
+    document.addEventListener('click', function (e) {
+      if (!returningBarangayInput.contains(e.target) && !returningBarangayDropdown.contains(e.target)) {
+        returningBarangayDropdown.classList.add('hidden');
+      }
+    });
+
+    // Helper to update the 3-step progress indicator
+    function markReturningStep(stepNum, state) {
+      const circle = document.getElementById(`returningStepCircle-${stepNum}`);
+      const label = document.getElementById(`returningStepLabel-${stepNum}`);
+      const line = document.getElementById(`returningStepLine-${stepNum}`);
+
+      circle.classList.remove('step-active', 'step-complete', 'step-inactive', 'shadow-lg', 'ring-4', 'ring-primary-container/20', 'shadow-md');
+
+      if (state === 'done') {
+        circle.classList.add('step-complete', 'shadow-md');
+        circle.innerHTML = '<span class="material-symbols-outlined text-xl">check</span>';
+        label.classList.remove('text-primary', 'text-on-surface-variant');
+        label.classList.add('text-emerald-600');
+        if (line) line.className = 'flex-1 h-[2px] bg-primary/40 mx-1 -mt-6 transition-colors';
+      } else if (state === 'active') {
+        circle.classList.add('step-active', 'shadow-lg', 'ring-4', 'ring-primary-container/20');
+        circle.innerHTML = `<span class="font-bold">${stepNum}</span>`;
+        label.classList.remove('text-emerald-600', 'text-on-surface-variant');
+        label.classList.add('text-primary');
+      } else {
+        circle.classList.add('step-inactive');
+        circle.innerHTML = `<span class="font-bold">${stepNum}</span>`;
+        label.classList.remove('text-emerald-600', 'text-primary');
+        label.classList.add('text-on-surface-variant');
+      }
+    }
+
     // Get the hidden input
     const priorityInput = document.getElementById('priorityInput');
     const priorityOptions = document.querySelectorAll('.priority-option');
+
+    // Step 2 (Confirm Details) is only done once Contact Number and Barangay are actually filled in
+    const returningContactNumberInput = document.getElementById('returningContactNumberInput');
+
+    function isReturningStep2Complete() {
+      return returningContactNumberInput.value.trim() !== '' &&
+        returningBarangayInput.value.trim() !== '';
+    }
+
+    function recalcReturningStep2() {
+      // Only recalculate step 2 once a record has actually been found (step 1 done)
+      if (!document.getElementById('detailsSection') || document.getElementById('detailsSection').classList.contains('hidden')) {
+        return;
+      }
+      if (isReturningStep2Complete()) {
+        markReturningStep(2, 'done');
+        markReturningStep(3, 'active');
+      } else {
+        markReturningStep(2, 'active');
+        markReturningStep(3, 'inactive');
+      }
+    }
+
+    [returningContactNumberInput, returningBarangayInput].forEach(field => {
+      if (field) {
+        field.addEventListener('input', recalcReturningStep2);
+      }
+    });
 
     priorityOptions.forEach(option => {
       option.addEventListener('click', function(e) {
@@ -388,6 +517,30 @@
         this.classList.remove('border-surface-container-high');
         this.classList.add('border-primary', 'bg-primary/5', 'ring-2', 'ring-primary/20');
       });
+    });
+
+    // Clear Form: native reset only clears input/select values, so this cleans up
+    // everything else that JS controls (locked fields, badges, highlighted cards, steps)
+    document.querySelector('form').addEventListener('reset', function () {
+      setTimeout(function () {
+        document.getElementById('detailsSection').classList.add('hidden');
+        document.getElementById('notFoundMsg').classList.add('hidden');
+        document.getElementById('recordFoundBox').classList.add('hidden');
+        document.getElementById('recordFoundBox').classList.remove('flex');
+        document.getElementById('lockedName').textContent = '—';
+        document.getElementById('lockedDob').textContent = '—';
+        document.getElementById('lockedSex').textContent = '—';
+        document.getElementById('seniorAutoDetectedBadge').classList.add('hidden');
+
+        document.querySelectorAll('.priority-option').forEach(opt => {
+          opt.classList.remove('border-primary', 'bg-primary/5', 'ring-2', 'ring-primary/20');
+          opt.classList.add('border-surface-container-high');
+        });
+
+        markReturningStep(1, 'active');
+        markReturningStep(2, 'inactive');
+        markReturningStep(3, 'inactive');
+      }, 0);
     });
   </script>
 </body>

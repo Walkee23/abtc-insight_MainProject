@@ -259,11 +259,15 @@
               <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5 ml-1">BHW Referral ID
                 <span class="text-error">*</span></label>
               <input
-                class="w-full bg-surface-container-highest border-none rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
-                name="bhw_referral_id" id="bhwReferralInput" placeholder="e.g., BRY-001-20250501-0023" required=""
+                class="w-full bg-surface-container-highest border-none rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all @error('bhw_referral_id') ring-2 ring-error @enderror"
+                name="bhw_referral_id" id="bhwReferralInput" value="{{ old('bhw_referral_id') }}"
+                pattern="BRY-\d{3}-\d{8}-\d{4}"
+                placeholder="e.g., BRY-001-20260501-0023" required=""
                 type="text" />
-              <p class="mt-1.5 ml-1 text-[10px] text-on-surface-variant/80 italic">Enter the referral ID provided by
-                your Barangay Health Worker.</p>
+              <p class="mt-1.5 ml-1 text-[10px] text-on-surface-variant/80 italic" id="bhwReferralHint">Enter the referral ID provided by your Barangay Health Worker.</p>
+              @error('bhw_referral_id')
+                <p class="mt-1.5 ml-1 text-[11px] text-error font-semibold">{{ $message }}</p>
+              @enderror
             </div>
             <div class="col-span-2 grid grid-cols-[1fr_1fr_70px] gap-3">
               <div>
@@ -506,6 +510,46 @@
       }
     });
 
+    // BHW Referral ID: must match BRY-[3-digit barangay code]-[YYYYMMDD]-[4-digit seq]
+    const bhwReferralInput = document.getElementById('bhwReferralInput');
+    const bhwReferralHint = document.getElementById('bhwReferralHint');
+    const BHW_REFERRAL_PATTERN = /^BRY-\d{3}-\d{8}-\d{4}$/;
+    const bhwReferralHintDefaultText = bhwReferralHint ? bhwReferralHint.textContent : '';
+
+    function isBhwReferralFormatValid(value) {
+      return BHW_REFERRAL_PATTERN.test(value.trim());
+    }
+
+    function showBhwReferralError(message) {
+      bhwReferralInput.classList.add('ring-2', 'ring-error');
+      bhwReferralHint.textContent = message;
+      bhwReferralHint.classList.remove('text-on-surface-variant/80', 'italic');
+      bhwReferralHint.classList.add('text-error', 'font-semibold');
+    }
+
+    function clearBhwReferralError() {
+      bhwReferralInput.classList.remove('ring-2', 'ring-error');
+      bhwReferralHint.textContent = bhwReferralHintDefaultText;
+      bhwReferralHint.classList.remove('text-error', 'font-semibold');
+      bhwReferralHint.classList.add('text-on-surface-variant/80', 'italic');
+    }
+
+    bhwReferralInput.addEventListener('blur', function () {
+      if (!this.value.trim()) return;
+      if (!isBhwReferralFormatValid(this.value)) {
+        showBhwReferralError('Invalid format. Use BRY-[BARANGAY CODE]-[YYYYMMDD]-[SEQ], e.g. BRY-001-20260501-0023.');
+      } else {
+        clearBhwReferralError();
+      }
+    });
+
+    bhwReferralInput.addEventListener('input', function () {
+      // Clear the error as soon as they start fixing it, rather than waiting for blur again
+      if (bhwReferralInput.classList.contains('ring-error') && isBhwReferralFormatValid(this.value)) {
+        clearBhwReferralError();
+      }
+    });
+
     // Also guard on submit in case a value slipped through
     document.querySelector('form').addEventListener('submit', function (e) {
       if (dobInput.value) {
@@ -514,7 +558,14 @@
           e.preventDefault();
           alert('Age cannot be more than 125 years old. Please check the date of birth.');
           dobInput.focus();
+          return;
         }
+      }
+
+      if (!isBhwReferralFormatValid(bhwReferralInput.value)) {
+        e.preventDefault();
+        showBhwReferralError('Invalid format. Use BRY-[BARANGAY CODE]-[YYYYMMDD]-[SEQ], e.g. BRY-001-20260501-0023.');
+        bhwReferralInput.focus();
       }
     });
 
@@ -552,7 +603,7 @@
 
     // Step 2 (Personal Info) is complete only when every required field has a value
     function isStep2Complete() {
-      return bhwReferralInput.value.trim() !== '' &&
+      return isBhwReferralFormatValid(bhwReferralInput.value) &&
         surnameInput.value.trim() !== '' &&
         givenNameInput.value.trim() !== '' &&
         dobInput.value !== '' &&
@@ -776,7 +827,6 @@
     });
 
     // Step 2 fields: recalculate completion every time any of them change
-    const bhwReferralInput = document.getElementById('bhwReferralInput');
     const contactNumberInput = document.getElementById('contactNumberInput');
     [bhwReferralInput, surnameInput, givenNameInput, dobInput, contactNumberInput, barangayInput].forEach(field => {
       if (field) {
@@ -847,6 +897,9 @@
           opt.classList.remove('border-primary', 'bg-primary/5', 'ring-2', 'ring-primary/20');
           opt.classList.add('border-surface-container-high');
         });
+
+        // Clear any BHW referral format error
+        clearBhwReferralError();
       }, 0);
     });
   </script>

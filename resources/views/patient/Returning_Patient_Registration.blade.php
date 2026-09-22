@@ -114,9 +114,9 @@
     <div class="flex justify-between items-center px-8 py-4 max-w-full mx-auto">
       <!-- Brand -->
       <a href="{{ url('/') }}" class="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
-        <div class="w-8 h-8 clinical-gradient rounded-lg flex items-center justify-center text-white">
+        <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white">
           <span class="material-symbols-outlined text-sm"
-            style="font-variation-settings: 'FILL' 1;">health_metrics</span>
+            style="font-variation-settings: 'FILL' 1;">health_and_safety</span>
         </div>
         <span class="text-xl font-bold tracking-tighter text-blue-900">ABTC-Insight</span>
       </a>

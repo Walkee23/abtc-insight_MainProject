@@ -97,9 +97,9 @@
     <div class="flex justify-between items-center px-8 py-4 max-w-full mx-auto">
       <!-- Brand -->
       <a href="{{ url('/') }}" class="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
-        <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white">
+        <div class="w-8 h-8 clinical-gradient rounded-lg flex items-center justify-center text-white">
           <span class="material-symbols-outlined text-sm"
-            style="font-variation-settings: 'FILL' 1;">health_and_safety</span>
+            style="font-variation-settings: 'FILL' 1;">health_metrics</span>
         </div>
         <span class="text-xl font-bold tracking-tighter text-blue-900">ABTC-Insight</span>
       </a>
@@ -264,7 +264,8 @@
                 pattern="BRY-\d{3}-\d{8}-\d{4}"
                 placeholder="e.g., BRY-001-20260501-0023" required=""
                 type="text" />
-              <p class="mt-1.5 ml-1 text-[10px] text-on-surface-variant/80 italic" id="bhwReferralHint">Enter the referral ID provided by your Barangay Health Worker.</p>
+              <p class="mt-1.5 ml-1 text-[10px] text-on-surface-variant/80 italic" id="bhwReferralHint">Enter the referral ID provided by
+                your Barangay Health Worker. Format: BRY-[BARANGAY CODE]-[YYYYMMDD]-[SEQ], e.g. BRY-001-20260501-0023.</p>
               @error('bhw_referral_id')
                 <p class="mt-1.5 ml-1 text-[11px] text-error font-semibold">{{ $message }}</p>
               @enderror
@@ -362,7 +363,7 @@
                 Number</label>
               <input
                 class="w-full bg-surface-container-highest border-none rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
-                name="valid_id_number" placeholder="Precinct no. / Senior Citizen ID / PWD card no." type="text" />
+                name="valid_id_number" id="validIdNumberInput" placeholder="Precinct no. / Senior Citizen ID / PWD card no." type="text" />
               <p class="mt-1.5 ml-1 text-[10px] text-on-surface-variant/80 italic">Required for Senior Citizens and PWDs
                 only. Pregnant patients do not need to provide an ID number.</p>
             </div>
@@ -424,7 +425,7 @@
                 Allergies</label>
               <textarea
                 class="w-full bg-surface-container-highest border-none rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
-                name="known_allergies" placeholder="e.g. Antibiotics, Food, Latex, etc." rows="3"></textarea>
+                name="known_allergies" id="knownAllergiesInput" placeholder="e.g. Antibiotics, Food, Latex, etc." rows="3"></textarea>
             </div>
           </div>
         </section>
@@ -901,6 +902,154 @@
         // Clear any BHW referral format error
         clearBhwReferralError();
       }, 0);
+
+      // A manual Clear Form click should also wipe the saved draft
+      clearDraft();
+    });
+
+    // Autosave: keep a draft of the form in localStorage so a refresh or
+    // accidental navigation doesn't lose what the user already typed.
+    const DRAFT_KEY = 'abtc_new_patient_registration_draft';
+
+    const draftTextFieldIds = [
+      'bhwReferralInput', 'surnameInput', 'givenNameInput', 'middleInitialInput',
+      'dobInput', 'contactNumberInput', 'barangayInput', 'validIdNumberInput',
+      'philhealthMemberNameInput', 'philhealthMemberDobInput',
+      'currentIllnessesInput', 'knownAllergiesInput'
+    ];
+
+    function saveDraft() {
+      const draft = {};
+
+      draftTextFieldIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) draft[id] = el.value;
+      });
+
+      draft.sex = sexInput.value;
+      draft.civilStatus = civilStatusInput.value;
+      draft.priority = priorityInput.value;
+
+      // priorityInput.value alone can't tell PWD/Senior/Pregnant apart (they
+      // all use data-priority="priority"), so save which card index was
+      // actually highlighted instead
+      let highlightedIndex = -1;
+      priorityOptions.forEach((opt, index) => {
+        if (opt.classList.contains('border-primary')) highlightedIndex = index;
+      });
+      draft.priorityIndex = highlightedIndex;
+
+      const philhealthChecked = document.querySelector('input[name="philhealth_member"]:checked');
+      draft.philhealthMember = philhealthChecked ? philhealthChecked.value : '';
+
+      try {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+      } catch (e) {
+        // Storage might be unavailable (private browsing, quota, etc.) - fail silently
+      }
+    }
+
+    function clearDraft() {
+      try {
+        localStorage.removeItem(DRAFT_KEY);
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    function restoreDraft() {
+      let raw;
+      try {
+        raw = localStorage.getItem(DRAFT_KEY);
+      } catch (e) {
+        return;
+      }
+      if (!raw) return;
+
+      let draft;
+      try {
+        draft = JSON.parse(raw);
+      } catch (e) {
+        return;
+      }
+
+      draftTextFieldIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && draft[id]) el.value = draft[id];
+      });
+
+      // Recalculate age from the restored date of birth
+      if (dobInput.value) {
+        const age = calculateAge(dobInput.value);
+        ageInput.value = age >= 0 ? age : '';
+      }
+
+      // Restore Sex dropdown
+      if (draft.sex) {
+        sexInput.value = draft.sex;
+        const sexLabels = { male: 'Male', female: 'Female' };
+        sexDisplayText.textContent = sexLabels[draft.sex] || draft.sex;
+        sexDisplayText.classList.remove('text-on-surface-variant');
+        sexDisplayText.classList.add('text-on-surface');
+      }
+
+      // Restore Civil Status dropdown
+      if (draft.civilStatus) {
+        civilStatusInput.value = draft.civilStatus;
+        const civilLabels = { single: 'Single', married: 'Married', widowed: 'Widowed', separated: 'Separated' };
+        civilStatusDisplayText.textContent = civilLabels[draft.civilStatus] || draft.civilStatus;
+        civilStatusDisplayText.classList.remove('text-on-surface-variant');
+        civilStatusDisplayText.classList.add('text-on-surface');
+      }
+
+      // Restore the highlighted priority card
+      if (typeof draft.priorityIndex === 'number' && draft.priorityIndex >= 0 && priorityOptions[draft.priorityIndex]) {
+        priorityInput.value = draft.priority || 'none';
+        priorityOptions.forEach(opt => {
+          opt.classList.remove('border-primary', 'bg-primary/5', 'ring-2', 'ring-primary/20');
+          opt.classList.add('border-surface-container-high');
+        });
+        const chosen = priorityOptions[draft.priorityIndex];
+        chosen.classList.remove('border-surface-container-high');
+        chosen.classList.add('border-primary', 'bg-primary/5', 'ring-2', 'ring-primary/20');
+        stepDone[1] = true;
+      }
+
+      // Restore PhilHealth Yes/No selection, and show/hide details to match
+      if (draft.philhealthMember) {
+        const radio = document.querySelector(`input[name="philhealth_member"][value="${draft.philhealthMember}"]`);
+        if (radio) {
+          radio.checked = true;
+          if (draft.philhealthMember === 'yes') {
+            philhealthDetails.classList.remove('hidden');
+          } else {
+            philhealthDetails.classList.add('hidden');
+          }
+        }
+      }
+
+      // Re-sync everything that depends on the restored values
+      updateFullNameHidden();
+      recalcSteps();
+    }
+
+    // Restore whatever was saved, as soon as the page loads
+    restoreDraft();
+
+    // Save on any change anywhere in the form (bubbles up from every field)
+    const registrationForm = document.querySelector('form');
+    registrationForm.addEventListener('input', saveDraft);
+    registrationForm.addEventListener('change', saveDraft);
+
+    // A successful submission means the draft is no longer needed.
+    // Attached last, so by the time this runs, every earlier validation
+    // listener (age cap, BHW format, Sex/Civil Status/PhilHealth) has already
+    // had a chance to call preventDefault() - just check the outcome instead
+    // of re-running those checks (which would re-trigger their alert() calls).
+    registrationForm.addEventListener('submit', function (e) {
+      if (!e.defaultPrevented) {
+        clearDraft();
+      }
     });
   </script>
 </body>

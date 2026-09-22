@@ -96,8 +96,8 @@
         <div class="flex justify-between items-center px-8 py-4 max-w-full mx-auto">
             <!-- Brand -->
             <a href="{{ url('/') }}" class="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
-                <div class="w-8 h-8 clinical-gradient rounded-lg flex items-center justify-center text-white">
-                    <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">health_metrics</span>
+                <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white">
+                    <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">health_and_safety</span>
                 </div>
                 <span class="text-xl font-bold tracking-tighter text-blue-900">ABTC-Insight</span>
             </a>
@@ -149,8 +149,8 @@
                                 <span class="material-symbols-outlined text-[20px]">lock</span>
                             </div>
                             <input class="block w-full pl-11 pr-12 py-4 bg-surface-container-highest border-none rounded-lg text-on-surface focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all duration-200 outline-none" id="password" name="password" placeholder="••••••••" type="password" required />
-                            <button class="absolute inset-y-0 right-0 pr-4 flex items-center text-outline hover:text-primary transition-colors" type="button">
-                                <span class="material-symbols-outlined text-[20px]">visibility</span>
+                            <button class="absolute inset-y-0 right-0 pr-4 flex items-center text-outline hover:text-primary transition-colors" id="togglePasswordBtn" type="button">
+                                <span class="material-symbols-outlined text-[20px]" id="togglePasswordIcon">visibility</span>
                             </button>
                         </div>
                     </div>
@@ -206,7 +206,17 @@
                 <a class="text-xs font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors" href="#">Accessibility</a>
             </div>
         </div>
-    </footer>
+    </footer>    <script>
+        const passwordInput = document.getElementById('password');
+        const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+        const togglePasswordIcon = document.getElementById('togglePasswordIcon');
+
+        togglePasswordBtn.addEventListener('click', function () {
+            const isHidden = passwordInput.type === 'password';
+            passwordInput.type = isHidden ? 'text' : 'password';
+            togglePasswordIcon.textContent = isHidden ? 'visibility_off' : 'visibility';
+        });
+    </script>
 </body>
 
 </html>

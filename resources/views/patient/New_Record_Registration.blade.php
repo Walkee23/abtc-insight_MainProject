@@ -584,7 +584,7 @@
                 <span class="text-error">*</span></label>
               <input
                 class="w-full bg-surface-container-highest border-none rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
-                name="bhw_referral_id" id="bhwReferralInput" placeholder="e.g., BRY-001-20250501-0023" required="" type="text" />
+                name="reference_no" id="bhwReferralInput" placeholder="e.g., BRY-001-20250501-0023" required="" type="text" />
               <p class="mt-1.5 ml-1 text-[10px] text-on-surface-variant/80 italic">Enter the referral ID provided by
                 your Barangay Health Worker.</p>
             </div>

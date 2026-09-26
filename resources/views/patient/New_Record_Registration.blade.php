@@ -92,27 +92,22 @@
 
 <body class="bg-surface text-on-surface selection:bg-primary-fixed">
   <!-- TopNavBar (Updated to match Patient Portal style) -->
-  <nav
-    class="fixed top-0 w-full z-50 bg-slate-50/85 backdrop-blur-md shadow-sm shadow-blue-900/5 transition-all duration-300 ease-in-out font-sans antialiased tracking-tight">
+  <nav class="fixed top-0 w-full z-50 bg-slate-50/85 backdrop-blur-md shadow-sm shadow-blue-900/5 transition-all duration-300 ease-in-out font-sans antialiased tracking-tight">
     <div class="flex justify-between items-center px-8 py-4 max-w-full mx-auto">
       <!-- Brand -->
       <a href="{{ url('/') }}" class="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
-        <div class="w-8 h-8 clinical-gradient rounded-lg flex items-center justify-center text-white">
+        <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white">
           <span class="material-symbols-outlined text-sm"
-            style="font-variation-settings: 'FILL' 1;">health_metrics</span>
+            style="font-variation-settings: 'FILL' 1;">health_and_safety</span>
         </div>
         <span class="text-xl font-bold tracking-tighter text-blue-900">ABTC-Insight</span>
       </a>
       <!-- Links & Actions -->
       <div class="flex items-center gap-8">
         <div class="hidden md:flex items-center gap-8">
-          <a class="text-slate-600 hover:text-blue-600 transition-colors text-sm font-medium"
-            href="{{ route('patient.register') }}">Patient Registration</a>
-          <a class="text-slate-600 hover:text-blue-600 transition-colors text-sm font-medium"
-            href="{{ route('patient.tracking.portal') }}">Tracking Portal</a>
-          <button type="button"
-            class="bg-primary text-on-primary px-5 py-2 rounded-full font-semibold active:scale-95 transition-transform"
-            onclick="window.location.href=`{{ route('login') }}`;">
+          <a class="text-slate-600 hover:text-blue-600 transition-colors text-sm font-medium" href="{{ route('patient.register') }}">Patient Registration</a>
+          <a class="text-slate-600 hover:text-blue-600 transition-colors text-sm font-medium" href="{{ route('patient.tracking.portal') }}">Tracking Portal</a>
+          <button type="button" class="bg-primary text-on-primary px-5 py-2 rounded-full font-semibold active:scale-95 transition-transform" onclick="window.location.href=`{{ route('login') }}`;">
             Login
           </button>
         </div>

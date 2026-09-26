@@ -171,7 +171,7 @@ public function storeCaseEncoding(Request $request, string $inflow_record_id)
         [
             'animal_type'       => $request->input('animal_type'),
             'animal_type_other' => $request->input('animal_type_other'),
-            'bite_date_time'    => $request->input('bite_date_time'),
+            'bite_date_time'    => $request->input('bite_date') . ($request->input('bite_time') ? ' ' . $request->input('bite_time') : ' 00:00:00'),
             'animal_vax_status' => $request->input('animal_vax_status'),
             'animal_vax_date'   => $request->input('animal_vax_date') ?: null,
             'animal_fate'       => $request->input('fate'),
@@ -188,7 +188,7 @@ public function storeCaseEncoding(Request $request, string $inflow_record_id)
     DB::table('bite_section4_wound_treatment')->updateOrInsert(
         ['bite_case_id' => $biteCaseId],
         [
-            'wound_washed'          => implode(', ', $request->input('wound_washed', [])),
+            'wound_washed'          => $request->input('wound_washed'),
             'wound_wash_other'      => $request->input('wound_wash_other'),
             'local_irritant_applied'=> $request->has('local_irritant_applied') ? 1 : 0,
             'local_irritant_detail' => $request->input('local_irritant_detail'),

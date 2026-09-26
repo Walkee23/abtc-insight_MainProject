@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\BhwController;
+use App\Http\Controllers\StaffController;
 use Illuminate\Http\Request;
 
 Route::get('/', function () {
@@ -47,17 +48,15 @@ Route::prefix('staff')->group(function () {
         return view('staff.dashboard');
     })->name('staff.dashboard');
 
-    Route::get('/case-encoding', function () {
-        return view('staff.Case_Encoding');
-    })->name('staff.case-encoding');
+    Route::get('/case-encoding/{inflow_record_id?}', [StaffController::class, 'caseEncoding'])->name('staff.case-encoding');
+    Route::post('/case-encoding/{inflow_record_id}/store', [StaffController::class, 'storeCaseEncoding'])->name('staff.store-case-encoding');
 
     Route::get('/patient-lookup', function () {
         return view('staff.Patient_Lookup');
     })->name('staff.patient-lookup');
 
-    Route::get('/patient-verification', function () {
-        return view('staff.Patient_Verification');
-    })->name('staff.patient-verification');
+    Route::get('/patient-verification', [StaffController::class, 'patientVerification'])->name('staff.patient-verification');
+    Route::post('/verify-attendance/{inflow_record_id}', [StaffController::class, 'verifyAttendance'])->name('staff.verify-attendance');
 });
 
 // Healthworker Routes
@@ -133,6 +132,18 @@ Route::get('/patient/queue/priority', function () {
 
 // Walk-in New Patient self-registration (Section I + II)
 Route::post('/patient/new-submit', function (Request $request) {
+    // BHW Referral ID must match a real referral on file - reject if not found
+    $referralId = $request->input('bhw_referral_id');
+    $referralExists = DB::table('bhw_referral_info')
+        ->where('reference_no', $referralId)
+        ->exists();
+
+    if (!$referralExists) {
+        return back()
+            ->withErrors(['bhw_referral_id' => 'This BHW Referral ID was not found. Please check it and try again.'])
+            ->withInput();
+    }
+
     $isPriority = $request->input('priority_status') !== 'none';
     $prefix = $isPriority ? 'P' : 'N';
     $queueDate = now()->toDateString();
@@ -149,6 +160,7 @@ Route::post('/patient/new-submit', function (Request $request) {
         'queue_id' => $queueId,
         'queue_date' => $queueDate,
         'id_number' => $request->input('valid_id_number'),
+        'bhw_referral_id' => $referralId,
         'patient_name' => $request->input('full_name'),
         'age' => $request->input('age'),
         'sex' => ucfirst($request->input('sex')),

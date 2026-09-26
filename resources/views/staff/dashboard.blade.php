@@ -101,34 +101,50 @@
 </head>
 
 <body class="text-on-surface select-none">
+     <!-- SideNavBar -->
+    <aside class="h-screen w-64 fixed left-0 top-0 bg-slate-100 dark:bg-slate-900 flex flex-col pt-6 pb-4 gap-2 z-50">
     <!-- SideNavBar -->
-    <aside class="fixed left-0 top-0 h-full z-40 h-screen w-72 flex flex-col border-r border-outline-variant/10 bg-white dark:bg-slate-900 font-sans Inter antialiased">
-        <div class="p-8 flex items-center gap-3">
-            <div class="w-10 h-10 bg-primary-container rounded-xl flex items-center justify-center text-white shadow-md">
-                <span class="material-symbols-outlined" data-icon="shield">shield</span>
-            </div>
-            <div>
-                <h1 class="text-xl font-bold tracking-tight text-primary dark:text-blue-200">ABTC-Insight</h1>
+        <div class="px-6 mb-8">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg">
+                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">health_and_safety</span>
+                </div>
+                <div>
+                    <h1 class="text-blue-900 dark:text-blue-50 font-bold text-sm tracking-tight leading-none">ABTC-Insight</h1>
+                </div>
             </div>
         </div>
-            <nav class="flex-1 mt-4 space-y-1 px-4">
-                  <a class="flex items-center gap-3 px-4 py-3.5 text-primary dark:text-blue-400 font-semibold border-l-4 border-primary dark:border-blue-400 bg-primary/5 transition-all" href="#">
-                  <span class="material-symbols-outlined" data-icon="queue">queue</span>
-                  <span>Queue Management</span>
-               </a>
-                  <a class="flex items-center gap-3 px-4 py-3.5 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors" href="{{ route('staff.patient-verification') }}">
-                  <span class="material-symbols-outlined" data-icon="verified_user">verified_user</span>
-                  <span>Patient Verification</span>
-               </a>
-                  <a class="flex items-center gap-3 px-4 py-3.5 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors" href="{{ route('staff.case-encoding') }}">
-                  <span class="material-symbols-outlined" data-icon="clinical_notes">clinical_notes</span>
-                  <span>Case Encoding</span>
-               </a>
-                  <a class="flex items-center gap-3 px-4 py-3.5 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors" href="{{ route('staff.patient-lookup') }}">
-                  <span class="material-symbols-outlined" data-icon="person_search">person_search</span>
-                  <span>Patient Lookup</span>
-               </a>
+           
+        <nav class="flex-1 mt-4 space-y-1 px-4">
+            <!-- Queue Management (Active - Admin Style) -->
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-blue-700 dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600 translate-x-1 duration-150" 
+            href="{{ route('staff.dashboard') }}">
+                <span class="material-symbols-outlined">queue</span>
+                <span class="font-['Inter'] text-sm tracking-wide">Queue Management</span>
+            </a>
+
+            <!-- Patient Verification -->
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
+            href="{{ route('staff.patient-verification') }}">
+                <span class="material-symbols-outlined">verified_user</span>
+                <span class="font-['Inter'] text-sm tracking-wide">Patient Verification</span>
+            </a>
+
+            <!-- Case Encoding -->
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
+            href="{{ route('staff.case-encoding') }}">
+                <span class="material-symbols-outlined">clinical_notes</span>
+                <span class="font-['Inter'] text-sm tracking-wide">Case Encoding</span>
+            </a>
+
+            <!-- Patient Lookup -->
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
+            href="{{ route('staff.patient-lookup') }}">
+                <span class="material-symbols-outlined">person_search</span>
+                <span class="font-['Inter'] text-sm tracking-wide">Patient Lookup</span>
+            </a>
         </nav>
+        
     </aside>
     <!-- Main Content Area -->
     <main class="ml-72 min-h-screen">
@@ -203,6 +219,7 @@
                 <h2 class="text-3xl font-extrabold tracking-tighter text-on-surface">Queue Management</h2>
                 <p class="text-on-surface-variant mt-1">Monitor intake progress and verify clinical exposure details.</p>
             </div>
+            
             <!-- Section 1: Stats Grid (Bento Style) -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
                 <div class="bg-surface-container-lowest p-6 rounded-lg shadow-sm border border-outline-variant/10">
@@ -236,6 +253,7 @@
                     <div class="text-xs text-on-surface-variant uppercase mt-1 tracking-widest font-semibold">PENDING VERIFICATIONS</div>
                 </div>
             </div>
+
             <!-- Content Grid: Priority and Normal Queue -->
             <div class="grid grid-cols-12 gap-8 items-start">
                 <!-- Section 2: Priority Queue -->

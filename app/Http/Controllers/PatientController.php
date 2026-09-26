@@ -77,6 +77,7 @@ class PatientController extends Controller
     }
 
     // BHW-referral registration (from main)
+        // BHW-referral registration (from main)
     public function registerPatient(Request $request)
     {
         $referralCode = $request->input('reference_no');
@@ -91,15 +92,34 @@ class PatientController extends Controller
             return back()->withErrors(['reference_no' => 'Referral code is invalid or has already been used.']);
         }
 
-        // 2. Insert the patient into the PATIENTS table
-        $patientId = DB::table('patients')->insertGetId([
-            'patient_name' => $request->input('patient_name'),
-            'barangay' => $request->input('barangay'),
-            'date_registered' => now(),
-            // Add your other patient fields here
+        // 2. Generate patient_id: CEB-[today]-[dob]-[seq]
+        $dob = $request->input('date_of_birth') ?: $validReferral->date_of_birth;
+        $regDate = now()->format('Ymd');
+        $dobFormatted = \Carbon\Carbon::parse($dob)->format('Ymd');
+
+        $countSameDay = DB::table('patients')
+            ->where('patient_id', 'LIKE', "CEB-{$regDate}-{$dobFormatted}-%")
+            ->count();
+        $sequence = str_pad($countSameDay + 1, 3, '0', STR_PAD_LEFT);
+        $patientId = "CEB-{$regDate}-{$dobFormatted}-{$sequence}";
+
+        // 3. Insert the patient into the PATIENTS table
+        DB::table('patients')->insert([
+            'patient_id'         => $patientId,
+            'inflow_record_id'   => null,
+            'date_registered'    => now(),
+            'patient_name'       => $request->input('patient_name') ?: $validReferral->patient_name,
+            'age'                => $request->input('age') ?: $validReferral->age,
+            'sex'                => $request->input('sex') ?: $validReferral->gender,
+            'date_of_birth'      => $dob,
+            'civil_status'       => $request->input('civil_status') ?: $validReferral->civil_status,
+            'contact_num'        => $request->input('contact_number') ?: $validReferral->contact_num,
+            'philhealth_member'  => $request->input('philhealth_member') === 'yes' ? 1 : 0,
+            'philhealth_name'    => $request->input('philhealth_member_name'),
+            'philhealth_dob'     => $request->input('philhealth_member_dob') ?: null,
         ]);
 
-        // 3. Lock the referral so it cannot be used again
+        // 4. Lock the referral so it cannot be used again
         DB::table('bhw_referral_info')
             ->where('referral_id', $validReferral->referral_id)
             ->update([
@@ -107,15 +127,24 @@ class PatientController extends Controller
                 'updated_at' => now()
             ]);
 
-        // 4. Link the referral to the new bite case
-        DB::table('bite_cases')->insert([
-            'patient_id' => $patientId,
-            'bhw_referral_id' => $validReferral->referral_id,
-            'date_verified' => now(),
-            // Add your other bite case fields here
-        ]);
+        // 5. Link the referral to the new bite case
+        $biteCaseId = DB::table('bite_cases')->insertGetId([
+            'patient_id'        => $patientId,
+            'inflow_record_id'  => null,
+            'case_number'       => DB::table('bite_cases')->max('case_number') + 1,
+            'bhw_referral_id'   => $validReferral->referral_id,
+            'date_verified'     => now(),
+            'barangay'          => $request->input('barangay') ?: $validReferral->patient_barangay,
+            'category'          => 'Cat II',
+            'philhealth_status' => $request->input('philhealth_member') === 'yes' ? 'Member' : 'Non-member',
+        ], 'bite_case_id');
 
-        // 5. Your Priority Condition Redirect
+        // 6. Link the bite case back to the referral so BHW dashboard shows it as Received
+        DB::table('bhw_referral_info')
+            ->where('referral_id', $validReferral->referral_id)
+            ->update(['bite_case_id' => $biteCaseId]);
+
+        // 7. Priority Condition Redirect
         $priority = $request->input('priority_status');
 
         if ($priority === 'none' || empty($priority)) {

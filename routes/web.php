@@ -132,6 +132,18 @@ Route::get('/patient/queue/priority', function () {
 
 // Walk-in New Patient self-registration (Section I + II)
 Route::post('/patient/new-submit', function (Request $request) {
+    // BHW Referral ID must match a real referral on file - reject if not found
+    $referralId = $request->input('bhw_referral_id');
+    $referralExists = DB::table('bhw_referral_info')
+        ->where('reference_no', $referralId)
+        ->exists();
+
+    if (!$referralExists) {
+        return back()
+            ->withErrors(['bhw_referral_id' => 'This BHW Referral ID was not found. Please check it and try again.'])
+            ->withInput();
+    }
+
     $isPriority = $request->input('priority_status') !== 'none';
     $prefix = $isPriority ? 'P' : 'N';
     $queueDate = now()->toDateString();
@@ -148,6 +160,7 @@ Route::post('/patient/new-submit', function (Request $request) {
         'queue_id' => $queueId,
         'queue_date' => $queueDate,
         'id_number' => $request->input('valid_id_number'),
+        'bhw_referral_id' => $referralId,
         'patient_name' => $request->input('full_name'),
         'age' => $request->input('age'),
         'sex' => ucfirst($request->input('sex')),

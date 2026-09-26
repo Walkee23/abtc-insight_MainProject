@@ -104,8 +104,13 @@
     <nav class="fixed top-0 w-full z-50 bg-slate-50/85 backdrop-blur-md shadow-sm">
         <div class="flex justify-between items-center px-6 py-4 max-w-7xl mx-auto font-sans antialiased text-sm font-medium tracking-tight">
             <!-- Left Side: Brand Logo -->
-            <div class="text-xl font-bold tracking-tighter text-blue-900">
-                ABTC-Insight
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                    <span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">health_and_safety</span>
+                </div>
+                <div class="text-xl font-bold tracking-tighter text-blue-900">
+                    ABTC-Insight
+                </div>
             </div>
             <!-- Right Side: Navigation Links & Login -->
             <div class="flex items-center gap-8">

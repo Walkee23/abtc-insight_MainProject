@@ -10,6 +10,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
     <script id="tailwind-config">
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Cebu Health ABTC - Case Encoding</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
+    <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
             theme: {
@@ -99,8 +109,30 @@
             background: #c1c7d3;
             border-radius: 10px;
         }
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #c1c7d3;
+            border-radius: 10px;
+        }
     </style>
 </head>
+
 
 <body class="bg-surface text-on-surface min-h-screen flex">
     <!-- SideNavBar -->
@@ -281,6 +313,8 @@
                                             </label>
                                             <label class="flex items-center gap-2 text-sm cursor-pointer">
                                                 <input class="text-primary focus:ring-primary" name="animal_type" value="Cat" type="radio" required /> Cat
+                                            <label class="flex items-center gap-2 text-sm cursor-pointer">
+                                                <input class="text-primary focus:ring-primary" name="animal_type" value="Cat" type="radio" required /> Cat
                                             </label>
                                             <label class="flex items-center gap-2 text-sm cursor-pointer">
                                                 <input class="text-primary focus:ring-primary" name="animal_type" value="Others" type="radio" required /> Others
@@ -292,7 +326,19 @@
                                         <div class="flex gap-4">
                                             <label class="flex items-center gap-2 text-sm cursor-pointer">
                                                 <input class="text-primary focus:ring-primary" name="pet_status" value="Pet" type="radio" /> Pet
+                                            <label class="flex items-center gap-2 text-sm cursor-pointer">
+                                                <input class="text-primary focus:ring-primary" name="animal_type" value="Others" type="radio" required /> Others
+                                            </label><input class="ml-2 bg-surface-container-highest border-none rounded-lg text-xs px-3 py-1.5 focus:ring-2 focus:ring-primary/20 transition-all outline-none w-32" name="animal_type_other" placeholder="Specify..." type="text" />
+                                        </div>
+                                    </div>
+                                    <div class="space-y-4">
+                                        <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Pet or Stray</label>
+                                        <div class="flex gap-4">
+                                            <label class="flex items-center gap-2 text-sm cursor-pointer">
+                                                <input class="text-primary focus:ring-primary" name="pet_status" value="Pet" type="radio" /> Pet
                                             </label>
+                                            <label class="flex items-center gap-2 text-sm cursor-pointer">
+                                                <input class="text-primary focus:ring-primary" name="pet_status" value="Stray" type="radio" /> Stray
                                             <label class="flex items-center gap-2 text-sm cursor-pointer">
                                                 <input class="text-primary focus:ring-primary" name="pet_status" value="Stray" type="radio" /> Stray
                                             </label>
@@ -310,10 +356,28 @@
                                         <div class="flex gap-4">
                                             <label class="flex items-center gap-2 text-sm cursor-pointer">
                                                 <input class="rounded text-primary focus:ring-primary" name="exposure_type[]" value="Lick" type="checkbox" /> Lick
+                                        </div>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Date/Time of Bite</label>
+                                        <div class="flex gap-2">
+                                            <input class="w-full bg-surface-container-highest border-none rounded-lg text-sm px-4 py-2.5 focus:ring-2 focus:ring-primary/20 transition-all outline-none" name="bite_date" type="date" required />
+                                            <input class="w-full bg-surface-container-highest border-none rounded-lg text-sm px-4 py-2.5 focus:ring-2 focus:ring-primary/20 transition-all outline-none" name="bite_time" type="time" />
+                                        </div>
+                                    </div>
+                                    <div class="space-y-4">
+                                        <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Exposure Type</label>
+                                        <div class="flex gap-4">
+                                            <label class="flex items-center gap-2 text-sm cursor-pointer">
+                                                <input class="rounded text-primary focus:ring-primary" name="exposure_type[]" value="Lick" type="checkbox" /> Lick
                                             </label>
                                             <label class="flex items-center gap-2 text-sm cursor-pointer">
                                                 <input class="rounded text-primary focus:ring-primary" name="exposure_type[]" value="Scratch" type="checkbox" /> Scratch
+                                            <label class="flex items-center gap-2 text-sm cursor-pointer">
+                                                <input class="rounded text-primary focus:ring-primary" name="exposure_type[]" value="Scratch" type="checkbox" /> Scratch
                                             </label>
+                                            <label class="flex items-center gap-2 text-sm cursor-pointer">
+                                                <input class="rounded text-primary focus:ring-primary" name="exposure_type[]" value="Bite" type="checkbox" /> Bite
                                             <label class="flex items-center gap-2 text-sm cursor-pointer">
                                                 <input class="rounded text-primary focus:ring-primary" name="exposure_type[]" value="Bite" type="checkbox" /> Bite
                                             </label>
@@ -392,7 +456,84 @@
                                         <div class="flex flex-wrap gap-4 items-center">
                                             <label class="flex items-center gap-2 text-sm cursor-pointer">
                                                 <input class="text-primary focus:ring-primary wound-wash-radio" name="wound_washed" value="Water only" type="radio" /> Water only
+                                        </div>
+                                    </div>
+                                    <div class="space-y-4">
+                                        <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Risk Indicators (Provocation &amp; Leash)</label>
+                                        <div class="grid gap-4">
+                                            <div class="flex flex-col gap-2">
+                                                <span class="text-[10px] text-on-surface-variant">Provoked</span>
+                                                <div class="flex gap-3">
+                                                    <label class="text-[11px]"><input class="text-primary" name="provoked" value="1" type="radio" /> Yes</label>
+                                                    <label class="text-[11px]"><input class="text-primary" name="provoked" value="0" type="radio" /> No</label>
+                                                </div>
+                                            </div>
+                                            <div class="flex flex-col gap-2">
+                                                <span class="text-[10px] text-on-surface-variant">On Leash</span>
+                                                <div class="flex gap-3">
+                                                    <label class="text-[11px]"><input class="text-primary" name="leash" value="1" type="radio" /> Yes</label>
+                                                    <label class="text-[11px]"><input class="text-primary" name="leash" value="0" type="radio" /> No</label>
+                                                </div>
+                                            </div>
+                                            <div class="flex flex-col gap-2">
+                                                <span class="text-[10px] text-on-surface-variant">Gate Status</span>
+                                                <div class="flex gap-3">
+                                                    <label class="text-[11px]"><input class="text-primary" name="gate" value="1" type="radio" /> With gate</label>
+                                                    <label class="text-[11px]"><input class="text-primary" name="gate" value="0" type="radio" /> Without gate</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Vax Status &amp; Date</label>
+                                        <div class="flex gap-2">
+                                            <select id="vax_status_select" class="flex-1 bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20" name="animal_vax_status">
+                                                <option>Unknown</option>
+                                                <option>Vaccinated</option>
+                                                <option>Not Vaccinated</option>
+                                            </select>
+                                            <input id="vax_date_input" class="flex-1 bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20 disabled:opacity-50 disabled:cursor-not-allowed" name="animal_vax_date" type="date" min="2000-01-01" max="{{ date('Y-m-d') }}" disabled />
+                                        </div>
+                                    </div>
+                                    <div class="md:col-span-2 space-y-2">
+                                        <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Circumstances of Exposure</label>
+                                        <textarea class="w-full bg-surface-container-highest border-none rounded-lg text-sm px-4 py-3 focus:ring-2 focus:ring-primary/20 transition-all outline-none resize-none" name="circumstances" placeholder="Brief description of the incident..." rows="3"></textarea>
+                                    </div>
+                                    <div class="md:col-span-2 grid grid-cols-2 gap-8">
+                                        <div class="space-y-4">
+                                            <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Fate of Animal</label>
+                                            <div class="grid grid-cols-2 gap-2">
+                                                <label class="text-xs flex items-center gap-2"><input class="text-primary" name="fate" value="Healthy" type="radio" /> Healthy</label>
+                                                <label class="text-xs flex items-center gap-2"><input class="text-primary" name="fate" value="Sick" type="radio" /> Sick</label>
+                                                <label class="text-xs flex items-center gap-2"><input class="text-primary" name="fate" value="Dead" type="radio" /> Dead</label>
+                                                <label class="text-xs flex items-center gap-2"><input class="text-primary" name="fate" value="Lost/Stray" type="radio" /> Lost/Stray</label>
+                                            </div>
+                                        </div>
+                                        <div class="space-y-4">
+                                            <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">14-Day Observation</label>
+                                            <div class="flex flex-col gap-2">
+                                                <label class="text-xs flex items-center gap-2"><input id="obs_checkbox" class="rounded text-primary focus:ring-primary" name="obs" value="1" type="checkbox" /> Under Observation</label>
+                                                <input id="obs_date_input" class="w-full bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20 disabled:opacity-50 disabled:cursor-not-allowed" name="obs_14_days" type="date" min="2000-01-01" max="{{ date('Y-m-d') }}" disabled />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                            <!-- Section 4: Local Wound Treatment -->
+                            <section class="space-y-6">
+                                <div class="flex items-center gap-3">
+                                    <span class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">4</span>
+                                    <h4 class="text-sm font-extrabold uppercase tracking-widest text-on-surface-variant">Local Wound Treatment</h4>
+                                </div>
+                                <div class="pl-11 grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div class="space-y-4">
+                                        <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Wound washed with</label>
+                                        <div class="flex flex-wrap gap-4 items-center">
+                                            <label class="flex items-center gap-2 text-sm cursor-pointer">
+                                                <input class="text-primary focus:ring-primary wound-wash-radio" name="wound_washed" value="Water only" type="radio" /> Water only
                                             </label>
+                                            <label class="flex items-center gap-2 text-sm cursor-pointer">
+                                                <input class="text-primary focus:ring-primary wound-wash-radio" name="wound_washed" value="Soap & Water" type="radio" /> Soap &amp; Water
                                             <label class="flex items-center gap-2 text-sm cursor-pointer">
                                                 <input class="text-primary focus:ring-primary wound-wash-radio" name="wound_washed" value="Soap & Water" type="radio" /> Soap &amp; Water
                                             </label>
@@ -429,7 +570,42 @@
                                         <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Previously Vaccinated?</label>
                                         <div class="flex gap-4">
                                             <label class="flex items-center gap-2 text-sm cursor-pointer font-bold text-primary"><input class="text-primary focus:ring-primary" id="prev_arv_yes" name="prev_arv_given" value="1" type="radio" /> Yes
+                                            <!-- Grouped "Others" and Input -->
+                                            <div class="flex items-center gap-2">
+                                                <label class="flex items-center gap-2 text-sm cursor-pointer">
+                                                    <input class="text-primary focus:ring-primary wound-wash-radio" name="wound_washed" value="Others" type="radio" /> Others
+                                                </label>
+                                                <input id="wound_wash_other_input" class="bg-surface-container-highest border-none rounded-lg text-xs px-3 py-1.5 focus:ring-2 focus:ring-primary/20 transition-all outline-none w-40 disabled:opacity-50 disabled:cursor-not-allowed" name="wound_wash_other" placeholder="Specify treatment..." type="text" disabled />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-4">
+                                        <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Local irritant applied</label>
+                                        <div class="flex flex-col gap-3">
+                                            <label class="relative inline-flex items-center cursor-pointer">
+                                                <input id="local_irritant_checkbox" class="sr-only peer" name="local_irritant_applied" value="1" type="checkbox" />
+                                                <div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                                <span class="ml-3 text-sm font-medium text-on-surface-variant">Yes, applied</span>
                                             </label>
+                                            <input id="local_irritant_input" class="w-full bg-surface-container-highest border-none rounded-lg text-xs px-4 py-2 focus:ring-2 focus:ring-primary/20 outline-none disabled:opacity-50 disabled:cursor-not-allowed" name="local_irritant_detail" placeholder="Specify (e.g., Garlic, Vinegar, etc.)" type="text" disabled />
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                            <!-- Section 5: Previous Anti-Rabies Treatment -->
+                            <section class="space-y-6">
+                                <div class="flex items-center gap-3">
+                                    <span class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">5</span>
+                                    <h4 class="text-sm font-extrabold uppercase tracking-widest text-on-surface-variant">Previous Anti-Rabies Treatment</h4>
+                                </div>
+                                <div class="pl-11 space-y-6">
+                                    <div class="flex items-center gap-8">
+                                        <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Previously Vaccinated?</label>
+                                        <div class="flex gap-4">
+                                            <label class="flex items-center gap-2 text-sm cursor-pointer font-bold text-primary"><input class="text-primary focus:ring-primary" id="prev_arv_yes" name="prev_arv_given" value="1" type="radio" /> Yes
+                                            </label>
+                                            <label class="flex items-center gap-2 text-sm cursor-pointer">
+                                                <input class="text-primary focus:ring-primary" id="prev_arv_no" name="prev_arv_given" value="0" checked type="radio" /> No
                                             <label class="flex items-center gap-2 text-sm cursor-pointer">
                                                 <input class="text-primary focus:ring-primary" id="prev_arv_no" name="prev_arv_given" value="0" checked type="radio" /> No
                                             </label>
@@ -464,8 +640,118 @@
                                 <button class="px-8 py-3 text-sm font-bold text-secondary bg-surface-container-low rounded-full hover:bg-surface-container-high transition-all">Cancel Entry</button>
                                 <button type="submit" name="action" value="complete" class="px-10 py-3 text-sm font-bold text-white bg-primary rounded-full hover:bg-primary-container transition-all shadow-xl active:scale-95 flex items-center gap-2">
                                     <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                                        </div>
+                                    </div>
+                                    <div class="bg-tertiary-fixed p-4 rounded-lg flex gap-3 items-start border-l-4 border-on-tertiary-fixed-variant shadow-sm">
+                                        <span class="material-symbols-outlined text-on-tertiary-fixed-variant" style="font-variation-settings: 'FILL' 1;">info</span>
+                                        <p class="text-xs text-on-tertiary-fixed-variant font-medium">Check with ABTC health worker for history or record patient's claims if medical documentation is unavailable. Incomplete history may lead to dosage errors.</p>
+                                    </div>
+                                    <div id="dose_dates_wrapper" class="grid grid-cols-2 md:grid-cols-4 gap-4 hidden">
+                                        <div class="space-y-2">
+                                            <label class="block text-[10px] font-bold text-on-surface-variant uppercase">Dose 1 Date</label>
+                                            <input class="w-full bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20" id="dose1_date" name="dose1_date" type="date" min="2000-01-01" max="{{ date('Y-m-d') }}" />
+                                        </div>
+                                        <div class="space-y-2">
+                                            <label class="block text-[10px] font-bold text-on-surface-variant uppercase">Dose 2 Date</label>
+                                            <input class="w-full bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20" id="dose2_date" name="dose2_date" type="date" min="2000-01-01" max="{{ date('Y-m-d') }}" />
+                                        </div>
+                                        <div class="space-y-2">
+                                            <label class="block text-[10px] font-bold text-on-surface-variant uppercase">Dose 3 Date</label>
+                                            <input class="w-full bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20" id="dose3_date" name="dose3_date" type="date" min="2000-01-01" max="{{ date('Y-m-d') }}" />
+                                        </div>
+                                        <div class="space-y-2">
+                                            <label class="block text-[10px] font-bold text-on-surface-variant uppercase">Booster Date</label>
+                                            <input class="w-full bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20" id="booster_date" name="booster_date" type="date" min="2000-01-01" max="{{ date('Y-m-d') }}" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                            <!-- Form Submission -->
+                            <div class="pt-8 border-t border-surface-container-high flex justify-end gap-4">
+                                <button class="px-8 py-3 text-sm font-bold text-secondary bg-surface-container-low rounded-full hover:bg-surface-container-high transition-all">Cancel Entry</button>
+                                <button type="submit" name="action" value="complete" class="px-10 py-3 text-sm font-bold text-white bg-primary rounded-full hover:bg-primary-container transition-all shadow-xl active:scale-95 flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-[18px]">check_circle</span>
                                     Complete Encoding
                                 </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- Section 5: Dose Dates Logic ---
+            const yesRadio = document.getElementById('prev_arv_yes');
+            const noRadio = document.getElementById('prev_arv_no');
+            const wrapper = document.getElementById('dose_dates_wrapper');
+            const doseInputs = ['dose1_date', 'dose2_date', 'dose3_date', 'booster_date'].map(id => document.getElementById(id));
+
+            function toggleDoseFields() {
+                if (yesRadio.checked) {
+                    wrapper.classList.remove('hidden');
+                } else {
+                    wrapper.classList.add('hidden');
+                    doseInputs.forEach(input => input.value = '');
+                }
+            }
+
+            yesRadio.addEventListener('change', toggleDoseFields);
+            noRadio.addEventListener('change', toggleDoseFields);
+
+            // --- Section 4: Wound Washed Logic ---
+            const woundWashRadios = document.querySelectorAll('.wound-wash-radio');
+            const woundWashOtherInput = document.getElementById('wound_wash_other_input');
+
+            woundWashRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.value === 'Others') {
+                        woundWashOtherInput.disabled = false;
+                        woundWashOtherInput.focus();
+                    } else {
+                        woundWashOtherInput.disabled = true;
+                        woundWashOtherInput.value = '';
+                    }
+                });
+            });
+
+            // --- Section 4: Local Irritant Logic ---
+            const irritantCheckbox = document.getElementById('local_irritant_checkbox');
+            const irritantInput = document.getElementById('local_irritant_input');
+
+            irritantCheckbox.addEventListener('change', function() {
+                irritantInput.disabled = !this.checked;
+                if (!this.checked) irritantInput.value = '';
+                else irritantInput.focus();
+            });
+
+            // --- Section 3: 14-Day Observation Logic ---
+            const obsCheckbox = document.getElementById('obs_checkbox');
+            const obsDateInput = document.getElementById('obs_date_input');
+
+            obsCheckbox.addEventListener('change', function() {
+                obsDateInput.disabled = !this.checked;
+                if (!this.checked) obsDateInput.value = '';
+            });
+
+            // --- Section 3: Vax Status Logic ---
+            const vaxSelect = document.getElementById('vax_status_select');
+            const vaxDateInput = document.getElementById('vax_date_input');
+
+            vaxSelect.addEventListener('change', function() {
+                if (this.value === 'Vaccinated') {
+                    vaxDateInput.disabled = false;
+                } else {
+                    vaxDateInput.disabled = true;
+                    vaxDateInput.value = '';
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
                             </div>
                         </form>
                     </div>

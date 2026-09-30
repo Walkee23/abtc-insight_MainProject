@@ -44,16 +44,13 @@ Route::prefix('admin')->group(function () {
 
 // Staff Routes
 Route::prefix('staff')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('staff.dashboard');
-    })->name('staff.dashboard');
+    // ---  Route now directs to StaffController@dashboard instead of inline view ---
+    Route::get('/dashboard', [StaffController::class, 'dashboard'])->name('staff.dashboard');
 
     Route::get('/case-encoding/{inflow_record_id?}', [StaffController::class, 'caseEncoding'])->name('staff.case-encoding');
     Route::post('/case-encoding/{inflow_record_id}/store', [StaffController::class, 'storeCaseEncoding'])->name('staff.store-case-encoding');
 
-    Route::get('/patient-lookup', function () {
-        return view('staff.Patient_Lookup');
-    })->name('staff.patient-lookup');
+    Route::get('/patient-lookup', [StaffController::class, 'patientLookup'])->name('staff.patient-lookup');
 
     Route::get('/patient-verification', [StaffController::class, 'patientVerification'])->name('staff.patient-verification');
     Route::post('/verify-attendance/{inflow_record_id}', [StaffController::class, 'verifyAttendance'])->name('staff.verify-attendance');

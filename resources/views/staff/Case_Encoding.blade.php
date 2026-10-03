@@ -288,18 +288,18 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pl-11">
                                     <div class="space-y-4">
                                         <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Animal Type</label>
-                                        <div class="flex gap-4 items-center">
-                                            <label class="flex items-center gap-2 text-sm cursor-pointer">
-                                                <input class="text-primary focus:ring-primary" name="animal_type" value="Dog" type="radio" required /> Dog
-                                            </label>
-                                            <label class="flex items-center gap-2 text-sm cursor-pointer">
-                                                <input class="text-primary focus:ring-primary" name="animal_type" value="Cat" type="radio" required /> Cat
-                                            </label>
-                                            <label class="flex items-center gap-2 text-sm cursor-pointer">
-                                                <input class="text-primary focus:ring-primary" name="animal_type" value="Others" type="radio" required /> Others
-                                            </label>
-                                            <input class="ml-2 bg-surface-container-highest border-none rounded-lg text-xs px-3 py-1.5 focus:ring-2 focus:ring-primary/20 transition-all outline-none w-32" name="animal_type_other" placeholder="Specify..." type="text" />
-                                        </div>
+                                    <div class="flex flex-wrap gap-4 items-center">
+                                        <label class="flex items-center gap-2 text-sm cursor-pointer">
+                                            <input class="text-primary focus:ring-primary animal-type-radio" name="animal_type" value="Dog" type="radio" required /> Dog
+                                         </label>
+                                       <label class="flex items-center gap-2 text-sm cursor-pointer">
+                                           <input class="text-primary focus:ring-primary animal-type-radio" name="animal_type" value="Cat" type="radio" required /> Cat
+                                       </label>
+                                       <label class="flex items-center gap-2 text-sm cursor-pointer">
+                                          <input class="text-primary focus:ring-primary animal-type-radio" name="animal_type" value="Others" type="radio" required /> Others
+                                         </label>
+                                    </div>
+                                         <input id="animal_type_other_input" class="hidden w-full bg-surface-container-highest border-none rounded-lg text-xs px-3 py-2 focus:ring-2 focus:ring-primary/20 transition-all outline-none" name="animal_type_other" placeholder="Specify animal..." type="text" />
                                     </div>
 
                                     <div class="space-y-4">
@@ -500,6 +500,24 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // --- Section 3: Animal Type "Others" Logic ---
+const animalTypeRadios = document.querySelectorAll('.animal-type-radio');
+const animalOtherInput = document.getElementById('animal_type_other_input');
+
+animalTypeRadios.forEach(radio => {
+    radio.addEventListener('change', function() {
+        if (this.value === 'Others') {
+            animalOtherInput.classList.remove('hidden');
+            animalOtherInput.required = true;
+            animalOtherInput.focus();
+        } else {
+            animalOtherInput.classList.add('hidden');
+            animalOtherInput.required = false;
+            animalOtherInput.value = '';
+        }
+    });
+});
+
             // --- Section 5: Dose Dates Logic ---
             const yesRadio = document.getElementById('prev_arv_yes');
             const noRadio = document.getElementById('prev_arv_no');

@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\BhwController;
 use App\Http\Controllers\StaffController;
+use App\Http\Controllers\HealthWorkerController;
 use Illuminate\Http\Request;
 
 Route::get('/', function () {
@@ -44,16 +45,13 @@ Route::prefix('admin')->group(function () {
 
 // Staff Routes
 Route::prefix('staff')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('staff.dashboard');
-    })->name('staff.dashboard');
+    // ---  Route now directs to StaffController@dashboard instead of inline view ---
+    Route::get('/dashboard', [StaffController::class, 'dashboard'])->name('staff.dashboard');
 
     Route::get('/case-encoding/{inflow_record_id?}', [StaffController::class, 'caseEncoding'])->name('staff.case-encoding');
     Route::post('/case-encoding/{inflow_record_id}/store', [StaffController::class, 'storeCaseEncoding'])->name('staff.store-case-encoding');
 
-    Route::get('/patient-lookup', function () {
-        return view('staff.Patient_Lookup');
-    })->name('staff.patient-lookup');
+    Route::get('/patient-lookup', [StaffController::class, 'patientLookup'])->name('staff.patient-lookup');
 
     Route::get('/patient-verification', [StaffController::class, 'patientVerification'])->name('staff.patient-verification');
     Route::post('/verify-attendance/{inflow_record_id}', [StaffController::class, 'verifyAttendance'])->name('staff.verify-attendance');
@@ -65,21 +63,24 @@ Route::prefix('healthworker')->group(function () {
         return view('healthworker.dashboard');
     })->name('healthworker.dashboard');
 
-    Route::get('/clinical-encoding', function () {
-        return view('healthworker.CE_VI');
-    })->name('healthworker.clinical-encoding');
+    // Main Entry Point for Clinical Encoding
+    Route::get('/clinical-encoding', [HealthWorkerController::class, 'clinical_encoding_index'])->name('healthworker.clinical-encoding');
 
-    Route::get('/clinical-encoding/section-vii', function () {
-        return view('healthworker.CE_VII');
-    })->name('healthworker.ce-vii');
+    // CE Section VI
+    Route::get('/clinical-encoding/{bite_case_id}/vi', [HealthWorkerController::class, 'ce_vi'])->name('healthworker.ce-vi');
+    Route::post('/clinical-encoding/{bite_case_id}/vi', [HealthWorkerController::class, 'store_ce_vi'])->name('healthworker.store-ce-vi');
 
-    Route::get('/clinical-encoding/section-viii', function () {
-        return view('healthworker.CE_VIII');
-    })->name('healthworker.ce-viii');
+    // CE Section VII
+    Route::get('/clinical-encoding/{bite_case_id}/vii', [HealthWorkerController::class, 'ce_vii'])->name('healthworker.ce-vii');
+    Route::post('/clinical-encoding/{bite_case_id}/vii', [HealthWorkerController::class, 'store_ce_vii'])->name('healthworker.store-ce-vii');
 
-    Route::get('/clinical-encoding/section-ix', function () {
-        return view('healthworker.CE_IX');
-    })->name('healthworker.ce-ix');
+    // CE Section VIII
+    Route::get('/clinical-encoding/{bite_case_id}/viii', [HealthWorkerController::class, 'ce_viii'])->name('healthworker.ce-viii');
+    Route::post('/clinical-encoding/{bite_case_id}/viii', [HealthWorkerController::class, 'store_ce_viii'])->name('healthworker.store-ce-viii');
+
+    // CE Section IX
+    Route::get('/clinical-encoding/{bite_case_id}/ix', [HealthWorkerController::class, 'ce_ix'])->name('healthworker.ce-ix');
+    Route::post('/clinical-encoding/{bite_case_id}/ix', [HealthWorkerController::class, 'store_ce_ix'])->name('healthworker.store-ce-ix');
 
     Route::get('/treatment-tracker', function () {
         return view('healthworker.Treatment_Tracker');

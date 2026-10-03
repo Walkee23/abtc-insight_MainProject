@@ -261,6 +261,12 @@
                 </div>
             </section>
             <section class="w-2/3 flex flex-col gap-6">
+                @if(session('status'))
+                <div class="bg-emerald-50 text-emerald-700 text-sm font-semibold px-4 py-3 rounded-lg flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                    {{ session('status') }}
+                </div>
+                @endif
                 <!-- Form Card -->
                 <div
                     class="bg-surface-container-lowest rounded-xl shadow-lg shadow-blue-900/5 overflow-hidden border border-outline-variant/10 flex flex-col h-[calc(100vh-12rem)]">
@@ -327,6 +333,7 @@
                         <form id="section6Form" method="POST"
                             action="{{ $case ? route('healthworker.clinical-encoding', ['bite_case_id' => $case->bite_case_id]) : '#' }}">
                             @csrf
+                            <input type="hidden" name="action" id="formActionInput" value="next" />
                         <div class="step-content active" id="step1">
                             <div class="flex items-center gap-3 mb-8">
                                 <span
@@ -348,13 +355,17 @@
                                         class="block text-xs font-bold text-outline uppercase tracking-wider mb-4">Exposure
                                         Category</label>
                                     <div class="flex gap-4">
+                                        @php
+                                            $selectedCategory = $section->category_of_exposure ?? $case->category ?? '';
+                                        @endphp
                                         @foreach(['I', 'II', 'III'] as $cat)
-                                        <div class="flex-1 cursor-pointer">
+                                        <label class="flex-1 cursor-pointer">
+                                            <input {{ $selectedCategory === $cat ? 'checked' : '' }} class="hidden peer" name="category_of_exposure" type="radio" value="{{ $cat }}" {{ $case ? '' : 'disabled' }} />
                                             <div
-                                                class="py-3 text-center rounded-lg border {{ ($case->category ?? '') === $cat ? 'bg-primary-container/10 border-primary-container text-primary' : 'border-outline-variant/30' }} transition-all">
+                                                class="py-3 text-center rounded-lg border border-outline-variant/30 peer-checked:bg-primary-container/10 peer-checked:border-primary-container peer-checked:text-primary transition-all">
                                                 <span class="text-sm font-bold">Cat {{ $cat }}</span>
                                             </div>
-                                        </div>
+                                        </label>
                                         @endforeach
                                     </div>
                                 </div>
@@ -386,8 +397,8 @@
                     <!-- Wizard Footer Actions -->
                     <div
                         class="p-6 bg-surface-container-low border-t border-outline-variant/20 flex justify-between items-center px-8">
-                        <button
-                            class="px-6 py-2.5 text-sm font-bold text-outline hover:text-on-surface transition-all flex items-center gap-2">
+                        <button type="submit" form="section6Form" id="draftBtn" {{ $case ? '' : 'disabled' }}
+                            class="px-6 py-2.5 text-sm font-bold text-outline hover:text-on-surface transition-all flex items-center gap-2 {{ $case ? '' : 'opacity-40 cursor-not-allowed' }}">
                             Save as Draft
                         </button>
                         <div class="flex gap-4">
@@ -396,8 +407,8 @@
                                 id="backBtn">
                                 Back
                             </button>
-                            <button
-                                class="px-8 py-2.5 bg-primary text-on-primary text-sm font-bold rounded-lg shadow-md shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-2"
+                            <button {{ $case ? '' : 'disabled' }}
+                                class="px-8 py-2.5 bg-primary text-on-primary text-sm font-bold rounded-lg shadow-md shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-2 {{ $case ? '' : 'opacity-40 cursor-not-allowed' }}"
                                 id="nextBtn">
                                 Next Step
                                 <span class="material-symbols-outlined text-[18px]">chevron_right</span>
@@ -434,6 +445,8 @@
         const backBtn = document.getElementById('backBtn');
         const nextBtn = document.getElementById('nextBtn');
         const finalizeBtn = document.getElementById('finalizeBtn');
+        const draftBtn = document.getElementById('draftBtn');
+        const formActionInput = document.getElementById('formActionInput');
 
         function updateWizard(step) {
             // Hide all steps
@@ -461,11 +474,23 @@
 
         nextBtn.addEventListener('click', () => {
             @if($case)
+            formActionInput.value = 'next';
             document.getElementById('section6Form').submit();
             @else
             alert('Please select a patient from the queue first.');
             @endif
         });
+
+        if (draftBtn) {
+            draftBtn.addEventListener('click', (e) => {
+                @if($case)
+                formActionInput.value = 'draft';
+                @else
+                e.preventDefault();
+                alert('Please select a patient from the queue first.');
+                @endif
+            });
+        }
 
         backBtn.addEventListener('click', () => {
             if (currentStep > 1) {

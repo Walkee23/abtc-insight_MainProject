@@ -70,16 +70,30 @@ class ClinicalEncodingController extends Controller
             'total_wounds' => 'nullable|in:Single,Multiple',
             'wound_description' => 'nullable|string',
             'site_of_bite' => 'nullable|string|max:100',
+            'category_of_exposure' => 'nullable|in:I,II,III',
         ]);
 
         DB::table('bite_section6_wound_description')->updateOrInsert(
             ['bite_case_id' => $biteCaseId],
-            array_merge($validated, [
-                // Mirrors bite_cases.category, per the column comment -
-                // not independently editable here, just carried over.
-                'category_of_exposure' => $case->category,
-            ])
+            $validated + [
+                // Fall back to whatever bite_cases already has if this form
+                // hasn't set a category yet (e.g. very first save)
+                'category_of_exposure' => $validated['category_of_exposure'] ?? $case->category,
+            ]
         );
+
+        // Keep bite_cases.category in sync, since bite_section6's column
+        // comment says it mirrors this value - if the health worker changes
+        // it here, bite_cases should reflect the same category.
+        if (!empty($validated['category_of_exposure']) && $validated['category_of_exposure'] !== $case->category) {
+            DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->update([
+                'category' => $validated['category_of_exposure'],
+            ]);
+        }
+
+        if ($request->input('action') === 'draft') {
+            return back()->with('status', 'Section VI saved as draft.');
+        }
 
         return redirect()->route('healthworker.ce-vii', ['bite_case_id' => $biteCaseId]);
     }

@@ -145,15 +145,16 @@
                 </div>
             </div>
             <div class="flex items-center gap-4">
-                <button class="w-10 h-10 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-200/50 transition-colors relative">
-                    <span class="material-symbols-outlined">notifications</span>
-                    <span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-white"></span>
-                </button>
-                <button class="w-10 h-10 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-200/50 transition-colors">
-                    <span class="material-symbols-outlined">help</span>
-                </button>
-                <div class="h-8 w-[1px] bg-slate-200 mx-2"></div>
-                <div class="relative group cursor-pointer">
+                <div class="flex items-center gap-1 border-r border-outline-variant/20 pr-4">
+                    <button class="p-2 text-slate-500 hover:bg-surface-container-high rounded-full transition-colors relative">
+                        <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+                        <span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-white"></span>
+                    </button>
+                    <button class="p-2 text-slate-500 hover:bg-surface-container-high rounded-full transition-colors">
+                        <span class="material-symbols-outlined" data-icon="help">help</span>
+                    </button>
+                </div>
+                <div class="relative group cursor-pointer pl-2">
                     <div class="flex items-center gap-3">
                         <div class="text-right">
                             <p class="text-xs font-bold text-on-surface leading-tight">Staff</p>
@@ -232,9 +233,12 @@
                             </thead>
                             <tbody class="divide-y divide-outline-variant/10">
                                 @forelse($verifiedQueue as $index => $row)
-                                @php $rowUrl = route('staff.case-encoding', $row->inflow_record_id); @endphp
-                                <tr onclick="window.location='{{ $rowUrl }}'" class="{{ isset($selectedPatient) && $selectedPatient->inflow_record_id === $row->inflow_record_id ? 'bg-primary/5 hover:bg-primary/10 border-l-4 border-primary' : 'hover:bg-surface-bright' }} transition-colors cursor-pointer">
-                                    <td class="px-4 py-4">
+                                @php
+                                   $rowUrl = route('staff.case-encoding', $row->inflow_record_id);
+                                   $isSelected = isset($selectedPatient) && $selectedPatient->inflow_record_id == $row->inflow_record_id;
+                                @endphp
+                                <tr onclick="window.location='{{ $rowUrl }}'" class="{{ $isSelected ? 'bg-primary/5 hover:bg-primary/10' : 'hover:bg-surface-bright' }} transition-colors cursor-pointer">
+                                   <td class="px-4 py-4 {{ $isSelected ? 'shadow-[inset_4px_0_0_0_#004a93]' : '' }}">
                                         <p class="font-bold text-on-surface">{{ $row->patient_name }}</p>
                                         <p class="text-[10px] text-on-surface-variant">#{{ $row->inflow_record_id }}</p>
                                     </td>

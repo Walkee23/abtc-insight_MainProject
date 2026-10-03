@@ -164,7 +164,7 @@ public function storeCaseEncoding(Request $request, string $inflow_record_id)
     } else {
         $biteCaseId = $biteCase->bite_case_id;
     }
-
+    
     // Section 3: Details of Exposure
     DB::table('bite_section3_exposure')->updateOrInsert(
         ['bite_case_id' => $biteCaseId],
@@ -224,4 +224,138 @@ public function storeCaseEncoding(Request $request, string $inflow_record_id)
     return redirect()->route('staff.case-encoding', $inflow_record_id)
         ->with('success', 'Progress saved. You can continue later.');
     }
+
+    // Staff Dashboard (Queue Management)
+    public function dashboard(Request $request)
+    {
+        $search = $request->input('search');
+
+        // 1. Stats Grid
+        $totalRegistered = DB::table('inflow_general_particulars')->count();
+
+        $verifiedCount = DB::table('inflow_general_particulars')
+            ->where('status', 'Verified')
+            ->count();
+
+        $pendingCount = DB::table('inflow_general_particulars')
+            ->where('status', 'Pending')
+            ->count();
+
+        // 2. Priority Queue
+        $priorityQuery = DB::table('inflow_general_particulars')
+            ->where('status', 'Pending')
+            ->where('queue_id', 'LIKE', 'P%');
+
+        // 3. Normal Queue
+        $normalQuery = DB::table('inflow_general_particulars')
+            ->where('status', 'Pending')
+            ->where('queue_id', 'LIKE', 'N%');
+
+        // Search Filter
+        if ($search) {
+            $applySearch = function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('patient_name', 'LIKE', "%{$search}%")
+                    ->orWhere('queue_id', 'LIKE', "%{$search}%")
+                    ->orWhere('id_number', 'LIKE', "%{$search}%")
+                    ->orWhere('barangay', 'LIKE', "%{$search}%");
+                });
+            };
+            $priorityQuery->where($applySearch);
+            $normalQuery->where($applySearch);
+        }
+
+        $priorityQueue = $priorityQuery->orderByRaw('CAST(SUBSTRING(queue_id, 2) AS UNSIGNED) ASC')->get();
+        $normalQueue   = $normalQuery->orderByRaw('CAST(SUBSTRING(queue_id, 2) AS UNSIGNED) ASC')->get();
+
+        return view('staff.dashboard', compact(
+            'totalRegistered',
+            'verifiedCount',
+            'pendingCount',
+            'priorityQueue',
+            'normalQueue',
+            'search'
+        ));
+    }
+
+    // Patient Lookup & Records (Master Database View linked to Section 9 PEP Progress)
+    public function patientLookup(Request $request)
+    {
+        $search = $request->input('search');
+
+        // Join patients -> bite_cases -> bite_section9_progress_notes
+        $query = DB::table('patients')
+            ->leftJoin('inflow_general_particulars', 'patients.inflow_record_id', '=', 'inflow_general_particulars.inflow_record_id')
+            ->leftJoin('bite_cases', 'patients.patient_id', '=', 'bite_cases.patient_id')
+            ->leftJoin('bite_section9_progress_notes', 'bite_cases.bite_case_id', '=', 'bite_section9_progress_notes.bite_case_id')
+            ->select(
+                'patients.patient_id',
+                'patients.patient_name',
+                'patients.age',
+                'patients.sex',
+                'patients.date_registered',
+                'patients.inflow_record_id',
+                'patients.contact_num',
+                DB::raw('COALESCE(MAX(bite_cases.barangay), MAX(inflow_general_particulars.barangay), "N/A") as barangay'),
+                DB::raw('MAX(bite_cases.bite_case_id) as bite_case_id'),
+                DB::raw('MAX(bite_cases.date_verified) as last_visit'),
+                DB::raw('MAX(bite_cases.category) as exposure_category'),
+                DB::raw('MAX(bite_section9_progress_notes.day3_notes) as day3_notes'),
+                DB::raw('MAX(bite_section9_progress_notes.day7_notes) as day7_notes'),
+                DB::raw('MAX(bite_section9_progress_notes.day28_notes) as day28_notes')
+            )
+            ->groupBy(
+                'patients.patient_id',
+                'patients.patient_name',
+                'patients.age',
+                'patients.sex',
+                'patients.date_registered',
+                'patients.inflow_record_id',
+                'patients.contact_num'
+            );
+
+        // Universal search filter across entire database
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('patients.patient_name', 'LIKE', "%{$search}%")
+                  ->orWhere('patients.patient_id', 'LIKE', "%{$search}%")
+                  ->orWhere('patients.id_number', 'LIKE', "%{$search}%")
+                  ->orWhere('patients.contact_num', 'LIKE', "%{$search}%")
+                  ->orWhere('inflow_general_particulars.barangay', 'LIKE', "%{$search}%")
+                  ->orWhere('bite_cases.barangay', 'LIKE', "%{$search}%");
+            });
+        }
+
+        // [UPDATED]: Set pagination to 4 records per page
+        $patients = $query->orderBy('patients.date_registered', 'desc')
+            ->paginate(4)
+            ->withQueryString();
+
+        // Map Section 9 Progress Notes to Active PEP Badges
+        $patients->getCollection()->transform(function ($patient) {
+            if (!$patient->bite_case_id) {
+                $patient->pep_status = 'No Case';
+                $patient->pep_badge = 'bg-slate-100 text-slate-500';
+            } elseif (!empty($patient->day28_notes)) {
+                $patient->pep_status = 'Completed';
+                $patient->pep_badge = 'bg-emerald-100 text-emerald-800';
+            } elseif (!empty($patient->day7_notes)) {
+                $patient->pep_status = 'Yes (D28)';
+                $patient->pep_badge = 'bg-purple-100 text-purple-800';
+            } elseif (!empty($patient->day3_notes)) {
+                $patient->pep_status = 'Yes (D7)';
+                $patient->pep_badge = 'bg-[#ffdbc8] text-[#743500]';
+            } else {
+                // Case exists, initial exposure registered (D0)
+                $patient->pep_status = 'Yes (D0)';
+                $patient->pep_badge = 'bg-[#ffdad6] text-[#93000a]';
+            }
+
+            return $patient;
+        });
+
+        $totalDatabasePatients = DB::table('patients')->count();
+
+        return view('staff.Patient_Lookup', compact('patients', 'search', 'totalDatabasePatients'));
+    }   
 }

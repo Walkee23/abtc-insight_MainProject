@@ -328,11 +328,11 @@
                         <div class="h-6"></div>
                     </div>
                     <!-- Wizard Body (Section VII) -->
+                    <div class="flex-1 p-8 overflow-y-auto">
                     <form id="section7Form" method="POST"
                         action="{{ route('healthworker.ce-vii', ['bite_case_id' => $case->bite_case_id]) }}">
                         @csrf
                         <input type="hidden" name="action" id="formActionInput" value="next" />
-                    <div class="flex-1 p-8 overflow-y-auto">
                         <div class="step-content" id="step2">
                             <div class="flex items-center gap-3 mb-8">
                                 <span
@@ -495,8 +495,8 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
                     </form>
+                    </div>
                     <div
                         class="p-6 bg-surface-container-low border-t border-outline-variant/20 flex justify-between items-center px-8">
                         <button type="submit" form="section7Form" id="draftBtn"

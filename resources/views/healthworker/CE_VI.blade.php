@@ -237,7 +237,7 @@
                         <a href="{{ route('healthworker.clinical-encoding', ['bite_case_id' => $item->bite_case_id]) }}"
                             class="queue-item block {{ isset($case) && $case->bite_case_id === $item->bite_case_id ? 'bg-surface-container-lowest p-4 rounded-lg border-l-4 border-primary shadow-sm' : 'bg-surface-container-lowest/50 p-4 rounded-lg border border-transparent hover:border-outline-variant/30 transition-all' }}">
                             <div class="flex justify-between items-start mb-2">
-                                <span class="text-[10px] font-bold {{ isset($case) && $case->bite_case_id === $item->bite_case_id ? 'text-primary' : 'text-outline' }} tracking-widest uppercase">QUEUE NO. {{ $item->case_number }}</span>
+                                <span class="text-[10px] font-bold {{ isset($case) && $case->bite_case_id === $item->bite_case_id ? 'text-primary' : 'text-outline' }} tracking-widest uppercase">CASE NO. {{ $item->case_number }}</span>
                                 <span class="text-[10px] font-medium text-outline">{{ \Carbon\Carbon::parse($item->date_verified)->diffForHumans() }}</span>
                             </div>
                             <h3 class="font-bold text-on-surface">{{ $item->patient_name }}</h3>
@@ -247,7 +247,7 @@
                             </p>
                             <div class="flex gap-2">
                                 <span
-                                    class="px-2 py-0.5 bg-error-container text-on-error-container text-[10px] font-bold rounded-full">
+                                    class="px-2 py-0.5 bg-error-container text-on-error-container text-[10px] font-bold rounded-full"> CAT
                                     {{ $item->category }}</span>
                                 <span
                                     class="px-2 py-0.5 {{ $item->encoding_status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : ($item->encoding_status === 'In Progress' ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface-container-high text-on-surface-variant') }} text-[10px] font-bold rounded-full">{{ $item->encoding_status }}</span>
@@ -267,6 +267,7 @@
                     {{ session('status') }}
                 </div>
                 @endif
+                @if($case)
                 <!-- Form Card -->
                 <div
                     class="bg-surface-container-lowest rounded-xl shadow-lg shadow-blue-900/5 overflow-hidden border border-outline-variant/10 flex flex-col h-[calc(100vh-12rem)]">
@@ -422,6 +423,14 @@
                         </div>
                     </div>
                 </div>
+                @else
+                <!-- No case selected -->
+                <div
+                    class="bg-surface-container-lowest rounded-xl shadow-lg shadow-blue-900/5 border border-outline-variant/10 flex flex-col items-center justify-center h-[calc(100vh-12rem)] gap-3">
+                    <span class="material-symbols-outlined text-5xl text-outline-variant">folder_open</span>
+                    <p class="text-sm font-bold text-on-surface-variant">Please select a case.</p>
+                </div>
+                @endif
             </section>
         </div>
     </main>
@@ -439,65 +448,61 @@
     -->
     <script>
         // Simple Wizard Logic for Demo Purposes
-        let currentStep = 1;
-        const totalSteps = 4;
-
+        // The whole form card (and these buttons) only exist in the DOM when
+        // a case is selected, so none of this runs otherwise.
         const backBtn = document.getElementById('backBtn');
-        const nextBtn = document.getElementById('nextBtn');
-        const finalizeBtn = document.getElementById('finalizeBtn');
-        const draftBtn = document.getElementById('draftBtn');
-        const formActionInput = document.getElementById('formActionInput');
 
-        function updateWizard(step) {
-            // Hide all steps
-            document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
-            // Show current
-            document.getElementById(`step${step}`).classList.add('active');
+        if (backBtn) {
+            let currentStep = 1;
+            const totalSteps = 4;
 
-            // Update Buttons
-            if (step === 1) {
-                backBtn.classList.add('hidden');
-            } else {
-                backBtn.classList.remove('hidden');
+            const nextBtn = document.getElementById('nextBtn');
+            const finalizeBtn = document.getElementById('finalizeBtn');
+            const draftBtn = document.getElementById('draftBtn');
+            const formActionInput = document.getElementById('formActionInput');
+
+            function updateWizard(step) {
+                // Hide all steps
+                document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+                // Show current
+                document.getElementById(`step${step}`).classList.add('active');
+
+                // Update Buttons
+                if (step === 1) {
+                    backBtn.classList.add('hidden');
+                } else {
+                    backBtn.classList.remove('hidden');
+                }
+
+                if (step === totalSteps) {
+                    nextBtn.classList.add('hidden');
+                    finalizeBtn.classList.remove('hidden');
+                } else {
+                    nextBtn.classList.remove('hidden');
+                    finalizeBtn.classList.add('hidden');
+                }
+
+                // Logic for updating header indicators would go here in a real app
             }
 
-            if (step === totalSteps) {
-                nextBtn.classList.add('hidden');
-                finalizeBtn.classList.remove('hidden');
-            } else {
-                nextBtn.classList.remove('hidden');
-                finalizeBtn.classList.add('hidden');
+            nextBtn.addEventListener('click', () => {
+                formActionInput.value = 'next';
+                document.getElementById('section6Form').submit();
+            });
+
+            if (draftBtn) {
+                draftBtn.addEventListener('click', () => {
+                    formActionInput.value = 'draft';
+                });
             }
 
-            // Logic for updating header indicators would go here in a real app
-        }
-
-        nextBtn.addEventListener('click', () => {
-            @if($case)
-            formActionInput.value = 'next';
-            document.getElementById('section6Form').submit();
-            @else
-            alert('Please select a patient from the queue first.');
-            @endif
-        });
-
-        if (draftBtn) {
-            draftBtn.addEventListener('click', (e) => {
-                @if($case)
-                formActionInput.value = 'draft';
-                @else
-                e.preventDefault();
-                alert('Please select a patient from the queue first.');
-                @endif
+            backBtn.addEventListener('click', () => {
+                if (currentStep > 1) {
+                    currentStep--;
+                    updateWizard(currentStep);
+                }
             });
         }
-
-        backBtn.addEventListener('click', () => {
-            if (currentStep > 1) {
-                currentStep--;
-                updateWizard(currentStep);
-            }
-        });
     </script>
 </body>
 

@@ -345,22 +345,22 @@
                                     <label
                                         class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Vaccine
                                         Brand</label>
-                                    <select name="vaccine_brand"
-                                        class="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 pr-10 focus:ring-2 focus:ring-primary/20 font-medium text-on-surface truncate">
-                                        <option class="text-outline" value="">Select</option>
+                                    <select name="vaccine_brand" id="vaccineBrandSelect"
+                                        class="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 pr-10 focus:ring-2 focus:ring-primary/20 font-medium truncate {{ ($section->vaccine_brand ?? '') ? 'text-on-surface' : 'text-outline' }}">
+                                        <option class="bg-white text-outline py-2" value="" disabled hidden {{ ($section->vaccine_brand ?? '') ? '' : 'selected' }}>Select</option>
                                         @foreach(['VERORAB' => 'VERORAB (PVRV)', 'SPEEDA' => 'SPEEDA (PVRV)', 'VAXIRAB' => 'VAXIRAB (PCEC)'] as $val => $label)
-                                        <option value="{{ $val }}" {{ ($section->vaccine_brand ?? '') === $val ? 'selected' : '' }}>{{ $label }}</option>
+                                        <option class="bg-white text-on-surface py-2" value="{{ $val }}" {{ ($section->vaccine_brand ?? '') === $val ? 'selected' : '' }}>{{ $label }}</option>
                                         @endforeach
                                     </select>
                                 </div>
                                 <div>
                                     <label
                                         class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Route</label>
-                                    <select name="route"
-                                        class="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 pr-10 focus:ring-2 focus:ring-primary/20 font-medium text-on-surface truncate">
-                                        <option class="text-outline" value="">Select</option>
-                                        <option value="ID" {{ ($section->route ?? '') === 'ID' ? 'selected' : '' }}>ID (Intradermal, 0.1mL)</option>
-                                        <option value="IM" {{ ($section->route ?? '') === 'IM' ? 'selected' : '' }}>IM (Intramuscular, 0.5mL)</option>
+                                    <select name="route" id="routeSelect"
+                                        class="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 pr-10 focus:ring-2 focus:ring-primary/20 font-medium truncate {{ ($section->route ?? '') ? 'text-on-surface' : 'text-outline' }}">
+                                        <option class="bg-white text-outline py-2" value="" disabled hidden {{ ($section->route ?? '') ? '' : 'selected' }}>Select</option>
+                                        <option class="bg-white text-on-surface py-2" value="ID" {{ ($section->route ?? '') === 'ID' ? 'selected' : '' }}>ID (Intradermal, 0.1mL)</option>
+                                        <option class="bg-white text-on-surface py-2" value="IM" {{ ($section->route ?? '') === 'IM' ? 'selected' : '' }}>IM (Intramuscular, 0.5mL)</option>
                                     </select>
                                 </div>
                                 <div>
@@ -369,8 +369,8 @@
                                         Type</label>
                                     <select name="dose_type" required
                                         class="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 pr-10 focus:ring-2 focus:ring-primary/20 font-medium text-on-surface truncate">
-                                        <option value="Primary" {{ ($section->dose_type ?? 'Primary') === 'Primary' ? 'selected' : '' }}>Primary</option>
-                                        <option value="Booster" {{ ($section->dose_type ?? '') === 'Booster' ? 'selected' : '' }}>Booster</option>
+                                        <option class="bg-white text-on-surface py-2" value="Primary" {{ ($section->dose_type ?? 'Primary') === 'Primary' ? 'selected' : '' }}>Primary</option>
+                                        <option class="bg-white text-on-surface py-2" value="Booster" {{ ($section->dose_type ?? '') === 'Booster' ? 'selected' : '' }}>Booster</option>
                                     </select>
                                 </div>
                             </div>
@@ -459,11 +459,11 @@
                                     <div>
                                         <label
                                             class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Route</label>
-                                        <select name="passive_route"
-                                            class="w-full bg-white border-none rounded-lg py-3 px-4 pr-10 focus:ring-2 focus:ring-primary/20 font-medium text-on-surface truncate">
-                                            <option class="text-outline" value="">Select</option>
-                                            <option value="IU infiltrate" {{ ($section->passive_route ?? '') === 'IU infiltrate' ? 'selected' : '' }}>IU infiltrate (around wound)</option>
-                                            <option value="IM" {{ ($section->passive_route ?? '') === 'IM' ? 'selected' : '' }}>IM</option>
+                                        <select name="passive_route" id="passiveRouteSelect"
+                                            class="w-full bg-white border-none rounded-lg py-3 px-4 pr-10 focus:ring-2 focus:ring-primary/20 font-medium truncate {{ ($section->passive_route ?? '') ? 'text-on-surface' : 'text-outline' }}">
+                                            <option class="bg-white text-outline py-2" value="" disabled hidden {{ ($section->passive_route ?? '') ? '' : 'selected' }}>Select</option>
+                                            <option class="bg-white text-on-surface py-2" value="IU infiltrate" {{ ($section->passive_route ?? '') === 'IU infiltrate' ? 'selected' : '' }}>IU infiltrate (around wound)</option>
+                                            <option class="bg-white text-on-surface py-2" value="IM" {{ ($section->passive_route ?? '') === 'IM' ? 'selected' : '' }}>IM</option>
                                         </select>
                                     </div>
                                 </div>
@@ -546,6 +546,17 @@
                     formActionInput.value = 'draft';
                 });
             }
+
+            // Dropdowns with a hidden "Select" placeholder: show muted text
+            // until the user actually picks a real option
+            ['vaccineBrandSelect', 'routeSelect', 'passiveRouteSelect'].forEach((id) => {
+                const select = document.getElementById(id);
+                if (!select) return;
+                select.addEventListener('change', () => {
+                    select.classList.toggle('text-outline', select.value === '');
+                    select.classList.toggle('text-on-surface', select.value !== '');
+                });
+            });
         }
     </script>
 </body>

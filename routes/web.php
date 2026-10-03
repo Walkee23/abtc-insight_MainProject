@@ -6,7 +6,6 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\BhwController;
 use App\Http\Controllers\StaffController;
-use App\Http\Controllers\HealthWorkerController;
 use Illuminate\Http\Request;
 
 Route::get('/', function () {
@@ -63,24 +62,21 @@ Route::prefix('healthworker')->group(function () {
         return view('healthworker.dashboard');
     })->name('healthworker.dashboard');
 
-    // Main Entry Point for Clinical Encoding
-    Route::get('/clinical-encoding', [HealthWorkerController::class, 'clinical_encoding_index'])->name('healthworker.clinical-encoding');
+    Route::get('/clinical-encoding', function () {
+        return view('healthworker.CE_VI');
+    })->name('healthworker.clinical-encoding');
 
-    // CE Section VI
-    Route::get('/clinical-encoding/{bite_case_id}/vi', [HealthWorkerController::class, 'ce_vi'])->name('healthworker.ce-vi');
-    Route::post('/clinical-encoding/{bite_case_id}/vi', [HealthWorkerController::class, 'store_ce_vi'])->name('healthworker.store-ce-vi');
+    Route::get('/clinical-encoding/section-vii', function () {
+        return view('healthworker.CE_VII');
+    })->name('healthworker.ce-vii');
 
-    // CE Section VII
-    Route::get('/clinical-encoding/{bite_case_id}/vii', [HealthWorkerController::class, 'ce_vii'])->name('healthworker.ce-vii');
-    Route::post('/clinical-encoding/{bite_case_id}/vii', [HealthWorkerController::class, 'store_ce_vii'])->name('healthworker.store-ce-vii');
+    Route::get('/clinical-encoding/section-viii', function () {
+        return view('healthworker.CE_VIII');
+    })->name('healthworker.ce-viii');
 
-    // CE Section VIII
-    Route::get('/clinical-encoding/{bite_case_id}/viii', [HealthWorkerController::class, 'ce_viii'])->name('healthworker.ce-viii');
-    Route::post('/clinical-encoding/{bite_case_id}/viii', [HealthWorkerController::class, 'store_ce_viii'])->name('healthworker.store-ce-viii');
-
-    // CE Section IX
-    Route::get('/clinical-encoding/{bite_case_id}/ix', [HealthWorkerController::class, 'ce_ix'])->name('healthworker.ce-ix');
-    Route::post('/clinical-encoding/{bite_case_id}/ix', [HealthWorkerController::class, 'store_ce_ix'])->name('healthworker.store-ce-ix');
+    Route::get('/clinical-encoding/section-ix', function () {
+        return view('healthworker.CE_IX');
+    })->name('healthworker.ce-ix');
 
     Route::get('/treatment-tracker', function () {
         return view('healthworker.Treatment_Tracker');

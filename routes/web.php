@@ -63,21 +63,22 @@ Route::prefix('healthworker')->group(function () {
         return view('healthworker.dashboard');
     })->name('healthworker.dashboard');
 
-    Route::get('/clinical-encoding', function () {
-        return view('healthworker.CE_VI');
-    })->name('healthworker.clinical-encoding');
+    // Clinical Encoding (Sections VI-IX), connected to the real bite_cases queue
+    Route::get('/clinical-encoding/{bite_case_id?}', [ClinicalEncodingController::class, 'sectionVI'])
+        ->name('healthworker.clinical-encoding');
+    Route::post('/clinical-encoding/{bite_case_id}', [ClinicalEncodingController::class, 'storeSectionVI']);
 
-    Route::get('/clinical-encoding/section-vii', function () {
-        return view('healthworker.CE_VII');
-    })->name('healthworker.ce-vii');
+    Route::get('/clinical-encoding/section-vii/{bite_case_id?}', [ClinicalEncodingController::class, 'sectionVII'])
+        ->name('healthworker.ce-vii');
+    Route::post('/clinical-encoding/section-vii/{bite_case_id}', [ClinicalEncodingController::class, 'storeSectionVII']);
 
-    Route::get('/clinical-encoding/section-viii', function () {
-        return view('healthworker.CE_VIII');
-    })->name('healthworker.ce-viii');
+    Route::get('/clinical-encoding/section-viii/{bite_case_id?}', [ClinicalEncodingController::class, 'sectionVIII'])
+        ->name('healthworker.ce-viii');
+    Route::post('/clinical-encoding/section-viii/{bite_case_id}', [ClinicalEncodingController::class, 'storeSectionVIII']);
 
-    Route::get('/clinical-encoding/section-ix', function () {
-        return view('healthworker.CE_IX');
-    })->name('healthworker.ce-ix');
+    Route::get('/clinical-encoding/section-ix/{bite_case_id?}', [ClinicalEncodingController::class, 'sectionIX'])
+        ->name('healthworker.ce-ix');
+    Route::post('/clinical-encoding/section-ix/{bite_case_id}', [ClinicalEncodingController::class, 'storeSectionIX']);
 
     Route::get('/treatment-tracker', function () {
         return view('healthworker.Treatment_Tracker');

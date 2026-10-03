@@ -151,10 +151,11 @@
         <!-- TopNavBar -->
         <header class="flex justify-between items-center w-full h-16 px-8 sticky top-0 z-30 bg-white/85 dark:bg-slate-950/85 backdrop-blur-md z-30 shadow-sm shadow-slate-200/50 dark:shadow-none border-b border-slate-100/50">
             <div class="flex items-center gap-8">
-                <div class="relative group">
+                
+                <form action="{{ route('staff.dashboard') }}" method="GET" class="relative group">
                     <span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 text-lg">search</span>
-                    <input class="pl-10 pr-4 py-1.5 bg-surface-container-low rounded-full text-sm focus:ring-2 focus:ring-primary/20 border-none outline-none w-72 transition-all" placeholder="Search analytics or case IDs..." type="text" />
-                </div>
+                    <input name="search" value="{{ $search ?? '' }}" class="pl-10 pr-4 py-1.5 bg-surface-container-low rounded-full text-sm focus:ring-2 focus:ring-primary/20 border-none outline-none w-72 transition-all" placeholder="Search name, queue no, ID..." type="text" />
+                </form>
             </div>
             <div class="flex items-center gap-4">
                 <!-- Status/Live indicator moved or kept subtle -->
@@ -162,10 +163,13 @@
                     <span class="material-symbols-outlined text-[20px]" data-icon="person_add">person_add</span>
                     <span>Register New Patient</span>
                 </a>
+
+                <!--  total of pending priority and normal queue items -->
                 <div class="hidden lg:flex items-center gap-2 px-3 py-1 bg-green-50 text-green-700 rounded-full text-[10px] font-bold uppercase tracking-wider">
                     <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
-                    12 Active
+                    {{ ($priorityQueue->count() ?? 0) + ($normalQueue->count() ?? 0) }} Pending Active
                 </div>
+
                 <div class="flex items-center gap-1 border-r border-outline-variant/20 pr-4">
                     <button class="p-2 text-slate-500 hover:bg-surface-container-high rounded-full transition-colors relative">
                         <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
@@ -214,6 +218,15 @@
             </div>
         </header>
         <div class="p-8 max-w-[1600px] mx-auto pb-32">
+
+            <!-- [ADDED]: Flash Message for Actions -->
+            @if(session('success'))
+                <div class="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg flex items-center gap-3">
+                    <span class="material-symbols-outlined">check_circle</span>
+                    <span class="text-sm font-semibold">{{ session('success') }}</span>
+                </div>
+            @endif
+
             <!-- Title Section -->
             <div class="mb-8">
                 <h2 class="text-3xl font-extrabold tracking-tighter text-on-surface">Queue Management</h2>
@@ -229,9 +242,11 @@
                         </div>
                         <span class="text-[10px] font-bold text-primary uppercase tracking-widest">DAILY REGISTRATIONS</span>
                     </div>
-                    <div class="text-4xl font-black text-on-surface">87</div>
+                    <!-- [CHANGED]: Dynamic $totalRegistered -->
+                    <div class="text-4xl font-black text-on-surface">{{ $totalRegistered ?? 0 }}</div>
                     <div class="text-xs text-on-surface-variant uppercase mt-1 tracking-widest font-semibold">Total Registered</div>
                 </div>
+
                 <div class="bg-surface-container-lowest p-6 rounded-lg shadow-sm border border-outline-variant/10">
                     <div class="flex justify-between items-start mb-4">
                         <div class="p-2 bg-green-500/5 rounded-lg text-green-600">
@@ -239,9 +254,11 @@
                         </div>
                         <span class="text-[10px] font-bold text-green-600 uppercase tracking-widest">Verified</span>
                     </div>
-                    <div class="text-4xl font-black text-on-surface">43</div>
+                    <!-- [CHANGED]: Dynamic $verifiedCount -->
+                    <div class="text-4xl font-black text-on-surface">{{ $verifiedCount ?? 0 }}</div>
                     <div class="text-xs text-on-surface-variant uppercase mt-1 tracking-widest font-semibold">VERIFIED PATIENTS</div>
                 </div>
+                
                 <div class="bg-surface-container-lowest p-6 rounded-lg shadow-sm border border-outline-variant/10">
                     <div class="flex justify-between items-start mb-4">
                         <div class="p-2 bg-error-container/20 rounded-lg text-error">
@@ -249,7 +266,8 @@
                         </div>
                         <span class="text-[10px] font-bold text-error uppercase tracking-widest">Action Required</span>
                     </div>
-                    <div class="text-4xl font-black text-on-surface">44</div>
+                    <!-- [CHANGED]: Dynamic $pendingCount -->
+                    <div class="text-4xl font-black text-on-surface">{{ $pendingCount ?? 0 }}</div>
                     <div class="text-xs text-on-surface-variant uppercase mt-1 tracking-widest font-semibold">PENDING VERIFICATIONS</div>
                 </div>
             </div>
@@ -258,58 +276,62 @@
             <div class="grid grid-cols-12 gap-8 items-start">
                 <!-- Section 2: Priority Queue -->
                 <div class="col-span-12 xl:col-span-5 bg-surface-container-low rounded-lg p-6">
-                    <div class="flex justify-between items-center mb-6">
-                        <div class="flex items-center gap-3">
-                            <div class="w-2 h-8 bg-green-500 rounded-full"></div>
-                            <h3 class="text-lg font-bold text-on-surface">Priority Queue P-Series</h3>
-                        </div>
-                        <span class="text-xs bg-green-500/10 text-green-700 px-3 py-1 rounded-full font-bold uppercase">3 Patients Waiting</span>
+                <!-- Dynamic Count -->
+                <div class="flex justify-between items-center mb-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-2 h-8 bg-green-500 rounded-full"></div>
+                        <h3 class="text-lg font-bold text-on-surface">Priority Queue P-Series</h3>
                     </div>
-                    <div class="overflow-hidden rounded-xl border border-outline-variant/20 bg-white">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-surface-container-high/50 border-b border-outline-variant/10">
-                                    <th class="px-4 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Queue No</th>
-                                    <th class="px-4 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Patient Name</th>
-                                    <th class="px-4 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Type</th>
-                                    <th class="px-4 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest text-right">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-outline-variant/10">
-                                <tr class="hover:bg-surface-container-low transition-colors">
-                                    <td class="px-4 py-4 font-black text-primary">P1</td>
-                                    <td class="px-4 py-4 text-sm font-semibold">Luzviminda Cruz</td>
-                                    <td class="px-4 py-4">
-                                        <span class="px-2 py-1 bg-tertiary-fixed text-on-tertiary-fixed-variant text-[10px] font-bold rounded-full uppercase">Senior</span>
-                                    </td>
-                                    <td class="px-4 py-4 text-right">
-                                        <button class="text-xs font-bold text-primary hover:underline">Call &amp; Verify</button>
-                                    </td>
-                                </tr>
-                                <tr class="hover:bg-surface-container-low transition-colors">
-                                    <td class="px-4 py-4 font-black text-primary">P2</td>
-                                    <td class="px-4 py-4 text-sm font-semibold">Roberto Gomez</td>
-                                    <td class="px-4 py-4">
-                                        <span class="px-2 py-1 bg-primary-fixed text-on-primary-fixed-variant text-[10px] font-bold rounded-full uppercase">PWD</span>
-                                    </td>
-                                    <td class="px-4 py-4 text-right">
-                                        <button class="text-xs font-bold text-primary hover:underline">Call &amp; Verify</button>
-                                    </td>
-                                </tr>
-                                <tr class="hover:bg-surface-container-low transition-colors">
-                                    <td class="px-4 py-4 font-black text-primary">P3</td>
-                                    <td class="px-4 py-4 text-sm font-semibold">Elena Marasigan</td>
-                                    <td class="px-4 py-4">
-                                        <span class="px-2 py-1 bg-error-container text-on-error-container text-[10px] font-bold rounded-full uppercase">Pregnant</span>
-                                    </td>
-                                    <td class="px-4 py-4 text-right">
-                                        <button class="text-xs font-bold text-primary hover:underline">Call &amp; Verify</button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <span class="text-xs bg-green-500/10 text-green-700 px-3 py-1 rounded-full font-bold uppercase">
+                        {{ $priorityQueue->count() }} Patients Waiting
+                    </span>
                 </div>
+
+                <!-- [UPDATED]: Vertical scroll only, strictly disable horizontal scroll -->
+                <div class="max-h-[380px] overflow-y-auto overflow-x-hidden rounded-xl border border-outline-variant/20 bg-white shadow-sm">
+                    <table class="w-full table-fixed text-left border-collapse">
+                        <!-- Sticky header stays fixed when scrolling -->
+                        <thead class="sticky top-0 z-10">
+                            <tr class="bg-surface-container-high border-b border-outline-variant/10 shadow-sm">
+                                <th class="w-2/12 px-3 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest bg-slate-50">Queue No</th>
+                                <th class="w-5/12 px-3 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest bg-slate-50">Patient Name</th>
+                                <th class="w-3/12 px-3 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest bg-slate-50">Barangay</th>
+                                <th class="w-2/12 px-3 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest text-right bg-slate-50">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-outline-variant/10">
+                            @forelse($priorityQueue as $patient)
+                                <tr class="hover:bg-surface-container-low transition-colors">
+                                    <td class="px-3 py-4 font-black text-primary truncate">{{ $patient->queue_id }}</td>
+                                    <td class="px-3 py-4">
+                                        <div class="text-sm font-semibold truncate">{{ $patient->patient_name }}</div>
+                                        <div class="text-[10px] text-on-surface-variant truncate">Age: {{ $patient->age }} • {{ $patient->sex }}</div>
+                                    </td>
+                                    <td class="px-3 py-4 text-xs font-semibold text-on-surface-variant truncate">
+                                        {{ $patient->barangay ?? 'N/A' }}
+                                    </td>
+                                    <td class="px-3 py-4 text-right">
+                                        <form action="{{ route('staff.verify-attendance', $patient->inflow_record_id) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="text-xs font-bold text-primary hover:underline hover:text-blue-700 whitespace-nowrap">
+                                                Call &amp; Verify
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="4" class="px-4 py-8 text-center text-xs text-slate-400 font-medium">
+                                        No priority patients waiting in queue.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+    
+    
                 <!-- Section 3: Normal Queue -->
                 <div class="col-span-12 xl:col-span-7 bg-surface-container-low rounded-lg p-6">
                     <div class="flex justify-between items-center mb-6">
@@ -329,49 +351,42 @@
                                     <th class="px-4 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest text-right">Action</th>
                                 </tr>
                             </thead>
+                            <!-- [CHANGED]: Iteration over $normalQueue with dynamic data & form submission -->
                             <tbody class="divide-y divide-outline-variant/10">
-                                <tr class="hover:bg-primary/5 transition-colors group">
-                                    <td class="px-4 py-4 font-black text-primary">N35</td>
-                                    <td class="px-4 py-4">
-                                        <p class="text-sm font-bold">Juan Dela Cruz</p>
-                                        <p class="text-[10px] text-on-surface-variant">08:15 AM • <span class="text-primary font-bold">New Case</span></p>
-                                    </td>
-                                    <td class="px-4 py-4 text-xs font-semibold text-on-surface-variant">Brgy. Guadalupe</td>
-                                    <td class="px-4 py-4">
-                                        <span class="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded-full">WAITING</span>
-                                    </td>
-                                    <td class="px-4 py-4 text-right">
-                                        <button class="px-4 py-1.5 bg-surface-container-lowest text-primary text-xs font-bold rounded-lg border border-primary/20 hover:bg-primary hover:text-white transition-all">Mark Present</button>
-                                    </td>
-                                </tr>
-                                <tr class="hover:bg-surface-container-low transition-colors group">
-                                    <td class="px-4 py-4 font-black text-primary/60">N36</td>
-                                    <td class="px-4 py-4">
-                                        <p class="text-sm font-bold">Maria Santos</p>
-                                        <p class="text-[10px] text-on-surface-variant">08:17 AM • Returning Patient</p>
-                                    </td>
-                                    <td class="px-4 py-4 text-xs font-semibold text-on-surface-variant">Brgy. Lahug</td>
-                                    <td class="px-4 py-4">
-                                        <span class="px-2 py-0.5 bg-surface-container-high text-on-surface-variant text-[10px] font-bold rounded-full uppercase">Waiting</span>
-                                    </td>
-                                    <td class="px-4 py-4 text-right">
-                                        <button class="px-4 py-1.5 bg-surface-container-lowest text-on-surface-variant text-xs font-bold rounded-lg border border-outline-variant/20">Mark Present</button>
-                                    </td>
-                                </tr>
-                                <tr class="hover:bg-surface-container-low transition-colors group">
-                                    <td class="px-4 py-4 font-black text-primary/60">N37</td>
-                                    <td class="px-4 py-4">
-                                        <p class="text-sm font-bold">Pedro Penduko</p>
-                                        <p class="text-[10px] text-on-surface-variant">08:20 AM • New Case</p>
-                                    </td>
-                                    <td class="px-4 py-4 text-xs font-semibold text-on-surface-variant">Brgy. Labangon</td>
-                                    <td class="px-4 py-4">
-                                        <span class="px-2 py-0.5 bg-surface-container-high text-on-surface-variant text-[10px] font-bold rounded-full uppercase">Waiting</span>
-                                    </td>
-                                    <td class="px-4 py-4 text-right">
-                                        <button class="px-4 py-1.5 bg-surface-container-lowest text-on-surface-variant text-xs font-bold rounded-lg border border-outline-variant/20">Mark Present</button>
-                                    </td>
-                                </tr>
+                                @forelse($normalQueue as $patient)
+                                    <tr class="hover:bg-primary/5 transition-colors group">
+                                        <td class="px-4 py-4 font-black text-primary">{{ $patient->queue_id }}</td>
+                                        <td class="px-4 py-4">
+                                            <p class="text-sm font-bold">{{ $patient->patient_name }}</p>
+                                            <p class="text-[10px] text-on-surface-variant">
+                                                ID: {{ $patient->id_number ?? 'No ID' }} • 
+                                                <span class="text-primary font-bold">Age: {{ $patient->age }}</span>
+                                            </p>
+                                        </td>
+                                        <td class="px-4 py-4 text-xs font-semibold text-on-surface-variant">
+                                            {{ $patient->barangay ?? 'N/A' }}
+                                        </td>
+                                        <td class="px-4 py-4">
+                                            <span class="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded-full uppercase">
+                                                {{ $patient->status }}
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-4 text-right">
+                                            <form action="{{ route('staff.verify-attendance', $patient->inflow_record_id) }}" method="POST">
+                                                @csrf
+                                                <button type="submit" class="px-4 py-1.5 bg-surface-container-lowest text-primary text-xs font-bold rounded-lg border border-primary/20 hover:bg-primary hover:text-white transition-all shadow-sm">
+                                                    Mark Present
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="px-4 py-8 text-center text-xs text-slate-400 font-medium">
+                                            No patients in the normal queue.
+                                        </td>
+                                    </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
@@ -382,21 +397,24 @@
         <div class="fixed bottom-0 left-72 right-0 p-4 z-10 pointer-events-none">
             <div class="max-w-[1200px] mx-auto pointer-events-auto">
                 <div class="bg-white/95 backdrop-blur-md rounded-t-2xl shadow-[0_-10px_30px_rgba(0,0,0,0.1)] border-x border-t border-outline-variant/20">
-                    <div class="flex items-center justify-between px-8 py-4">
+                    <!-- [CHANGED]: Converted to functional GET search form -->
+                    <form action="{{ route('staff.dashboard') }}" method="GET" class="flex items-center justify-between px-8 py-4">
                         <div class="flex items-center gap-4">
                             <span class="material-symbols-outlined text-primary" data-icon="person_search">person_search</span>
                             <span class="text-sm font-bold text-on-surface uppercase tracking-wider">Quick Patient Lookup</span>
                         </div>
                         <div class="flex items-center gap-4">
                             <div class="flex bg-surface-container-low rounded-full px-4 py-1.5 border border-outline-variant/20 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
-                                <input class="bg-transparent border-0 text-xs font-medium w-64 focus:ring-0" placeholder="Search by name or case ID..." type="text" />
-                                <span class="material-symbols-outlined text-sm text-on-surface-variant" data-icon="search">search</span>
+                                <input name="search" value="{{ $search ?? '' }}" class="bg-transparent border-0 text-xs font-medium w-64 focus:ring-0 outline-none" placeholder="Search by name, ID or queue..." type="text" />
+                                <button type="submit" class="text-primary hover:opacity-80">
+                                    <span class="material-symbols-outlined text-sm text-on-surface-variant" data-icon="search">search</span>
+                                </button>
                             </div>
-                            <button class="p-2 hover:bg-surface-container-high rounded-full transition-colors">
-                                <span class="material-symbols-outlined" data-icon="keyboard_arrow_up">keyboard_arrow_up</span>
-                            </button>
+                            <a href="{{ route('staff.patient-lookup') }}" class="p-2 hover:bg-surface-container-high rounded-full transition-colors text-slate-500" title="Go to Patient Lookup">
+                                <span class="material-symbols-outlined" data-icon="open_in_new">open_in_new</span>
+                            </a>
                         </div>
-                    </div>
+                    </form>
                 </div>
             </div>
         </div>

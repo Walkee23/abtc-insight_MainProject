@@ -237,18 +237,17 @@
                         <a href="{{ route('healthworker.clinical-encoding', ['bite_case_id' => $item->bite_case_id]) }}"
                             class="queue-item block {{ isset($case) && $case->bite_case_id === $item->bite_case_id ? 'bg-surface-container-lowest p-4 rounded-lg border-l-4 border-primary shadow-sm' : 'bg-surface-container-lowest/50 p-4 rounded-lg border border-transparent hover:border-outline-variant/30 transition-all' }}">
                             <div class="flex justify-between items-start mb-2">
-                                <span class="text-[10px] font-bold {{ isset($case) && $case->bite_case_id === $item->bite_case_id ? 'text-primary' : 'text-outline' }} tracking-widest uppercase">Case
-                                    #{{ $item->case_number }}</span>
+                                <span class="text-[10px] font-bold {{ isset($case) && $case->bite_case_id === $item->bite_case_id ? 'text-primary' : 'text-outline' }} tracking-widest uppercase">QUEUE NO. {{ $item->case_number }}</span>
                                 <span class="text-[10px] font-medium text-outline">{{ \Carbon\Carbon::parse($item->date_verified)->diffForHumans() }}</span>
                             </div>
                             <h3 class="font-bold text-on-surface">{{ $item->patient_name }}</h3>
                             <p class="text-xs text-on-surface-variant mb-3 flex items-center gap-1">
                                 <span class="material-symbols-outlined text-[14px]">calendar_today</span>
-                                Verified: {{ \Carbon\Carbon::parse($item->date_verified)->format('M d, Y') }}
+                                Incident: {{ \Carbon\Carbon::parse($item->date_verified)->format('M d, Y') }}
                             </p>
                             <div class="flex gap-2">
                                 <span
-                                    class="px-2 py-0.5 bg-error-container text-on-error-container text-[10px] font-bold rounded-full">CAT
+                                    class="px-2 py-0.5 bg-error-container text-on-error-container text-[10px] font-bold rounded-full">
                                     {{ $item->category }}</span>
                                 <span
                                     class="px-2 py-0.5 {{ $item->encoding_status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : ($item->encoding_status === 'In Progress' ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface-container-high text-on-surface-variant') }} text-[10px] font-bold rounded-full">{{ $item->encoding_status }}</span>
@@ -278,11 +277,6 @@
                                     <p class="text-[10px] font-semibold text-outline uppercase tracking-wider">Patient
                                         ID</p>
                                     <p class="text-sm font-bold">{{ $case->patient_id ?? '—' }}</p>
-                                </div>
-                                <div class="text-right border-l border-outline-variant/30 pl-4">
-                                    <p class="text-[10px] font-semibold text-outline uppercase tracking-wider">Form
-                                        Level</p>
-                                    <p class="text-sm font-bold text-primary">Authorized: VI-IX</p>
                                 </div>
                             </div>
                         </div>
@@ -349,21 +343,13 @@
                                         class="w-full bg-surface-container-low border-none rounded-lg py-3.5 px-4 focus:ring-2 focus:ring-primary/20 text-on-surface font-medium"
                                         name="site_of_bite" type="text" value="{{ $section->site_of_bite ?? '' }}" />
                                 </div>
-                                <div class="col-span-2">
-                                    <label
-                                        class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Wound
-                                        Description</label>
-                                    <textarea
-                                        class="w-full bg-surface-container-low border-none rounded-lg py-3.5 px-4 focus:ring-2 focus:ring-primary/20 text-on-surface font-medium"
-                                        name="wound_description" rows="3" placeholder="Describe the wound(s) observed...">{{ $section->wound_description ?? '' }}</textarea>
-                                </div>
                                 <div>
                                     <label
                                         class="block text-xs font-bold text-outline uppercase tracking-wider mb-4">Exposure
                                         Category</label>
                                     <div class="flex gap-4">
                                         @foreach(['I', 'II', 'III'] as $cat)
-                                        <div class="flex-1 pointer-events-none">
+                                        <div class="flex-1 cursor-pointer">
                                             <div
                                                 class="py-3 text-center rounded-lg border {{ ($case->category ?? '') === $cat ? 'bg-primary-container/10 border-primary-container text-primary' : 'border-outline-variant/30' }} transition-all">
                                                 <span class="text-sm font-bold">Cat {{ $cat }}</span>
@@ -371,8 +357,6 @@
                                         </div>
                                         @endforeach
                                     </div>
-                                    <p class="text-[10px] text-on-surface-variant mt-2 italic">Set by Staff during Case
-                                        Encoding - not editable here.</p>
                                 </div>
                                 <div>
                                     <label

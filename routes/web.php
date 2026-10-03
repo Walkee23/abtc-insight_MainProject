@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\BhwController;
 use App\Http\Controllers\StaffController;
+use App\Http\Controllers\ClinicalEncodingController;
 use Illuminate\Http\Request;
 
 Route::get('/', function () {

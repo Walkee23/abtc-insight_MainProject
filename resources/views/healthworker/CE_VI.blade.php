@@ -221,7 +221,7 @@
                 <div class="bg-surface-container-low rounded-xl p-6 flex flex-col h-[calc(100vh-12rem)]">
                     <div class="flex items-center justify-between mb-6">
                         <h2 class="text-lg font-bold tracking-tight text-on-surface">Pending Encoding Queue</h2>
-                        <span class="px-1 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full">{{ $queue->count() }}
+                        <span class="px-2.5 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full">{{ $queue->count() }}
                             Active</span>
                     </div>
                     <div class="mb-4">
@@ -361,12 +361,18 @@
                                     <label
                                         class="block text-xs font-bold text-outline uppercase tracking-wider mb-4">Exposure
                                         Category</label>
-                                    <p class="text-[10px] text-on-surface-variant mb-2 italic">Set by Staff during Case
-                                        Encoding - not editable here.</p>
-                                    <div
-                                        class="py-3 text-center rounded-lg border border-primary-container bg-primary-container/10 text-primary">
-                                        <span class="text-sm font-bold">Cat {{ $case->category ?? '—' }}</span>
+                                    <div class="flex gap-4">
+                                        @foreach(['I', 'II', 'III'] as $cat)
+                                        <div class="flex-1 pointer-events-none">
+                                            <div
+                                                class="py-3 text-center rounded-lg border {{ ($case->category ?? '') === $cat ? 'bg-primary-container/10 border-primary-container text-primary' : 'border-outline-variant/30' }} transition-all">
+                                                <span class="text-sm font-bold">Cat {{ $cat }}</span>
+                                            </div>
+                                        </div>
+                                        @endforeach
                                     </div>
+                                    <p class="text-[10px] text-on-surface-variant mt-2 italic">Set by Staff during Case
+                                        Encoding - not editable here.</p>
                                 </div>
                                 <div>
                                     <label

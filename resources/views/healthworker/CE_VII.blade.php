@@ -257,6 +257,7 @@
                         <p class="text-sm text-on-surface-variant text-center py-8">No cases in the queue yet. Cases
                             appear here once Staff finishes Case Encoding.</p>
                         @endforelse
+                        <p id="queueNoMatch" class="hidden text-sm text-on-surface-variant text-center py-8">No cases match your filter.</p>
                     </div>
                 </div>
             </section>
@@ -738,6 +739,35 @@
             };
             document.getElementById('statusToastClose').addEventListener('click', dismiss);
             setTimeout(dismiss, 4000);
+        })();
+    </script>
+    <script>
+        // Queue filter: every word typed must match somewhere in the case card
+        // (patient name, case no., category, status, incident date)
+        (function () {
+            const input = document.getElementById('queueFilterInput');
+            const items = document.querySelectorAll('#queueList .queue-item');
+            const noMatch = document.getElementById('queueNoMatch');
+            if (!input) return;
+
+            const KEY = 'ceQueueFilter';
+            const apply = () => {
+                const terms = input.value.toLowerCase().split(/\s+/).filter(Boolean);
+                let shown = 0;
+                items.forEach((item) => {
+                    const text = item.textContent.toLowerCase().replace(/\s+/g, ' ');
+                    const match = terms.every((t) => text.includes(t));
+                    item.classList.toggle('hidden', !match);
+                    if (match) shown++;
+                });
+                if (noMatch) noMatch.classList.toggle('hidden', shown > 0 || items.length === 0);
+                try { sessionStorage.setItem(KEY, input.value); } catch (e) {}
+            };
+
+            input.addEventListener('input', apply);
+            // Keep the filter when moving between sections / selecting a case
+            try { input.value = sessionStorage.getItem(KEY) || ''; } catch (e) {}
+            apply();
         })();
     </script>
 </body>

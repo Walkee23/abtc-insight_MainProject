@@ -209,88 +209,77 @@
             <section class="w-1/3 flex flex-col gap-6">
                 <div class="bg-surface-container-low rounded-xl p-6 flex flex-col h-[calc(100vh-12rem)]">
                     <div class="flex items-center justify-between mb-6">
-                        <h2 class="text-lg font-bold tracking-tight text-on-surface">Pending Encoding Queue</h2>
-                        <span class="px-2.5 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full">12
-                            Active</span>
+                        <h2 class="text-lg font-bold tracking-tight text-on-surface truncate">Pending Encoding Queue</h2>
+                        <span class="px-2.5 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full whitespace-nowrap shrink-0">{{ $queue->count() }} Active</span>
                     </div>
                     <div class="mb-4">
                         <div
                             class="flex items-center bg-white rounded-lg px-3 py-2 border border-outline-variant/20 focus-within:border-primary/40 transition-all">
                             <span class="material-symbols-outlined text-outline text-[18px]">filter_list</span>
-                            <input class="bg-transparent border-none focus:ring-0 text-sm w-full py-0"
+                            <input class="bg-transparent border-none focus:ring-0 text-sm w-full py-0" id="queueFilterInput"
                                 placeholder="Filter queue..." type="text" />
                         </div>
                     </div>
-                    <div class="flex-1 overflow-y-auto space-y-3 pr-2">
-                        <div class="bg-surface-container-lowest p-4 rounded-lg border-l-4 border-primary shadow-sm">
+                    <div class="flex-1 overflow-y-auto space-y-3 pr-2" id="queueList">
+                        @forelse($queue as $item)
+                        <a href="{{ route('healthworker.clinical-encoding', ['bite_case_id' => $item->bite_case_id]) }}"
+                            class="queue-item block {{ isset($case) && $case->bite_case_id === $item->bite_case_id ? 'bg-surface-container-lowest p-4 rounded-lg border-l-4 border-primary shadow-sm' : 'bg-surface-container-lowest/50 p-4 rounded-lg border border-transparent hover:border-outline-variant/30 transition-all' }}">
                             <div class="flex justify-between items-start mb-2">
-                                <span class="text-[10px] font-bold text-primary tracking-widest uppercase">Queue No.
-                                    042</span>
-                                <span class="text-[10px] font-medium text-outline">15 mins ago</span>
+                                <span class="text-[10px] font-bold {{ isset($case) && $case->bite_case_id === $item->bite_case_id ? 'text-primary' : 'text-outline' }} tracking-widest uppercase">CASE NO. {{ $item->case_number }}</span>
+                                <span class="text-[10px] font-medium text-outline">{{ \Carbon\Carbon::parse($item->date_verified)->diffForHumans() }}</span>
                             </div>
-                            <h3 class="font-bold text-on-surface">Juan Dela Cruz</h3>
+                            <h3 class="font-bold text-on-surface">{{ $item->patient_name }}</h3>
                             <p class="text-xs text-on-surface-variant mb-3 flex items-center gap-1">
                                 <span class="material-symbols-outlined text-[14px]">calendar_today</span>
-                                Incident: Oct 24, 2023
+                                Incident: {{ \Carbon\Carbon::parse($item->date_verified)->format('M d, Y') }}
                             </p>
                             <div class="flex gap-2">
                                 <span
-                                    class="px-2 py-0.5 bg-error-container text-on-error-container text-[10px] font-bold rounded-full">CAT
-                                    III</span>
+                                    class="px-2 py-0.5 bg-error-container text-on-error-container text-[10px] font-bold rounded-full"> CAT
+                                    {{ $item->category }}</span>
                                 <span
-                                    class="px-2 py-0.5 bg-secondary-container text-on-secondary-container text-[10px] font-bold rounded-full">Urgent</span>
+                                    class="px-2 py-0.5 {{ $item->encoding_status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : ($item->encoding_status === 'In Progress' ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface-container-high text-on-surface-variant') }} text-[10px] font-bold rounded-full">{{ $item->encoding_status }}</span>
                             </div>
-                        </div>
-                        <div
-                            class="bg-surface-container-lowest/50 p-4 rounded-lg border border-transparent hover:border-outline-variant/30 transition-all cursor-pointer">
-                            <div class="flex justify-between items-start mb-2">
-                                <span class="text-[10px] font-bold text-outline tracking-widest uppercase">Queue No.
-                                    043</span>
-                                <span class="text-[10px] font-medium text-outline">22 mins ago</span>
-                            </div>
-                            <h3 class="font-bold text-on-surface">Elena Soriano</h3>
-                            <p class="text-xs text-on-surface-variant flex items-center gap-1">
-                                <span class="material-symbols-outlined text-[14px]">calendar_today</span>
-                                Incident: Oct 23, 2023
-                            </p>
-                        </div>
-                        <div
-                            class="bg-surface-container-lowest/50 p-4 rounded-lg border border-transparent hover:border-outline-variant/30 transition-all cursor-pointer">
-                            <div class="flex justify-between items-start mb-2">
-                                <span class="text-[10px] font-bold text-outline tracking-widest uppercase">Queue No.
-                                    044</span>
-                                <span class="text-[10px] font-medium text-outline">45 mins ago</span>
-                            </div>
-                            <h3 class="font-bold text-on-surface">Roberto Lim</h3>
-                            <p class="text-xs text-on-surface-variant flex items-center gap-1">
-                                <span class="material-symbols-outlined text-[14px]">calendar_today</span>
-                                Incident: Oct 24, 2023
-                            </p>
-                        </div>
+                        </a>
+                        @empty
+                        <p class="text-sm text-on-surface-variant text-center py-8">No cases in the queue yet. Cases
+                            appear here once Staff finishes Case Encoding.</p>
+                        @endforelse
                     </div>
                 </div>
             </section>
-            <section class="w-2/3 flex flex-col gap-6">
-                <!-- Form Card -->
+            <section class="w-2/3 min-w-0 flex flex-col gap-6">
+                @if(session('status'))
+                {{-- Toast: fixed bottom-right (below the form card, so it never overlaps the footer buttons), auto-dismisses after 4s --}}
+                <div id="statusToast" role="status"
+                    class="fixed bottom-6 right-8 z-50 max-w-sm flex items-center gap-3 bg-emerald-50 text-emerald-700 text-sm font-semibold pl-4 pr-2 py-3 rounded-lg shadow-lg shadow-blue-900/10 border border-emerald-200 transition-opacity duration-300">
+                    <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                    <span class="flex-1">{{ session('status') }}</span>
+                    <button type="button" id="statusToastClose" aria-label="Dismiss"
+                        class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-emerald-100 transition-colors">
+                        <span class="material-symbols-outlined text-[18px]">close</span>
+                    </button>
+                </div>
+                @endif
                 <div
                     class="bg-surface-container-lowest rounded-xl shadow-lg shadow-blue-900/5 overflow-hidden border border-outline-variant/10 flex flex-col h-[calc(100vh-12rem)]">
+                    @if($case)
                     <!-- Form Header & Step Indicator -->
                     <div class="bg-surface-container-low border-b border-outline-variant/20">
                         <div class="px-8 py-6 flex justify-between items-center">
                             <div>
                                 <p class="text-[10px] font-bold text-primary tracking-widest uppercase mb-1">Active
                                     Encoding Session</p>
-                                <h2 class="text-2xl font-extrabold tracking-tight text-on-surface">Juan Dela Cruz</h2>
+                                <h2 class="text-2xl font-extrabold tracking-tight text-on-surface">{{ $case->patient_name ?? 'No case selected' }}</h2>
                             </div>
                             <div class="flex gap-4">
                                 <div class="text-right">
                                     <p class="text-[10px] font-semibold text-outline uppercase tracking-wider">Patient
                                         ID</p>
-                                    <p class="text-sm font-bold">ABTC-2023-1042</p>
+                                    <p class="text-sm font-bold">{{ $case->patient_id ?? '—' }}</p>
                                 </div>
                             </div>
                         </div>
-                        <!-- Horizontal Wizard Steps -->
                         <div class="px-8 pb-4">
                             <div class="flex items-center w-full">
                                 <!-- Step 1 (Completed) -->
@@ -338,6 +327,21 @@
                     </div>
                     <!-- Wizard Body (Section VIII) -->
                     <div class="flex-1 p-8 overflow-y-auto">
+                    <form id="section8Form" method="POST"
+                        action="{{ route('healthworker.ce-viii', ['bite_case_id' => $case->bite_case_id]) }}">
+                        @csrf
+                        <input type="hidden" name="action" id="formActionInput" value="next" />
+                        @php $val = fn ($key, $default = '') => old($key, $section->$key ?? $default); @endphp
+                        {{-- Toast: fixed bottom-right, auto-dismisses after 4s (same look as the draft-saved toast) --}}
+                        <div id="formErrorBanner" role="alert"
+                            class="{{ $errors->any() ? '' : 'hidden opacity-0' }} fixed bottom-6 right-8 z-50 max-w-sm flex items-center gap-3 bg-error-container text-on-error-container text-sm font-semibold pl-4 pr-2 py-3 rounded-lg shadow-lg shadow-blue-900/10 border border-error/20 transition-opacity duration-300">
+                            <span class="material-symbols-outlined text-[18px]">error</span>
+                            <span class="flex-1">Please fill in all required fields before continuing.</span>
+                            <button type="button" id="formErrorToastClose" aria-label="Dismiss"
+                                class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-black/5 transition-colors">
+                                <span class="material-symbols-outlined text-[18px]">close</span>
+                            </button>
+                        </div>
                         <div class="step-content" id="step3">
                             <div class="flex items-center gap-3 mb-8">
                                 <span
@@ -347,12 +351,18 @@
                             </div>
                             <div class="space-y-6">
                                 <div>
-                                    <label
-                                        class="block text-xs font-bold text-outline uppercase tracking-wider mb-3">Clinical
-                                        Remarks</label>
-                                    <textarea
-                                        class="w-full bg-surface-container-low border-none rounded-xl p-4 focus:ring-2 focus:ring-primary/20 text-sm resize-none h-48"
-                                        placeholder="Enter medical advice or initial assessment notes..."></textarea>
+                                    <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-3">Medication <span class="text-error">*</span></label>
+                                    <textarea name="medication" data-field="medication"
+                                        class="w-full bg-surface-container-low border-none rounded-xl p-4 ring-1 ring-transparent focus:ring-2 focus:ring-primary/20 text-sm resize-none h-32"
+                                        placeholder="Medications given or prescribed (e.g. antibiotics, analgesics)...">{{ $val('medication') }}</textarea>
+                                    <p data-error-for="medication" class="mt-1 ml-1 text-xs font-semibold text-error {{ $errors->has('medication') ? '' : 'hidden' }}">{{ $errors->first('medication') }}</p>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-3">Advice <span class="text-error">*</span></label>
+                                    <textarea name="advice" data-field="advice"
+                                        class="w-full bg-surface-container-low border-none rounded-xl p-4 ring-1 ring-transparent focus:ring-2 focus:ring-primary/20 text-sm resize-none h-32"
+                                        placeholder="Medical advice and instructions given to the patient...">{{ $val('advice') }}</textarea>
+                                    <p data-error-for="advice" class="mt-1 ml-1 text-xs font-semibold text-error {{ $errors->has('advice') ? '' : 'hidden' }}">{{ $errors->first('advice') }}</p>
                                 </div>
                                 <div class="p-4 bg-primary-container/10 border border-primary/10 rounded-lg flex gap-3">
                                     <span class="material-symbols-outlined text-primary">info</span>
@@ -363,32 +373,146 @@
                                 </div>
                             </div>
                         </div>
+                    </form>
                     </div>
                     <div
                         class="p-6 bg-surface-container-low border-t border-outline-variant/20 flex justify-between items-center px-8">
-                        <button
+                        <button type="submit" form="section8Form" id="draftBtn"
                             class="px-6 py-2.5 text-sm font-bold text-outline hover:text-on-surface transition-all flex items-center gap-2">
                             Save as Draft
                         </button>
                         <div class="flex gap-4">
-                            <button
+                            <button type="button"
                                 class="px-8 py-2.5 text-sm font-bold text-outline hover:bg-slate-200/50 rounded-lg transition-all flex items-center gap-2"
-                                onclick="window.location.href=`{{ route('healthworker.ce-vii') }}`">
+                                onclick="window.location.href=`{{ route('healthworker.ce-vii', ['bite_case_id' => $case->bite_case_id]) }}`">
                                 <span class="material-symbols-outlined text-[18px]">chevron_left</span>
                                 Back
                             </button>
-                            <button
-                                class="px-8 py-2.5 bg-primary text-on-primary text-sm font-bold rounded-lg shadow-md shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-2"
-                                onclick="window.location.href=`{{ route('healthworker.ce-ix') }}`">
+                            <button type="button" id="nextBtn"
+                                class="px-8 py-2.5 bg-primary text-on-primary text-sm font-bold rounded-lg shadow-md shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-2">
                                 Next: Section IX
                                 <span class="material-symbols-outlined text-[18px]">chevron_right</span>
                             </button>
                         </div>
                     </div>
+                    @else
+                    <!-- No case selected -->
+                    <div class="flex-1 flex flex-col items-center justify-center gap-3">
+                        <span class="material-symbols-outlined text-5xl text-outline-variant">folder_open</span>
+                        <p class="text-sm font-bold text-on-surface-variant">Please select a case.</p>
+                    </div>
+                    @endif
                 </div>
             </section>
         </div>
     </main>
+    <script>
+        // The form and its buttons only exist in the DOM when a case is selected
+        const nextBtn = document.getElementById('nextBtn');
+
+        if (nextBtn) {
+            const form = document.getElementById('section8Form');
+            const draftBtn = document.getElementById('draftBtn');
+            const formActionInput = document.getElementById('formActionInput');
+            const banner = document.getElementById('formErrorBanner');
+            // Required-fields toast: closes on the X button or by itself after 4 seconds
+            const errorToast = (() => {
+                let timer;
+                const hide = () => {
+                    clearTimeout(timer);
+                    banner.classList.add('opacity-0');
+                    setTimeout(() => {
+                        if (banner.classList.contains('opacity-0')) banner.classList.add('hidden');
+                    }, 300);
+                };
+                const show = () => {
+                    clearTimeout(timer);
+                    banner.classList.remove('hidden');
+                    void banner.offsetWidth; // let the fade-in transition run
+                    banner.classList.remove('opacity-0');
+                    timer = setTimeout(hide, 4000);
+                };
+                document.getElementById('formErrorToastClose').addEventListener('click', hide);
+                if (!banner.classList.contains('hidden')) show(); // errors rendered by the server
+                return { show, hide };
+            })();
+
+            // Required to move on to Section IX. Drafts skip these.
+            const REQUIRED = {
+                medication: 'Please enter the medication given or prescribed.',
+                advice: 'Please enter the advice given to the patient.',
+            };
+
+            const field = (name) => form.querySelector(`[data-field="${name}"]`);
+            const errorEl = (name) => form.querySelector(`[data-error-for="${name}"]`);
+
+            function setError(name, message) {
+                const input = field(name);
+                const el = errorEl(name);
+                input.classList.toggle('ring-2', !!message);
+                input.classList.toggle('ring-error', !!message);
+                input.classList.toggle('ring-transparent', !message);
+                if (el) {
+                    if (message) el.textContent = message;
+                    el.classList.toggle('hidden', !message);
+                }
+            }
+
+            function validate() {
+                let firstBad = null;
+                Object.keys(REQUIRED).forEach((name) => {
+                    const message = field(name).value.trim() === '' ? REQUIRED[name] : '';
+                    setError(name, message);
+                    if (message && !firstBad) firstBad = name;
+                });
+                if (firstBad) {
+                    errorToast.show();
+                    field(firstBad).scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    errorToast.hide();
+                }
+                return !firstBad;
+            }
+
+            // Clear a field's error as soon as the user fixes it
+            form.querySelectorAll('[data-field]').forEach((input) => {
+                input.addEventListener('input', () => {
+                    if (input.value.trim() !== '') setError(input.dataset.field, '');
+                    if (!form.querySelector('[data-error-for]:not(.hidden)')) errorToast.hide();
+                });
+            });
+
+            nextBtn.addEventListener('click', () => {
+                formActionInput.value = 'next';
+                if (validate()) form.submit();
+            });
+
+            if (draftBtn) {
+                draftBtn.addEventListener('click', () => {
+                    // A draft saves whatever is filled in, required or not
+                    formActionInput.value = 'draft';
+                });
+            }
+
+            // Re-apply red rings for errors rendered by the server
+            form.querySelectorAll('[data-error-for]:not(.hidden)').forEach((el) => {
+                setError(el.dataset.errorFor, el.textContent.trim());
+            });
+        }
+    </script>
+    <script>
+        // Draft-saved toast: closes on the X button or by itself after 4 seconds
+        (function () {
+            const toast = document.getElementById('statusToast');
+            if (!toast) return;
+            const dismiss = () => {
+                toast.classList.add('opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            };
+            document.getElementById('statusToastClose').addEventListener('click', dismiss);
+            setTimeout(dismiss, 4000);
+        })();
+    </script>
 </body>
 
 </html>

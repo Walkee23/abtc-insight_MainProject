@@ -185,15 +185,23 @@ class ClinicalEncodingController extends Controller
     {
         DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->firstOrFail();
 
+        // A draft saves whatever is filled in; moving on to Section IX needs both fields
+        $isDraft = $request->input('action') === 'draft';
+        $required = $isDraft ? 'nullable' : 'required';
+
         $validated = $request->validate([
-            'medication' => 'nullable|string',
-            'advice' => 'nullable|string',
+            'medication' => $required . '|string|max:5000',
+            'advice' => $required . '|string|max:5000',
         ]);
 
         DB::table('bite_section8_remarks')->updateOrInsert(
             ['bite_case_id' => $biteCaseId],
             $validated
         );
+
+        if ($isDraft) {
+            return back()->with('status', 'Section VIII saved as draft.');
+        }
 
         return redirect()->route('healthworker.ce-ix', ['bite_case_id' => $biteCaseId]);
     }

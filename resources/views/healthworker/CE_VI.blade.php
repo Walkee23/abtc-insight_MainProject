@@ -260,7 +260,7 @@
                     </div>
                 </div>
             </section>
-            <section class="w-2/3 flex flex-col gap-6">
+            <section class="w-2/3 min-w-0 flex flex-col gap-6">
                 @if(session('status'))
                 <div class="bg-emerald-50 text-emerald-700 text-sm font-semibold px-4 py-3 rounded-lg flex items-center gap-2">
                     <span class="material-symbols-outlined text-[18px]">check_circle</span>

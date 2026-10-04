@@ -32,6 +32,10 @@ class BhwController extends Controller
 
     public function storeReferral(Request $request)
     {
+        $request->validate([
+             'exposure_category' => 'required|in:1,2,3',
+             'animal_remarks'    => 'nullable|string|max:1000',
+]);
         $barangayName = $request->input('patient_barangay');
         
         // 1. Get the 3-digit code from the config file, default to '000' if not found
@@ -86,7 +90,9 @@ class BhwController extends Controller
             'biting_animal' => $request->input('biting_animal'),
             'biting_animal_other' => $request->input('biting_animal_other'),
             'lab_exam' => $request->input('lab_exam'),
-            'action_desired' => $request->input('action_desired')
+            'action_desired' => $request->input('action_desired'),
+            'exposure_category' => $request->input('exposure_category'),
+            'animal_remarks' => $request->input('animal_remarks')
         ]);
 
         // Redirect back with a success message

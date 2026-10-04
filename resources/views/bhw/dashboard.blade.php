@@ -300,7 +300,7 @@
                 </div>
                 <!-- Pagination Footer -->
                 <div class="px-6 py-5 bg-surface-container-low/30 border-t border-outline-variant/5 flex justify-between items-center">
-                    <p class="text-xs font-medium text-on-surface-variant">Showing 1 to 4 of 124 referrals</p>
+                    <p class="text-xs font-medium text-on-surface-variant">{{ $referrals->count() }} of {{ $totalSubmissions }} referrals</p>
                     <div class="flex gap-2">
                         <button class="p-2 rounded-lg border border-outline-variant/30 text-on-surface-variant hover:bg-surface-container-highest transition-all disabled:opacity-30">
                             <span class="material-symbols-outlined text-sm" data-icon="chevron_left">chevron_left</span>

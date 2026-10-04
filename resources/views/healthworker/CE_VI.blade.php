@@ -414,12 +414,6 @@
                                 Next Step
                                 <span class="material-symbols-outlined text-[18px]">chevron_right</span>
                             </button>
-                            <button
-                                class="px-8 py-2.5 bg-gradient-to-r from-primary to-primary-container text-on-primary text-sm font-bold rounded-lg shadow-md shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all hidden flex items-center gap-2"
-                                id="finalizeBtn">
-                                <span class="material-symbols-outlined text-[18px]">verified_user</span>
-                                Save and Finalize Record
-                            </button>
                         </div>
                     </div>
                 </div>

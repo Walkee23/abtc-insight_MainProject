@@ -335,6 +335,11 @@
                             action="{{ $case ? route('healthworker.clinical-encoding', ['bite_case_id' => $case->bite_case_id]) : '#' }}">
                             @csrf
                             <input type="hidden" name="action" id="formActionInput" value="next" />
+                            <div id="formErrorBanner"
+                                class="{{ $errors->any() ? '' : 'hidden' }} mb-6 bg-error-container text-on-error-container text-sm font-semibold px-4 py-3 rounded-lg flex items-center gap-2">
+                                <span class="material-symbols-outlined text-[18px]">error</span>
+                                <span>Please fill in all required fields (marked with *) before continuing.</span>
+                            </div>
                         <div class="step-content active" id="step1">
                             <div class="flex items-center gap-3 mb-8">
                                 <span
@@ -346,15 +351,16 @@
                                 <div class="col-span-2">
                                     <label
                                         class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Site
-                                        of Bite / Exposure</label>
-                                    <input
-                                        class="w-full bg-surface-container-low border-none rounded-lg py-3.5 px-4 focus:ring-2 focus:ring-primary/20 text-on-surface font-medium"
-                                        name="site_of_bite" type="text" value="{{ $section->site_of_bite ?? '' }}" />
+                                        of Bite / Exposure <span class="text-error">*</span></label>
+                                    <input id="siteOfBiteInput"
+                                        class="w-full bg-surface-container-low border-none rounded-lg py-3.5 px-4 ring-1 ring-transparent focus:ring-2 focus:ring-primary/20 text-on-surface font-medium"
+                                        name="site_of_bite" type="text" value="{{ old('site_of_bite', $section->site_of_bite ?? '') }}" />
+                                    <p id="siteOfBiteError" class="mt-1 ml-1 text-xs font-semibold text-error {{ $errors->has('site_of_bite') ? '' : 'hidden' }}">{{ $errors->first('site_of_bite') }}</p>
                                 </div>
                                 <div>
                                     <label
                                         class="block text-xs font-bold text-outline uppercase tracking-wider mb-4">Exposure
-                                        Category</label>
+                                        Category <span class="text-error">*</span></label>
                                     <div class="flex gap-4">
                                         @php
                                             $selectedCategory = $section->category_of_exposure ?? $case->category ?? '';
@@ -373,7 +379,7 @@
                                 <div>
                                     <label
                                         class="block text-xs font-bold text-outline uppercase tracking-wider mb-4">Total
-                                        Number of Wounds</label>
+                                        Number of Wounds <span class="text-error">*</span></label>
                                     <div class="flex gap-4">
                                         <label class="flex-1 cursor-pointer">
                                             <input {{ ($section->total_wounds ?? 'Single') === 'Single' ? 'checked' : '' }} class="hidden peer" name="total_wounds" type="radio" value="Single" />
@@ -479,8 +485,32 @@
                 // Logic for updating header indicators would go here in a real app
             }
 
+            const siteInput = document.getElementById('siteOfBiteInput');
+            const siteError = document.getElementById('siteOfBiteError');
+            const banner = document.getElementById('formErrorBanner');
+
+            function showSiteError(message) {
+                siteError.textContent = message || siteError.textContent;
+                siteError.classList.toggle('hidden', !message);
+                siteInput.classList.toggle('ring-2', !!message);
+                siteInput.classList.toggle('ring-error', !!message);
+                siteInput.classList.toggle('ring-transparent', !message);
+                banner.classList.toggle('hidden', !message);
+            }
+
+            // Re-apply the red ring for an error rendered by the server
+            if (!siteError.classList.contains('hidden')) showSiteError(siteError.textContent.trim());
+            siteInput.addEventListener('input', () => {
+                if (siteInput.value.trim() !== '') showSiteError('');
+            });
+
             nextBtn.addEventListener('click', () => {
                 formActionInput.value = 'next';
+                if (siteInput.value.trim() === '') {
+                    showSiteError('Please enter the site of bite / exposure.');
+                    siteInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return;
+                }
                 document.getElementById('section6Form').submit();
             });
 

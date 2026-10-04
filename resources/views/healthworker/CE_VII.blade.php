@@ -335,27 +335,29 @@
                         <input type="hidden" name="action" id="formActionInput" value="next" />
                         @php $val = fn ($key, $default = '') => old($key, $section->$key ?? $default); @endphp
                         @php
-                            // Styled dropdown (native <select> option lists can't be styled - see conventions.md #5)
-                            $dropdown = function ($name, $options, $bg = 'bg-surface-container-low') use ($val, $errors) {
+                            $dropdown = function ($name, $options, $bg = 'bg-surface-container-low', $fit = false) use ($val, $errors) {
                                 $current = (string) $val($name);
                                 $currentLabel = $options[$current] ?? null;
                                 $html = '<div class="relative" data-dd>'
                                     . '<input type="hidden" name="' . e($name) . '" value="' . e($current) . '" data-field="' . e($name) . '" />'
                                     . '<button type="button" data-dd-trigger class="w-full flex items-center justify-between gap-2 ' . $bg . ' rounded-lg py-3 px-4 text-left font-medium ring-1 ring-transparent focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all">'
-                                    . '<span data-dd-label class="truncate ' . ($currentLabel ? 'text-on-surface' : 'text-outline') . '">' . e($currentLabel ?? 'Select') . '</span>'
+                                    . ($fit
+                                        ? '<span class="grid"><span data-dd-label class="col-start-1 row-start-1 whitespace-nowrap ' . ($currentLabel ? 'text-on-surface' : 'text-outline') . '">' . e($currentLabel ?? 'Select') . '</span>'
+                                            . '<span aria-hidden="true" class="col-start-1 row-start-1 invisible whitespace-nowrap">' . e(collect($options)->sortByDesc(fn ($l) => strlen($l))->first()) . '</span></span>'
+                                        : '<span data-dd-label class="truncate ' . ($currentLabel ? 'text-on-surface' : 'text-outline') . '">' . e($currentLabel ?? 'Select') . '</span>')
                                     . '<span data-dd-chevron class="material-symbols-outlined text-outline text-[20px] transition-transform">expand_more</span>'
                                     . '</button>'
-                                    . '<ul data-dd-menu class="hidden absolute left-0 right-0 top-full mt-2 z-30 bg-white rounded-xl border border-outline-variant/30 shadow-xl shadow-blue-900/10 p-1.5 max-h-60 overflow-y-auto">';
+                                    . '<ul data-dd-menu class="hidden absolute left-0 min-w-full w-max top-full mt-2 z-30 bg-white rounded-xl border border-outline-variant/30 shadow-xl shadow-blue-900/10 p-1.5 max-h-60 overflow-y-auto">';
                                 foreach ($options as $optValue => $optLabel) {
                                     $active = $current === (string) $optValue;
                                     $html .= '<li><button type="button" data-dd-option data-value="' . e($optValue) . '" class="w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg text-sm text-left transition-colors hover:bg-primary-fixed/60 '
                                         . ($active ? 'bg-primary-fixed text-primary font-bold' : 'text-on-surface font-medium') . '">'
-                                        . '<span class="truncate">' . e($optLabel) . '</span>'
-                                        . '<span class="material-symbols-outlined text-[18px] text-primary ' . ($active ? '' : 'invisible') . '" style="font-variation-settings: \'wght\' 700;">check</span>'
+                                        . '<span class="whitespace-nowrap">' . e($optLabel) . '</span>'
+                                        . '<span class="material-symbols-outlined text-[18px] text-primary shrink-0 ' . ($active ? '' : 'invisible') . '" style="font-variation-settings: \'wght\' 700;">' . 'check' . '</span>'
                                         . '</button></li>';
                                 }
                                 return $html . '</ul>'
-                                    . '<p data-error-for="' . e($name) . '" class="mt-1 ml-1 text-xs font-semibold text-error ' . ($errors->has($name) ? '' : 'hidden') . '">' . e($errors->first($name)) . '</p>'
+                                    . '<p data-error-for="' . e($name) . '" class="mt-1 ml-1 text-xs font-semibold text-error ' . ($fit ? 'w-0 min-w-full ' : '') . ($errors->has($name) ? '' : 'hidden') . '">' . e($errors->first($name)) . '</p>'
                                     . '</div>';
                             };
                         @endphp
@@ -371,18 +373,18 @@
                                 <h3 class="text-sm font-extrabold uppercase tracking-widest text-on-surface-variant">
                                     Immunization Schedule</h3>
                             </div>
-                            <div class="grid grid-cols-3 gap-6 mb-8">
+                            <div class="grid grid-cols-[1fr_auto_auto] gap-6 mb-8">
                                 <div>
                                     <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Vaccine Brand <span class="text-error">*</span></label>
                                     {!! $dropdown('vaccine_brand', ['VERORAB' => 'VERORAB (PVRV)', 'SPEEDA' => 'SPEEDA (PVRV)', 'VAXIRAB' => 'VAXIRAB (PCEC)']) !!}
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Route <span class="text-error">*</span></label>
-                                    {!! $dropdown('route', ['ID' => 'ID (Intradermal, 0.1mL)', 'IM' => 'IM (Intramuscular, 0.5mL)']) !!}
+                                    {!! $dropdown('route', ['ID' => 'ID (Intradermal, 0.1mL)', 'IM' => 'IM (Intramuscular, 0.5mL)'], 'bg-surface-container-low', true) !!}
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Dose Type <span class="text-error">*</span></label>
-                                    {!! $dropdown('dose_type', ['Primary' => 'Primary', 'Booster' => 'Booster']) !!}
+                                    {!! $dropdown('dose_type', ['Primary' => 'Primary', 'Booster' => 'Booster'], 'bg-surface-container-low', true) !!}
                                 </div>
                             </div>
                             <div class="grid grid-cols-3 gap-6 mb-8">
@@ -465,7 +467,7 @@
                                     <div>
                                         <label
                                             class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Route <span class="text-[10px] normal-case font-medium">(required if ERIG/HRIG)</span></label>
-                                        {!! $dropdown('passive_route', ['IU infiltrate' => 'IU infiltrate (around wound)', 'IM' => 'IM'], 'bg-white') !!}
+                                        {!! $dropdown('passive_route', ['IU infiltrate' => 'IU infiltrate', 'IM' => 'IM'], 'bg-white') !!}
                                     </div>
                                 </div>
                             </div>
@@ -473,26 +475,29 @@
                                 <p class="text-xs font-extrabold text-outline uppercase tracking-widest mb-4">Dose
                                     Tracking Grid</p>
                                 <div class="grid grid-cols-4 gap-4">
-                                    <div data-field-wrap="day0_date" class="bg-white p-4 rounded-lg border border-primary/20">
+                                    <div data-field-wrap="day0_date" class="bg-white p-4 rounded-lg border border-primary/20 ring-1 ring-transparent">
                                         <p class="text-[10px] font-bold text-primary uppercase mb-1">Day 0 <span class="text-error">*</span></p>
-                                        <input name="day0_date" data-field="day0_date" type="date" value="{{ $val('day0_date') }}"
-                                            class="w-full text-sm font-bold text-on-surface bg-transparent border-none p-0 focus:ring-0" />
+                                        <input name="day0_date" data-field="day0_date" type="date" max="{{ now()->toDateString() }}" value="{{ $val('day0_date') }}"
+                                            class="w-full text-[10px] font-bold text-on-surface bg-transparent border-none p-0 focus:ring-0" />
                                         <p data-error-for="day0_date" class="mt-1 text-xs font-semibold text-error {{ $errors->has('day0_date') ? '' : 'hidden' }}">{{ $errors->first('day0_date') }}</p>
                                     </div>
-                                    <div class="bg-white p-4 rounded-lg border border-outline-variant/30">
+                                    <div data-field-wrap="day3_date" class="bg-white p-4 rounded-lg border border-outline-variant/30 ring-1 ring-transparent">
                                         <p class="text-[10px] font-bold text-outline uppercase mb-1">Day 3</p>
-                                        <input name="day3_date" type="date" value="{{ $section->day3_date ?? '' }}"
-                                            class="w-full text-sm font-bold text-on-surface bg-transparent border-none p-0 focus:ring-0" />
+                                        <input name="day3_date" data-field="day3_date" type="date" max="{{ now()->toDateString() }}" value="{{ $val('day3_date') }}"
+                                            class="w-full text-[10px] font-bold text-on-surface bg-transparent border-none p-0 focus:ring-0" />
+                                        <p data-error-for="day3_date" class="mt-1 text-xs font-semibold text-error {{ $errors->has('day3_date') ? '' : 'hidden' }}">{{ $errors->first('day3_date') }}</p>
                                     </div>
-                                    <div class="bg-white p-4 rounded-lg border border-outline-variant/30">
+                                    <div data-field-wrap="day7_date" class="bg-white p-4 rounded-lg border border-outline-variant/30 ring-1 ring-transparent">
                                         <p class="text-[10px] font-bold text-outline uppercase mb-1">Day 7</p>
-                                        <input name="day7_date" type="date" value="{{ $section->day7_date ?? '' }}"
-                                            class="w-full text-sm font-bold text-on-surface bg-transparent border-none p-0 focus:ring-0" />
+                                        <input name="day7_date" data-field="day7_date" type="date" max="{{ now()->toDateString() }}" value="{{ $val('day7_date') }}"
+                                            class="w-full text-[10px] font-bold text-on-surface bg-transparent border-none p-0 focus:ring-0" />
+                                        <p data-error-for="day7_date" class="mt-1 text-xs font-semibold text-error {{ $errors->has('day7_date') ? '' : 'hidden' }}">{{ $errors->first('day7_date') }}</p>
                                     </div>
-                                    <div class="bg-white p-4 rounded-lg border border-outline-variant/30">
+                                    <div data-field-wrap="day28_date" class="bg-white p-4 rounded-lg border border-outline-variant/30 ring-1 ring-transparent">
                                         <p class="text-[10px] font-bold text-outline uppercase mb-1">Day 28</p>
-                                        <input name="day28_date" type="date" value="{{ $section->day28_date ?? '' }}"
-                                            class="w-full text-sm font-bold text-on-surface bg-transparent border-none p-0 focus:ring-0" />
+                                        <input name="day28_date" data-field="day28_date" type="date" max="{{ now()->toDateString() }}" value="{{ $val('day28_date') }}"
+                                            class="w-full text-[10px] font-bold text-on-surface bg-transparent border-none p-0 focus:ring-0" />
+                                        <p data-error-for="day28_date" class="mt-1 text-xs font-semibold text-error {{ $errors->has('day28_date') ? '' : 'hidden' }}">{{ $errors->first('day28_date') }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -540,8 +545,7 @@
             const formActionInput = document.getElementById('formActionInput');
             const banner = document.getElementById('formErrorBanner');
 
-            // Required to move on to Section VIII. A draft only needs dose_type,
-            // since that database column is NOT NULL.
+            // Required to move on to Section VIII. Drafts skip these.
             const REQUIRED = {
                 vaccine_brand: 'Please select a vaccine brand.',
                 route: 'Please select a route.',
@@ -550,8 +554,8 @@
                 administered_by: 'Please enter who administered the dose.',
                 day0_date: 'Please set the Day 0 date.',
             };
-            const ALL_CHECKED = Object.keys(REQUIRED).concat(['passive_route']);
-            const DRAFT_REQUIRED = ['dose_type'];
+            const DATE_FIELDS = ['day0_date', 'day3_date', 'day7_date', 'day28_date'];
+            const ALL_CHECKED = Object.keys(REQUIRED).concat(['passive_route', 'day3_date', 'day7_date', 'day28_date']);
 
             const field = (name) => form.querySelector(`[data-field="${name}"]`);
             const errorEl = (name) => form.querySelector(`[data-error-for="${name}"]`);
@@ -575,19 +579,30 @@
                 }
             }
 
+            // Local date as YYYY-MM-DD, comparable with <input type="date"> values
+            const todayStr = (() => {
+                const d = new Date();
+                return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            })();
+
+            // names = fields that must be filled in; the future-date check always runs
             function validate(names) {
                 let firstBad = null;
                 ALL_CHECKED.forEach((name) => {
                     let message = '';
+                    const value = field(name).value.trim();
                     if (names.includes(name)) {
                         if (name === 'passive_route') {
                             const passive = form.querySelector('input[name="passive_type"]:checked');
-                            if (passive && passive.value !== '' && field(name).value === '') {
+                            if (passive && passive.value !== '' && value === '') {
                                 message = 'Please select a route for the passive immunization.';
                             }
-                        } else if (field(name).value.trim() === '') {
+                        } else if (name in REQUIRED && value === '') {
                             message = REQUIRED[name];
                         }
+                    }
+                    if (!message && DATE_FIELDS.includes(name) && value > todayStr) {
+                        message = 'Date cannot be in the future.';
                     }
                     setError(name, message);
                     if (message && !firstBad) firstBad = name;
@@ -600,7 +615,8 @@
             // Clear a field's error as soon as the user fixes it
             function clearIfFilled(name) {
                 const f = field(name);
-                if (f && f.value.trim() !== '') setError(name, '');
+                const stillFuture = DATE_FIELDS.includes(name) && f && f.value > todayStr;
+                if (f && f.value.trim() !== '' && !stillFuture) setError(name, '');
                 if (!form.querySelector('[data-error-for]:not(.hidden)')) banner.classList.add('hidden');
             }
             form.querySelectorAll('input[data-field]').forEach((input) => {
@@ -619,7 +635,8 @@
             if (draftBtn) {
                 draftBtn.addEventListener('click', (e) => {
                     formActionInput.value = 'draft';
-                    if (!validate(DRAFT_REQUIRED)) e.preventDefault();
+                    // A draft saves whatever is filled in, required or not
+                    if (!validate([])) e.preventDefault();
                 });
             }
 

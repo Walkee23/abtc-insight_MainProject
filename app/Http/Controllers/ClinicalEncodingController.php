@@ -66,20 +66,24 @@ class ClinicalEncodingController extends Controller
     {
         $case = DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->firstOrFail();
 
+        // A draft saves whatever is filled in; moving on needs the core fields
+        $isDraft = $request->input('action') === 'draft';
+        $required = $isDraft ? 'nullable' : 'required';
+
         $validated = $request->validate([
-            'total_wounds' => 'nullable|in:Single,Multiple',
+            'total_wounds' => $required . '|in:Single,Multiple',
             'wound_description' => 'nullable|string',
-            'site_of_bite' => 'nullable|string|max:100',
-            'category_of_exposure' => 'nullable|in:I,II,III',
+            'site_of_bite' => $required . '|string|max:100',
+            'category_of_exposure' => $required . '|in:I,II,III',
         ]);
 
         DB::table('bite_section6_wound_description')->updateOrInsert(
             ['bite_case_id' => $biteCaseId],
-            $validated + [
+            array_merge($validated, [
                 // Fall back to whatever bite_cases already has if this form
                 // hasn't set a category yet (e.g. very first save)
                 'category_of_exposure' => $validated['category_of_exposure'] ?? $case->category,
-            ]
+            ])
         );
 
         // Keep bite_cases.category in sync, since bite_section6's column
@@ -91,7 +95,7 @@ class ClinicalEncodingController extends Controller
             ]);
         }
 
-        if ($request->input('action') === 'draft') {
+        if ($isDraft) {
             return back()->with('status', 'Section VI saved as draft.');
         }
 
@@ -117,8 +121,8 @@ class ClinicalEncodingController extends Controller
     {
         DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->firstOrFail();
 
-        // A draft may be incomplete (dose_type is NOT NULL in the table, so it is
-        // always required); moving on to Section VIII needs the core fields.
+        // A draft saves whatever is filled in, required or not; moving on to
+        // Section VIII needs the core fields.
         $isDraft = $request->input('action') === 'draft';
         $required = $isDraft ? 'nullable' : 'required';
 
@@ -130,15 +134,15 @@ class ClinicalEncodingController extends Controller
             'tig_details' => 'nullable|string|max:200',
             'vaccine_brand' => $required . '|string|max:100',
             'route' => $required . '|in:ID,IM',
-            'dose_type' => 'required|in:Primary,Booster',
-            'day0_date' => $required . '|date',
-            'day3_date' => 'nullable|date',
-            'day7_date' => 'nullable|date',
-            'day28_date' => 'nullable|date',
+            'dose_type' => $required . '|in:Primary,Booster',
+            'day0_date' => $required . '|date|before_or_equal:today',
+            'day3_date' => 'nullable|date|before_or_equal:today',
+            'day7_date' => 'nullable|date|before_or_equal:today',
+            'day28_date' => 'nullable|date|before_or_equal:today',
             'passive_given' => 'nullable|boolean',
             'passive_type' => 'nullable|string|max:50',
             // Only needed once a passive immunoglobulin (ERIG/HRIG) is chosen
-            'passive_route' => ($isDraft ? 'nullable' : 'required_with:passive_type') . '|string|max:10',
+            'passive_route' => ($isDraft ? 'nullable' : 'required_with:passive_type') . '|in:IU infiltrate,IM',
             'skin_test_due' => 'nullable|date_format:H:i',
             'administered_by' => $required . '|string|max:100',
         ]);
@@ -146,6 +150,9 @@ class ClinicalEncodingController extends Controller
         $validated['tetanus_given'] = $request->boolean('tetanus_given');
         $validated['tig_given'] = $request->boolean('tig_given');
         $validated['passive_given'] = $request->boolean('passive_given');
+        // dose_type is NOT NULL in the table: an unchosen value on a draft is stored
+        // as '' (shows as "Select" again) rather than a made-up default
+        $validated['dose_type'] = $validated['dose_type'] ?? '';
 
         DB::table('bite_section7_immunization')->updateOrInsert(
             ['bite_case_id' => $biteCaseId],

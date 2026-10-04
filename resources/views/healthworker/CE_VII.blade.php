@@ -98,46 +98,58 @@
 </head>
 
 <body class="bg-surface text-on-surface selection:bg-primary-container selection:text-on-primary-container">
-    <aside
-        class="h-screen w-64 fixed left-0 top-0 bg-slate-50 dark:bg-slate-900 flex flex-col border-r border-slate-200/50 dark:border-slate-800/50 py-6 font-['Inter'] tracking-tight z-50">
-        <div class="px-6 mb-10 flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-on-primary">
-                <span class="material-symbols-outlined"
-                    style="font-variation-settings: 'FILL' 1;">health_and_safety</span>
-            </div>
-            <div>
-                <h1 class="text-lg font-bold text-blue-900 dark:text-blue-100 leading-none">ABTC-Insight</h1>
+    <aside class="h-screen w-64 fixed left-0 top-0 bg-slate-100 dark:bg-slate-900 flex flex-col pt-6 pb-4 gap-2 z-50">
+        <!-- Brand / Header Section -->
+        <div class="px-6 mb-8">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg">
+                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">health_and_safety</span>
+                </div>
+                <div>
+                    <h1 class="text-blue-900 dark:text-blue-50 font-bold text-sm tracking-tight leading-none">ABTC-Insight</h1>
+                </div>
             </div>
         </div>
-        <nav class="flex-1 space-y-1 px-3">
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg border-l-4 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all"
-                href="{{ route('healthworker.dashboard') }}">
-                <span class="material-symbols-outlined">dashboard</span>
-                <span class="text-sm">Dashboard</span>
+
+        <!-- Navigation sits right beneath it -->
+        <nav class="space-y-1 px-4 dark:bg-slate-900">
+            <!-- Dashboard (Inactive) -->
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
+            href="{{ route('healthworker.dashboard') }}">
+                <span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                <span class="font-['Inter'] text-sm tracking-wide">Dashboard</span>
             </a>
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg border-l-4 border-blue-700 text-blue-700 bg-blue-50 dark:bg-blue-900/20 font-semibold transition-all"
-                href="{{ route('healthworker.clinical-encoding') }}">
-                <span class="material-symbols-outlined"
-                    style="font-variation-settings: 'FILL' 1;">medical_services</span>
-                <span class="text-sm">Clinical Encoding</span>
+
+            <!-- Clinical Encoding (Active - Admin Style) -->
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-blue-700 dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600 translate-x-1 duration-150" 
+            href="{{ route('healthworker.clinical-encoding') }}">
+                <span class="material-symbols-outlined" data-icon="medical_services">medical_services</span>
+                <span class="font-['Inter'] text-sm tracking-wide">Clinical Encoding</span>
             </a>
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg border-l-4 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all"
-                href="{{ route('healthworker.treatment-tracker') }}">
-                <span class="material-symbols-outlined">monitor_heart</span>
-                <span class="text-sm">Treatment Tracker</span>
+
+            <!-- Treatment Tracker -->
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
+            href="{{ route('healthworker.treatment-tracker') }}">
+                <span class="material-symbols-outlined" data-icon="monitor_heart">monitor_heart</span>
+                <span class="font-['Inter'] text-sm tracking-wide">Treatment Tracker</span>
             </a>
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg border-l-4 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all"
-                href="{{ route('healthworker.patient-database') }}">
-                <span class="material-symbols-outlined">database</span>
-                <span class="text-sm">Patient Database</span>
+
+            <!-- Patient Database -->
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
+            href="{{ route('healthworker.patient-database') }}">
+                <span class="material-symbols-outlined" data-icon="database">database</span>
+                <span class="font-['Inter'] text-sm tracking-wide">Patient Database</span>
             </a>
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg border-l-4 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all"
-                href="{{ route('healthworker.compliance') }}">
-                <span class="material-symbols-outlined">verified_user</span>
-                <span class="text-sm">Compliance</span>
+
+            <!-- Compliance -->
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
+            href="{{ route('healthworker.compliance') }}">
+                <span class="material-symbols-outlined" data-icon="verified_user">verified_user</span>
+                <span class="font-['Inter'] text-sm tracking-wide">Compliance</span>
             </a>
         </nav>
     </aside>
+
     <!-- TopNavBar -->
     <header
         class="fixed top-0 w-full h-16 bg-slate-50/85 dark:bg-slate-900/85 backdrop-blur-md shadow-sm shadow-blue-900/5 z-40">
@@ -210,81 +222,68 @@
                 <div class="bg-surface-container-low rounded-xl p-6 flex flex-col h-[calc(100vh-12rem)]">
                     <div class="flex items-center justify-between mb-6">
                         <h2 class="text-lg font-bold tracking-tight text-on-surface">Pending Encoding Queue</h2>
-                        <span class="px-2.5 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full">12
+                        <span class="px-2.5 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full">{{ $queue->count() }}
                             Active</span>
                     </div>
                     <div class="mb-4">
                         <div
                             class="flex items-center bg-white rounded-lg px-3 py-2 border border-outline-variant/20 focus-within:border-primary/40 transition-all">
                             <span class="material-symbols-outlined text-outline text-[18px]">filter_list</span>
-                            <input class="bg-transparent border-none focus:ring-0 text-sm w-full py-0"
+                            <input class="bg-transparent border-none focus:ring-0 text-sm w-full py-0" id="queueFilterInput"
                                 placeholder="Filter queue..." type="text" />
                         </div>
                     </div>
-                    <div class="flex-1 overflow-y-auto space-y-3 pr-2">
-                        <div class="bg-surface-container-lowest p-4 rounded-lg border-l-4 border-primary shadow-sm">
+                    <div class="flex-1 overflow-y-auto space-y-3 pr-2" id="queueList">
+                        @forelse($queue as $item)
+                        <a href="{{ route('healthworker.clinical-encoding', ['bite_case_id' => $item->bite_case_id]) }}"
+                            class="queue-item block {{ isset($case) && $case->bite_case_id === $item->bite_case_id ? 'bg-surface-container-lowest p-4 rounded-lg border-l-4 border-primary shadow-sm' : 'bg-surface-container-lowest/50 p-4 rounded-lg border border-transparent hover:border-outline-variant/30 transition-all' }}">
                             <div class="flex justify-between items-start mb-2">
-                                <span class="text-[10px] font-bold text-primary tracking-widest uppercase">Queue No.
-                                    042</span>
-                                <span class="text-[10px] font-medium text-outline">15 mins ago</span>
+                                <span class="text-[10px] font-bold {{ isset($case) && $case->bite_case_id === $item->bite_case_id ? 'text-primary' : 'text-outline' }} tracking-widest uppercase">CASE NO. {{ $item->case_number }}</span>
+                                <span class="text-[10px] font-medium text-outline">{{ \Carbon\Carbon::parse($item->date_verified)->diffForHumans() }}</span>
                             </div>
-                            <h3 class="font-bold text-on-surface">Juan Dela Cruz</h3>
+                            <h3 class="font-bold text-on-surface">{{ $item->patient_name }}</h3>
                             <p class="text-xs text-on-surface-variant mb-3 flex items-center gap-1">
                                 <span class="material-symbols-outlined text-[14px]">calendar_today</span>
-                                Incident: Oct 24, 2023
+                                Incident: {{ \Carbon\Carbon::parse($item->date_verified)->format('M d, Y') }}
                             </p>
                             <div class="flex gap-2">
                                 <span
-                                    class="px-2 py-0.5 bg-error-container text-on-error-container text-[10px] font-bold rounded-full">CAT
-                                    III</span>
+                                    class="px-2 py-0.5 bg-error-container text-on-error-container text-[10px] font-bold rounded-full"> CAT
+                                    {{ $item->category }}</span>
                                 <span
-                                    class="px-2 py-0.5 bg-secondary-container text-on-secondary-container text-[10px] font-bold rounded-full">Urgent</span>
+                                    class="px-2 py-0.5 {{ $item->encoding_status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : ($item->encoding_status === 'In Progress' ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface-container-high text-on-surface-variant') }} text-[10px] font-bold rounded-full">{{ $item->encoding_status }}</span>
                             </div>
-                        </div>
-                        <div
-                            class="bg-surface-container-lowest/50 p-4 rounded-lg border border-transparent hover:border-outline-variant/30 transition-all cursor-pointer">
-                            <div class="flex justify-between items-start mb-2">
-                                <span class="text-[10px] font-bold text-outline tracking-widest uppercase">Queue No.
-                                    043</span>
-                                <span class="text-[10px] font-medium text-outline">22 mins ago</span>
-                            </div>
-                            <h3 class="font-bold text-on-surface">Elena Soriano</h3>
-                            <p class="text-xs text-on-surface-variant flex items-center gap-1">
-                                <span class="material-symbols-outlined text-[14px]">calendar_today</span>
-                                Incident: Oct 23, 2023
-                            </p>
-                        </div>
-                        <div
-                            class="bg-surface-container-lowest/50 p-4 rounded-lg border border-transparent hover:border-outline-variant/30 transition-all cursor-pointer">
-                            <div class="flex justify-between items-start mb-2">
-                                <span class="text-[10px] font-bold text-outline tracking-widest uppercase">Queue No.
-                                    044</span>
-                                <span class="text-[10px] font-medium text-outline">45 mins ago</span>
-                            </div>
-                            <h3 class="font-bold text-on-surface">Roberto Lim</h3>
-                            <p class="text-xs text-on-surface-variant flex items-center gap-1">
-                                <span class="material-symbols-outlined text-[14px]">calendar_today</span>
-                                Incident: Oct 24, 2023
-                            </p>
-                        </div>
+                        </a>
+                        @empty
+                        <p class="text-sm text-on-surface-variant text-center py-8">No cases in the queue yet. Cases
+                            appear here once Staff finishes Case Encoding.</p>
+                        @endforelse
                     </div>
                 </div>
             </section>
             <section class="w-2/3 flex flex-col gap-6">
+                @if(session('status'))
+                <div class="bg-emerald-50 text-emerald-700 text-sm font-semibold px-4 py-3 rounded-lg flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                    {{ session('status') }}
+                </div>
+                @endif
                 <div
                     class="bg-surface-container-lowest rounded-xl shadow-lg shadow-blue-900/5 overflow-hidden border border-outline-variant/10 flex flex-col h-[calc(100vh-12rem)]">
+                    @if($case)
+                    <!-- Form Header & Step Indicator -->
                     <div class="bg-surface-container-low border-b border-outline-variant/20">
                         <div class="px-8 py-6 flex justify-between items-center">
                             <div>
                                 <p class="text-[10px] font-bold text-primary tracking-widest uppercase mb-1">Active
                                     Encoding Session</p>
-                                <h2 class="text-2xl font-extrabold tracking-tight text-on-surface">Juan Dela Cruz</h2>
+                                <h2 class="text-2xl font-extrabold tracking-tight text-on-surface">{{ $case->patient_name ?? 'No case selected' }}</h2>
                             </div>
                             <div class="flex gap-4">
                                 <div class="text-right">
                                     <p class="text-[10px] font-semibold text-outline uppercase tracking-wider">Patient
                                         ID</p>
-                                    <p class="text-sm font-bold">ABTC-2023-1042</p>
+                                    <p class="text-sm font-bold">{{ $case->patient_id ?? '—' }}</p>
                                 </div>
                             </div>
                         </div>
@@ -330,6 +329,41 @@
                     </div>
                     <!-- Wizard Body (Section VII) -->
                     <div class="flex-1 p-8 overflow-y-auto">
+                    <form id="section7Form" method="POST"
+                        action="{{ route('healthworker.ce-vii', ['bite_case_id' => $case->bite_case_id]) }}">
+                        @csrf
+                        <input type="hidden" name="action" id="formActionInput" value="next" />
+                        @php $val = fn ($key, $default = '') => old($key, $section->$key ?? $default); @endphp
+                        @php
+                            // Styled dropdown (native <select> option lists can't be styled - see conventions.md #5)
+                            $dropdown = function ($name, $options, $bg = 'bg-surface-container-low') use ($val, $errors) {
+                                $current = (string) $val($name);
+                                $currentLabel = $options[$current] ?? null;
+                                $html = '<div class="relative" data-dd>'
+                                    . '<input type="hidden" name="' . e($name) . '" value="' . e($current) . '" data-field="' . e($name) . '" />'
+                                    . '<button type="button" data-dd-trigger class="w-full flex items-center justify-between gap-2 ' . $bg . ' rounded-lg py-3 px-4 text-left font-medium ring-1 ring-transparent focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all">'
+                                    . '<span data-dd-label class="truncate ' . ($currentLabel ? 'text-on-surface' : 'text-outline') . '">' . e($currentLabel ?? 'Select') . '</span>'
+                                    . '<span data-dd-chevron class="material-symbols-outlined text-outline text-[20px] transition-transform">expand_more</span>'
+                                    . '</button>'
+                                    . '<ul data-dd-menu class="hidden absolute left-0 right-0 top-full mt-2 z-30 bg-white rounded-xl border border-outline-variant/30 shadow-xl shadow-blue-900/10 p-1.5 max-h-60 overflow-y-auto">';
+                                foreach ($options as $optValue => $optLabel) {
+                                    $active = $current === (string) $optValue;
+                                    $html .= '<li><button type="button" data-dd-option data-value="' . e($optValue) . '" class="w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg text-sm text-left transition-colors hover:bg-primary-fixed/60 '
+                                        . ($active ? 'bg-primary-fixed text-primary font-bold' : 'text-on-surface font-medium') . '">'
+                                        . '<span class="truncate">' . e($optLabel) . '</span>'
+                                        . '<span class="material-symbols-outlined text-[18px] text-primary ' . ($active ? '' : 'invisible') . '" style="font-variation-settings: \'wght\' 700;">check</span>'
+                                        . '</button></li>';
+                                }
+                                return $html . '</ul>'
+                                    . '<p data-error-for="' . e($name) . '" class="mt-1 ml-1 text-xs font-semibold text-error ' . ($errors->has($name) ? '' : 'hidden') . '">' . e($errors->first($name)) . '</p>'
+                                    . '</div>';
+                            };
+                        @endphp
+                        <div id="formErrorBanner"
+                            class="{{ $errors->any() ? '' : 'hidden' }} mb-6 bg-error-container text-on-error-container text-sm font-semibold px-4 py-3 rounded-lg flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[18px]">error</span>
+                            <span>Please fill in all required fields (marked with *) before continuing.</span>
+                        </div>
                         <div class="step-content" id="step2">
                             <div class="flex items-center gap-3 mb-8">
                                 <span
@@ -339,36 +373,99 @@
                             </div>
                             <div class="grid grid-cols-3 gap-6 mb-8">
                                 <div>
-                                    <label
-                                        class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Vaccine
-                                        Brand</label>
-                                    <select
-                                        class="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/20 font-medium">
-                                        <option>VERORAB</option>
-                                        <option>SPEEDA</option>
-                                        <option>VAXIRAB</option>
-                                    </select>
+                                    <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Vaccine Brand <span class="text-error">*</span></label>
+                                    {!! $dropdown('vaccine_brand', ['VERORAB' => 'VERORAB (PVRV)', 'SPEEDA' => 'SPEEDA (PVRV)', 'VAXIRAB' => 'VAXIRAB (PCEC)']) !!}
                                 </div>
                                 <div>
-                                    <label
-                                        class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Route</label>
-                                    <select
-                                        class="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/20 font-medium">
-                                        <option>ID (Intradermal)</option>
-                                        <option>IM (Intramuscular)</option>
-                                    </select>
+                                    <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Route <span class="text-error">*</span></label>
+                                    {!! $dropdown('route', ['ID' => 'ID (Intradermal, 0.1mL)', 'IM' => 'IM (Intramuscular, 0.5mL)']) !!}
                                 </div>
                                 <div>
-                                    <label
-                                        class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Passive
-                                        Immunization</label>
-                                    <div class="flex items-center bg-surface-container-low rounded-lg p-1">
-                                        <button
-                                            class="flex-1 py-2 text-xs font-bold bg-white text-primary rounded-md shadow-sm">ERIG</button>
-                                        <button
-                                            class="flex-1 py-2 text-xs font-bold text-outline hover:text-on-surface transition-colors">HRIG</button>
-                                        <button
-                                            class="flex-1 py-2 text-xs font-bold text-outline hover:text-on-surface transition-colors">NO</button>
+                                    <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Dose Type <span class="text-error">*</span></label>
+                                    {!! $dropdown('dose_type', ['Primary' => 'Primary', 'Booster' => 'Booster']) !!}
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-6 mb-8">
+                                <div>
+                                    <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Patient Weight (kg) <span class="text-error">*</span></label>
+                                    <input name="patient_weight" data-field="patient_weight" type="number" step="0.01" min="0" max="999.99"
+                                        value="{{ $val('patient_weight') }}"
+                                        class="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 ring-1 ring-transparent focus:ring-2 focus:ring-primary/20 font-medium"
+                                        placeholder="e.g. 55.50" />
+                                    <p data-error-for="patient_weight" class="mt-1 ml-1 text-xs font-semibold text-error {{ $errors->has('patient_weight') ? '' : 'hidden' }}">{{ $errors->first('patient_weight') }}</p>
+                                    <p class="mt-1 ml-1 text-[10px] text-on-surface-variant/80 italic">Used for passive immunoglobulin dosage.</p>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Administered By <span class="text-error">*</span></label>
+                                    <input name="administered_by" data-field="administered_by" type="text"
+                                        value="{{ $val('administered_by') }}"
+                                        class="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 ring-1 ring-transparent focus:ring-2 focus:ring-primary/20 font-medium"
+                                        placeholder="Name of attending health worker" />
+                                    <p data-error-for="administered_by" class="mt-1 ml-1 text-xs font-semibold text-error {{ $errors->has('administered_by') ? '' : 'hidden' }}">{{ $errors->first('administered_by') }}</p>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">30-min Skin Test Due</label>
+                                    <input name="skin_test_due" type="time"
+                                        value="{{ $val('skin_test_due') }}"
+                                        class="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/20 font-medium" />
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-6 mb-8">
+                                <div class="bg-surface-container-low rounded-xl p-5">
+                                    <p class="text-xs font-extrabold text-outline uppercase tracking-widest mb-3">Tetanus
+                                        Prophylaxis</p>
+                                    <label class="flex items-center gap-2 cursor-pointer mb-3">
+                                        <input name="tetanus_given" type="checkbox" value="1"
+                                            {{ ($section->tetanus_given ?? false) ? 'checked' : '' }}
+                                            class="rounded text-primary focus:ring-primary/20" />
+                                        <span class="text-sm font-medium">Tetanus prophylaxis given</span>
+                                    </label>
+                                    <input name="tetanus_details" type="text"
+                                        value="{{ $section->tetanus_details ?? '' }}"
+                                        class="w-full bg-white border-none rounded-lg py-2.5 px-4 text-sm focus:ring-2 focus:ring-primary/20"
+                                        placeholder="Details (vaccine, dose, date)..." />
+                                </div>
+                                <div class="bg-surface-container-low rounded-xl p-5">
+                                    <p class="text-xs font-extrabold text-outline uppercase tracking-widest mb-3">Tetanus
+                                        Immune Globulin (TIG)</p>
+                                    <label class="flex items-center gap-2 cursor-pointer mb-3">
+                                        <input name="tig_given" type="checkbox" value="1"
+                                            {{ ($section->tig_given ?? false) ? 'checked' : '' }}
+                                            class="rounded text-primary focus:ring-primary/20" />
+                                        <span class="text-sm font-medium">TIG given</span>
+                                    </label>
+                                    <input name="tig_details" type="text" value="{{ $section->tig_details ?? '' }}"
+                                        class="w-full bg-white border-none rounded-lg py-2.5 px-4 text-sm focus:ring-2 focus:ring-primary/20"
+                                        placeholder="Details (dose, date)..." />
+                                </div>
+                            </div>
+                            <div class="bg-surface-container-low rounded-xl p-6 mb-8">
+                                <p class="text-xs font-extrabold text-outline uppercase tracking-widest mb-4">Passive
+                                    Immunization (Rabies)</p>
+                                <div class="grid grid-cols-2 gap-6">
+                                    <div>
+                                        <label
+                                            class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Type</label>
+                                        <div class="flex items-center bg-white rounded-lg p-1">
+                                            @php $passiveType = $val('passive_type'); @endphp
+                                            <label class="flex-1">
+                                                <input class="hidden peer" name="passive_type" type="radio" value="ERIG (EQUIRAB)" {{ $passiveType === 'ERIG (EQUIRAB)' ? 'checked' : '' }} />
+                                                <span class="block py-2 text-center text-xs font-bold text-outline peer-checked:bg-primary peer-checked:text-white rounded-md cursor-pointer transition-all">ERIG</span>
+                                            </label>
+                                            <label class="flex-1">
+                                                <input class="hidden peer" name="passive_type" type="radio" value="HRIG (BERIRAB)" {{ $passiveType === 'HRIG (BERIRAB)' ? 'checked' : '' }} />
+                                                <span class="block py-2 text-center text-xs font-bold text-outline peer-checked:bg-primary peer-checked:text-white rounded-md cursor-pointer transition-all">HRIG</span>
+                                            </label>
+                                            <label class="flex-1">
+                                                <input class="hidden peer" name="passive_type" type="radio" value="" {{ $passiveType === '' ? 'checked' : '' }} />
+                                                <span class="block py-2 text-center text-xs font-bold text-outline peer-checked:bg-primary peer-checked:text-white rounded-md cursor-pointer transition-all">NO</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label
+                                            class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Route <span class="text-[10px] normal-case font-medium">(required if ERIG/HRIG)</span></label>
+                                        {!! $dropdown('passive_route', ['IU infiltrate' => 'IU infiltrate (around wound)', 'IM' => 'IM'], 'bg-white') !!}
                                     </div>
                                 </div>
                             </div>
@@ -376,78 +473,212 @@
                                 <p class="text-xs font-extrabold text-outline uppercase tracking-widest mb-4">Dose
                                     Tracking Grid</p>
                                 <div class="grid grid-cols-4 gap-4">
-                                    <div class="bg-white p-4 rounded-lg border border-primary/20">
-                                        <p class="text-[10px] font-bold text-primary uppercase mb-1">Day 0</p>
-                                        <div class="flex items-center justify-between">
-                                            <span class="text-sm font-bold text-on-surface">Oct 24</span>
-                                            <span class="material-symbols-outlined text-primary"
-                                                style="font-variation-settings: 'FILL' 1;">check_circle</span>
-                                        </div>
+                                    <div data-field-wrap="day0_date" class="bg-white p-4 rounded-lg border border-primary/20">
+                                        <p class="text-[10px] font-bold text-primary uppercase mb-1">Day 0 <span class="text-error">*</span></p>
+                                        <input name="day0_date" data-field="day0_date" type="date" value="{{ $val('day0_date') }}"
+                                            class="w-full text-sm font-bold text-on-surface bg-transparent border-none p-0 focus:ring-0" />
+                                        <p data-error-for="day0_date" class="mt-1 text-xs font-semibold text-error {{ $errors->has('day0_date') ? '' : 'hidden' }}">{{ $errors->first('day0_date') }}</p>
                                     </div>
                                     <div class="bg-white p-4 rounded-lg border border-outline-variant/30">
                                         <p class="text-[10px] font-bold text-outline uppercase mb-1">Day 3</p>
-                                        <div class="flex items-center justify-between">
-                                            <span class="text-sm font-bold text-on-surface">Oct 27</span>
-                                            <input class="rounded text-primary focus:ring-primary/20" type="checkbox" />
-                                        </div>
+                                        <input name="day3_date" type="date" value="{{ $section->day3_date ?? '' }}"
+                                            class="w-full text-sm font-bold text-on-surface bg-transparent border-none p-0 focus:ring-0" />
                                     </div>
-                                    <div
-                                        class="bg-surface-container-low/50 p-4 rounded-lg border border-dashed border-outline-variant">
+                                    <div class="bg-white p-4 rounded-lg border border-outline-variant/30">
                                         <p class="text-[10px] font-bold text-outline uppercase mb-1">Day 7</p>
-                                        <span class="text-sm font-medium text-outline-variant">Oct 31</span>
+                                        <input name="day7_date" type="date" value="{{ $section->day7_date ?? '' }}"
+                                            class="w-full text-sm font-bold text-on-surface bg-transparent border-none p-0 focus:ring-0" />
                                     </div>
-                                    <div
-                                        class="bg-surface-container-low/50 p-4 rounded-lg border border-dashed border-outline-variant">
+                                    <div class="bg-white p-4 rounded-lg border border-outline-variant/30">
                                         <p class="text-[10px] font-bold text-outline uppercase mb-1">Day 28</p>
-                                        <span class="text-sm font-medium text-outline-variant">Nov 21</span>
+                                        <input name="day28_date" type="date" value="{{ $section->day28_date ?? '' }}"
+                                            class="w-full text-sm font-bold text-on-surface bg-transparent border-none p-0 focus:ring-0" />
                                     </div>
                                 </div>
                             </div>
                         </div>
+                    </form>
                     </div>
                     <div
                         class="p-6 bg-surface-container-low border-t border-outline-variant/20 flex justify-between items-center px-8">
-                        <button
+                        <button type="submit" form="section7Form" id="draftBtn"
                             class="px-6 py-2.5 text-sm font-bold text-outline hover:text-on-surface transition-all flex items-center gap-2">
                             Save as Draft
                         </button>
                         <div class="flex gap-4">
-                            <button
+                            <button type="button"
                                 class="px-8 py-2.5 text-sm font-bold text-outline hover:bg-slate-200/50 rounded-lg transition-all flex items-center gap-2"
-                                onclick="window.location.href=`{{ route('healthworker.clinical-encoding') }}`">
+                                onclick="window.location.href=`{{ route('healthworker.clinical-encoding', ['bite_case_id' => $case->bite_case_id]) }}`">
                                 <span class="material-symbols-outlined text-[18px]">chevron_left</span>
                                 Back
                             </button>
-                            <button
-                                class="px-8 py-2.5 bg-primary text-on-primary text-sm font-bold rounded-lg shadow-md shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-2"
-                                onclick="window.location.href=`{{ route('healthworker.ce-viii') }}`">
+                            <button type="button" id="nextBtn"
+                                class="px-8 py-2.5 bg-primary text-on-primary text-sm font-bold rounded-lg shadow-md shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-2">
                                 Next: Section VIII
                                 <span class="material-symbols-outlined text-[18px]">chevron_right</span>
                             </button>
                         </div>
                     </div>
+                    @else
+                    <!-- No case selected -->
+                    <div class="flex-1 flex flex-col items-center justify-center gap-3">
+                        <span class="material-symbols-outlined text-5xl text-outline-variant">folder_open</span>
+                        <p class="text-sm font-bold text-on-surface-variant">Please select a case.</p>
+                    </div>
+                    @endif
                 </div>
             </section>
         </div>
     </main>
     <script>
-        // Simple UI interactivity for the demo toggles
-        document.querySelectorAll('input[type="radio"]').forEach(radio => {
-            radio.addEventListener('change', (e) => {
-                const section = e.target.closest('div[class*="group/"]');
-                if (!section) return;
+        // The form and its buttons only exist in the DOM when a case is selected
+        const nextBtn = document.getElementById('nextBtn');
 
-                const content = section.querySelector('div:last-child');
-                if (!content) return;
+        if (nextBtn) {
+            const form = document.getElementById('section7Form');
+            const draftBtn = document.getElementById('draftBtn');
+            const formActionInput = document.getElementById('formActionInput');
+            const banner = document.getElementById('formErrorBanner');
 
-                if (e.target.value === '0' || e.target.value === 'not_admin' || e.target.value === 'not_req') {
-                    content.classList.add('opacity-40', 'pointer-events-none', 'grayscale');
-                } else {
-                    content.classList.remove('opacity-40', 'pointer-events-none', 'grayscale');
+            // Required to move on to Section VIII. A draft only needs dose_type,
+            // since that database column is NOT NULL.
+            const REQUIRED = {
+                vaccine_brand: 'Please select a vaccine brand.',
+                route: 'Please select a route.',
+                dose_type: 'Please select a dose type.',
+                patient_weight: 'Please enter the patient weight.',
+                administered_by: 'Please enter who administered the dose.',
+                day0_date: 'Please set the Day 0 date.',
+            };
+            const ALL_CHECKED = Object.keys(REQUIRED).concat(['passive_route']);
+            const DRAFT_REQUIRED = ['dose_type'];
+
+            const field = (name) => form.querySelector(`[data-field="${name}"]`);
+            const errorEl = (name) => form.querySelector(`[data-error-for="${name}"]`);
+            // The element that gets the red ring: the dropdown trigger, the Day 0 card, or the input itself
+            const ringEl = (name) => {
+                const f = field(name);
+                return f.type === 'hidden'
+                    ? f.closest('[data-dd]').querySelector('[data-dd-trigger]')
+                    : (f.closest('[data-field-wrap]') || f);
+            };
+
+            function setError(name, message) {
+                const ring = ringEl(name);
+                const el = errorEl(name);
+                ring.classList.toggle('ring-2', !!message);
+                ring.classList.toggle('ring-error', !!message);
+                ring.classList.toggle('ring-transparent', !message);
+                if (el) {
+                    if (message) el.textContent = message;
+                    el.classList.toggle('hidden', !message);
                 }
+            }
+
+            function validate(names) {
+                let firstBad = null;
+                ALL_CHECKED.forEach((name) => {
+                    let message = '';
+                    if (names.includes(name)) {
+                        if (name === 'passive_route') {
+                            const passive = form.querySelector('input[name="passive_type"]:checked');
+                            if (passive && passive.value !== '' && field(name).value === '') {
+                                message = 'Please select a route for the passive immunization.';
+                            }
+                        } else if (field(name).value.trim() === '') {
+                            message = REQUIRED[name];
+                        }
+                    }
+                    setError(name, message);
+                    if (message && !firstBad) firstBad = name;
+                });
+                banner.classList.toggle('hidden', !firstBad);
+                if (firstBad) ringEl(firstBad).scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return !firstBad;
+            }
+
+            // Clear a field's error as soon as the user fixes it
+            function clearIfFilled(name) {
+                const f = field(name);
+                if (f && f.value.trim() !== '') setError(name, '');
+                if (!form.querySelector('[data-error-for]:not(.hidden)')) banner.classList.add('hidden');
+            }
+            form.querySelectorAll('input[data-field]').forEach((input) => {
+                input.addEventListener('input', () => clearIfFilled(input.dataset.field));
+                input.addEventListener('change', () => clearIfFilled(input.dataset.field));
             });
-        });
-    </script>
+            form.querySelectorAll('input[name="passive_type"]').forEach((radio) => {
+                radio.addEventListener('change', () => setError('passive_route', ''));
+            });
+
+            nextBtn.addEventListener('click', () => {
+                formActionInput.value = 'next';
+                if (validate(ALL_CHECKED)) form.submit();
+            });
+
+            if (draftBtn) {
+                draftBtn.addEventListener('click', (e) => {
+                    formActionInput.value = 'draft';
+                    if (!validate(DRAFT_REQUIRED)) e.preventDefault();
+                });
+            }
+
+            // Styled dropdowns
+            const menus = form.querySelectorAll('[data-dd]');
+            const closeAll = (except) => menus.forEach((dd) => {
+                if (dd === except) return;
+                dd.querySelector('[data-dd-menu]').classList.add('hidden');
+                dd.querySelector('[data-dd-chevron]').classList.remove('rotate-180');
+            });
+
+            menus.forEach((dd) => {
+                const trigger = dd.querySelector('[data-dd-trigger]');
+                const menu = dd.querySelector('[data-dd-menu]');
+                const chevron = dd.querySelector('[data-dd-chevron]');
+                const input = dd.querySelector('input[type="hidden"]');
+                const label = dd.querySelector('[data-dd-label]');
+
+                trigger.addEventListener('click', () => {
+                    closeAll(dd);
+                    menu.classList.toggle('hidden');
+                    chevron.classList.toggle('rotate-180');
+                });
+
+                dd.querySelectorAll('[data-dd-option]').forEach((opt) => {
+                    opt.addEventListener('click', () => {
+                        input.value = opt.dataset.value;
+                        label.textContent = opt.querySelector('span').textContent;
+                        label.classList.remove('text-outline');
+                        label.classList.add('text-on-surface');
+                        dd.querySelectorAll('[data-dd-option]').forEach((o) => {
+                            const active = o === opt;
+                            o.classList.toggle('bg-primary-fixed', active);
+                            o.classList.toggle('text-primary', active);
+                            o.classList.toggle('font-bold', active);
+                            o.classList.toggle('text-on-surface', !active);
+                            o.classList.toggle('font-medium', !active);
+                            o.lastElementChild.classList.toggle('invisible', !active);
+                        });
+                        menu.classList.add('hidden');
+                        chevron.classList.remove('rotate-180');
+                        clearIfFilled(input.dataset.field);
+                    });
+                });
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('[data-dd]')) closeAll(null);
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closeAll(null);
+            });
+
+            // Re-apply red rings for errors rendered by the server
+            form.querySelectorAll('[data-error-for]:not(.hidden)').forEach((el) => {
+                setError(el.dataset.errorFor, el.textContent.trim());
+            });
+        }
+</script>
 </body>
 
 </html>

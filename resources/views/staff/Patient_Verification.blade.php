@@ -153,7 +153,7 @@
 <span class="material-symbols-outlined" data-icon="help">help</span>
 </button>
 </div>
-<div class="relative group cursor-pointer pl-4 border-l border-slate-200">
+<div class="relative group cursor-pointer pl-2">
     <div class="flex items-center gap-3">
         <div class="text-right hidden sm:block">
             <p class="text-xs font-bold text-on-surface leading-tight">Staff</p>

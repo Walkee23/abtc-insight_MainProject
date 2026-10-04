@@ -236,12 +236,21 @@
                     <h2 class="text-xl font-bold tracking-tight">Patient Information</h2>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
-                    <div class="md:col-span-8 space-y-2">
-                        <label class="text-xs font-semibold text-on-surface-variant ml-1">Full Patient Name</label>
-                        <input type="text" name="patient_name" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Enter given name and surname" required/>
-                    </div>
                     <div class="md:col-span-4 space-y-2">
-                        <label class="text-xs font-semibold text-on-surface-variant ml-1">Date of Birth</label>
+    <label class="text-xs font-semibold text-on-surface-variant ml-1">First Name <span class="text-error">*</span></label>
+    <input type="text" name="first_name" id="firstName" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Juan" required/>
+</div>
+<div class="md:col-span-2 space-y-2">
+    <label class="text-xs font-semibold text-on-surface-variant ml-1">M.I.</label>
+    <input type="text" name="middle_initial" id="middleInitial" maxlength="2" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-center uppercase focus:ring-2 focus:ring-primary/20 transition-all" placeholder="D"/>
+</div>
+<div class="md:col-span-6 space-y-2">
+    <label class="text-xs font-semibold text-on-surface-variant ml-1">Last Name <span class="text-error">*</span></label>
+    <input type="text" name="last_name" id="lastName" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Dela Cruz" required/>
+</div>
+<input type="hidden" name="patient_name" id="patientName">
+                    <div class="md:col-span-4 space-y-2">
+                        <label class="text-xs font-semibold text-on-surface-variant ml-1">Date of Birth <span class="text-error">*</span></label>
                         <input type="date" name="date_of_birth" id="dob" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" required/>
                     </div>
                     <div class="md:col-span-2 space-y-2">
@@ -250,7 +259,7 @@
                         <p id="ageError" class="text-[10px] text-error hidden mt-1">Age must be 0 to 125.</p>
                     </div>
                     <div class="md:col-span-3 space-y-2">
-                        <label class="text-xs font-semibold text-on-surface-variant ml-1">Gender</label>
+                        <label class="text-xs font-semibold text-on-surface-variant ml-1">Gender <span class="text-error">*</span></label>
                         <select name="gender" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" required>
                             <option value="" disabled selected>Select</option>
                             <option value="Male">Male</option>
@@ -258,7 +267,7 @@
                         </select>
                     </div>
                     <div class="md:col-span-3 space-y-2">
-                        <label class="text-xs font-semibold text-on-surface-variant ml-1">Civil Status</label>
+                        <label class="text-xs font-semibold text-on-surface-variant ml-1">Civil Status <span class="text-error">*</span></label>
                         <select name="civil_status" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" required>
                             <option value="" disabled selected>Select</option>
                             <option value="Single">Single</option>
@@ -268,16 +277,17 @@
                         </select>
                     </div>
                     <div class="md:col-span-4 space-y-2">
-                        <label class="text-xs font-semibold text-on-surface-variant ml-1">Contact Number</label>
-                        <input type="tel" name="contact_num" id="contactNum" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" placeholder="09XX XXX XXXX" pattern="^09\d{9}$" required/>
+                        <label class="text-xs font-semibold text-on-surface-variant ml-1">Contact Number <span class="text-error">*</span></label>
+                        <input type="tel" name="contact_num" id="contactNum" inputmode="numeric" maxlength="11" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" placeholder="09XXXXXXXXX" pattern="^09\d{9}$" required/>
                         <p id="contactError" class="text-[10px] text-error hidden mt-1">Must be exactly 11 digits and start with 09.</p>
                     </div>
                     <div class="md:col-span-12 space-y-2">
-                        <label class="text-xs font-semibold text-on-surface-variant ml-1">Address (Barangay)</label>
+                        <label class="text-xs font-semibold text-on-surface-variant ml-1">Address (Barangay) <span class="text-error">*</span></label>
                         <div class="flex gap-4">
                             <input type="text" class="w-48 bg-surface-container border-none rounded-lg px-4 py-3 font-semibold text-primary" value="{{ auth()->user()->barangay_assignment ?? 'Guadalupe' }}" readonly/>
                             <input type="text" name="street_address" class="flex-1 bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" placeholder="Street, Sitio, or Landmark" required/>
-                        </div>
+
+                           </div>
                     </div>
                 </div>
             </section>

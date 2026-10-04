@@ -262,9 +262,15 @@
             </section>
             <section class="w-2/3 min-w-0 flex flex-col gap-6">
                 @if(session('status'))
-                <div class="bg-emerald-50 text-emerald-700 text-sm font-semibold px-4 py-3 rounded-lg flex items-center gap-2">
+                {{-- Toast: fixed bottom-right (below the form card, so it never overlaps the footer buttons), auto-dismisses after 4s --}}
+                <div id="statusToast" role="status"
+                    class="fixed bottom-6 right-8 z-50 max-w-sm flex items-center gap-3 bg-emerald-50 text-emerald-700 text-sm font-semibold pl-4 pr-2 py-3 rounded-lg shadow-lg shadow-blue-900/10 border border-emerald-200 transition-opacity duration-300">
                     <span class="material-symbols-outlined text-[18px]">check_circle</span>
-                    {{ session('status') }}
+                    <span class="flex-1">{{ session('status') }}</span>
+                    <button type="button" id="statusToastClose" aria-label="Dismiss"
+                        class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-emerald-100 transition-colors">
+                        <span class="material-symbols-outlined text-[18px]">close</span>
+                    </button>
                 </div>
                 @endif
                 <div
@@ -360,10 +366,15 @@
                                     . '</div>';
                             };
                         @endphp
-                        <div id="formErrorBanner"
-                            class="{{ $errors->any() ? '' : 'hidden' }} mb-6 bg-error-container text-on-error-container text-sm font-semibold px-4 py-3 rounded-lg flex items-center gap-2">
+                        {{-- Toast: fixed bottom-right, auto-dismisses after 4s (same look as the draft-saved toast) --}}
+                        <div id="formErrorBanner" role="alert"
+                            class="{{ $errors->any() ? '' : 'hidden opacity-0' }} fixed bottom-6 right-8 z-50 max-w-sm flex items-center gap-3 bg-error-container text-on-error-container text-sm font-semibold pl-4 pr-2 py-3 rounded-lg shadow-lg shadow-blue-900/10 border border-error/20 transition-opacity duration-300">
                             <span class="material-symbols-outlined text-[18px]">error</span>
-                            <span>Please fill in all required fields (marked with *) before continuing.</span>
+                            <span class="flex-1">Please fill in all required fields before continuing.</span>
+                            <button type="button" id="formErrorToastClose" aria-label="Dismiss"
+                                class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-black/5 transition-colors">
+                                <span class="material-symbols-outlined text-[18px]">close</span>
+                            </button>
                         </div>
                         <div class="step-content" id="step2">
                             <div class="flex items-center gap-3 mb-8">
@@ -543,6 +554,27 @@
             const draftBtn = document.getElementById('draftBtn');
             const formActionInput = document.getElementById('formActionInput');
             const banner = document.getElementById('formErrorBanner');
+            // Required-fields toast: closes on the X button or by itself after 4 seconds
+            const errorToast = (() => {
+                let timer;
+                const hide = () => {
+                    clearTimeout(timer);
+                    banner.classList.add('opacity-0');
+                    setTimeout(() => {
+                        if (banner.classList.contains('opacity-0')) banner.classList.add('hidden');
+                    }, 300);
+                };
+                const show = () => {
+                    clearTimeout(timer);
+                    banner.classList.remove('hidden');
+                    void banner.offsetWidth; // let the fade-in transition run
+                    banner.classList.remove('opacity-0');
+                    timer = setTimeout(hide, 4000);
+                };
+                document.getElementById('formErrorToastClose').addEventListener('click', hide);
+                if (!banner.classList.contains('hidden')) show(); // errors rendered by the server
+                return { show, hide };
+            })();
 
             // Required to move on to Section VIII. Drafts skip these.
             const REQUIRED = {
@@ -606,7 +638,7 @@
                     setError(name, message);
                     if (message && !firstBad) firstBad = name;
                 });
-                banner.classList.toggle('hidden', !firstBad);
+                if (firstBad) errorToast.show(); else errorToast.hide();
                 if (firstBad) ringEl(firstBad).scrollIntoView({ behavior: 'smooth', block: 'center' });
                 return !firstBad;
             }
@@ -616,7 +648,7 @@
                 const f = field(name);
                 const stillFuture = DATE_FIELDS.includes(name) && f && f.value > todayStr;
                 if (f && f.value.trim() !== '' && !stillFuture) setError(name, '');
-                if (!form.querySelector('[data-error-for]:not(.hidden)')) banner.classList.add('hidden');
+                if (!form.querySelector('[data-error-for]:not(.hidden)')) errorToast.hide();
             }
             form.querySelectorAll('input[data-field]').forEach((input) => {
                 input.addEventListener('input', () => clearIfFilled(input.dataset.field));
@@ -695,6 +727,19 @@
             });
         }
 </script>
+    <script>
+        // Draft-saved toast: closes on the X button or by itself after 4 seconds
+        (function () {
+            const toast = document.getElementById('statusToast');
+            if (!toast) return;
+            const dismiss = () => {
+                toast.classList.add('opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            };
+            document.getElementById('statusToastClose').addEventListener('click', dismiss);
+            setTimeout(dismiss, 4000);
+        })();
+    </script>
 </body>
 
 </html>

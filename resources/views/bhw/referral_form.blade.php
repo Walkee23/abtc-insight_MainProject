@@ -339,7 +339,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div class="space-y-6">
                         <div class="space-y-2">
-                            <label class="text-xs font-semibold text-on-surface-variant">Exposure Type</label>
+                            <label class="text-xs font-semibold text-on-surface-variant">Exposure Type <span class="text-error">*</span></label>
                             <div class="flex gap-4">
                                 <label class="flex-1 cursor-pointer">
                                     <input type="radio" class="hidden peer" name="exposure_type" value="Bite" required/>
@@ -360,25 +360,24 @@
                         
                         <!-- Split Date and Time of Exposure -->
                         <div class="space-y-2">
-                            <label class="text-xs font-semibold text-on-surface-variant">Date and Time of Exposure</label>
+                            <label class="text-xs font-semibold text-on-surface-variant">Date and Time of Exposure <span class="text-error">*</span></label>
                             <div class="flex gap-4">
-                                <input type="date" name="exposure_date" class="flex-1 bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" required title="Date of exposure is required"/>
-                                <input type="time" name="exposure_time" class="flex-1 bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" title="Time of exposure is optional"/>
+                                <input type="date" id="exposureDate" name="exposure_date" class="flex-1 bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" required title="Date of exposure is required"/>
+                                <input type="time" id="exposureTime" name="exposure_time" class="flex-1 bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" title="Time of exposure is optional"/>
                             </div>
                             <p class="text-[10px] text-on-surface-variant italic mt-1">Time is optional if exact time is unknown.</p>
                         </div>
                         
                         <div class="space-y-2">
-                            <label class="text-xs font-semibold text-on-surface-variant">Anatomic Site of Bite</label>
+                            <label class="text-xs font-semibold text-on-surface-variant">Anatomic Site of Bite <span class="text-error">*</span></label>
                             <input type="text" name="site_of_bite" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" placeholder="e.g. Left distal forearm" required/>
                         </div>
                     </div>
                     <div class="space-y-6">
                         <div class="space-y-2">
-                            <label class="text-xs font-semibold text-on-surface-variant">Biting Animal</label>
+                            <label class="text-xs font-semibold text-on-surface-variant">Biting Animal <span class="text-error">*</span></label>
                             <div class="grid grid-cols-2 gap-4">
                                 <select name="biting_animal" id="bitingAnimal" class="bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" required>
-                                    <option value="" disabled selected>Select Animal</option>
                                     <option value="Dog">Dog</option>
                                     <option value="Cat">Cat</option>
                                     <option value="Others">Others</option>
@@ -386,6 +385,37 @@
                                 <input type="text" name="biting_animal_other" id="animalOthers" class="bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" placeholder="Specify if 'Others'" disabled/>
                             </div>
                         </div>
+                        <div class="space-y-2">
+    <label class="text-xs font-semibold text-on-surface-variant">Exposure Category <span class="text-error">*</span></label>
+    <div class="flex gap-3">
+        <label class="flex-1 cursor-pointer">
+            <input type="radio" class="hidden peer" name="exposure_category" value="1" required/>
+            <div class="p-3 border-2 border-outline-variant/20 rounded-xl text-center peer-checked:border-primary peer-checked:bg-primary/5 transition-all">
+                <span class="font-bold text-sm">Category I</span>
+                <p class="text-[10px] text-on-surface-variant">Touch / lick on intact skin</p>
+            </div>
+        </label>
+        <label class="flex-1 cursor-pointer">
+            <input type="radio" class="hidden peer" name="exposure_category" value="2"/>
+            <div class="p-3 border-2 border-outline-variant/20 rounded-xl text-center peer-checked:border-primary peer-checked:bg-primary/5 transition-all">
+                <span class="font-bold text-sm">Category II</span>
+                <p class="text-[10px] text-on-surface-variant">Nibble / minor scratch</p>
+            </div>
+        </label>
+        <label class="flex-1 cursor-pointer">
+            <input type="radio" class="hidden peer" name="exposure_category" value="3"/>
+            <div class="p-3 border-2 border-outline-variant/20 rounded-xl text-center peer-checked:border-primary peer-checked:bg-primary/5 transition-all">
+                <span class="font-bold text-sm">Category III</span>
+                <p class="text-[10px] text-on-surface-variant">Bite / broken skin</p>
+            </div>
+        </label>
+    </div>
+</div>
+
+<div class="space-y-2">
+    <label class="text-xs font-semibold text-on-surface-variant">Animal Condition / Remarks</label>
+    <textarea name="animal_remarks" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20 resize-none" placeholder="e.g. Foaming at the mouth, aggressive, died after bite..." rows="2"></textarea>
+</div>
                         <div class="space-y-2">
                             <label class="text-xs font-semibold text-on-surface-variant">Lab Exam (Optional)</label>
                             <input type="text" name="lab_exam" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" placeholder="e.g. Rapid Rabies Test results"/>
@@ -487,6 +517,7 @@
 
             // 2. Contact Number Validation
             contactInput.addEventListener('input', function() {
+                this.value = this.value.replace(/\D/g, '').slice(0, 11);
                 const regex = /^09\d{9}$/;
                 
                 // Show error only if there is text and it doesn't match the format
@@ -515,6 +546,40 @@
                     animalOthers.value = '';
                 }
             });
+            // 5. Build patient_name from first / MI / last on submit
+           document.getElementById('referralForm').addEventListener('submit', function() {
+           const first = document.getElementById('firstName').value.trim();
+           const mi    = document.getElementById('middleInitial').value.trim().replace('.', '');
+           const last  = document.getElementById('lastName').value.trim();
+           document.getElementById('patientName').value =
+            last + ', ' + first + (mi ? ' ' + mi.toUpperCase() + '.' : '');
+});
+
+           // 6. Limit exposure date and time
+           const exposureDate = document.getElementById('exposureDate');
+           const exposureTime = document.getElementById('exposureTime');
+
+           function pad(n) { return String(n).padStart(2, '0'); }
+           function toYMD(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+
+           const now0 = new Date();
+           const oneYearAgo = new Date(now0);
+                oneYearAgo.setFullYear(now0.getFullYear() - 1);
+                exposureDate.max = toYMD(now0);
+                exposureDate.min = toYMD(oneYearAgo);
+
+        function limitExposureTime() {
+            if (exposureDate.value === toYMD(new Date())) {
+            const now = new Date();
+            const maxTime = pad(now.getHours()) + ':' + pad(now.getMinutes());
+                exposureTime.max = maxTime;
+            if (exposureTime.value > maxTime) exposureTime.value = '';
+    } else {
+            exposureTime.removeAttribute('max');
+    }
+}
+                exposureDate.addEventListener('change', limitExposureTime);
+                exposureTime.addEventListener('change', limitExposureTime);
 
             // 4. Preview Button Alert
             document.getElementById('previewBtn').addEventListener('click', function() {

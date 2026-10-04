@@ -221,7 +221,7 @@
             <section class="w-1/3 flex flex-col gap-6">
                 <div class="bg-surface-container-low rounded-xl p-6 flex flex-col h-[calc(100vh-12rem)]">
                     <div class="flex items-center justify-between mb-6">
-                        <h2 class="text-lg font-bold tracking-tight text-on-surface truncate">Pending Encoding Queue</h2>
+                        <h2 class="text-lg font-bold tracking-tight text-on-surface leading-tight">Pending Encoding<br>Queue</h2>
                         <span class="px-2.5 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full whitespace-nowrap shrink-0">{{ $queue->count() }} Active</span>
                     </div>
                     <div class="mb-4">

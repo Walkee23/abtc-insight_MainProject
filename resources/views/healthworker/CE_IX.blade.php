@@ -221,7 +221,7 @@
             <section class="w-1/3 flex flex-col gap-6">
                 <div class="bg-surface-container-low rounded-xl p-6 flex flex-col h-[calc(100vh-12rem)]">
                     <div class="flex items-center justify-between mb-6">
-                        <h2 class="text-lg font-bold tracking-tight text-on-surface truncate">Pending Encoding Queue</h2>
+                        <h2 class="text-lg font-bold tracking-tight text-on-surface leading-tight">Pending Encoding<br>Queue</h2>
                         <span class="px-2.5 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full whitespace-nowrap shrink-0">{{ $queue->count() }} Active</span>
                     </div>
                     <div class="mb-4">
@@ -366,20 +366,13 @@
                             <div class="space-y-6">
                                 @foreach(['day3_notes' => 'Day 3 Notes', 'day7_notes' => 'Day 7 Notes', 'day28_notes' => 'Day 28 Notes'] as $key => $label)
                                 <div>
-                                    <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-3">{{ $label }} <span class="text-error">*</span></label>
+                                    <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-3">{{ $label }}@if($key === 'day3_notes') <span class="text-error">*</span>@endif</label>
                                     <textarea name="{{ $key }}" data-field="{{ $key }}"
                                         class="w-full bg-surface-container-low border-none rounded-xl p-4 ring-1 ring-transparent focus:ring-2 focus:ring-primary/20 text-sm resize-none h-28"
                                         placeholder="Wound healing observations, adverse reactions, or follow-up notes for this visit...">{{ $val($key) }}</textarea>
                                     <p data-error-for="{{ $key }}" class="mt-1 ml-1 text-xs font-semibold text-error {{ $errors->has($key) ? '' : 'hidden' }}">{{ $errors->first($key) }}</p>
                                 </div>
                                 @endforeach
-                                <div class="p-4 bg-primary-container/10 border border-primary/10 rounded-lg flex gap-3">
-                                    <span class="material-symbols-outlined text-primary">info</span>
-                                    <p class="text-xs text-primary font-medium leading-relaxed">
-                                        Use Save as Draft to record notes as each visit happens. All three notes are
-                                        needed to finalize the record.
-                                    </p>
-                                </div>
                             </div>
                         </div>
                     </form>
@@ -449,8 +442,6 @@
             // Required to finalize the record. Drafts skip these.
             const REQUIRED = {
                 day3_notes: 'Please enter the Day 3 notes.',
-                day7_notes: 'Please enter the Day 7 notes.',
-                day28_notes: 'Please enter the Day 28 notes.',
             };
 
             const field = (name) => form.querySelector(`[data-field="${name}"]`);

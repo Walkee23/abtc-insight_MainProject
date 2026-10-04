@@ -221,7 +221,7 @@
             <section class="w-1/3 flex flex-col gap-6">
                 <div class="bg-surface-container-low rounded-xl p-6 flex flex-col h-[calc(100vh-12rem)]">
                     <div class="flex items-center justify-between mb-6">
-                        <h2 class="text-lg font-bold tracking-tight text-on-surface truncate">Pending Encoding Queue</h2>
+                        <h2 class="text-lg font-bold tracking-tight text-on-surface leading-tight">Pending Encoding<br>Queue</h2>
                         <span class="px-2.5 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full whitespace-nowrap shrink-0">{{ $queue->count() }} Active</span>
                     </div>
                     <div class="mb-4">
@@ -344,16 +344,6 @@
                         @csrf
                         <input type="hidden" name="action" id="formActionInput" value="next" />
                         @php $val = fn ($key, $default = '') => old($key, $section->$key ?? $default); @endphp
-                        {{-- Toast: fixed bottom-right, auto-dismisses after 4s (same look as the draft-saved toast) --}}
-                        <div id="formErrorBanner" role="alert"
-                            class="{{ $errors->any() ? '' : 'hidden opacity-0' }} fixed bottom-6 right-8 z-50 max-w-sm flex items-center gap-3 bg-error-container text-on-error-container text-sm font-semibold pl-4 pr-2 py-3 rounded-lg shadow-lg shadow-blue-900/10 border border-error/20 transition-opacity duration-300">
-                            <span class="material-symbols-outlined text-[18px]">error</span>
-                            <span class="flex-1">Please fill in all required fields before continuing.</span>
-                            <button type="button" id="formErrorToastClose" aria-label="Dismiss"
-                                class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-black/5 transition-colors">
-                                <span class="material-symbols-outlined text-[18px]">close</span>
-                            </button>
-                        </div>
                         <div class="step-content" id="step3">
                             <div class="flex items-center gap-3 mb-8">
                                 <span
@@ -363,18 +353,16 @@
                             </div>
                             <div class="space-y-6">
                                 <div>
-                                    <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-3">Medication <span class="text-error">*</span></label>
-                                    <textarea name="medication" data-field="medication"
-                                        class="w-full bg-surface-container-low border-none rounded-xl p-4 ring-1 ring-transparent focus:ring-2 focus:ring-primary/20 text-sm resize-none h-32"
+                                    <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-3">Medication</label>
+                                    <textarea name="medication" maxlength="5000"
+                                        class="w-full bg-surface-container-low border-none rounded-xl p-4 focus:ring-2 focus:ring-primary/20 text-sm resize-none h-32"
                                         placeholder="Medications given or prescribed (e.g. antibiotics, analgesics)...">{{ $val('medication') }}</textarea>
-                                    <p data-error-for="medication" class="mt-1 ml-1 text-xs font-semibold text-error {{ $errors->has('medication') ? '' : 'hidden' }}">{{ $errors->first('medication') }}</p>
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-3">Advice <span class="text-error">*</span></label>
-                                    <textarea name="advice" data-field="advice"
-                                        class="w-full bg-surface-container-low border-none rounded-xl p-4 ring-1 ring-transparent focus:ring-2 focus:ring-primary/20 text-sm resize-none h-32"
+                                    <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-3">Advice</label>
+                                    <textarea name="advice" maxlength="5000"
+                                        class="w-full bg-surface-container-low border-none rounded-xl p-4 focus:ring-2 focus:ring-primary/20 text-sm resize-none h-32"
                                         placeholder="Medical advice and instructions given to the patient...">{{ $val('advice') }}</textarea>
-                                    <p data-error-for="advice" class="mt-1 ml-1 text-xs font-semibold text-error {{ $errors->has('advice') ? '' : 'hidden' }}">{{ $errors->first('advice') }}</p>
                                 </div>
                                 <div class="p-4 bg-primary-container/10 border border-primary/10 rounded-lg flex gap-3">
                                     <span class="material-symbols-outlined text-primary">info</span>
@@ -423,93 +411,20 @@
         const nextBtn = document.getElementById('nextBtn');
 
         if (nextBtn) {
-            const form = document.getElementById('section8Form');
             const draftBtn = document.getElementById('draftBtn');
             const formActionInput = document.getElementById('formActionInput');
-            const banner = document.getElementById('formErrorBanner');
-            // Required-fields toast: closes on the X button or by itself after 4 seconds
-            const errorToast = (() => {
-                let timer;
-                const hide = () => {
-                    clearTimeout(timer);
-                    banner.classList.add('opacity-0');
-                    setTimeout(() => {
-                        if (banner.classList.contains('opacity-0')) banner.classList.add('hidden');
-                    }, 300);
-                };
-                const show = () => {
-                    clearTimeout(timer);
-                    banner.classList.remove('hidden');
-                    void banner.offsetWidth; // let the fade-in transition run
-                    banner.classList.remove('opacity-0');
-                    timer = setTimeout(hide, 4000);
-                };
-                document.getElementById('formErrorToastClose').addEventListener('click', hide);
-                if (!banner.classList.contains('hidden')) show(); // errors rendered by the server
-                return { show, hide };
-            })();
 
-            // Required to move on to Section IX. Drafts skip these.
-            const REQUIRED = {
-                medication: 'Please enter the medication given or prescribed.',
-                advice: 'Please enter the advice given to the patient.',
-            };
-
-            const field = (name) => form.querySelector(`[data-field="${name}"]`);
-            const errorEl = (name) => form.querySelector(`[data-error-for="${name}"]`);
-
-            function setError(name, message) {
-                const input = field(name);
-                const el = errorEl(name);
-                input.classList.toggle('ring-2', !!message);
-                input.classList.toggle('ring-error', !!message);
-                input.classList.toggle('ring-transparent', !message);
-                if (el) {
-                    if (message) el.textContent = message;
-                    el.classList.toggle('hidden', !message);
-                }
-            }
-
-            function validate() {
-                let firstBad = null;
-                Object.keys(REQUIRED).forEach((name) => {
-                    const message = field(name).value.trim() === '' ? REQUIRED[name] : '';
-                    setError(name, message);
-                    if (message && !firstBad) firstBad = name;
-                });
-                if (firstBad) {
-                    errorToast.show();
-                    field(firstBad).scrollIntoView({ behavior: 'smooth', block: 'center' });
-                } else {
-                    errorToast.hide();
-                }
-                return !firstBad;
-            }
-
-            // Clear a field's error as soon as the user fixes it
-            form.querySelectorAll('[data-field]').forEach((input) => {
-                input.addEventListener('input', () => {
-                    if (input.value.trim() !== '') setError(input.dataset.field, '');
-                    if (!form.querySelector('[data-error-for]:not(.hidden)')) errorToast.hide();
-                });
-            });
-
+            // Nothing is required in this section, so Next just submits
             nextBtn.addEventListener('click', () => {
                 formActionInput.value = 'next';
-                if (validate()) form.submit();
+                document.getElementById('section8Form').submit();
             });
 
             if (draftBtn) {
                 draftBtn.addEventListener('click', () => {
-                    // A draft saves whatever is filled in, required or not
                     formActionInput.value = 'draft';
                 });
             }
-
-            // Re-apply red rings for errors rendered by the server
-            form.querySelectorAll('[data-error-for]:not(.hidden)').forEach((el) => {
-                setError(el.dataset.errorFor, el.textContent.trim());
-            });
         }
     </script>
     <script>

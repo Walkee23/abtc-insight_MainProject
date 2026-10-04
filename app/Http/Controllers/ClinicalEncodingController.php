@@ -26,8 +26,8 @@ class ClinicalEncodingController extends Controller
                 'p.patient_id',
                 'p.patient_name',
                 DB::raw("CASE
-                    WHEN s9.progress_id IS NOT NULL THEN 'Completed'
-                    WHEN s6.wound_desc_id IS NOT NULL THEN 'In Progress'
+                    WHEN s9.day3_notes <> '' AND s9.day7_notes <> '' AND s9.day28_notes <> '' THEN 'Completed'
+                    WHEN s9.progress_id IS NOT NULL OR s6.wound_desc_id IS NOT NULL THEN 'In Progress'
                     ELSE 'Not Started'
                 END as encoding_status")
             )
@@ -225,16 +225,25 @@ class ClinicalEncodingController extends Controller
     {
         DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->firstOrFail();
 
+        // A draft saves whatever is filled in (notes are added visit by visit);
+        // finalizing the record needs all three
+        $isDraft = $request->input('action') === 'draft';
+        $required = $isDraft ? 'nullable' : 'required';
+
         $validated = $request->validate([
-            'day3_notes' => 'nullable|string',
-            'day7_notes' => 'nullable|string',
-            'day28_notes' => 'nullable|string',
+            'day3_notes' => $required . '|string|max:5000',
+            'day7_notes' => $required . '|string|max:5000',
+            'day28_notes' => $required . '|string|max:5000',
         ]);
 
         DB::table('bite_section9_progress_notes')->updateOrInsert(
             ['bite_case_id' => $biteCaseId],
             $validated
         );
+
+        if ($isDraft) {
+            return back()->with('status', 'Section IX saved as draft.');
+        }
 
         // Last section - send the health worker back to their dashboard
         return redirect()->route('healthworker.dashboard')

@@ -117,24 +117,30 @@ class ClinicalEncodingController extends Controller
     {
         DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->firstOrFail();
 
+        // A draft may be incomplete (dose_type is NOT NULL in the table, so it is
+        // always required); moving on to Section VIII needs the core fields.
+        $isDraft = $request->input('action') === 'draft';
+        $required = $isDraft ? 'nullable' : 'required';
+
         $validated = $request->validate([
-            'patient_weight' => 'nullable|numeric|min:0|max:999.99',
+            'patient_weight' => $required . '|numeric|min:0|max:999.99',
             'tetanus_given' => 'nullable|boolean',
             'tetanus_details' => 'nullable|string|max:200',
             'tig_given' => 'nullable|boolean',
             'tig_details' => 'nullable|string|max:200',
-            'vaccine_brand' => 'nullable|string|max:100',
-            'route' => 'nullable|in:ID,IM',
+            'vaccine_brand' => $required . '|string|max:100',
+            'route' => $required . '|in:ID,IM',
             'dose_type' => 'required|in:Primary,Booster',
-            'day0_date' => 'nullable|date',
+            'day0_date' => $required . '|date',
             'day3_date' => 'nullable|date',
             'day7_date' => 'nullable|date',
             'day28_date' => 'nullable|date',
             'passive_given' => 'nullable|boolean',
             'passive_type' => 'nullable|string|max:50',
-            'passive_route' => 'nullable|string|max:10',
+            // Only needed once a passive immunoglobulin (ERIG/HRIG) is chosen
+            'passive_route' => ($isDraft ? 'nullable' : 'required_with:passive_type') . '|string|max:10',
             'skin_test_due' => 'nullable|date_format:H:i',
-            'administered_by' => 'nullable|string|max:100',
+            'administered_by' => $required . '|string|max:100',
         ]);
 
         $validated['tetanus_given'] = $request->boolean('tetanus_given');
@@ -145,6 +151,10 @@ class ClinicalEncodingController extends Controller
             ['bite_case_id' => $biteCaseId],
             $validated
         );
+
+        if ($isDraft) {
+            return back()->with('status', 'Section VII saved as draft.');
+        }
 
         return redirect()->route('healthworker.ce-viii', ['bite_case_id' => $biteCaseId]);
     }

@@ -242,7 +242,7 @@
 </div>
 <div class="md:col-span-2 space-y-2">
     <label class="text-xs font-semibold text-on-surface-variant ml-1">M.I.</label>
-    <input type="text" name="middle_initial" id="middleInitial" maxlength="2" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-center uppercase focus:ring-2 focus:ring-primary/20 transition-all" placeholder="D"/>
+    <input type="text" name="middle_initial" id="middleInitial" maxlength="2" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-center uppercase focus:ring-2 focus:ring-primary/20 transition-all" placeholder="D."/>
 </div>
 <div class="md:col-span-6 space-y-2">
     <label class="text-xs font-semibold text-on-surface-variant ml-1">Last Name <span class="text-error">*</span></label>
@@ -278,7 +278,7 @@
                     </div>
                     <div class="md:col-span-4 space-y-2">
                         <label class="text-xs font-semibold text-on-surface-variant ml-1">Contact Number <span class="text-error">*</span></label>
-                        <input type="tel" name="contact_num" id="contactNum" inputmode="numeric" maxlength="11" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" placeholder="09XXXXXXXXX" pattern="^09\d{9}$" required/>
+                        <input type="tel" name="contact_num" id="contactNum" inputmode="numeric" maxlength="11" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" placeholder="+63 000 000 0000" pattern="^09\d{9}$" required/>
                         <p id="contactError" class="text-[10px] text-error hidden mt-1">Must be exactly 11 digits and start with 09.</p>
                     </div>
                     <div class="md:col-span-12 space-y-2">
@@ -393,21 +393,21 @@
             <input type="radio" class="hidden peer" name="exposure_category" value="1" required/>
             <div class="p-3 border-2 border-outline-variant/20 rounded-xl text-center peer-checked:border-primary peer-checked:bg-primary/5 transition-all">
                 <span class="font-bold text-sm">Category I</span>
-                <p class="text-[10px] text-on-surface-variant">Touch / lick on intact skin</p>
+                <p class="text-[10px] text-on-surface-variant">Lick</p>
             </div>
         </label>
         <label class="flex-1 cursor-pointer">
             <input type="radio" class="hidden peer" name="exposure_category" value="2"/>
             <div class="p-3 border-2 border-outline-variant/20 rounded-xl text-center peer-checked:border-primary peer-checked:bg-primary/5 transition-all">
                 <span class="font-bold text-sm">Category II</span>
-                <p class="text-[10px] text-on-surface-variant">Nibble / minor scratch</p>
+                <p class="text-[10px] text-on-surface-variant">Nibble</p>
             </div>
         </label>
         <label class="flex-1 cursor-pointer">
             <input type="radio" class="hidden peer" name="exposure_category" value="3"/>
             <div class="p-3 border-2 border-outline-variant/20 rounded-xl text-center peer-checked:border-primary peer-checked:bg-primary/5 transition-all">
                 <span class="font-bold text-sm">Category III</span>
-                <p class="text-[10px] text-on-surface-variant">Bite / broken skin</p>
+                <p class="text-[10px] text-on-surface-variant">Bite</p>
             </div>
         </label>
     </div>

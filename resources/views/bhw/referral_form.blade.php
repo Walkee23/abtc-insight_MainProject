@@ -378,6 +378,7 @@
                             <label class="text-xs font-semibold text-on-surface-variant">Biting Animal <span class="text-error">*</span></label>
                             <div class="grid grid-cols-2 gap-4">
                                 <select name="biting_animal" id="bitingAnimal" class="bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" required>
+                                    <option value="" selected disabled hidden>--</option>
                                     <option value="Dog">Dog</option>
                                     <option value="Cat">Cat</option>
                                     <option value="Others">Others</option>

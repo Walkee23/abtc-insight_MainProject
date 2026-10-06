@@ -177,7 +177,7 @@
                         class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm group-focus-within:text-blue-700 transition-colors">search</span>
                     <input
                         class="w-full bg-slate-100 dark:bg-slate-800/50 border-none rounded-full py-2 pl-9 pr-4 text-xs focus:ring-2 focus:ring-blue-700/20 placeholder:text-slate-400 font-['Inter']"
-                        id="dashboardSearch" placeholder="Search patient by name or ID..." type="text" />
+                        id="dashboardSearch" placeholder="Search for patients..." type="text" />
                 </div>
             </div>
             <!-- Right Side Actions (Notifications, Help, Vertical Divider, Profile) -->
@@ -270,9 +270,9 @@
                     <span class="text-4xl font-extrabold tracking-tighter text-on-surface">{{ $stats['pending'] }}</span>
                     @if($stats['pending_cat3'] > 0)
                     <span class="text-xs font-semibold text-error px-2 py-0.5 bg-error-container/30 rounded-full">{{ $stats['pending_cat3'] }}
-                        Cat III</span>
+                        urgent {{ \Illuminate\Support\Str::plural('case', $stats['pending_cat3']) }}</span>
                     @else
-                    <span class="text-xs font-semibold text-on-surface-variant px-2 py-0.5 bg-surface-container-high rounded-full">No Cat III</span>
+                    <span class="text-xs font-semibold text-on-surface-variant px-2 py-0.5 bg-surface-container-high rounded-full">No urgent cases</span>
                     @endif
                 </div>
                 <div class="absolute -bottom-4 -right-4 opacity-5 group-hover:opacity-10 transition-opacity">

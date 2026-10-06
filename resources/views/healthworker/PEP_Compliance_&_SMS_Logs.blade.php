@@ -173,7 +173,7 @@
                         class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm group-focus-within:text-blue-700 transition-colors">search</span>
                     <input
                         class="w-full bg-slate-100 dark:bg-slate-800/50 border-none rounded-full py-2 pl-9 pr-4 text-xs focus:ring-2 focus:ring-blue-700/20 placeholder:text-slate-400 font-['Inter']"
-                        placeholder="Search patient by name or ID..." type="text" />
+                        placeholder="Search records..." type="text" />
                 </div>
             </div>
             <!-- Right Side Actions (Notifications, Help, Vertical Divider, Profile) -->

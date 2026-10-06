@@ -54,6 +54,7 @@ Route::prefix('staff')->group(function () {
 
     Route::get('/patient-verification', [StaffController::class, 'patientVerification'])->name('staff.patient-verification');
     Route::post('/verify-attendance/{inflow_record_id}', [StaffController::class, 'verifyAttendance'])->name('staff.verify-attendance');
+    Route::post('/staff/bhw-referral/{referral_id}/verify', [StaffController::class, 'verifyBhwReferral'])->name('staff.verify-bhw-referral');
 });
 
 // Healthworker Routes

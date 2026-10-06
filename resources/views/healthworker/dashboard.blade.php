@@ -177,7 +177,7 @@
                         class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm group-focus-within:text-blue-700 transition-colors">search</span>
                     <input
                         class="w-full bg-slate-100 dark:bg-slate-800/50 border-none rounded-full py-2 pl-9 pr-4 text-xs focus:ring-2 focus:ring-blue-700/20 placeholder:text-slate-400 font-['Inter']"
-                        id="dashboardSearch" placeholder="Search for patients..." type="text" />
+                        id="dashboardSearch" placeholder="Search patient by name or ID..." type="text" />
                 </div>
             </div>
             <!-- Right Side Actions (Notifications, Help, Vertical Divider, Profile) -->
@@ -194,25 +194,14 @@
                     <span class="material-symbols-outlined" data-icon="help">help</span>
                 </button>
                 <div class="h-8 w-[1px] bg-slate-200 dark:bg-slate-800 mx-2"></div>
-
-                <!-- User Profile Section with Dropdown (Identical to Admin Dashboard) -->
-                <div class="relative group cursor-pointer pl-4 border-l border-slate-200 dark:border-slate-800">
-                    <div class="flex items-center gap-3">
-                        <div class="text-right hidden lg:block">
-                            <p class="text-xs font-bold text-slate-900 dark:text-slate-100">
-                                {{ $profileName }}
-                            </p>
-                            <p class="text-[10px] text-slate-500 font-medium">
-                                {{ Auth::user()->role ?? 'Senior Health Worker' }}
-                            </p>
-                        </div>
-                        <div class="w-9 h-9 rounded-full overflow-hidden ring-2 ring-slate-100 border border-slate-200">
-                            <img alt="Health Worker Profile" class="w-full h-full object-cover"
-                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAzuEzGuKhuDJKI44bu6U1YzFdI7z5disX1FjUVLwgq07xpkF1vi2q1RQg1lWnbbzx-97qaEaUE0wHwrsBEDnQdIf8whoLOPKyx4AYqvvB-lfqq-SS3OBugICvjWAE_JcAHe0Vi0CwgldGbMzdKqqq-JDxrvKkK7FcZlxsnNKgOhrLZQUJ0ev2rjCkC13g53yP7Tgqv7JJmgsQFbx1nOvxapzia3kkgWKs_FBVNJ7u5msUyUkju3OqnpM2i3ofnQDyojEEc-LEA3xlD" />
-                        </div>
+                <div class="flex items-center gap-3 cursor-pointer group relative">
+                    <div class="text-right hidden lg:block">
+                        <p class="text-xs font-bold text-on-surface leading-tight font-['Inter']">{{ Auth::user()->full_name ?? 'Dr. Elena Santos' }}</p>
+                        <p class="text-[10px] text-on-surface-variant font-['Inter']">{{ Auth::user()->role ?? 'Senior Health Worker' }}</p>
                     </div>
-
-                    <!-- Hover Dropdown Menu -->
+                    <img alt="Health Worker Profile"
+                        class="w-9 h-9 rounded-full object-cover ring-2 ring-primary/10 group-hover:ring-primary/30 transition-all"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuAzuEzGuKhuDJKI44bu6U1YzFdI7z5disX1FjUVLwgq07xpkF1vi2q1RQg1lWnbbzx-97qaEaUE0wHwrsBEDnQdIf8whoLOPKyx4AYqvvB-lfqq-SS3OBugICvjWAE_JcAHe0Vi0CwgldGbMzdKqqq-JDxrvKkK7FcZlxsnNKgOhrLZQUJ0ev2rjCkC13g53yP7Tgqv7JJmgsQFbx1nOvxapzia3kkgWKs_FBVNJ7u5msUyUkju3OqnpM2i3ofnQDyojEEc-LEA3xlD" />
                     <div
                         class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                         <div class="p-2">
@@ -222,12 +211,10 @@
                                 My Profile
                             </a>
                             <div class="h-px bg-slate-100 my-1"></div>
-
-                            <!-- Secure Logout Form -->
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <button type="submit"
-                                    class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors text-left cursor-pointer">
+                                    class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors text-left">
                                     <span class="material-symbols-outlined text-[18px]">logout</span>
                                     Log Out
                                 </button>
@@ -235,7 +222,6 @@
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
     </header>

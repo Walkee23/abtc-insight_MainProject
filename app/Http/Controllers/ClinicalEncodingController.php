@@ -254,4 +254,127 @@ class ClinicalEncodingController extends Controller
         return redirect()->route('healthworker.dashboard')
             ->with('status', 'Clinical encoding completed for this case.');
     }
+
+    // ---------------------------------------------------------------
+    // Health Worker Dashboard
+    // ---------------------------------------------------------------
+
+    public function dashboard()
+    {
+        $today = now()->toDateString();
+
+        // Cases still in Clinical Encoding / PEP (finalized ones have outcome = 'Completed')
+        $unfinished = fn () => DB::table('bite_cases as bc')->where(function ($q) {
+            $q->whereNull('bc.outcome')->orWhere('bc.outcome', '<>', 'Completed');
+        });
+
+        $stats = [
+            'pending' => $unfinished()->count(),
+            'pending_cat3' => $unfinished()->where('bc.category', 'III')->count(),
+            'active_pep' => $unfinished()
+                ->join('bite_section7_immunization as s7', 's7.bite_case_id', '=', 'bc.bite_case_id')
+                ->whereNotNull('s7.day0_date')->count(),
+            'started_today' => $unfinished()
+                ->join('bite_section7_immunization as s7', 's7.bite_case_id', '=', 'bc.bite_case_id')
+                ->where('s7.day0_date', $today)->count(),
+            'verified_today' => DB::table('bite_cases')->whereDate('date_verified', $today)->count(),
+            'encoding_started_today' => DB::table('bite_cases as bc')
+                ->join('bite_section6_wound_description as s6', 's6.bite_case_id', '=', 'bc.bite_case_id')
+                ->whereDate('bc.date_verified', $today)->count(),
+        ];
+        $stats['encoded_pct'] = $stats['verified_today']
+            ? (int) round($stats['encoding_started_today'] / $stats['verified_today'] * 100)
+            : 0;
+
+        // Priority queue: Category III first, then longest-waiting first
+        $queue = $unfinished()
+            ->join('patients as p', 'p.patient_id', '=', 'bc.patient_id')
+            ->leftJoin('inflow_general_particulars as ig', 'ig.inflow_record_id', '=', 'bc.inflow_record_id')
+            ->leftJoin('bite_section6_wound_description as s6', 's6.bite_case_id', '=', 'bc.bite_case_id')
+            ->leftJoin('bite_section9_progress_notes as s9', 's9.bite_case_id', '=', 'bc.bite_case_id')
+            ->select(
+                'bc.bite_case_id',
+                'bc.case_number',
+                'bc.category',
+                'bc.date_verified',
+                'p.patient_id',
+                'p.patient_name',
+                'ig.queue_id',
+                DB::raw("CASE
+                    WHEN s9.progress_id IS NOT NULL OR s6.wound_desc_id IS NOT NULL THEN 'In Progress'
+                    ELSE 'Not Started'
+                END as encoding_status")
+            )
+            ->orderByRaw("CASE WHEN bc.category = 'III' THEN 0 ELSE 1 END")
+            ->orderBy('bc.date_verified')
+            ->limit(10)
+            ->get();
+
+        // Reminders: PEP doses that are due or overdue, worked out from the Day 0 date
+        // (Primary: Day 3 / 7 / 28, Booster: Day 3), skipping doses already recorded
+        $reminders = [];
+        $immunizations = $unfinished()
+            ->join('patients as p', 'p.patient_id', '=', 'bc.patient_id')
+            ->join('bite_section7_immunization as s7', 's7.bite_case_id', '=', 'bc.bite_case_id')
+            ->whereNotNull('s7.day0_date')
+            ->select('bc.bite_case_id', 'p.patient_name', 's7.dose_type', 's7.day0_date', 's7.day3_date', 's7.day7_date', 's7.day28_date')
+            ->get();
+
+        foreach ($immunizations as $row) {
+            $days = $row->dose_type === 'Booster' ? [3] : [3, 7, 28];
+            foreach ($days as $day) {
+                $due = \Carbon\Carbon::parse($row->day0_date)->addDays($day)->startOfDay();
+                // Already given, or not due yet
+                if ($row->{'day' . $day . '_date'} || $due->isFuture()) {
+                    continue;
+                }
+                $reminders[] = (object) [
+                    'bite_case_id' => $row->bite_case_id,
+                    'patient_name' => $row->patient_name,
+                    'day' => $day,
+                    'due' => $due,
+                    'overdue_by' => (int) $due->diffInDays(now()->startOfDay()),
+                ];
+            }
+        }
+        usort($reminders, fn ($a, $b) => $b->overdue_by <=> $a->overdue_by);
+        $reminders = array_slice($reminders, 0, 5);
+
+        // Recent activity, from the dates the system records: newly verified cases
+        // and PEP doses that were given
+        $activity = [];
+        $verified = DB::table('bite_cases as bc')
+            ->join('patients as p', 'p.patient_id', '=', 'bc.patient_id')
+            ->orderByDesc('bc.date_verified')->limit(5)
+            ->get(['bc.bite_case_id', 'bc.category', 'bc.date_verified', 'p.patient_name']);
+        foreach ($verified as $v) {
+            $activity[] = (object) [
+                'at' => \Carbon\Carbon::parse($v->date_verified),
+                'type' => 'verified',
+                'title' => 'New Case Verified',
+                'text' => $v->patient_name . ' (Cat ' . $v->category . ') is ready for clinical encoding.',
+            ];
+        }
+        $doses = DB::table('bite_section7_immunization as s7')
+            ->join('bite_cases as bc', 'bc.bite_case_id', '=', 's7.bite_case_id')
+            ->join('patients as p', 'p.patient_id', '=', 'bc.patient_id')
+            ->get(['p.patient_name', 's7.day0_date', 's7.day3_date', 's7.day7_date', 's7.day28_date']);
+        foreach ($doses as $d) {
+            foreach ([0, 3, 7, 28] as $day) {
+                $date = $d->{'day' . $day . '_date'};
+                if ($date) {
+                    $activity[] = (object) [
+                        'at' => \Carbon\Carbon::parse($date),
+                        'type' => 'dose',
+                        'title' => 'Day ' . $day . ' Dose Recorded',
+                        'text' => $d->patient_name . ' received the Day ' . $day . ' PEP dose.',
+                    ];
+                }
+            }
+        }
+        usort($activity, fn ($a, $b) => $b->at <=> $a->at);
+        $activity = array_slice($activity, 0, 6);
+
+        return view('healthworker.dashboard', compact('stats', 'queue', 'reminders', 'activity'));
+    }
 }

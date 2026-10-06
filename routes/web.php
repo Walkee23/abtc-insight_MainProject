@@ -59,9 +59,7 @@ Route::prefix('staff')->group(function () {
 
 // Healthworker Routes
 Route::prefix('healthworker')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('healthworker.dashboard');
-    })->name('healthworker.dashboard');
+    Route::get('/dashboard', [ClinicalEncodingController::class, 'dashboard'])->name('healthworker.dashboard');
 
     // Clinical Encoding (Sections VI-IX), connected to the real bite_cases queue
     Route::get('/clinical-encoding/{bite_case_id?}', [ClinicalEncodingController::class, 'sectionVI'])

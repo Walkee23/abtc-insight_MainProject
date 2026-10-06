@@ -348,15 +348,14 @@
                     </div>
                 </div>
                 <div class="overflow-x-auto no-scrollbar">
-                    <table class="w-full text-left">
+                    <table class="w-full min-w-[520px] text-left">
                         <thead>
                             <tr
                                 class="text-[11px] uppercase tracking-widest text-slate-400 font-bold border-b border-surface-container-low">
-                                <th class="pb-4 pl-4 font-bold">Queue No.</th>
-                                <th class="pb-4">Patient Name</th>
-                                <th class="pb-4">Case Info</th>
-                                <th class="pb-4">Priority Type</th>
-                                <th class="pb-4 text-right pr-4">Action</th>
+                                <th class="pb-4 pl-4 pr-5 font-bold whitespace-nowrap">Queue No.</th>
+                                <th class="pb-4 pr-5 font-bold whitespace-nowrap">Patient Name</th>
+                                <th class="pb-4 pr-5 font-bold whitespace-nowrap">Priority</th>
+                                <th class="pb-4 text-right pr-4 font-bold whitespace-nowrap">Action</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-surface-container-low" id="queueBody">
@@ -373,42 +372,38 @@
                             @endphp
                             <tr class="queue-row group hover:bg-surface/50 transition-colors"
                                 data-export="{{ json_encode([$row->queue_id ?? '', $row->patient_name, $row->patient_id, $caseInfo, 'Cat ' . $row->category, $priority, $row->encoding_status]) }}">
-                                <td class="py-5 pl-4">
+                                <td class="py-5 pl-4 pr-5 align-middle">
                                     <span
-                                        class="text-sm font-bold {{ $priority === 'Urgent' ? 'text-blue-700 bg-blue-50' : 'text-slate-600 bg-slate-100' }} px-3 py-1 rounded-lg">{{ $row->queue_id ?? '—' }}</span>
+                                        class="inline-block whitespace-nowrap text-sm font-bold {{ $priority === 'Urgent' ? 'text-blue-700 bg-blue-50' : 'text-slate-600 bg-slate-100' }} px-3 py-1 rounded-lg">{{ $row->queue_id ?? '—' }}</span>
                                 </td>
-                                <td class="py-5">
+                                <td class="py-5 pr-5 align-middle">
                                     <div>
-                                        <p class="text-sm font-bold text-on-surface">{{ $row->patient_name }}</p>
-                                        <p class="text-[11px] text-on-surface-variant">ID: {{ $row->patient_id }}</p>
+                                        <p class="text-sm font-bold text-on-surface whitespace-nowrap">{{ $row->patient_name }}</p>
+                                        <p class="text-[11px] text-on-surface-variant whitespace-nowrap">ID: {{ $row->patient_id }}</p>
+                                        <p class="mt-1 text-[11px] font-semibold whitespace-nowrap {{ $row->category === 'III' ? 'text-error' : ($row->category === 'II' ? 'text-tertiary' : 'text-on-surface-variant') }}">{{ $caseInfo }} · Cat {{ $row->category }}</p>
                                     </div>
                                 </td>
-                                <td class="py-5">
-                                    <span
-                                        class="text-xs font-medium text-slate-600 bg-slate-100 px-3 py-1 rounded-full">{{ $caseInfo }}
-                                        · Cat {{ $row->category }}</span>
-                                </td>
-                                <td class="py-5">
+                                <td class="py-5 pr-5 align-middle">
                                     @if($priority === 'Urgent')
                                     <span
-                                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-error-container text-on-error-container">
+                                        class="inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1 rounded-full text-[11px] font-bold bg-error-container text-on-error-container">
                                         <span class="w-1.5 h-1.5 rounded-full bg-error"></span> Urgent
                                     </span>
                                     @elseif($priority === 'Priority')
                                     <span
-                                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-tertiary-fixed text-on-tertiary-fixed-variant">
+                                        class="inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1 rounded-full text-[11px] font-bold bg-tertiary-fixed text-on-tertiary-fixed-variant">
                                         <span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span> Priority
                                     </span>
                                     @else
                                     <span
-                                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-secondary-container text-on-secondary-container">
+                                        class="inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1 rounded-full text-[11px] font-bold bg-secondary-container text-on-secondary-container">
                                         <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> Standard
                                     </span>
                                     @endif
                                 </td>
-                                <td class="py-5 text-right pr-4">
+                                <td class="py-5 text-right pr-4 align-middle">
                                     <a href="{{ route('healthworker.clinical-encoding', ['bite_case_id' => $row->bite_case_id]) }}"
-                                        class="inline-block text-xs font-bold text-primary hover:bg-primary/5 px-4 py-2 rounded-lg transition-colors border border-primary/10">{{ $row->encoding_status === 'In Progress' ? 'Continue Encoding' : 'Start Clinical Encoding' }}</a>
+                                        class="inline-block whitespace-nowrap text-xs font-bold text-primary hover:bg-primary/5 px-4 py-2 rounded-lg transition-colors border border-primary/10">{{ $row->encoding_status === 'In Progress' ? 'Continue Encoding' : 'Start Encoding' }}</a>
                                 </td>
                             </tr>
                             @endforeach

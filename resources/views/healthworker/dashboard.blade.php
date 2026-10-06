@@ -98,6 +98,7 @@
 </head>
 
 <body class="bg-surface text-on-surface">
+    @php $profileName = Auth::user()->name ?? (Auth::user()->full_name ?? 'Dr. Elena Santos'); @endphp
 
     <aside class="h-screen w-64 fixed left-0 top-0 bg-slate-100 dark:bg-slate-900 flex flex-col pt-6 pb-4 gap-2 z-50">
         <!-- Brand / Header Section -->
@@ -199,7 +200,7 @@
                     <div class="flex items-center gap-3">
                         <div class="text-right hidden lg:block">
                             <p class="text-xs font-bold text-slate-900 dark:text-slate-100">
-                                {{ Auth::user()->name ?? (Auth::user()->full_name ?? 'Dr. Elena Santos') }}
+                                {{ $profileName }}
                             </p>
                             <p class="text-[10px] text-slate-500 font-medium">
                                 {{ Auth::user()->role ?? 'Senior Health Worker' }}
@@ -241,9 +242,13 @@
     <!-- Main Canvas -->
     <main class="ml-64 pt-24 px-10 pb-12 min-h-screen">
         @php
-            $hour = now()->hour;
+            // Greeting follows Cebu time (the app timezone is UTC); name = title + first name
+            $hour = now('Asia/Manila')->hour;
             $greeting = $hour < 12 ? 'Good morning' : ($hour < 18 ? 'Good afternoon' : 'Good evening');
-            $displayName = Auth::user()->full_name ?? 'Health Worker';
+            $nameParts = preg_split('/\s+/', trim($profileName));
+            $titles = ['dr', 'dra', 'mr', 'ms', 'mrs', 'engr', 'atty', 'prof'];
+            $isTitle = in_array(strtolower(rtrim($nameParts[0], '.')), $titles) && count($nameParts) > 1;
+            $displayName = $isTitle ? $nameParts[0] . ' ' . $nameParts[1] : $nameParts[0];
         @endphp
         @if(session('status'))
         {{-- Toast: fixed bottom-right, auto-dismisses after 4s --}}

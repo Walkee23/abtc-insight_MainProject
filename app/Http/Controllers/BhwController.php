@@ -95,8 +95,12 @@ class BhwController extends Controller
             'animal_remarks' => $request->input('animal_remarks')
         ]);
 
-        // Redirect back with a success message
-        return back()->with('success', 'Referral created successfully! Your code is: ' . $referenceNo);
+                // Go to the dashboard and show the success pop-up
+        return redirect()->route('bhw.dashboard')->with('new_referral', [
+            'id'           => $referralId,
+            'reference_no' => $referenceNo,
+            'patient_name' => $request->input('patient_name'),
+        ]);
     }
 
     

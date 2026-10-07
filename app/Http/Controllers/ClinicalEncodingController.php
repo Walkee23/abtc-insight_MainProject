@@ -8,27 +8,13 @@ use Illuminate\Support\Facades\DB;
 class ClinicalEncodingController extends Controller
 {
     /**
-     * Only cases Staff has finished (Case Encoding "Complete Encoding" sets the walk-in
-     * record to 'Encoded') belong to the Health Worker. A bite_cases row can already
-     * exist from a Staff draft, so its existence alone is not the hand-off.
-     */
-    private function handedOff($query, string $alias = 'bc')
-    {
-        return $query->whereExists(function ($e) use ($alias) {
-            $e->select(DB::raw(1))->from('inflow_general_particulars as hg')
-                ->whereColumn('hg.inflow_record_id', $alias . '.inflow_record_id')
-                ->where('hg.status', 'Encoded');
-        });
-    }
-
-    /**
      * Every unfinished bite_cases row (created once Staff finishes Case Encoding,
      * Sections 1-5) joined to its patient, with a derived status based on
      * which section tables already have a matching row for that case.
      */
     private function getQueue()
     {
-        return $this->handedOff(DB::table('bite_cases as bc'))
+        return DB::table('bite_cases as bc')
             ->join('patients as p', 'p.patient_id', '=', 'bc.patient_id')
             ->leftJoin('bite_section6_wound_description as s6', 's6.bite_case_id', '=', 'bc.bite_case_id')
             ->leftJoin('bite_section9_progress_notes as s9', 's9.bite_case_id', '=', 'bc.bite_case_id')
@@ -278,7 +264,7 @@ class ClinicalEncodingController extends Controller
         $today = now()->toDateString();
 
         // Cases still in Clinical Encoding / PEP (finalized ones have outcome = 'Completed')
-        $unfinished = fn () => $this->handedOff(DB::table('bite_cases as bc'))->where(function ($q) {
+        $unfinished = fn () => DB::table('bite_cases as bc')->where(function ($q) {
             $q->whereNull('bc.outcome')->orWhere('bc.outcome', '<>', 'Completed');
         });
 
@@ -291,8 +277,8 @@ class ClinicalEncodingController extends Controller
             'started_today' => $unfinished()
                 ->join('bite_section7_immunization as s7', 's7.bite_case_id', '=', 'bc.bite_case_id')
                 ->where('s7.day0_date', $today)->count(),
-            'verified_today' => $this->handedOff(DB::table('bite_cases as bc'))->whereDate('bc.date_verified', $today)->count(),
-            'encoding_started_today' => $this->handedOff(DB::table('bite_cases as bc'))
+            'verified_today' => DB::table('bite_cases')->whereDate('date_verified', $today)->count(),
+            'encoding_started_today' => DB::table('bite_cases as bc')
                 ->join('bite_section6_wound_description as s6', 's6.bite_case_id', '=', 'bc.bite_case_id')
                 ->whereDate('bc.date_verified', $today)->count(),
         ];
@@ -357,7 +343,7 @@ class ClinicalEncodingController extends Controller
         // Recent activity, from the dates the system records: newly verified cases
         // and PEP doses that were given
         $activity = [];
-        $verified = $this->handedOff(DB::table('bite_cases as bc'))
+        $verified = DB::table('bite_cases as bc')
             ->join('patients as p', 'p.patient_id', '=', 'bc.patient_id')
             ->orderByDesc('bc.date_verified')->limit(5)
             ->get(['bc.bite_case_id', 'bc.category', 'bc.date_verified', 'p.patient_name']);
@@ -372,10 +358,6 @@ class ClinicalEncodingController extends Controller
         $doses = DB::table('bite_section7_immunization as s7')
             ->join('bite_cases as bc', 'bc.bite_case_id', '=', 's7.bite_case_id')
             ->join('patients as p', 'p.patient_id', '=', 'bc.patient_id')
-            ->whereExists(function ($e) {
-                $e->select(DB::raw(1))->from('inflow_general_particulars as hg')
-                    ->whereColumn('hg.inflow_record_id', 'bc.inflow_record_id')->where('hg.status', 'Encoded');
-            })
             ->get(['p.patient_name', 's7.day0_date', 's7.day3_date', 's7.day7_date', 's7.day28_date']);
         foreach ($doses as $d) {
             foreach ([0, 3, 7, 28] as $day) {

@@ -8,6 +8,20 @@ use Illuminate\Support\Facades\DB;
 class PatientDatabaseController extends Controller
 {
     /**
+     * Only cases Staff has finished (Case Encoding "Complete Encoding" sets the walk-in
+     * record to 'Encoded') belong to the Health Worker. A bite_cases row can already
+     * exist from a Staff draft, so its existence alone is not the hand-off.
+     */
+    private function handedOff($query, string $alias = 'bc')
+    {
+        return $query->whereExists(function ($e) use ($alias) {
+            $e->select(DB::raw(1))->from('inflow_general_particulars as hg')
+                ->whereColumn('hg.inflow_record_id', $alias . '.inflow_record_id')
+                ->where('hg.status', 'Encoded');
+        });
+    }
+
+    /**
      * Health Worker Patient Database: every verified patient (a `patients` row only
      * exists after Staff verification), with their latest case and PEP status.
      */
@@ -18,7 +32,7 @@ class PatientDatabaseController extends Controller
 
         // A case is "unfinished" until Clinical Encoding is finalized (outcome = 'Completed')
         $unfinishedCase = function ($q) {
-            $q->select(DB::raw(1))->from('bite_cases as uc')
+            $this->handedOff($q->select(DB::raw(1))->from('bite_cases as uc'), 'uc')
                 ->whereColumn('uc.patient_id', 'p.patient_id')
                 ->where(function ($w) {
                     $w->whereNull('uc.outcome')->orWhere('uc.outcome', '<>', 'Completed');
@@ -28,12 +42,14 @@ class PatientDatabaseController extends Controller
         $query = DB::table('patients as p')
             ->select('p.patient_id', 'p.patient_name', 'p.age', 'p.sex')
             ->selectSub(
-                DB::table('bite_cases')->select('barangay')->whereColumn('patient_id', 'p.patient_id')
-                    ->orderByDesc('date_verified')->limit(1),
+                $this->handedOff(DB::table('bite_cases as lc'), 'lc')->select('lc.barangay')
+                    ->whereColumn('lc.patient_id', 'p.patient_id')
+                    ->orderByDesc('lc.date_verified')->limit(1),
                 'barangay'
             )
             ->selectSub(
-                DB::table('bite_cases')->select(DB::raw('MAX(date_verified)'))->whereColumn('patient_id', 'p.patient_id'),
+                $this->handedOff(DB::table('bite_cases as vc'), 'vc')->select(DB::raw('MAX(vc.date_verified)'))
+                    ->whereColumn('vc.patient_id', 'p.patient_id'),
                 'last_visit'
             );
 
@@ -43,7 +59,7 @@ class PatientDatabaseController extends Controller
                 $q->where('p.patient_name', 'like', $like)
                     ->orWhere('p.patient_id', 'like', $like)
                     ->orWhereExists(function ($e) use ($like) {
-                        $e->select(DB::raw(1))->from('bite_cases as sc')
+                        $this->handedOff($e->select(DB::raw(1))->from('bite_cases as sc'), 'sc')
                             ->whereColumn('sc.patient_id', 'p.patient_id')
                             ->where('sc.barangay', 'like', $like);
                     });
@@ -55,7 +71,8 @@ class PatientDatabaseController extends Controller
         } elseif ($status === 'completed') {
             $query->whereNotExists($unfinishedCase)
                 ->whereExists(function ($q) {
-                    $q->select(DB::raw(1))->from('bite_cases as cc')->whereColumn('cc.patient_id', 'p.patient_id');
+                    $this->handedOff($q->select(DB::raw(1))->from('bite_cases as cc'), 'cc')
+                        ->whereColumn('cc.patient_id', 'p.patient_id');
                 });
         }
 
@@ -66,7 +83,7 @@ class PatientDatabaseController extends Controller
 
         // Case history for the patients on this page (drives the status badge and the record modal)
         $ids = $patients->pluck('patient_id')->all();
-        $cases = DB::table('bite_cases as bc')
+        $cases = $this->handedOff(DB::table('bite_cases as bc'))
             ->leftJoin('bite_section6_wound_description as s6', 's6.bite_case_id', '=', 'bc.bite_case_id')
             ->leftJoin('bite_section7_immunization as s7', 's7.bite_case_id', '=', 'bc.bite_case_id')
             ->leftJoin('bite_section9_progress_notes as s9', 's9.bite_case_id', '=', 'bc.bite_case_id')

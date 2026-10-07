@@ -162,11 +162,22 @@ class StaffController extends Controller
 
         $inflow = DB::table('inflow_general_particulars')->where('inflow_record_id', $inflow_record_id)->first();
 
+        // Provisional WHO category from the exposure types ticked (Bite -> III, Scratch -> II,
+        // Lick -> I; II when none yet). The Health Worker confirms or changes it in Section VI.
+        $exposureTypes = (array) $request->input('exposure_type', []);
+        $category = in_array('Bite', $exposureTypes, true) ? 'III'
+            : (in_array('Scratch', $exposureTypes, true) ? 'II'
+            : (in_array('Lick', $exposureTypes, true) ? 'I' : 'II'));
+
+        // Everything saves together; "Complete Encoding" is the hand-off to the Health Worker
+        // (status 'Encoded' puts the case in their Clinical Encoding queue), drafts stay with Staff.
+        return DB::transaction(function () use ($request, $inflow_record_id, $patient, $inflow, $isComplete, $category) {
+
         // Get or create the bite_cases record for this patient
         $biteCase = DB::table('bite_cases')->where('inflow_record_id', $inflow_record_id)->first();
 
         if (!$biteCase) {
-            $caseNumber = DB::table('bite_cases')->max('case_number') + 1;
+            $caseNumber = DB::table('bite_cases')->where('patient_id', $patient->patient_id)->max('case_number') + 1;
 
             $biteCaseId = DB::table('bite_cases')->insertGetId([
                 'patient_id'        => $patient->patient_id,
@@ -174,11 +185,17 @@ class StaffController extends Controller
                 'case_number'       => $caseNumber,
                 'date_verified'     => now(),
                 'barangay'          => $inflow->barangay ?? 'Unknown',
-                'category'          => 'Cat II',
+                'category'          => $category,
                 'philhealth_status' => $patient->philhealth_member ? 'Member' : 'Non-member',
             ], 'bite_case_id');
         } else {
             $biteCaseId = $biteCase->bite_case_id;
+
+            // Keep the provisional category current while Staff is still encoding, unless the
+            // Health Worker has already set it in Section VI
+            if (!DB::table('bite_section6_wound_description')->where('bite_case_id', $biteCaseId)->exists()) {
+                DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->update(['category' => $category]);
+            }
         }
         
         // Section 3: Details of Exposure
@@ -233,11 +250,13 @@ class StaffController extends Controller
                 ->update(['status' => 'Encoded']);
 
             return redirect()->route('staff.case-encoding')
-                ->with('success', 'Case encoding completed and saved successfully.');
+                ->with('success', 'Case encoding completed and sent to the Health Worker for Clinical Encoding.');
         }
 
         return redirect()->route('staff.case-encoding', $inflow_record_id)
             ->with('success', 'Progress saved. You can continue later.');
+
+        });
     }
 
     // Staff Dashboard (Queue Management)

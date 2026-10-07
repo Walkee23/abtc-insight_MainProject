@@ -257,20 +257,18 @@
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="bg-surface-container-low/50">
-                <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Patient Name</th>
-                <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Patient ID</th>
-                <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Age/Sex</th>
-                <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Barangay</th>
-                <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Last Visit</th>
-                <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Active PEP</th>
-                <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant text-right whitespace-nowrap">Action</th>
+                <th class="px-4 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Patient Name</th>
+                <th class="px-4 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Patient ID</th>
+                <th class="px-4 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Age/Sex</th>
+                <th class="px-4 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Barangay</th>
+                <th class="px-4 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Last Visit</th>
+                <th class="px-4 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Active PEP</th>
+                <th class="px-4 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant text-right whitespace-nowrap">Action</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-surface-container-high">
               @forelse($patients as $patient)
               @php
-                $parts = array_map('trim', explode(',', $patient->patient_name));
-                $initials = strtoupper(mb_substr($parts[1] ?? $parts[0], 0, 1) . mb_substr($parts[0], 0, 1));
                 $pill = [
                   'In Progress' => 'bg-primary/10 text-primary',
                   'Awaiting Encoding' => 'bg-tertiary-fixed text-on-tertiary-fixed-variant',
@@ -279,23 +277,18 @@
                 ][$patient->pep_status];
               @endphp
               <tr class="hover:bg-surface-container-low transition-colors group">
-                <td class="px-6 py-5">
-                  <div class="flex items-center gap-3">
-                    <div
-                      class="w-8 h-8 shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
-                      {{ $initials }}</div>
-                    <span class="font-semibold text-on-surface whitespace-nowrap">{{ $patient->patient_name }}</span>
-                  </div>
+                <td class="px-4 py-5">
+                  <span class="font-semibold text-on-surface whitespace-nowrap">{{ $patient->patient_name }}</span>
                 </td>
-                <td class="px-6 py-5 text-sm text-on-surface-variant font-mono whitespace-nowrap">{{ $patient->patient_id }}</td>
-                <td class="px-6 py-5 text-sm text-on-surface-variant whitespace-nowrap">{{ $patient->age }} / {{ strtoupper(substr($patient->sex, 0, 1)) }}</td>
-                <td class="px-6 py-5 text-sm text-on-surface-variant whitespace-nowrap">{{ $patient->barangay ?? '—' }}</td>
-                <td class="px-6 py-5 text-sm text-on-surface-variant whitespace-nowrap">{{ $patient->last_visit ? \Carbon\Carbon::parse($patient->last_visit)->format('M d, Y') : '—' }}</td>
-                <td class="px-6 py-5">
+                <td class="px-4 py-5 text-sm text-on-surface-variant font-mono whitespace-nowrap">{{ $patient->patient_id }}</td>
+                <td class="px-4 py-5 text-sm text-on-surface-variant whitespace-nowrap">{{ $patient->age }} / {{ strtoupper(substr($patient->sex, 0, 1)) }}</td>
+                <td class="px-4 py-5 text-sm text-on-surface-variant whitespace-nowrap">{{ $patient->barangay ?? '—' }}</td>
+                <td class="px-4 py-5 text-sm text-on-surface-variant whitespace-nowrap">{{ $patient->last_visit ? \Carbon\Carbon::parse($patient->last_visit)->format('M d, Y') : '—' }}</td>
+                <td class="px-4 py-5">
                   <span
                     class="inline-block whitespace-nowrap px-3 py-1 rounded-full {{ $pill }} text-[10px] font-bold uppercase tracking-wider">{{ $patient->pep_status }}</span>
                 </td>
-                <td class="px-6 py-5 text-right">
+                <td class="px-4 py-5 text-right">
                   <button type="button" data-view-record="{{ $patient->patient_id }}"
                     class="whitespace-nowrap text-primary font-bold text-xs hover:underline decoration-2 underline-offset-4">View
                     Record</button>
@@ -317,7 +310,7 @@
         </div>
         <!-- Pagination -->
         <div
-          class="px-6 py-5 flex flex-wrap items-center justify-between gap-3 border-t border-surface-container-high bg-surface-container-lowest/50">
+          class="px-4 py-5 flex flex-wrap items-center justify-between gap-3 border-t border-surface-container-high bg-surface-container-lowest/50">
           <p class="text-xs text-on-surface-variant">
             @if($patients->total() > 0)
             Showing <span class="font-bold text-on-surface">{{ $patients->firstItem() }}</span> to <span

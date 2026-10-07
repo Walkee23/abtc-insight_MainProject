@@ -106,18 +106,18 @@
         </div>
 
         <nav class="flex-1 mt-4 space-y-1 px-4">
+
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
+                href="{{ route('staff.newdashboard') }}">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span class="font-['Inter'] text-sm tracking-wide">Dashboard</span>
+            </a>
+            
             <!-- Queue Management -->
             <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
             href="{{ route('staff.dashboard') }}">
                 <span class="material-symbols-outlined">queue</span>
                 <span class="font-['Inter'] text-sm tracking-wide">Queue Management</span>
-            </a>
-
-            <!-- Patient Verification -->
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
-            href="{{ route('staff.patient-verification') }}">
-                <span class="material-symbols-outlined">verified_user</span>
-                <span class="font-['Inter'] text-sm tracking-wide">Patient Verification</span>
             </a>
 
             <!-- Case Encoding -->
@@ -283,16 +283,157 @@ Log Out
                         {{ $patient->pep_status ?? 'No Case' }}
                     </span>
                 </td>
-
                 <td class="px-8 py-5 text-right">
                     @if($patient->inflow_record_id)
-                        <a href="{{ route('staff.case-encoding', $patient->inflow_record_id) }}" class="px-3 py-1.5 bg-surface-container-lowest text-primary text-xs font-bold rounded-lg border border-primary/20 hover:bg-primary hover:text-white transition-all shadow-sm inline-block">
-                            View Case
+                        <!-- Trigger Button ng CSS Modal -->
+                        <a href="#case-modal-{{ $patient->inflow_record_id }}" 
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-surface-container-lowest text-primary text-xs font-bold rounded-lg border border-primary/20 hover:bg-primary hover:text-white transition-all shadow-sm">
+                            <span class="material-symbols-outlined text-[15px]">clinical_notes</span>
+                            <span>View Case</span>
                         </a>
+
+                        <!-- PURE CSS MODAL PARA SA CLINICAL SUMMARY CHART (WALANG JAVASCRIPT) -->
+                        <div id="case-modal-{{ $patient->inflow_record_id }}" 
+                            class="fixed inset-0 z-50 hidden [&:target]:flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                            
+                            <div class="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden text-left max-h-[90vh] flex flex-col">
+                                
+                                <!-- Modal Header -->
+                                <div class="bg-gradient-to-r from-primary to-primary-container p-6 text-white flex justify-between items-start shrink-0">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white font-extrabold text-base shadow-inner">
+                                            {{ strtoupper(substr($patient->patient_name ?? 'P', 0, 2)) }}
+                                        </div>
+                                        <div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-[10px] font-mono tracking-wider px-2 py-0.5 bg-white/20 rounded font-bold uppercase">{{ $patient->patient_id }}</span>
+                                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full {{ $patient->pep_badge ?? 'bg-white/30 text-white' }}">
+                                                    {{ $patient->pep_status }}
+                                                </span>
+                                            </div>
+                                            <h3 class="text-xl font-bold leading-tight mt-1">{{ $patient->patient_name }}</h3>
+                                        </div>
+                                    </div>
+                                    <!-- Close button papuntang '#' -->
+                                    <a href="#" class="text-white/70 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10">
+                                        <span class="material-symbols-outlined text-[22px]">close</span>
+                                    </a>
+                                </div>
+
+                                <!-- Modal Body (Scrollable kung mahaba ang notes) -->
+                                <div class="p-6 space-y-5 overflow-y-auto flex-1 text-xs">
+                                    
+                                    <!-- Patient Basics -->
+                                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                        <div class="p-3 bg-surface-container-low rounded-xl">
+                                            <span class="text-slate-500 block font-medium mb-0.5">Age / Sex</span>
+                                            <span class="font-bold text-slate-800 dark:text-slate-200 text-sm">{{ $patient->age }} / {{ $patient->sex }}</span>
+                                        </div>
+                                        <div class="p-3 bg-surface-container-low rounded-xl">
+                                            <span class="text-slate-500 block font-medium mb-0.5">Barangay</span>
+                                            <span class="font-bold text-slate-800 dark:text-slate-200 text-sm truncate block">{{ $patient->barangay ?? 'N/A' }}</span>
+                                        </div>
+                                        <div class="p-3 bg-surface-container-low rounded-xl">
+                                            <span class="text-slate-500 block font-medium mb-0.5">PhilHealth</span>
+                                            <span class="font-bold text-sm {{ $patient->philhealth_member ? 'text-emerald-600' : 'text-slate-500' }}">
+                                                {{ $patient->philhealth_member ? 'Member' : 'Non-member' }}
+                                            </span>
+                                        </div>
+                                        <div class="p-3 bg-surface-container-low rounded-xl">
+                                            <span class="text-slate-500 block font-medium mb-0.5">Contact</span>
+                                            <span class="font-bold text-slate-800 dark:text-slate-200 text-sm truncate block">{{ $patient->contact_num ?? 'None' }}</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Exposure & Incident Overview -->
+                                    <div class="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-3">
+                                        <h4 class="font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                                            <span class="material-symbols-outlined text-[16px] text-primary">pets</span>
+                                            Bite Exposure Record
+                                        </h4>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <div>
+                                                <span class="text-slate-400 block text-[10px]">Case Number</span>
+                                                <span class="font-semibold text-slate-700 dark:text-slate-300">#{{ $patient->case_number ?? 'Pending' }}</span>
+                                            </div>
+                                            <div>
+                                                <span class="text-slate-400 block text-[10px]">Exposure Category</span>
+                                                <span class="font-semibold text-primary font-bold">{{ $patient->exposure_category ?? 'Cat II' }}</span>
+                                            </div>
+                                            <div>
+                                                <span class="text-slate-400 block text-[10px]">Biting Animal</span>
+                                                <span class="font-semibold text-slate-700 dark:text-slate-300">{{ $patient->animal_type ?? 'Dog / Stray' }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Vaccination / PEP Progress Tracker -->
+                                    <div class="space-y-3">
+                                        <h4 class="font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                                            <span class="material-symbols-outlined text-[16px] text-emerald-600">vaccines</span>
+                                            PEP Regimen Schedule &amp; Clinical Notes
+                                        </h4>
+                                        
+                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                            <!-- Day 3 -->
+                                            <div class="p-3 rounded-xl border {{ !empty($patient->day3_notes) ? 'border-emerald-200 bg-emerald-50/40 text-emerald-950' : 'border-slate-200 bg-slate-50 text-slate-400' }}">
+                                                <div class="flex items-center justify-between mb-1">
+                                                    <span class="font-bold text-[11px]">Dose 2 (Day 3)</span>
+                                                    <span class="material-symbols-outlined text-[16px] {{ !empty($patient->day3_notes) ? 'text-emerald-600' : 'text-slate-300' }}">
+                                                        {{ !empty($patient->day3_notes) ? 'check_circle' : 'pending' }}
+                                                    </span>
+                                                </div>
+                                                <p class="text-[11px] leading-relaxed italic">{{ $patient->day3_notes ?? 'Not yet administered / no notes recorded.' }}</p>
+                                            </div>
+
+                                            <!-- Day 7 -->
+                                            <div class="p-3 rounded-xl border {{ !empty($patient->day7_notes) ? 'border-purple-200 bg-purple-50/40 text-purple-950' : 'border-slate-200 bg-slate-50 text-slate-400' }}">
+                                                <div class="flex items-center justify-between mb-1">
+                                                    <span class="font-bold text-[11px]">Dose 3 (Day 7)</span>
+                                                    <span class="material-symbols-outlined text-[16px] {{ !empty($patient->day7_notes) ? 'text-purple-600' : 'text-slate-300' }}">
+                                                        {{ !empty($patient->day7_notes) ? 'check_circle' : 'pending' }}
+                                                    </span>
+                                                </div>
+                                                <p class="text-[11px] leading-relaxed italic">{{ $patient->day7_notes ?? 'Awaiting Day 7 dose.' }}</p>
+                                            </div>
+
+                                            <!-- Day 28 -->
+                                            <div class="p-3 rounded-xl border {{ !empty($patient->day28_notes) ? 'border-blue-200 bg-blue-50/40 text-blue-950' : 'border-slate-200 bg-slate-50 text-slate-400' }}">
+                                                <div class="flex items-center justify-between mb-1">
+                                                    <span class="font-bold text-[11px]">Dose 4 (Day 28)</span>
+                                                    <span class="material-symbols-outlined text-[16px] {{ !empty($patient->day28_notes) ? 'text-blue-600' : 'text-slate-300' }}">
+                                                        {{ !empty($patient->day28_notes) ? 'check_circle' : 'pending' }}
+                                                    </span>
+                                                </div>
+                                                <p class="text-[11px] leading-relaxed italic">{{ $patient->day28_notes ?? 'Awaiting completion.' }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <!-- Modal Footer -->
+                                <div class="p-5 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center shrink-0">
+                                    <a href="#" class="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-colors">
+                                        Close Preview
+                                    </a>
+
+                                    <!-- Direct link to full Case Encoding editor -->
+                                    <a href="{{ route('staff.case-encoding', $patient->inflow_record_id) }}" 
+                                    class="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white text-xs font-bold rounded-xl shadow-md flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-[16px]">edit_note</span>
+                                        <span>Open Full Case Editor</span>
+                                    </a>
+                                </div>
+
+                            </div>
+                        </div>
                     @else
                         <span class="text-xs text-slate-400 font-semibold">No Active Inflow</span>
                     @endif
                 </td>
+
+                
             </tr>
         @endforeach
     @else

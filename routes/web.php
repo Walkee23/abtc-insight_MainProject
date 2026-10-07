@@ -46,7 +46,10 @@ Route::prefix('admin')->group(function () {
 // Staff Routes
 Route::prefix('staff')->group(function () {
     // ---  Route now directs to StaffController@dashboard instead of inline view ---
-    Route::get('/dashboard', [StaffController::class, 'dashboard'])->name('staff.dashboard');
+    Route::get('/dashboard', [StaffController::class, 'newDashboard'])->name('staff.newdashboard');
+    Route::get('/queue', [StaffController::class, 'dashboard'])->name('staff.dashboard');
+    Route::post('/staff/call-patient/{inflowRecordId}', [App\Http\Controllers\StaffController::class, 'callPatient'])
+    ->name('staff.call-patient');
 
     Route::get('/case-encoding/{inflow_record_id?}', [StaffController::class, 'caseEncoding'])->name('staff.case-encoding');
     Route::post('/case-encoding/{inflow_record_id}/store', [StaffController::class, 'storeCaseEncoding'])->name('staff.store-case-encoding');

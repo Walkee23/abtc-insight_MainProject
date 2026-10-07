@@ -221,7 +221,6 @@
     </header>
     <!-- Main Content Area -->
     <main class="ml-64 pt-24 min-h-screen bg-surface">
-        <!-- TopNavBar -->
         <div class="p-8">
             <!-- Summary Stats -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -232,9 +231,13 @@
                         <div class="p-2 bg-primary/10 rounded-lg">
                             <span class="material-symbols-outlined text-primary" data-icon="task_alt">task_alt</span>
                         </div>
-                        <span class="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">+2.4%</span>
+                        @if($stats['on_time_pct'] !== null)
+                        <span class="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full whitespace-nowrap">{{ $stats['on_time_pct'] }}% on time</span>
+                        @else
+                        <span class="text-xs font-medium text-on-surface-variant bg-surface-container-high px-2 py-1 rounded-full whitespace-nowrap">No doses yet</span>
+                        @endif
                     </div>
-                    <p class="text-display-md text-3xl font-black text-on-surface tracking-tight">94.2%</p>
+                    <p class="text-display-md text-3xl font-black text-on-surface tracking-tight">{{ $stats['completion'] !== null ? rtrim(rtrim(number_format($stats['completion'], 1), '0'), '.') . '%' : '—' }}</p>
                     <p
                         class="text-label-sm text-[10px] font-bold uppercase text-on-surface-variant tracking-widest mt-1">
                         PEP Completion Rate</p>
@@ -247,9 +250,9 @@
                             <span class="material-symbols-outlined text-secondary" data-icon="sms">sms</span>
                         </div>
                         <span
-                            class="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full italic">Stable</span>
+                            class="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full italic whitespace-nowrap">{{ $stats['sms_total'] }} {{ \Illuminate\Support\Str::plural('message', $stats['sms_total']) }}</span>
                     </div>
-                    <p class="text-display-md text-3xl font-black text-on-surface tracking-tight">98.8%</p>
+                    <p class="text-display-md text-3xl font-black text-on-surface tracking-tight">{{ $stats['sms_rate'] !== null ? rtrim(rtrim(number_format($stats['sms_rate'], 1), '0'), '.') . '%' : '—' }}</p>
                     <p
                         class="text-label-sm text-[10px] font-bold uppercase text-on-surface-variant tracking-widest mt-1">
                         SMS Success Rate</p>
@@ -263,10 +266,9 @@
                                 data-icon="notification_important">notification_important</span>
                         </div>
                         <span
-                            class="text-xs font-bold text-on-tertiary-fixed-variant bg-tertiary-fixed px-2 py-1 rounded-full">High
-                            Priority</span>
+                            class="text-xs font-bold text-on-tertiary-fixed-variant bg-tertiary-fixed px-2 py-1 rounded-full whitespace-nowrap">Due within 24h</span>
                     </div>
-                    <p class="text-display-md text-3xl font-black text-on-surface tracking-tight">42</p>
+                    <p class="text-display-md text-3xl font-black text-on-surface tracking-tight">{{ $stats['pending_reminders'] }}</p>
                     <p
                         class="text-label-sm text-[10px] font-bold uppercase text-on-surface-variant tracking-widest mt-1">
                         Pending Reminders</p>
@@ -280,147 +282,139 @@
                                 data-icon="priority_high">priority_high</span>
                         </div>
                         <span
-                            class="text-xs font-bold text-on-error-container bg-error-container px-2 py-1 rounded-full">Critical</span>
+                            class="text-xs font-bold text-on-error-container bg-error-container px-2 py-1 rounded-full whitespace-nowrap">{{ $stats['missed'] > 0 ? 'Needs follow-up' : 'All on track' }}</span>
                     </div>
-                    <p class="text-display-md text-3xl font-black text-on-surface tracking-tight">18</p>
+                    <p class="text-display-md text-3xl font-black text-on-surface tracking-tight">{{ $stats['missed'] }}</p>
                     <p
                         class="text-label-sm text-[10px] font-bold uppercase text-on-surface-variant tracking-widest mt-1">
-                        Late Follow-ups Sent</p>
+                        Missed Doses</p>
                 </div>
             </div>
             <!-- Main Content: Tracking & Logs -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
                 <!-- Left Column: PEP Compliance Tracking Table -->
                 <div class="lg:col-span-2 bg-surface-container-lowest rounded-lg ghost-border p-6">
-                    <div class="flex justify-between items-center mb-6">
+                    <div class="flex flex-wrap justify-between items-center gap-3 mb-6">
                         <h2 class="text-lg font-extrabold tracking-tight text-on-surface">PEP Compliance Tracking</h2>
-                        <button class="text-primary text-sm font-semibold flex items-center gap-1">
-                            Filter
-                            <span class="material-symbols-outlined text-sm">filter_list</span>
-                        </button>
+                        <div class="flex gap-2">
+                            @foreach(['all' => 'All', 'pending' => 'Pending', 'missed' => 'Missed', 'completed' => 'Completed'] as $key => $label)
+                            <a href="{{ route('healthworker.compliance', array_filter(['q' => $search, 'status' => $key === 'all' ? null : $key])) }}"
+                                class="px-3 py-1.5 text-xs font-semibold rounded-full transition-colors {{ $status === $key ? 'bg-primary text-on-primary shadow-sm' : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-variant' }}">{{ $label }}</a>
+                            @endforeach
+                        </div>
                     </div>
+                    <form method="GET" action="{{ route('healthworker.compliance') }}" class="mb-5">
+                        @if($status !== 'all')
+                        <input type="hidden" name="status" value="{{ $status }}" />
+                        @endif
+                        <div
+                            class="flex items-center bg-surface-container-low rounded-lg px-3 py-2 border border-outline-variant/20 focus-within:border-primary/40 transition-all">
+                            <span class="material-symbols-outlined text-outline text-[18px]">search</span>
+                            <input id="complianceSearchInput" name="q" type="text" value="{{ $search }}"
+                                class="bg-transparent border-none focus:ring-0 text-sm w-full py-0"
+                                placeholder="Search by patient, ID, dose, label or barangay..." />
+                            @if($search !== '')
+                            <a href="{{ route('healthworker.compliance', $status !== 'all' ? ['status' => $status] : []) }}"
+                                class="material-symbols-outlined text-outline text-[18px] hover:text-on-surface" title="Clear search">close</a>
+                            @endif
+                        </div>
+                    </form>
                     <div class="overflow-x-auto">
                         <table class="w-full">
                             <thead>
                                 <tr class="text-left">
                                     <th
-                                        class="pb-4 text-[11px] font-black uppercase text-on-surface-variant tracking-widest px-2">
+                                        class="pb-4 text-[11px] font-black uppercase text-on-surface-variant tracking-widest px-2 whitespace-nowrap">
                                         Patient Name</th>
                                     <th
-                                        class="pb-4 text-[11px] font-black uppercase text-on-surface-variant tracking-widest px-2">
+                                        class="pb-4 text-[11px] font-black uppercase text-on-surface-variant tracking-widest px-2 whitespace-nowrap">
                                         Scheduled Dose</th>
                                     <th
-                                        class="pb-4 text-[11px] font-black uppercase text-on-surface-variant tracking-widest px-2">
+                                        class="pb-4 text-[11px] font-black uppercase text-on-surface-variant tracking-widest px-2 whitespace-nowrap">
                                         Label</th>
                                     <th
-                                        class="pb-4 text-[11px] font-black uppercase text-on-surface-variant tracking-widest px-2">
+                                        class="pb-4 text-[11px] font-black uppercase text-on-surface-variant tracking-widest px-2 whitespace-nowrap">
                                         Status</th>
-                                    <th
-                                        class="pb-4 text-[11px] font-black uppercase text-on-surface-variant tracking-widest px-2">
-                                    </th>
+                                    <th class="pb-4 px-2"></th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-outline-variant/10">
+                                @forelse($tracking as $dose)
+                                @php
+                                    $labelStyle = [
+                                        'Standard' => 'bg-secondary-container text-on-secondary-container',
+                                        'High Risk' => 'bg-blue-100 text-blue-700',
+                                        'Booster' => 'bg-slate-100 text-slate-600',
+                                    ][$dose->label];
+                                    $statusStyle = [
+                                        'Pending' => ['text-on-tertiary-fixed-variant bg-tertiary-fixed', 'bg-tertiary'],
+                                        'Missed' => ['text-on-error-container bg-error-container', 'bg-error'],
+                                        'Completed On Time' => ['text-green-700 bg-green-100', 'bg-green-700'],
+                                        'Completed Late' => ['text-amber-800 bg-amber-100', 'bg-amber-600'],
+                                    ][$dose->status];
+                                @endphp
                                 <tr class="hover:bg-surface-container-low transition-colors">
                                     <td class="py-4 px-2">
-                                        <p class="font-bold text-on-surface text-sm">Juana Dela Cruz</p>
-                                        <p class="text-xs text-on-surface-variant">ID: ABTC-2024-089</p>
+                                        <p class="font-bold text-on-surface text-sm whitespace-nowrap">{{ $dose->patient_name }}</p>
+                                        <p class="text-xs text-on-surface-variant whitespace-nowrap">ID: {{ $dose->patient_id }}</p>
                                     </td>
                                     <td class="py-4 px-2">
-                                        <span class="text-sm font-medium text-on-surface">Dose 3 (D7)</span>
-                                    </td>
-                                    <td class="py-4 px-2">
-                                        <span
-                                            class="text-xs bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded font-semibold italic">Standard</span>
+                                        <span class="text-sm font-medium text-on-surface whitespace-nowrap">{{ $dose->dose_label }}</span>
+                                        <p class="text-[11px] text-on-surface-variant whitespace-nowrap">{{ $dose->scheduled->format('M d, Y') }}@if($dose->actual && !$dose->actual->eq($dose->scheduled)) · given {{ $dose->actual->format('M d') }}@endif</p>
                                     </td>
                                     <td class="py-4 px-2">
                                         <span
-                                            class="flex items-center gap-1.5 text-xs font-bold text-on-tertiary-fixed-variant bg-tertiary-fixed px-3 py-1 rounded-full w-max">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
-                                            Pending
+                                            class="text-xs {{ $labelStyle }} px-2 py-0.5 rounded font-semibold italic whitespace-nowrap">{{ $dose->label }}</span>
+                                    </td>
+                                    <td class="py-4 px-2">
+                                        <span
+                                            class="flex items-center gap-1.5 text-xs font-bold {{ $statusStyle[0] }} px-3 py-1 rounded-full w-max whitespace-nowrap">
+                                            <span class="w-1.5 h-1.5 rounded-full {{ $statusStyle[1] }}"></span>
+                                            {{ $dose->status }}
                                         </span>
                                     </td>
                                     <td class="py-4 px-2 text-right">
-                                        <button class="p-1 hover:bg-surface-container-high rounded-full"><span
-                                                class="material-symbols-outlined text-sm">more_vert</span></button>
+                                        <a href="{{ route('healthworker.ce-vii', ['bite_case_id' => $dose->bite_case_id]) }}"
+                                            title="Open case" class="inline-flex p-1 hover:bg-surface-container-high rounded-full"><span
+                                                class="material-symbols-outlined text-sm">open_in_new</span></a>
                                     </td>
                                 </tr>
-                                <tr class="hover:bg-surface-container-low transition-colors">
-                                    <td class="py-4 px-2">
-                                        <p class="font-bold text-on-surface text-sm">Ricardo Gomez</p>
-                                        <p class="text-xs text-on-surface-variant">ID: ABTC-2024-112</p>
-                                    </td>
-                                    <td class="py-4 px-2">
-                                        <span class="text-sm font-medium text-on-surface">Dose 2 (D3)</span>
-                                    </td>
-                                    <td class="py-4 px-2">
-                                        <span
-                                            class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-semibold italic">High
-                                            Risk</span>
-                                    </td>
-                                    <td class="py-4 px-2">
-                                        <span
-                                            class="flex items-center gap-1.5 text-xs font-bold text-green-700 bg-green-100 px-3 py-1 rounded-full w-max">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-green-700"></span>
-                                            Completed On Time
-                                        </span>
-                                    </td>
-                                    <td class="py-4 px-2 text-right">
-                                        <button class="p-1 hover:bg-surface-container-high rounded-full"><span
-                                                class="material-symbols-outlined text-sm">more_vert</span></button>
+                                @empty
+                                <tr>
+                                    <td colspan="5" class="py-12 text-center text-sm text-on-surface-variant">
+                                        @if($search !== '' || $status !== 'all')
+                                        No doses match your search or filter.
+                                        @else
+                                        No scheduled doses yet. Doses appear here once a case has a Day 0 date in Section VII.
+                                        @endif
                                     </td>
                                 </tr>
-                                <tr class="hover:bg-surface-container-low transition-colors">
-                                    <td class="py-4 px-2">
-                                        <p class="font-bold text-on-surface text-sm">Angelina Santos</p>
-                                        <p class="text-xs text-on-surface-variant">ID: ABTC-2024-045</p>
-                                    </td>
-                                    <td class="py-4 px-2">
-                                        <span class="text-sm font-medium text-on-surface">Dose 4 (D21)</span>
-                                    </td>
-                                    <td class="py-4 px-2">
-                                        <span
-                                            class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-semibold italic">Post-Exposure</span>
-                                    </td>
-                                    <td class="py-4 px-2">
-                                        <span
-                                            class="flex items-center gap-1.5 text-xs font-bold text-on-error-container bg-error-container px-3 py-1 rounded-full w-max">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-error"></span>
-                                            Missed
-                                        </span>
-                                    </td>
-                                    <td class="py-4 px-2 text-right">
-                                        <button class="p-1 hover:bg-surface-container-high rounded-full"><span
-                                                class="material-symbols-outlined text-sm">more_vert</span></button>
-                                    </td>
-                                </tr>
-                                <tr class="hover:bg-surface-container-low transition-colors">
-                                    <td class="py-4 px-2">
-                                        <p class="font-bold text-on-surface text-sm">Mateo Reyes</p>
-                                        <p class="text-xs text-on-surface-variant">ID: ABTC-2024-156</p>
-                                    </td>
-                                    <td class="py-4 px-2">
-                                        <span class="text-sm font-medium text-on-surface">Dose 1 (D0)</span>
-                                    </td>
-                                    <td class="py-4 px-2">
-                                        <span
-                                            class="text-xs bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded font-semibold italic">Standard</span>
-                                    </td>
-                                    <td class="py-4 px-2">
-                                        <span
-                                            class="flex items-center gap-1.5 text-xs font-bold text-green-700 bg-green-100 px-3 py-1 rounded-full w-max">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-green-700"></span>
-                                            Completed On Time
-                                        </span>
-                                    </td>
-                                    <td class="py-4 px-2 text-right">
-                                        <button class="p-1 hover:bg-surface-container-high rounded-full"><span
-                                                class="material-symbols-outlined text-sm">more_vert</span></button>
-                                    </td>
-                                </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
+                    @if($tracking->total() > 0)
+                    <div class="flex flex-wrap items-center justify-between gap-3 mt-5 pt-4 border-t border-outline-variant/10">
+                        <p class="text-xs text-on-surface-variant">Showing <span class="font-bold text-on-surface">{{ $tracking->firstItem() }}</span>
+                            to <span class="font-bold text-on-surface">{{ $tracking->lastItem() }}</span> of <span
+                                class="font-bold text-on-surface">{{ $tracking->total() }}</span> doses</p>
+                        @if($tracking->hasPages())
+                        <div class="flex gap-2">
+                            @if($tracking->onFirstPage())
+                            <span class="p-1.5 rounded-lg bg-surface-container-low text-outline-variant cursor-not-allowed"><span class="material-symbols-outlined text-sm">chevron_left</span></span>
+                            @else
+                            <a href="{{ $tracking->previousPageUrl() }}" class="p-1.5 rounded-lg bg-surface-container-low text-outline hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined text-sm">chevron_left</span></a>
+                            @endif
+                            <span class="px-3 py-1.5 text-xs font-bold text-on-surface">{{ $tracking->currentPage() }} / {{ $tracking->lastPage() }}</span>
+                            @if($tracking->hasMorePages())
+                            <a href="{{ $tracking->nextPageUrl() }}" class="p-1.5 rounded-lg bg-surface-container-low text-outline hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined text-sm">chevron_right</span></a>
+                            @else
+                            <span class="p-1.5 rounded-lg bg-surface-container-low text-outline-variant cursor-not-allowed"><span class="material-symbols-outlined text-sm">chevron_right</span></span>
+                            @endif
+                        </div>
+                        @endif
+                    </div>
+                    @endif
                 </div>
                 <!-- Right Column: SMS Outreach Logs -->
                 <div class="bg-surface-container-lowest rounded-lg ghost-border p-6 flex flex-col">
@@ -429,79 +423,40 @@
                         <span
                             class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full uppercase tracking-tighter">Live</span>
                     </div>
-                    <div class="space-y-4 flex-1">
-                        <!-- Log Item -->
-                        <div class="flex items-start gap-3 p-3 rounded-lg bg-surface-container-low/50">
-                            <div class="mt-1 p-1.5 bg-green-100 rounded-full">
-                                <span class="material-symbols-outlined text-xs text-green-700" data-icon="check_circle"
-                                    style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                    <div class="space-y-4 flex-1" id="smsList">
+                        @forelse($smsLogs as $i => $log)
+                        @php
+                            $isSent = $log->status === 'Sent';
+                            $isFailed = $log->status === 'Failed';
+                        @endphp
+                        <div class="sms-item {{ $i >= 5 ? 'hidden' : '' }} flex items-start gap-3 p-3 rounded-lg hover:bg-surface-container-low transition-colors">
+                            <div class="mt-1 p-1.5 {{ $isSent ? 'bg-green-100' : ($isFailed ? 'bg-error-container' : 'bg-blue-100') }} rounded-full">
+                                <span class="material-symbols-outlined text-xs {{ $isSent ? 'text-green-700' : ($isFailed ? 'text-error' : 'text-blue-700') }}"
+                                    style="font-variation-settings: 'FILL' 1;">{{ $isSent ? 'check_circle' : ($isFailed ? 'error' : 'pending') }}</span>
                             </div>
-                            <div class="flex-1">
-                                <div class="flex justify-between">
-                                    <p class="text-sm font-bold text-on-surface">+63 917 555 0123</p>
-                                    <span class="text-[10px] text-on-surface-variant">2m ago</span>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex justify-between gap-2">
+                                    <p class="text-sm font-bold text-on-surface truncate">{{ $log->contact_num }}</p>
+                                    <span class="text-[10px] text-on-surface-variant whitespace-nowrap">{{ \Carbon\Carbon::parse($log->send_date)->diffForHumans(null, true, true) }} ago</span>
                                 </div>
-                                <p class="text-xs text-on-surface-variant font-medium">Next Dose Reminder (D7)</p>
+                                <p class="text-xs text-on-surface-variant font-medium">{{ $log->sms_type }}</p>
+                                @if($isFailed && $log->error_detail)
+                                <p class="text-[11px] text-error mt-0.5 truncate" title="{{ $log->error_detail }}">{{ $log->error_detail }}</p>
+                                @endif
                                 <span
-                                    class="text-[9px] font-black text-green-700 uppercase tracking-widest mt-1 block">Sent</span>
+                                    class="text-[9px] font-black {{ $isSent ? 'text-green-700' : ($isFailed ? 'text-error' : 'text-blue-600') }} uppercase tracking-widest mt-1 block">{{ $log->status }}</span>
                             </div>
                         </div>
-                        <!-- Log Item -->
-                        <div
-                            class="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-container-low transition-colors">
-                            <div class="mt-1 p-1.5 bg-error-container rounded-full">
-                                <span class="material-symbols-outlined text-xs text-error" data-icon="error"
-                                    style="font-variation-settings: 'FILL' 1;">error</span>
-                            </div>
-                            <div class="flex-1">
-                                <div class="flex justify-between">
-                                    <p class="text-sm font-bold text-on-surface">+63 920 111 4489</p>
-                                    <span class="text-[10px] text-on-surface-variant">15m ago</span>
-                                </div>
-                                <p class="text-xs text-on-surface-variant font-medium">Late Follow-up Alert</p>
-                                <span
-                                    class="text-[9px] font-black text-error uppercase tracking-widest mt-1 block">Failed</span>
-                            </div>
-                        </div>
-                        <!-- Log Item -->
-                        <div
-                            class="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-container-low transition-colors">
-                            <div class="mt-1 p-1.5 bg-blue-100 rounded-full">
-                                <span class="material-symbols-outlined text-xs text-blue-700"
-                                    data-icon="pending">pending</span>
-                            </div>
-                            <div class="flex-1">
-                                <div class="flex justify-between">
-                                    <p class="text-sm font-bold text-on-surface">+63 998 222 7733</p>
-                                    <span class="text-[10px] text-on-surface-variant">42m ago</span>
-                                </div>
-                                <p class="text-xs text-on-surface-variant font-medium">Initial Dose Confirmation</p>
-                                <span
-                                    class="text-[9px] font-black text-blue-600 uppercase tracking-widest mt-1 block">Pending</span>
-                            </div>
-                        </div>
-                        <!-- Log Item -->
-                        <div
-                            class="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-container-low transition-colors">
-                            <div class="mt-1 p-1.5 bg-green-100 rounded-full">
-                                <span class="material-symbols-outlined text-xs text-green-700" data-icon="check_circle"
-                                    style="font-variation-settings: 'FILL' 1;">check_circle</span>
-                            </div>
-                            <div class="flex-1">
-                                <div class="flex justify-between">
-                                    <p class="text-sm font-bold text-on-surface">+63 915 888 2211</p>
-                                    <span class="text-[10px] text-on-surface-variant">1h ago</span>
-                                </div>
-                                <p class="text-xs text-on-surface-variant font-medium">Next Dose Reminder (D3)</p>
-                                <span
-                                    class="text-[9px] font-black text-green-700 uppercase tracking-widest mt-1 block">Sent</span>
-                            </div>
-                        </div>
+                        @empty
+                        <p class="text-xs text-on-surface-variant text-center py-8">No SMS sent yet. Reminders and late follow-ups will be logged here.</p>
+                        @endforelse
                     </div>
-                    <button
+                    @if($smsLogs->count() > 5)
+                    <button type="button" id="smsToggle"
                         class="mt-6 w-full py-2.5 text-xs font-bold text-primary border border-primary/20 rounded-lg hover:bg-primary/5 transition-colors">
-                        View All SMS History
+                        View All SMS History ({{ $smsLogs->count() }})
                     </button>
+                    @endif
                 </div>
             </div>
             <!-- Bottom Section: Performance by Barangay -->
@@ -510,86 +465,65 @@
                     <div>
                         <h2 class="text-xl font-extrabold tracking-tighter text-on-surface">Compliance Performance by
                             Barangay</h2>
-                        <p class="text-sm text-on-surface-variant">Monthly percentage of patients completing their
-                            scheduled dose cycle</p>
+                        <p class="text-sm text-on-surface-variant">Share of due doses that were completed (on time or
+                            late), by barangay</p>
                     </div>
-                    <button
-                        class="px-6 py-3 bg-primary text-on-primary rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-primary/20 active:scale-95 transition-all">
-                        View Full Compliance Report
-                        <span class="material-symbols-outlined text-sm">analytics</span>
-                    </button>
+                    <a href="{{ route('healthworker.compliance.export') }}"
+                        class="px-6 py-3 bg-primary text-on-primary rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-primary/20 active:scale-95 transition-all whitespace-nowrap">
+                        Download Full Compliance Report
+                        <span class="material-symbols-outlined text-sm">download</span>
+                    </a>
                 </div>
+                @if($barangays->isEmpty())
+                <p class="text-sm text-on-surface-variant text-center py-6">No completed or missed doses yet to compare barangays.</p>
+                @else
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-8">
-                    <!-- Barangay Item -->
+                    @foreach($barangays as $b)
                     <div>
                         <div class="flex justify-between items-end mb-2">
-                            <span class="text-sm font-bold text-on-surface">Mabolo</span>
-                            <span class="text-xs font-black text-primary">98%</span>
+                            <span class="text-sm font-bold text-on-surface">{{ $b->name }}</span>
+                            <span class="text-xs font-black text-primary">{{ $b->pct }}%</span>
                         </div>
                         <div class="h-2 w-full bg-outline-variant/30 rounded-full overflow-hidden">
-                            <div class="h-full bg-gradient-to-r from-primary to-primary-container" style="width: 98%">
+                            <div class="h-full bg-gradient-to-r from-primary to-primary-container" style="width: {{ $b->pct }}%">
                             </div>
                         </div>
+                        <p class="text-[10px] text-on-surface-variant mt-1">{{ $b->doses }} {{ \Illuminate\Support\Str::plural('dose', $b->doses) }} counted</p>
                     </div>
-                    <!-- Barangay Item -->
-                    <div>
-                        <div class="flex justify-between items-end mb-2">
-                            <span class="text-sm font-bold text-on-surface">Lahug</span>
-                            <span class="text-xs font-black text-primary">92%</span>
-                        </div>
-                        <div class="h-2 w-full bg-outline-variant/30 rounded-full overflow-hidden">
-                            <div class="h-full bg-gradient-to-r from-primary to-primary-container" style="width: 92%">
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Barangay Item -->
-                    <div>
-                        <div class="flex justify-between items-end mb-2">
-                            <span class="text-sm font-bold text-on-surface">Guadalupe</span>
-                            <span class="text-xs font-black text-primary">87%</span>
-                        </div>
-                        <div class="h-2 w-full bg-outline-variant/30 rounded-full overflow-hidden">
-                            <div class="h-full bg-gradient-to-r from-primary to-primary-container" style="width: 87%">
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Barangay Item -->
-                    <div>
-                        <div class="flex justify-between items-end mb-2">
-                            <span class="text-sm font-bold text-on-surface">Banilad</span>
-                            <span class="text-xs font-black text-primary">95%</span>
-                        </div>
-                        <div class="h-2 w-full bg-outline-variant/30 rounded-full overflow-hidden">
-                            <div class="h-full bg-gradient-to-r from-primary to-primary-container" style="width: 95%">
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Barangay Item -->
-                    <div>
-                        <div class="flex justify-between items-end mb-2">
-                            <span class="text-sm font-bold text-on-surface">Pardo</span>
-                            <span class="text-xs font-black text-primary">82%</span>
-                        </div>
-                        <div class="h-2 w-full bg-outline-variant/30 rounded-full overflow-hidden">
-                            <div class="h-full bg-gradient-to-r from-primary to-primary-container" style="width: 82%">
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Barangay Item -->
-                    <div>
-                        <div class="flex justify-between items-end mb-2">
-                            <span class="text-sm font-bold text-on-surface">Tisa</span>
-                            <span class="text-xs font-black text-primary">89%</span>
-                        </div>
-                        <div class="h-2 w-full bg-outline-variant/30 rounded-full overflow-hidden">
-                            <div class="h-full bg-gradient-to-r from-primary to-primary-container" style="width: 89%">
-                            </div>
-                        </div>
-                    </div>
+                    @endforeach
                 </div>
+                @endif
             </div>
         </div>
     </main>
+    <script>
+        (function () {
+            // Show / hide the older SMS entries
+            const toggle = document.getElementById('smsToggle');
+            if (toggle) {
+                const older = document.querySelectorAll('#smsList .sms-item:nth-child(n+6)');
+                const total = document.querySelectorAll('#smsList .sms-item').length;
+                let open = false;
+                toggle.addEventListener('click', () => {
+                    open = !open;
+                    older.forEach((el) => el.classList.toggle('hidden', !open));
+                    toggle.textContent = open ? 'Show Less' : 'View All SMS History (' + total + ')';
+                });
+            }
+
+            // The header search box searches the compliance table too (Enter to search)
+            const headerSearch = document.querySelector('header input[type="text"]');
+            const pageSearch = document.getElementById('complianceSearchInput');
+            if (headerSearch && pageSearch) {
+                headerSearch.value = pageSearch.value;
+                headerSearch.addEventListener('keydown', (e) => {
+                    if (e.key !== 'Enter') return;
+                    pageSearch.value = headerSearch.value;
+                    pageSearch.form.requestSubmit();
+                });
+            }
+        })();
+    </script>
 </body>
 
 </html>

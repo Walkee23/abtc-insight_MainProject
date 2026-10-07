@@ -7,6 +7,8 @@ use App\Http\Controllers\PatientController;
 use App\Http\Controllers\BhwController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\ClinicalEncodingController;
+use App\Http\Controllers\PatientDatabaseController;
+use App\Http\Controllers\PepComplianceController;
 use Illuminate\Http\Request;
 
 Route::get('/', function () {
@@ -25,6 +27,14 @@ Route::prefix('admin')->group(function () {
     Route::get('/dashboard', function () {
         return view('admin.dashboard');
     })->name('admin.dashboard');
+
+    Route::get('/spatial-map', function () {
+        $barangayData = DB::table('inflow_general_particulars')
+            ->select('barangay', DB::raw('count(*) as total_cases'))
+            ->groupBy('barangay')
+            ->get();
+        return view('admin.gis_map', compact('barangayData'));
+    })->name('admin.gis_map');
 
     Route::get('/analytics', function () {
         return view('admin.V_and_A');
@@ -113,13 +123,10 @@ Route::prefix('healthworker')->group(function () {
         return view('healthworker.Treatment_Tracker');
     })->name('healthworker.treatment-tracker');
 
-    Route::get('/patient-database', function () {
-        return view('healthworker.Patient_Lookup&DB');
-    })->name('healthworker.patient-database');
+    Route::get('/patient-database', [PatientDatabaseController::class, 'index'])->name('healthworker.patient-database');
 
-    Route::get('/compliance', function () {
-        return view('healthworker.PEP_Compliance_&_SMS_Logs');
-    })->name('healthworker.compliance');
+    Route::get('/compliance', [PepComplianceController::class, 'index'])->name('healthworker.compliance');
+    Route::get('/compliance/export', [PepComplianceController::class, 'export'])->name('healthworker.compliance.export');
 });
 
 // BHW Routes (referral dashboard, referral form, submission, print)

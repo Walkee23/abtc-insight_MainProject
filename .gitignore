@@ -25,3 +25,8 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+CLAUDE.md
+docs/database-schema.md
+docs/architecture.md
+docs/conventions.md
+docs/project-status.md

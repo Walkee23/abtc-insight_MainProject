@@ -186,11 +186,11 @@
                 <div class="h-8 w-[1px] bg-slate-200 dark:bg-slate-800 mx-2"></div>
                 <div class="flex items-center gap-3 cursor-pointer group relative">
                     <div class="text-right hidden lg:block">
-                        <p class="text-xs font-bold text-on-surface leading-tight font-['Inter']">Dr. Elena Santos</p>
-                        <p class="text-[10px] text-on-surface-variant font-['Inter']">Senior Health Worker</p>
+                        <p class="text-xs font-bold text-on-surface leading-tight font-['Inter']">{{ Auth::user()->full_name ?? 'Dr. Elena Santos' }}</p>
+                        <p class="text-[10px] text-on-surface-variant font-['Inter']">{{ Auth::user()->role ?? 'Senior Health Worker' }}</p>
                     </div>
                     <img alt="Health Worker Profile"
-                        class="w-9 h-9 rounded-full object-cover ring-2 ring-primary/10 group:ring-primary/30 transition-all"
+                        class="w-9 h-9 rounded-full object-cover ring-2 ring-primary/10 group-hover:ring-primary/30 transition-all"
                         src="https://lh3.googleusercontent.com/aida-public/AB6AXuAzuEzGuKhuDJKI44bu6U1YzFdI7z5disX1FjUVLwgq07xpkF1vi2q1RQg1lWnbbzx-97qaEaUE0wHwrsBEDnQdIf8whoLOPKyx4AYqvvB-lfqq-SS3OBugICvjWAE_JcAHe0Vi0CwgldGbMzdKqqq-JDxrvKkK7FcZlxsnNKgOhrLZQUJ0ev2rjCkC13g53yP7Tgqv7JJmgsQFbx1nOvxapzia3kkgWKs_FBVNJ7u5msUyUkju3OqnpM2i3ofnQDyojEEc-LEA3xlD" />
                     <div
                         class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
@@ -220,68 +220,61 @@
             <section class="w-1/3 flex flex-col gap-6">
                 <div class="bg-surface-container-low rounded-xl p-6 flex flex-col h-[calc(100vh-12rem)]">
                     <div class="flex items-center justify-between mb-6">
-                        <h2 class="text-lg font-bold tracking-tight text-on-surface">Pending Encoding Queue</h2>
-                        <span class="px-2.5 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full">12
+                        <h2 class="text-lg font-bold tracking-tight text-on-surface leading-tight">Pending Encoding<br>Queue</h2>
+                        <span class="px-2.5 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full">{{ $queue->count() }}
                             Active</span>
                     </div>
                     <div class="mb-4">
                         <div
                             class="flex items-center bg-white rounded-lg px-3 py-2 border border-outline-variant/20 focus-within:border-primary/40 transition-all">
                             <span class="material-symbols-outlined text-outline text-[18px]">filter_list</span>
-                            <input class="bg-transparent border-none focus:ring-0 text-sm w-full py-0"
+                            <input class="bg-transparent border-none focus:ring-0 text-sm w-full py-0" id="queueFilterInput"
                                 placeholder="Filter queue..." type="text" />
                         </div>
                     </div>
-                    <div class="flex-1 overflow-y-auto space-y-3 pr-2">
-                        <div class="bg-surface-container-lowest p-4 rounded-lg border-l-4 border-primary shadow-sm">
+                    <div class="flex-1 overflow-y-auto space-y-3 pr-2" id="queueList">
+                        @forelse($queue as $item)
+                        <a href="{{ route('healthworker.clinical-encoding', ['bite_case_id' => $item->bite_case_id]) }}"
+                            class="queue-item block {{ isset($case) && $case->bite_case_id === $item->bite_case_id ? 'bg-surface-container-lowest p-4 rounded-lg border-l-4 border-primary shadow-sm' : 'bg-surface-container-lowest/50 p-4 rounded-lg border border-transparent hover:border-outline-variant/30 transition-all' }}">
                             <div class="flex justify-between items-start mb-2">
-                                <span class="text-[10px] font-bold text-primary tracking-widest uppercase">Queue No.
-                                    042</span>
-                                <span class="text-[10px] font-medium text-outline">15 mins ago</span>
+                                <span class="text-[10px] font-bold {{ isset($case) && $case->bite_case_id === $item->bite_case_id ? 'text-primary' : 'text-outline' }} tracking-widest uppercase">CASE NO. {{ $item->case_number }}</span>
+                                <span class="text-[10px] font-medium text-outline">{{ \Carbon\Carbon::parse($item->date_verified)->diffForHumans() }}</span>
                             </div>
-                            <h3 class="font-bold text-on-surface">Juan Dela Cruz</h3>
+                            <h3 class="font-bold text-on-surface">{{ $item->patient_name }}</h3>
                             <p class="text-xs text-on-surface-variant mb-3 flex items-center gap-1">
                                 <span class="material-symbols-outlined text-[14px]">calendar_today</span>
-                                Incident: Oct 24, 2023
+                                Incident: {{ \Carbon\Carbon::parse($item->date_verified)->format('M d, Y') }}
                             </p>
                             <div class="flex gap-2">
                                 <span
-                                    class="px-2 py-0.5 bg-error-container text-on-error-container text-[10px] font-bold rounded-full">CAT
-                                    III</span>
+                                    class="px-2 py-0.5 bg-error-container text-on-error-container text-[10px] font-bold rounded-full"> CAT
+                                    {{ $item->category }}</span>
                                 <span
-                                    class="px-2 py-0.5 bg-secondary-container text-on-secondary-container text-[10px] font-bold rounded-full">Urgent</span>
+                                    class="px-2 py-0.5 {{ $item->encoding_status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : ($item->encoding_status === 'In Progress' ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface-container-high text-on-surface-variant') }} text-[10px] font-bold rounded-full">{{ $item->encoding_status }}</span>
                             </div>
-                        </div>
-                        <div
-                            class="bg-surface-container-lowest/50 p-4 rounded-lg border border-transparent hover:border-outline-variant/30 transition-all cursor-pointer">
-                            <div class="flex justify-between items-start mb-2">
-                                <span class="text-[10px] font-bold text-outline tracking-widest uppercase">Queue No.
-                                    043</span>
-                                <span class="text-[10px] font-medium text-outline">22 mins ago</span>
-                            </div>
-                            <h3 class="font-bold text-on-surface">Elena Soriano</h3>
-                            <p class="text-xs text-on-surface-variant flex items-center gap-1">
-                                <span class="material-symbols-outlined text-[14px]">calendar_today</span>
-                                Incident: Oct 23, 2023
-                            </p>
-                        </div>
-                        <div
-                            class="bg-surface-container-lowest/50 p-4 rounded-lg border border-transparent hover:border-outline-variant/30 transition-all cursor-pointer">
-                            <div class="flex justify-between items-start mb-2">
-                                <span class="text-[10px] font-bold text-outline tracking-widest uppercase">Queue No.
-                                    044</span>
-                                <span class="text-[10px] font-medium text-outline">45 mins ago</span>
-                            </div>
-                            <h3 class="font-bold text-on-surface">Roberto Lim</h3>
-                            <p class="text-xs text-on-surface-variant flex items-center gap-1">
-                                <span class="material-symbols-outlined text-[14px]">calendar_today</span>
-                                Incident: Oct 24, 2023
-                            </p>
-                        </div>
+                        </a>
+                        @empty
+                        <p class="text-sm text-on-surface-variant text-center py-8">No cases in the queue yet. Cases
+                            appear here once Staff finishes Case Encoding.</p>
+                        @endforelse
+                        <p id="queueNoMatch" class="hidden text-sm text-on-surface-variant text-center py-8">No cases match your filter.</p>
                     </div>
                 </div>
             </section>
-            <section class="w-2/3 flex flex-col gap-6">
+            <section class="w-2/3 min-w-0 flex flex-col gap-6">
+                @if(session('status'))
+                {{-- Toast: fixed bottom-right (below the form card, so it never overlaps the footer buttons), auto-dismisses after 4s --}}
+                <div id="statusToast" role="status"
+                    class="fixed bottom-6 right-8 z-50 max-w-sm flex items-center gap-3 bg-emerald-50 text-emerald-700 text-sm font-semibold pl-4 pr-2 py-3 rounded-lg shadow-lg shadow-blue-900/10 border border-emerald-200 transition-opacity duration-300">
+                    <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                    <span class="flex-1">{{ session('status') }}</span>
+                    <button type="button" id="statusToastClose" aria-label="Dismiss"
+                        class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-emerald-100 transition-colors">
+                        <span class="material-symbols-outlined text-[18px]">close</span>
+                    </button>
+                </div>
+                @endif
+                @if($case)
                 <!-- Form Card -->
                 <div
                     class="bg-surface-container-lowest rounded-xl shadow-lg shadow-blue-900/5 overflow-hidden border border-outline-variant/10 flex flex-col h-[calc(100vh-12rem)]">
@@ -291,18 +284,13 @@
                             <div>
                                 <p class="text-[10px] font-bold text-primary tracking-widest uppercase mb-1">Active
                                     Encoding Session</p>
-                                <h2 class="text-2xl font-extrabold tracking-tight text-on-surface">Juan Dela Cruz</h2>
+                                <h2 class="text-2xl font-extrabold tracking-tight text-on-surface">{{ $case->patient_name ?? 'No case selected' }}</h2>
                             </div>
                             <div class="flex gap-4">
                                 <div class="text-right">
                                     <p class="text-[10px] font-semibold text-outline uppercase tracking-wider">Patient
                                         ID</p>
-                                    <p class="text-sm font-bold">ABTC-2023-1042</p>
-                                </div>
-                                <div class="text-right border-l border-outline-variant/30 pl-4">
-                                    <p class="text-[10px] font-semibold text-outline uppercase tracking-wider">Form
-                                        Level</p>
-                                    <p class="text-sm font-bold text-primary">Authorized: VI-IX</p>
+                                    <p class="text-sm font-bold">{{ $case->patient_id ?? '—' }}</p>
                                 </div>
                             </div>
                         </div>
@@ -350,6 +338,20 @@
                     </div>
                     <!-- Wizard Body -->
                     <div class="flex-1 p-8 overflow-y-auto">
+                        <form id="section6Form" method="POST"
+                            action="{{ $case ? route('healthworker.clinical-encoding', ['bite_case_id' => $case->bite_case_id]) : '#' }}">
+                            @csrf
+                            <input type="hidden" name="action" id="formActionInput" value="next" />
+                            {{-- Toast: fixed bottom-right, auto-dismisses after 4s (same look as the draft-saved toast) --}}
+                            <div id="formErrorBanner" role="alert"
+                                class="{{ $errors->any() ? '' : 'hidden opacity-0' }} fixed bottom-6 right-8 z-50 max-w-sm flex items-center gap-3 bg-error-container text-on-error-container text-sm font-semibold pl-4 pr-2 py-3 rounded-lg shadow-lg shadow-blue-900/10 border border-error/20 transition-opacity duration-300">
+                                <span class="material-symbols-outlined text-[18px]">error</span>
+                                <span class="flex-1">Please fill in all required fields before continuing.</span>
+                                <button type="button" id="formErrorToastClose" aria-label="Dismiss"
+                                    class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-black/5 transition-colors">
+                                    <span class="material-symbols-outlined text-[18px]">close</span>
+                                </button>
+                            </div>
                         <div class="step-content active" id="step1">
                             <div class="flex items-center gap-3 mb-8">
                                 <span
@@ -361,53 +363,45 @@
                                 <div class="col-span-2">
                                     <label
                                         class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Site
-                                        of Bite / Exposure</label>
-                                    <input
-                                        class="w-full bg-surface-container-low border-none rounded-lg py-3.5 px-4 focus:ring-2 focus:ring-primary/20 text-on-surface font-medium"
-                                        type="text" value="Right Lower Leg - Calf Muscle Area" />
+                                        of Bite / Exposure <span class="text-error">*</span></label>
+                                    <input id="siteOfBiteInput"
+                                        class="w-full bg-surface-container-low border-none rounded-lg py-3.5 px-4 ring-1 ring-transparent focus:ring-2 focus:ring-primary/20 text-on-surface font-medium"
+                                        name="site_of_bite" type="text" value="{{ old('site_of_bite', $section->site_of_bite ?? '') }}" />
+                                    <p id="siteOfBiteError" class="mt-1 ml-1 text-xs font-semibold text-error {{ $errors->has('site_of_bite') ? '' : 'hidden' }}">{{ $errors->first('site_of_bite') }}</p>
                                 </div>
                                 <div>
                                     <label
                                         class="block text-xs font-bold text-outline uppercase tracking-wider mb-4">Exposure
-                                        Category</label>
+                                        Category <span class="text-error">*</span></label>
                                     <div class="flex gap-4">
+                                        @php
+                                            $selectedCategory = $section->category_of_exposure ?? $case->category ?? '';
+                                        @endphp
+                                        @foreach(['I', 'II', 'III'] as $cat)
                                         <label class="flex-1 cursor-pointer">
-                                            <input class="hidden peer" name="cat" type="radio" />
+                                            <input {{ $selectedCategory === $cat ? 'checked' : '' }} class="hidden peer" name="category_of_exposure" type="radio" value="{{ $cat }}" {{ $case ? '' : 'disabled' }} />
                                             <div
                                                 class="py-3 text-center rounded-lg border border-outline-variant/30 peer-checked:bg-primary-container/10 peer-checked:border-primary-container peer-checked:text-primary transition-all">
-                                                <span class="text-sm font-bold">Cat I</span>
+                                                <span class="text-sm font-bold">Cat {{ $cat }}</span>
                                             </div>
                                         </label>
-                                        <label class="flex-1 cursor-pointer">
-                                            <input class="hidden peer" name="cat" type="radio" />
-                                            <div
-                                                class="py-3 text-center rounded-lg border border-outline-variant/30 peer-checked:bg-primary-container/10 peer-checked:border-primary-container peer-checked:text-primary transition-all">
-                                                <span class="text-sm font-bold">Cat II</span>
-                                            </div>
-                                        </label>
-                                        <label class="flex-1 cursor-pointer">
-                                            <input checked="" class="hidden peer" name="cat" type="radio" />
-                                            <div
-                                                class="py-3 text-center rounded-lg border border-outline-variant/30 peer-checked:bg-primary-container/10 peer-checked:border-primary-container peer-checked:text-primary transition-all">
-                                                <span class="text-sm font-bold">Cat III</span>
-                                            </div>
-                                        </label>
+                                        @endforeach
                                     </div>
                                 </div>
                                 <div>
                                     <label
                                         class="block text-xs font-bold text-outline uppercase tracking-wider mb-4">Total
-                                        Number of Wounds</label>
+                                        Number of Wounds <span class="text-error">*</span></label>
                                     <div class="flex gap-4">
                                         <label class="flex-1 cursor-pointer">
-                                            <input checked="" class="hidden peer" name="wounds" type="radio" />
+                                            <input {{ ($section->total_wounds ?? 'Single') === 'Single' ? 'checked' : '' }} class="hidden peer" name="total_wounds" type="radio" value="Single" />
                                             <div
                                                 class="py-3 text-center rounded-lg border border-outline-variant/30 peer-checked:bg-primary-container/10 peer-checked:border-primary-container peer-checked:text-primary transition-all">
                                                 <span class="text-sm font-bold">Single</span>
                                             </div>
                                         </label>
                                         <label class="flex-1 cursor-pointer">
-                                            <input class="hidden peer" name="wounds" type="radio" />
+                                            <input {{ ($section->total_wounds ?? '') === 'Multiple' ? 'checked' : '' }} class="hidden peer" name="total_wounds" type="radio" value="Multiple" />
                                             <div
                                                 class="py-3 text-center rounded-lg border border-outline-variant/30 peer-checked:bg-primary-container/10 peer-checked:border-primary-container peer-checked:text-primary transition-all">
                                                 <span class="text-sm font-bold">Multiple</span>
@@ -417,12 +411,13 @@
                                 </div>
                             </div>
                         </div>
+                        </form>
                     </div>
                     <!-- Wizard Footer Actions -->
                     <div
                         class="p-6 bg-surface-container-low border-t border-outline-variant/20 flex justify-between items-center px-8">
-                        <button
-                            class="px-6 py-2.5 text-sm font-bold text-outline hover:text-on-surface transition-all flex items-center gap-2">
+                        <button type="submit" form="section6Form" id="draftBtn" {{ $case ? '' : 'disabled' }}
+                            class="px-6 py-2.5 text-sm font-bold text-outline hover:text-on-surface transition-all flex items-center gap-2 {{ $case ? '' : 'opacity-40 cursor-not-allowed' }}">
                             Save as Draft
                         </button>
                         <div class="flex gap-4">
@@ -431,21 +426,23 @@
                                 id="backBtn">
                                 Back
                             </button>
-                            <button
-                                class="px-8 py-2.5 bg-primary text-on-primary text-sm font-bold rounded-lg shadow-md shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-2"
+                            <button {{ $case ? '' : 'disabled' }}
+                                class="px-8 py-2.5 bg-primary text-on-primary text-sm font-bold rounded-lg shadow-md shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-2 {{ $case ? '' : 'opacity-40 cursor-not-allowed' }}"
                                 id="nextBtn">
                                 Next Step
                                 <span class="material-symbols-outlined text-[18px]">chevron_right</span>
                             </button>
-                            <button
-                                class="px-8 py-2.5 bg-gradient-to-r from-primary to-primary-container text-on-primary text-sm font-bold rounded-lg shadow-md shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all hidden flex items-center gap-2"
-                                id="finalizeBtn">
-                                <span class="material-symbols-outlined text-[18px]">verified_user</span>
-                                Save and Finalize Record
-                            </button>
                         </div>
                     </div>
                 </div>
+                @else
+                <!-- No case selected -->
+                <div
+                    class="bg-surface-container-lowest rounded-xl shadow-lg shadow-blue-900/5 border border-outline-variant/10 flex flex-col items-center justify-center h-[calc(100vh-12rem)] gap-3">
+                    <span class="material-symbols-outlined text-5xl text-outline-variant">folder_open</span>
+                    <p class="text-sm font-bold text-on-surface-variant">Please select a case.</p>
+                </div>
+                @endif
             </section>
         </div>
     </main>
@@ -463,47 +460,148 @@
     -->
     <script>
         // Simple Wizard Logic for Demo Purposes
-        let currentStep = 1;
-        const totalSteps = 4;
-
+        // The whole form card (and these buttons) only exist in the DOM when
+        // a case is selected, so none of this runs otherwise.
         const backBtn = document.getElementById('backBtn');
-        const nextBtn = document.getElementById('nextBtn');
-        const finalizeBtn = document.getElementById('finalizeBtn');
 
-        function updateWizard(step) {
-            // Hide all steps
-            document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
-            // Show current
-            document.getElementById(`step${step}`).classList.add('active');
+        if (backBtn) {
+            let currentStep = 1;
+            const totalSteps = 4;
 
-            // Update Buttons
-            if (step === 1) {
-                backBtn.classList.add('hidden');
-            } else {
-                backBtn.classList.remove('hidden');
+            const nextBtn = document.getElementById('nextBtn');
+            const finalizeBtn = document.getElementById('finalizeBtn');
+            const draftBtn = document.getElementById('draftBtn');
+            const formActionInput = document.getElementById('formActionInput');
+
+            function updateWizard(step) {
+                // Hide all steps
+                document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+                // Show current
+                document.getElementById(`step${step}`).classList.add('active');
+
+                // Update Buttons
+                if (step === 1) {
+                    backBtn.classList.add('hidden');
+                } else {
+                    backBtn.classList.remove('hidden');
+                }
+
+                if (step === totalSteps) {
+                    nextBtn.classList.add('hidden');
+                    finalizeBtn.classList.remove('hidden');
+                } else {
+                    nextBtn.classList.remove('hidden');
+                    finalizeBtn.classList.add('hidden');
+                }
+
+                // Logic for updating header indicators would go here in a real app
             }
 
-            if (step === totalSteps) {
-                nextBtn.classList.add('hidden');
-                finalizeBtn.classList.remove('hidden');
-            } else {
-                nextBtn.classList.remove('hidden');
-                finalizeBtn.classList.add('hidden');
+            const siteInput = document.getElementById('siteOfBiteInput');
+            const siteError = document.getElementById('siteOfBiteError');
+            const banner = document.getElementById('formErrorBanner');
+            // Required-fields toast: closes on the X button or by itself after 4 seconds
+            const errorToast = (() => {
+                let timer;
+                const hide = () => {
+                    clearTimeout(timer);
+                    banner.classList.add('opacity-0');
+                    setTimeout(() => {
+                        if (banner.classList.contains('opacity-0')) banner.classList.add('hidden');
+                    }, 300);
+                };
+                const show = () => {
+                    clearTimeout(timer);
+                    banner.classList.remove('hidden');
+                    void banner.offsetWidth; // let the fade-in transition run
+                    banner.classList.remove('opacity-0');
+                    timer = setTimeout(hide, 4000);
+                };
+                document.getElementById('formErrorToastClose').addEventListener('click', hide);
+                if (!banner.classList.contains('hidden')) show(); // errors rendered by the server
+                return { show, hide };
+            })();
+
+            function showSiteError(message) {
+                siteError.textContent = message || siteError.textContent;
+                siteError.classList.toggle('hidden', !message);
+                siteInput.classList.toggle('ring-2', !!message);
+                siteInput.classList.toggle('ring-error', !!message);
+                siteInput.classList.toggle('ring-transparent', !message);
+                if (message) errorToast.show(); else errorToast.hide();
             }
 
-            // Logic for updating header indicators would go here in a real app
+            // Re-apply the red ring for an error rendered by the server
+            if (!siteError.classList.contains('hidden')) showSiteError(siteError.textContent.trim());
+            siteInput.addEventListener('input', () => {
+                if (siteInput.value.trim() !== '') showSiteError('');
+            });
+
+            nextBtn.addEventListener('click', () => {
+                formActionInput.value = 'next';
+                if (siteInput.value.trim() === '') {
+                    showSiteError('Please enter the site of bite / exposure.');
+                    siteInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return;
+                }
+                document.getElementById('section6Form').submit();
+            });
+
+            if (draftBtn) {
+                draftBtn.addEventListener('click', () => {
+                    formActionInput.value = 'draft';
+                });
+            }
+
+            backBtn.addEventListener('click', () => {
+                if (currentStep > 1) {
+                    currentStep--;
+                    updateWizard(currentStep);
+                }
+            });
         }
+    </script>
+    <script>
+        // Draft-saved toast: closes on the X button or by itself after 4 seconds
+        (function () {
+            const toast = document.getElementById('statusToast');
+            if (!toast) return;
+            const dismiss = () => {
+                toast.classList.add('opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            };
+            document.getElementById('statusToastClose').addEventListener('click', dismiss);
+            setTimeout(dismiss, 4000);
+        })();
+    </script>
+    <script>
+        // Queue filter: every word typed must match somewhere in the case card
+        // (patient name, case no., category, status, incident date)
+        (function () {
+            const input = document.getElementById('queueFilterInput');
+            const items = document.querySelectorAll('#queueList .queue-item');
+            const noMatch = document.getElementById('queueNoMatch');
+            if (!input) return;
 
-        nextBtn.addEventListener('click', () => {
-            window.location.href = "{{ route('healthworker.ce-vii') }}";
-        });
+            const KEY = 'ceQueueFilter';
+            const apply = () => {
+                const terms = input.value.toLowerCase().split(/\s+/).filter(Boolean);
+                let shown = 0;
+                items.forEach((item) => {
+                    const text = item.textContent.toLowerCase().replace(/\s+/g, ' ');
+                    const match = terms.every((t) => text.includes(t));
+                    item.classList.toggle('hidden', !match);
+                    if (match) shown++;
+                });
+                if (noMatch) noMatch.classList.toggle('hidden', shown > 0 || items.length === 0);
+                try { sessionStorage.setItem(KEY, input.value); } catch (e) {}
+            };
 
-        backBtn.addEventListener('click', () => {
-            if (currentStep > 1) {
-                currentStep--;
-                updateWizard(currentStep);
-            }
-        });
+            input.addEventListener('input', apply);
+            // Keep the filter when moving between sections / selecting a case
+            try { input.value = sessionStorage.getItem(KEY) || ''; } catch (e) {}
+            apply();
+        })();
     </script>
 </body>
 

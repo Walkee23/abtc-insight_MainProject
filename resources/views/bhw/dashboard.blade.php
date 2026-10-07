@@ -300,7 +300,7 @@
                 </div>
                 <!-- Pagination Footer -->
                 <div class="px-6 py-5 bg-surface-container-low/30 border-t border-outline-variant/5 flex justify-between items-center">
-                    <p class="text-xs font-medium text-on-surface-variant">Showing 1 to 4 of 124 referrals</p>
+                    <p class="text-xs font-medium text-on-surface-variant">{{ $referrals->count() }} of {{ $totalSubmissions }} referrals</p>
                     <div class="flex gap-2">
                         <button class="p-2 rounded-lg border border-outline-variant/30 text-on-surface-variant hover:bg-surface-container-highest transition-all disabled:opacity-30">
                             <span class="material-symbols-outlined text-sm" data-icon="chevron_left">chevron_left</span>
@@ -328,6 +328,38 @@
             </div>
         </div>
     </main>
+    @if(session('new_referral'))
+<div id="successModal" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-8 text-center">
+        <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-100 flex items-center justify-center">
+            <span class="material-symbols-outlined text-emerald-600 text-4xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+        </div>
+        <h2 class="text-2xl font-extrabold text-slate-900 mb-1">Referral Submitted!</h2>
+        <p class="text-sm text-slate-500 mb-4">The referral was sent to CHD-ABTC for verification.</p>
+
+        <div class="bg-slate-50 rounded-xl p-4 mb-6 text-left space-y-2">
+            <div class="flex justify-between text-sm">
+                <span class="text-slate-500">Patient</span>
+                <span class="font-bold text-slate-900">{{ session('new_referral')['patient_name'] }}</span>
+            </div>
+            <div class="flex justify-between text-sm">
+                <span class="text-slate-500">Reference No.</span>
+                <span class="font-bold text-blue-700">{{ session('new_referral')['reference_no'] }}</span>
+            </div>
+        </div>
+
+        <div class="flex gap-3">
+            <button type="button" onclick="document.getElementById('successModal').remove()" class="flex-1 py-3 rounded-xl border-2 border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-all">
+                Close
+            </button>
+            <a href="{{ route('bhw.print', session('new_referral')['id']) }}?autoprint=true" target="_blank" class="flex-1 py-3 rounded-xl bg-primary text-white font-bold flex items-center justify-center gap-2 hover:bg-primary-container transition-all">
+                <span class="material-symbols-outlined text-[18px]">print</span>
+                Print
+            </a>
+        </div>
+    </div>
+</div>
+@endif
 </body>
 
 </html>

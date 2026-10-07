@@ -153,7 +153,7 @@
 <span class="material-symbols-outlined" data-icon="help">help</span>
 </button>
 </div>
-<div class="relative group cursor-pointer pl-4 border-l border-slate-200">
+<div class="relative group cursor-pointer pl-2">
     <div class="flex items-center gap-3">
         <div class="text-right hidden sm:block">
             <p class="text-xs font-bold text-on-surface leading-tight">Staff</p>
@@ -210,6 +210,53 @@
                         Search Records
                     </button>
 </form>
+</section>
+    <!-- BHW Referrals Section -->
+<section class="bg-surface-container-lowest rounded-lg ghost-border overflow-hidden shadow-sm">
+<div class="p-5 flex items-center justify-between border-b border-slate-50">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-amber-500"></div>
+<h2 class="text-lg font-bold text-on-surface tracking-tight">BHW Referrals (Pending)</h2>
+</div>
+<span class="text-xs font-medium text-on-surface-variant bg-surface-container px-3 py-1 rounded-full uppercase tracking-wider">{{ $bhwReferrals->count() }} Pending</span>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="bg-surface-container-low/50">
+<th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Reference No</th>
+<th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Patient Name</th>
+<th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Barangay</th>
+<th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Category</th>
+<th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider text-right">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-50">
+@forelse($bhwReferrals as $ref)
+<tr class="hover:bg-slate-50/50 transition-colors">
+<td class="px-6 py-4 font-mono text-xs font-bold text-primary">{{ $ref->reference_no }}</td>
+<td class="px-6 py-4 font-medium">{{ $ref->patient_name }}</td>
+<td class="px-6 py-4 text-sm text-on-surface-variant">Brgy. {{ $ref->patient_barangay }}</td>
+<td class="px-6 py-4">
+<span class="px-2 py-1 rounded text-[10px] font-bold bg-error-container text-on-error-container uppercase">Cat {{ ['', 'I', 'II', 'III'][$ref->exposure_category ?? 0] ?: 'N/A' }}</span>
+</td>
+<td class="px-6 py-4 text-right">
+<form action="{{ route('staff.verify-bhw-referral', $ref->referral_id) }}" method="POST">
+@csrf
+<button type="submit" class="bg-primary text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-primary-container transition-all active:scale-95">
+    Verify Attendance &amp; Transfer
+</button>
+</form>
+</td>
+</tr>
+@empty
+<tr>
+<td colspan="5" class="px-6 py-8 text-center text-slate-500">No BHW referrals pending verification.</td>
+</tr>
+@endforelse
+</tbody>
+</table>
+</div>
 </section>
 <!-- Priority Queue Section -->
 <section class="bg-surface-container-lowest rounded-lg ghost-border overflow-hidden shadow-sm">

@@ -115,14 +115,16 @@
             </div>
         </div>
         <nav class="flex-1 mt-4 space-y-1 px-4">
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
+                href="{{ route('staff.newdashboard') }}">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span class="font-['Inter'] text-sm tracking-wide">Dashboard</span>
+            </a>
             <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors" href="{{ route('staff.dashboard') }}">
                 <span class="material-symbols-outlined">queue</span>
                 <span class="font-['Inter'] text-sm tracking-wide">Queue Management</span>
             </a>
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors" href="{{ route('staff.patient-verification') }}">
-                <span class="material-symbols-outlined">verified_user</span>
-                <span class="font-['Inter'] text-sm tracking-wide">Patient Verification</span>
-            </a>
+           
             <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-blue-700 dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600 translate-x-1 duration-150" href="{{ route('staff.case-encoding') }}">
                 <span class="material-symbols-outlined">clinical_notes</span>
                 <span class="font-['Inter'] text-sm tracking-wide">Case Encoding</span>

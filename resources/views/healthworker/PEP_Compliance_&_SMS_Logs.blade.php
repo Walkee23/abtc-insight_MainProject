@@ -190,8 +190,8 @@
                 <div class="h-8 w-[1px] bg-slate-200 dark:bg-slate-800 mx-2"></div>
                 <div class="flex items-center gap-3 cursor-pointer group relative">
                     <div class="text-right hidden lg:block">
-                        <p class="text-xs font-bold text-on-surface leading-tight font-['Inter']">Dr. Elena Santos</p>
-                        <p class="text-[10px] text-on-surface-variant font-['Inter']">Senior Health Worker</p>
+                        <p class="text-xs font-bold text-on-surface leading-tight font-['Inter']">{{ Auth::user()->full_name ?? 'Dr. Elena Santos' }}</p>
+                        <p class="text-[10px] text-on-surface-variant font-['Inter']">{{ Auth::user()->role ?? 'Senior Health Worker' }}</p>
                     </div>
                     <img alt="Health Worker Profile"
                         class="w-9 h-9 rounded-full object-cover ring-2 ring-primary/10 group-hover:ring-primary/30 transition-all"

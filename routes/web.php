@@ -9,6 +9,7 @@ use App\Http\Controllers\StaffController;
 use App\Http\Controllers\ClinicalEncodingController;
 use App\Http\Controllers\PatientDatabaseController;
 use App\Http\Controllers\PepComplianceController;
+use App\Http\Controllers\TreatmentTrackerController;
 use Illuminate\Http\Request;
 
 Route::get('/', function () {
@@ -84,9 +85,7 @@ Route::prefix('healthworker')->group(function () {
         ->name('healthworker.ce-ix');
     Route::post('/clinical-encoding/section-ix/{bite_case_id}', [ClinicalEncodingController::class, 'storeSectionIX']);
 
-    Route::get('/treatment-tracker', function () {
-        return view('healthworker.Treatment_Tracker');
-    })->name('healthworker.treatment-tracker');
+    Route::get('/treatment-tracker', [TreatmentTrackerController::class, 'index'])->name('healthworker.treatment-tracker');
 
     Route::get('/patient-database', [PatientDatabaseController::class, 'index'])->name('healthworker.patient-database');
 

@@ -114,36 +114,36 @@
         <!-- Navigation sits right beneath it -->
         <nav class="space-y-1 px-4 dark:bg-slate-900">
             <!-- Dashboard (Inactive) -->
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
-            href="{{ route('healthworker.dashboard') }}">
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50"
+                href="{{ route('healthworker.dashboard') }}">
                 <span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
                 <span class="font-['Inter'] text-sm tracking-wide">Dashboard</span>
             </a>
 
             <!-- Clinical Encoding (Active - Admin Style) -->
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-blue-700 dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600 translate-x-1 duration-150" 
-            href="{{ route('healthworker.clinical-encoding') }}">
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-blue-700 dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600 translate-x-1 duration-150"
+                href="{{ route('healthworker.clinical-encoding') }}">
                 <span class="material-symbols-outlined" data-icon="medical_services">medical_services</span>
                 <span class="font-['Inter'] text-sm tracking-wide">Clinical Encoding</span>
             </a>
 
             <!-- Treatment Tracker -->
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
-            href="{{ route('healthworker.treatment-tracker') }}">
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50"
+                href="{{ route('healthworker.treatment-tracker') }}">
                 <span class="material-symbols-outlined" data-icon="monitor_heart">monitor_heart</span>
                 <span class="font-['Inter'] text-sm tracking-wide">Treatment Tracker</span>
             </a>
 
             <!-- Patient Database -->
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
-            href="{{ route('healthworker.patient-database') }}">
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50"
+                href="{{ route('healthworker.patient-database') }}">
                 <span class="material-symbols-outlined" data-icon="database">database</span>
                 <span class="font-['Inter'] text-sm tracking-wide">Patient Database</span>
             </a>
 
             <!-- Compliance -->
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
-            href="{{ route('healthworker.compliance') }}">
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50"
+                href="{{ route('healthworker.compliance') }}">
                 <span class="material-symbols-outlined" data-icon="verified_user">verified_user</span>
                 <span class="font-['Inter'] text-sm tracking-wide">Compliance</span>
             </a>
@@ -335,185 +335,189 @@
                     </div>
                     <!-- Wizard Body (Section VII) -->
                     <div class="flex-1 p-8 overflow-y-auto">
-                    <form id="section7Form" method="POST"
-                        action="{{ route('healthworker.ce-vii', ['bite_case_id' => $case->bite_case_id]) }}">
-                        @csrf
-                        <input type="hidden" name="action" id="formActionInput" value="next" />
-                        @php $val = fn ($key, $default = '') => old($key, $section->$key ?? $default); @endphp
-                        @php
+                        <form id="section7Form" method="POST"
+                            action="{{ route('healthworker.ce-vii', ['bite_case_id' => $case->bite_case_id]) }}">
+                            @csrf
+                            <input type="hidden" name="action" id="formActionInput" value="next" />
+                            @php $val = fn ($key, $default = '') => old($key, $section->$key ?? $default); @endphp
+                            @php
                             $dropdown = function ($name, $options, $bg = 'bg-surface-container-low', $fit = false) use ($val, $errors) {
-                                $current = (string) $val($name);
-                                $currentLabel = $options[$current] ?? null;
-                                $html = '<div class="relative" data-dd>'
-                                    . '<input type="hidden" name="' . e($name) . '" value="' . e($current) . '" data-field="' . e($name) . '" />'
-                                    . '<button type="button" data-dd-trigger class="w-full flex items-center justify-between gap-2 ' . $bg . ' rounded-lg py-3 px-4 text-left font-medium ring-1 ring-transparent focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all">'
+                            $current = (string) $val($name);
+                            $currentLabel = $options[$current] ?? null;
+                            $html = '<div class="relative" data-dd>'
+                                . '<input type="hidden" name="' . e($name) . '" value="' . e($current) . '" data-field="' . e($name) . '" />'
+                                . '<button type="button" data-dd-trigger class="w-full flex items-center justify-between gap-2 ' . $bg . ' rounded-lg py-3 px-4 text-left font-medium ring-1 ring-transparent focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all">'
                                     . ($fit
-                                        ? '<span class="grid"><span data-dd-label class="col-start-1 row-start-1 whitespace-nowrap ' . ($currentLabel ? 'text-on-surface' : 'text-outline') . '">' . e($currentLabel ?? 'Select') . '</span>'
-                                            . '<span aria-hidden="true" class="col-start-1 row-start-1 invisible whitespace-nowrap">' . e(collect($options)->sortByDesc(fn ($l) => strlen($l))->first()) . '</span></span>'
-                                        : '<span data-dd-label class="truncate ' . ($currentLabel ? 'text-on-surface' : 'text-outline') . '">' . e($currentLabel ?? 'Select') . '</span>')
+                                    ? '<span class="grid"><span data-dd-label class="col-start-1 row-start-1 whitespace-nowrap ' . ($currentLabel ? 'text-on-surface' : 'text-outline') . '">' . e($currentLabel ?? 'Select') . '</span>'
+                                        . '<span aria-hidden="true" class="col-start-1 row-start-1 invisible whitespace-nowrap">' . e(collect($options)->sortByDesc(fn ($l) => strlen($l))->first()) . '</span></span>'
+                                    : '<span data-dd-label class="truncate ' . ($currentLabel ? 'text-on-surface' : 'text-outline') . '">' . e($currentLabel ?? 'Select') . '</span>')
                                     . '<span data-dd-chevron class="material-symbols-outlined text-outline text-[20px] transition-transform">expand_more</span>'
                                     . '</button>'
-                                    . '<ul data-dd-menu class="hidden absolute left-0 min-w-full w-max top-full mt-2 z-30 bg-white rounded-xl border border-outline-variant/30 shadow-xl shadow-blue-900/10 p-1.5 max-h-60 overflow-y-auto">';
-                                foreach ($options as $optValue => $optLabel) {
+                                . '<ul data-dd-menu class="hidden absolute left-0 min-w-full w-max top-full mt-2 z-30 bg-white rounded-xl border border-outline-variant/30 shadow-xl shadow-blue-900/10 p-1.5 max-h-60 overflow-y-auto">';
+                                    foreach ($options as $optValue => $optLabel) {
                                     $active = $current === (string) $optValue;
                                     $html .= '<li><button type="button" data-dd-option data-value="' . e($optValue) . '" class="w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg text-sm text-left transition-colors hover:bg-primary-fixed/60 '
                                         . ($active ? 'bg-primary-fixed text-primary font-bold' : 'text-on-surface font-medium') . '">'
-                                        . '<span class="whitespace-nowrap">' . e($optLabel) . '</span>'
-                                        . '<span class="material-symbols-outlined text-[18px] text-primary shrink-0 ' . ($active ? '' : 'invisible') . '" style="font-variation-settings: \'wght\' 700;">' . 'check' . '</span>'
-                                        . '</button></li>';
-                                }
-                                return $html . '</ul>'
-                                    . '<p data-error-for="' . e($name) . '" class="mt-1 ml-1 text-xs font-semibold text-error ' . ($fit ? 'w-0 min-w-full ' : '') . ($errors->has($name) ? '' : 'hidden') . '">' . e($errors->first($name)) . '</p>'
-                                    . '</div>';
+                                            . '<span class="whitespace-nowrap">' . e($optLabel) . '</span>'
+                                            . '<span class="material-symbols-outlined text-[18px] text-primary shrink-0 ' . ($active ? '' : 'invisible') . '" style="font-variation-settings: \'wght\' 700;">' . 'check' . '</span>'
+                                            . '</button></li>';
+                                    }
+                                    return $html . '</ul>'
+                                . '<p data-error-for="' . e($name) . '" class="mt-1 ml-1 text-xs font-semibold text-error ' . ($fit ? 'w-0 min-w-full ' : '') . ($errors->has($name) ? '' : 'hidden') . '">' . e($errors->first($name)) . '</p>'
+                                . '</div>';
                             };
-                        @endphp
-                        {{-- Toast: fixed bottom-right, auto-dismisses after 4s (same look as the draft-saved toast) --}}
-                        <div id="formErrorBanner" role="alert"
-                            class="{{ $errors->any() ? '' : 'hidden opacity-0' }} fixed bottom-6 right-8 z-50 max-w-sm flex items-center gap-3 bg-error-container text-on-error-container text-sm font-semibold pl-4 pr-2 py-3 rounded-lg shadow-lg shadow-blue-900/10 border border-error/20 transition-opacity duration-300">
-                            <span class="material-symbols-outlined text-[18px]">error</span>
-                            <span class="flex-1">Please fill in all required fields before continuing.</span>
-                            <button type="button" id="formErrorToastClose" aria-label="Dismiss"
-                                class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-black/5 transition-colors">
-                                <span class="material-symbols-outlined text-[18px]">close</span>
-                            </button>
-                        </div>
-                        <div class="step-content" id="step2">
-                            <div class="flex items-center gap-3 mb-8">
-                                <span
-                                    class="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center font-bold text-sm">VII</span>
-                                <h3 class="text-sm font-extrabold uppercase tracking-widest text-on-surface-variant">
-                                    Immunization Schedule</h3>
+                            @endphp
+                            {{-- Toast: fixed bottom-right, auto-dismisses after 4s (same look as the draft-saved toast) --}}
+                            <div id="formErrorBanner" role="alert"
+                                class="{{ $errors->any() ? '' : 'hidden opacity-0' }} fixed bottom-6 right-8 z-50 max-w-sm flex items-center gap-3 bg-error-container text-on-error-container text-sm font-semibold pl-4 pr-2 py-3 rounded-lg shadow-lg shadow-blue-900/10 border border-error/20 transition-opacity duration-300">
+                                <span class="material-symbols-outlined text-[18px]">error</span>
+                                <span class="flex-1">Please fill in all required fields before continuing.</span>
+                                <button type="button" id="formErrorToastClose" aria-label="Dismiss"
+                                    class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-black/5 transition-colors">
+                                    <span class="material-symbols-outlined text-[18px]">close</span>
+                                </button>
                             </div>
-                            <div class="grid grid-cols-[1fr_auto_auto] gap-6 mb-8">
-                                <div>
-                                    <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Vaccine Brand <span class="text-error">*</span></label>
-                                    {!! $dropdown('vaccine_brand', ['VERORAB' => 'VERORAB (PVRV)', 'SPEEDA' => 'SPEEDA (PVRV)', 'VAXIRAB' => 'VAXIRAB (PCEC)']) !!}
+                            <div class="step-content" id="step2">
+                                <div class="flex items-center gap-3 mb-8">
+                                    <span
+                                        class="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center font-bold text-sm">VII</span>
+                                    <h3 class="text-sm font-extrabold uppercase tracking-widest text-on-surface-variant">
+                                        Immunization Schedule</h3>
                                 </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Route <span class="text-error">*</span></label>
-                                    {!! $dropdown('route', ['ID' => 'ID (Intradermal, 0.1mL)', 'IM' => 'IM (Intramuscular, 0.5mL)'], 'bg-surface-container-low', true) !!}
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Dose Type <span class="text-error">*</span></label>
-                                    {!! $dropdown('dose_type', ['Primary' => 'Primary', 'Booster' => 'Booster'], 'bg-surface-container-low', true) !!}
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-3 gap-6 mb-8">
-                                <div>
-                                    <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Patient Weight (kg) <span class="text-error">*</span></label>
-                                    <input name="patient_weight" data-field="patient_weight" type="number" step="0.01" min="0" max="999.99"
-                                        value="{{ $val('patient_weight') }}"
-                                        class="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 ring-1 ring-transparent focus:ring-2 focus:ring-primary/20 font-medium"
-                                        placeholder="e.g. 55.50" />
-                                    <p data-error-for="patient_weight" class="mt-1 ml-1 text-xs font-semibold text-error {{ $errors->has('patient_weight') ? '' : 'hidden' }}">{{ $errors->first('patient_weight') }}</p>
-                                    <p class="mt-1 ml-1 text-[10px] text-on-surface-variant/80 italic">Used for passive immunoglobulin dosage.</p>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Administered By <span class="text-error">*</span></label>
-                                    <input name="administered_by" data-field="administered_by" type="text"
-                                        value="{{ $val('administered_by') }}"
-                                        class="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 ring-1 ring-transparent focus:ring-2 focus:ring-primary/20 font-medium"
-                                        placeholder="Name of attending health worker" />
-                                    <p data-error-for="administered_by" class="mt-1 ml-1 text-xs font-semibold text-error {{ $errors->has('administered_by') ? '' : 'hidden' }}">{{ $errors->first('administered_by') }}</p>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">30-min Skin Test Due</label>
-                                    <input name="skin_test_due" type="time"
-                                        value="{{ $val('skin_test_due') }}"
-                                        class="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/20 font-medium" />
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-2 gap-6 mb-8">
-                                <div class="bg-surface-container-low rounded-xl p-5">
-                                    <p class="text-xs font-extrabold text-outline uppercase tracking-widest mb-3">Tetanus
-                                        Prophylaxis</p>
-                                    <label class="flex items-center gap-2 cursor-pointer mb-3">
-                                        <input name="tetanus_given" type="checkbox" value="1"
-                                            {{ ($section->tetanus_given ?? false) ? 'checked' : '' }}
-                                            class="rounded text-primary focus:ring-primary/20" />
-                                        <span class="text-sm font-medium">Tetanus prophylaxis given</span>
-                                    </label>
-                                    <input name="tetanus_details" type="text"
-                                        value="{{ $section->tetanus_details ?? '' }}"
-                                        class="w-full bg-white border-none rounded-lg py-2.5 px-4 text-sm focus:ring-2 focus:ring-primary/20"
-                                        placeholder="Details (vaccine, dose, date)..." />
-                                </div>
-                                <div class="bg-surface-container-low rounded-xl p-5">
-                                    <p class="text-xs font-extrabold text-outline uppercase tracking-widest mb-3">Tetanus
-                                        Immune Globulin (TIG)</p>
-                                    <label class="flex items-center gap-2 cursor-pointer mb-3">
-                                        <input name="tig_given" type="checkbox" value="1"
-                                            {{ ($section->tig_given ?? false) ? 'checked' : '' }}
-                                            class="rounded text-primary focus:ring-primary/20" />
-                                        <span class="text-sm font-medium">TIG given</span>
-                                    </label>
-                                    <input name="tig_details" type="text" value="{{ $section->tig_details ?? '' }}"
-                                        class="w-full bg-white border-none rounded-lg py-2.5 px-4 text-sm focus:ring-2 focus:ring-primary/20"
-                                        placeholder="Details (dose, date)..." />
-                                </div>
-                            </div>
-                            <div class="bg-surface-container-low rounded-xl p-6 mb-8">
-                                <p class="text-xs font-extrabold text-outline uppercase tracking-widest mb-4">Passive
-                                    Immunization (Rabies)</p>
-                                <div class="grid grid-cols-2 gap-6">
+                                <div class="grid grid-cols-[1fr_auto_auto] gap-6 mb-8">
                                     <div>
-                                        <label
-                                            class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Type</label>
-                                        <div class="flex items-center bg-white rounded-lg p-1">
-                                            @php $passiveType = $val('passive_type'); @endphp
-                                            <label class="flex-1">
-                                                <input class="hidden peer" name="passive_type" type="radio" value="ERIG (EQUIRAB)" {{ $passiveType === 'ERIG (EQUIRAB)' ? 'checked' : '' }} />
-                                                <span class="block py-2 text-center text-xs font-bold text-outline peer-checked:bg-primary peer-checked:text-white rounded-md cursor-pointer transition-all">ERIG</span>
-                                            </label>
-                                            <label class="flex-1">
-                                                <input class="hidden peer" name="passive_type" type="radio" value="HRIG (BERIRAB)" {{ $passiveType === 'HRIG (BERIRAB)' ? 'checked' : '' }} />
-                                                <span class="block py-2 text-center text-xs font-bold text-outline peer-checked:bg-primary peer-checked:text-white rounded-md cursor-pointer transition-all">HRIG</span>
-                                            </label>
-                                            <label class="flex-1">
-                                                <input class="hidden peer" name="passive_type" type="radio" value="" {{ $passiveType === '' ? 'checked' : '' }} />
-                                                <span class="block py-2 text-center text-xs font-bold text-outline peer-checked:bg-primary peer-checked:text-white rounded-md cursor-pointer transition-all">NO</span>
-                                            </label>
+                                        <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Vaccine Brand <span class="text-error">*</span></label>
+                                        {!! $dropdown('vaccine_brand', ['VERORAB' => 'VERORAB (PVRV)', 'SPEEDA' => 'SPEEDA (PVRV)', 'VAXIRAB' => 'VAXIRAB (PCEC)']) !!}
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Route <span class="text-error">*</span></label>
+                                        {!! $dropdown('route', ['ID' => 'ID (Intradermal, 0.1mL)', 'IM' => 'IM (Intramuscular, 0.5mL)'], 'bg-surface-container-low', true) !!}
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Dose Type <span class="text-error">*</span></label>
+                                        {!! $dropdown('dose_type', ['Primary' => 'Primary', 'Booster' => 'Booster'], 'bg-surface-container-low', true) !!}
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-3 gap-6 mb-8">
+                                    <div>
+                                        <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Patient Weight (kg) <span class="text-error">*</span></label>
+                                        <input name="patient_weight" data-field="patient_weight" type="number" step="0.01" min="0" max="999.99"
+                                            value="{{ $val('patient_weight') }}"
+                                            class="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 ring-1 ring-transparent focus:ring-2 focus:ring-primary/20 font-medium"
+                                            placeholder="e.g. 55.50" />
+                                        <p data-error-for="patient_weight" class="mt-1 ml-1 text-xs font-semibold text-error {{ $errors->has('patient_weight') ? '' : 'hidden' }}">{{ $errors->first('patient_weight') }}</p>
+                                        <p class="mt-1 ml-1 text-[10px] text-on-surface-variant/80 italic">Used for passive immunoglobulin dosage.</p>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Administered By <span class="text-error">*</span></label>
+                                        <input name="administered_by" data-field="administered_by" type="text"
+                                            value="{{ $val('administered_by') }}"
+                                            class="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 ring-1 ring-transparent focus:ring-2 focus:ring-primary/20 font-medium"
+                                            placeholder="Name of attending health worker" />
+                                        <p data-error-for="administered_by" class="mt-1 ml-1 text-xs font-semibold text-error {{ $errors->has('administered_by') ? '' : 'hidden' }}">{{ $errors->first('administered_by') }}</p>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">30-min Skin Test Due</label>
+                                        <input name="skin_test_due" type="time"
+                                            value="{{ $val('skin_test_due') }}"
+                                            class="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/20 font-medium" />
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-6 mb-8">
+                                    <div class="bg-surface-container-low rounded-xl p-5">
+                                        <p class="text-xs font-extrabold text-outline uppercase tracking-widest mb-3">Tetanus
+                                            Prophylaxis</p>
+                                        <label class="flex items-center gap-2 cursor-pointer mb-3">
+                                            <!-- Added id="tetanus_given" -->
+                                            <input id="tetanus_given" name="tetanus_given" type="checkbox" value="1"
+                                                {{ ($section->tetanus_given ?? false) ? 'checked' : '' }}
+                                                class="rounded text-primary focus:ring-primary/20" />
+                                            <span class="text-sm font-medium">Tetanus prophylaxis given</span>
+                                        </label>
+                                        <!-- Added id="tetanus_details" and disabled styling -->
+                                        <input id="tetanus_details" name="tetanus_details" type="text"
+                                            value="{{ $section->tetanus_details ?? '' }}"
+                                            class="w-full bg-white border-none rounded-lg py-2.5 px-4 text-sm focus:ring-2 focus:ring-primary/20 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed transition-all"
+                                            placeholder="Details (vaccine, dose, date)..." />
+                                    </div>
+                                    <div class="bg-surface-container-low rounded-xl p-5">
+                                        <p class="text-xs font-extrabold text-outline uppercase tracking-widest mb-3">Tetanus
+                                            Immune Globulin (TIG)</p>
+                                        <label class="flex items-center gap-2 cursor-pointer mb-3">
+                                            <!-- Added id="tig_given" -->
+                                            <input id="tig_given" name="tig_given" type="checkbox" value="1"
+                                                {{ ($section->tig_given ?? false) ? 'checked' : '' }}
+                                                class="rounded text-primary focus:ring-primary/20" />
+                                            <span class="text-sm font-medium">TIG given</span>
+                                        </label>
+                                        <!-- Added id="tig_details" and disabled styling -->
+                                        <input id="tig_details" name="tig_details" type="text" value="{{ $section->tig_details ?? '' }}"
+                                            class="w-full bg-white border-none rounded-lg py-2.5 px-4 text-sm focus:ring-2 focus:ring-primary/20 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed transition-all"
+                                            placeholder="Details (dose, date)..." />
+                                    </div>
+                                </div>
+                                <div class="bg-surface-container-low rounded-xl p-6 mb-8">
+                                    <p class="text-xs font-extrabold text-outline uppercase tracking-widest mb-4">Passive
+                                        Immunization (Rabies)</p>
+                                    <div class="grid grid-cols-2 gap-6">
+                                        <div>
+                                            <label
+                                                class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Type</label>
+                                            <div class="flex items-center bg-white rounded-lg p-1">
+                                                @php $passiveType = $val('passive_type'); @endphp
+                                                <label class="flex-1">
+                                                    <input class="hidden peer" name="passive_type" type="radio" value="ERIG (EQUIRAB)" {{ $passiveType === 'ERIG (EQUIRAB)' ? 'checked' : '' }} />
+                                                    <span class="block py-2 text-center text-xs font-bold text-outline peer-checked:bg-primary peer-checked:text-white rounded-md cursor-pointer transition-all">ERIG</span>
+                                                </label>
+                                                <label class="flex-1">
+                                                    <input class="hidden peer" name="passive_type" type="radio" value="HRIG (BERIRAB)" {{ $passiveType === 'HRIG (BERIRAB)' ? 'checked' : '' }} />
+                                                    <span class="block py-2 text-center text-xs font-bold text-outline peer-checked:bg-primary peer-checked:text-white rounded-md cursor-pointer transition-all">HRIG</span>
+                                                </label>
+                                                <label class="flex-1">
+                                                    <input class="hidden peer" name="passive_type" type="radio" value="" {{ $passiveType === '' ? 'checked' : '' }} />
+                                                    <span class="block py-2 text-center text-xs font-bold text-outline peer-checked:bg-primary peer-checked:text-white rounded-md cursor-pointer transition-all">NO</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label
+                                                class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Route <span class="text-[10px] normal-case font-medium">(required if ERIG/HRIG)</span></label>
+                                            {!! $dropdown('passive_route', ['IU infiltrate' => 'IU infiltrate', 'IM' => 'IM'], 'bg-white') !!}
                                         </div>
                                     </div>
-                                    <div>
-                                        <label
-                                            class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Route <span class="text-[10px] normal-case font-medium">(required if ERIG/HRIG)</span></label>
-                                        {!! $dropdown('passive_route', ['IU infiltrate' => 'IU infiltrate', 'IM' => 'IM'], 'bg-white') !!}
+                                </div>
+                                <div class="bg-surface-container-low rounded-xl p-6">
+                                    <p class="text-xs font-extrabold text-outline uppercase tracking-widest mb-4">Dose
+                                        Tracking Grid</p>
+                                    <div class="grid grid-cols-4 gap-4">
+                                        <div data-field-wrap="day0_date" class="bg-white p-4 rounded-lg border border-primary/20 ring-1 ring-transparent">
+                                            <p class="text-[10px] font-bold text-primary uppercase mb-1">Day 0 <span class="text-error">*</span></p>
+                                            <input name="day0_date" data-field="day0_date" type="date" max="{{ now()->toDateString() }}" value="{{ $val('day0_date') }}"
+                                                class="w-full text-[10px] font-bold text-on-surface bg-transparent border-none p-0 focus:ring-0" />
+                                            <p data-error-for="day0_date" class="mt-1 text-xs font-semibold text-error {{ $errors->has('day0_date') ? '' : 'hidden' }}">{{ $errors->first('day0_date') }}</p>
+                                        </div>
+                                        <div data-field-wrap="day3_date" class="bg-white p-4 rounded-lg border border-outline-variant/30 ring-1 ring-transparent">
+                                            <p class="text-[10px] font-bold text-outline uppercase mb-1">Day 3</p>
+                                            <input name="day3_date" data-field="day3_date" type="date" max="{{ now()->toDateString() }}" value="{{ $val('day3_date') }}"
+                                                class="w-full text-[10px] font-bold text-on-surface bg-transparent border-none p-0 focus:ring-0" />
+                                            <p data-error-for="day3_date" class="mt-1 text-xs font-semibold text-error {{ $errors->has('day3_date') ? '' : 'hidden' }}">{{ $errors->first('day3_date') }}</p>
+                                        </div>
+                                        <div data-field-wrap="day7_date" class="bg-white p-4 rounded-lg border border-outline-variant/30 ring-1 ring-transparent">
+                                            <p class="text-[10px] font-bold text-outline uppercase mb-1">Day 7</p>
+                                            <input name="day7_date" data-field="day7_date" type="date" max="{{ now()->toDateString() }}" value="{{ $val('day7_date') }}"
+                                                class="w-full text-[10px] font-bold text-on-surface bg-transparent border-none p-0 focus:ring-0" />
+                                            <p data-error-for="day7_date" class="mt-1 text-xs font-semibold text-error {{ $errors->has('day7_date') ? '' : 'hidden' }}">{{ $errors->first('day7_date') }}</p>
+                                        </div>
+                                        <div data-field-wrap="day28_date" class="bg-white p-4 rounded-lg border border-outline-variant/30 ring-1 ring-transparent">
+                                            <p class="text-[10px] font-bold text-outline uppercase mb-1">Day 28</p>
+                                            <input name="day28_date" data-field="day28_date" type="date" max="{{ now()->toDateString() }}" value="{{ $val('day28_date') }}"
+                                                class="w-full text-[10px] font-bold text-on-surface bg-transparent border-none p-0 focus:ring-0" />
+                                            <p data-error-for="day28_date" class="mt-1 text-xs font-semibold text-error {{ $errors->has('day28_date') ? '' : 'hidden' }}">{{ $errors->first('day28_date') }}</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="bg-surface-container-low rounded-xl p-6">
-                                <p class="text-xs font-extrabold text-outline uppercase tracking-widest mb-4">Dose
-                                    Tracking Grid</p>
-                                <div class="grid grid-cols-4 gap-4">
-                                    <div data-field-wrap="day0_date" class="bg-white p-4 rounded-lg border border-primary/20 ring-1 ring-transparent">
-                                        <p class="text-[10px] font-bold text-primary uppercase mb-1">Day 0 <span class="text-error">*</span></p>
-                                        <input name="day0_date" data-field="day0_date" type="date" max="{{ now()->toDateString() }}" value="{{ $val('day0_date') }}"
-                                            class="w-full text-[10px] font-bold text-on-surface bg-transparent border-none p-0 focus:ring-0" />
-                                        <p data-error-for="day0_date" class="mt-1 text-xs font-semibold text-error {{ $errors->has('day0_date') ? '' : 'hidden' }}">{{ $errors->first('day0_date') }}</p>
-                                    </div>
-                                    <div data-field-wrap="day3_date" class="bg-white p-4 rounded-lg border border-outline-variant/30 ring-1 ring-transparent">
-                                        <p class="text-[10px] font-bold text-outline uppercase mb-1">Day 3</p>
-                                        <input name="day3_date" data-field="day3_date" type="date" max="{{ now()->toDateString() }}" value="{{ $val('day3_date') }}"
-                                            class="w-full text-[10px] font-bold text-on-surface bg-transparent border-none p-0 focus:ring-0" />
-                                        <p data-error-for="day3_date" class="mt-1 text-xs font-semibold text-error {{ $errors->has('day3_date') ? '' : 'hidden' }}">{{ $errors->first('day3_date') }}</p>
-                                    </div>
-                                    <div data-field-wrap="day7_date" class="bg-white p-4 rounded-lg border border-outline-variant/30 ring-1 ring-transparent">
-                                        <p class="text-[10px] font-bold text-outline uppercase mb-1">Day 7</p>
-                                        <input name="day7_date" data-field="day7_date" type="date" max="{{ now()->toDateString() }}" value="{{ $val('day7_date') }}"
-                                            class="w-full text-[10px] font-bold text-on-surface bg-transparent border-none p-0 focus:ring-0" />
-                                        <p data-error-for="day7_date" class="mt-1 text-xs font-semibold text-error {{ $errors->has('day7_date') ? '' : 'hidden' }}">{{ $errors->first('day7_date') }}</p>
-                                    </div>
-                                    <div data-field-wrap="day28_date" class="bg-white p-4 rounded-lg border border-outline-variant/30 ring-1 ring-transparent">
-                                        <p class="text-[10px] font-bold text-outline uppercase mb-1">Day 28</p>
-                                        <input name="day28_date" data-field="day28_date" type="date" max="{{ now()->toDateString() }}" value="{{ $val('day28_date') }}"
-                                            class="w-full text-[10px] font-bold text-on-surface bg-transparent border-none p-0 focus:ring-0" />
-                                        <p data-error-for="day28_date" class="mt-1 text-xs font-semibold text-error {{ $errors->has('day28_date') ? '' : 'hidden' }}">{{ $errors->first('day28_date') }}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
+                        </form>
                     </div>
                     <div
                         class="p-6 bg-surface-container-low border-t border-outline-variant/20 flex justify-between items-center px-8">
@@ -574,7 +578,10 @@
                 };
                 document.getElementById('formErrorToastClose').addEventListener('click', hide);
                 if (!banner.classList.contains('hidden')) show(); // errors rendered by the server
-                return { show, hide };
+                return {
+                    show,
+                    hide
+                };
             })();
 
             // Required to move on to Section VIII. Drafts skip these.
@@ -587,16 +594,16 @@
                 day0_date: 'Please set the Day 0 date.',
             };
             const DATE_FIELDS = ['day0_date', 'day3_date', 'day7_date', 'day28_date'];
-            const ALL_CHECKED = Object.keys(REQUIRED).concat(['passive_route', 'day3_date', 'day7_date', 'day28_date']);
+            const ALL_CHECKED = Object.keys(REQUIRED).concat(['passive_route', 'day3_date', 'day7_date', 'day28_date', 'tetanus_details', 'tig_details']);
 
             const field = (name) => form.querySelector(`[data-field="${name}"]`);
             const errorEl = (name) => form.querySelector(`[data-error-for="${name}"]`);
             // The element that gets the red ring: the dropdown trigger, the Day 0 card, or the input itself
             const ringEl = (name) => {
                 const f = field(name);
-                return f.type === 'hidden'
-                    ? f.closest('[data-dd]').querySelector('[data-dd-trigger]')
-                    : (f.closest('[data-field-wrap]') || f);
+                return f.type === 'hidden' ?
+                    f.closest('[data-dd]').querySelector('[data-dd-trigger]') :
+                    (f.closest('[data-field-wrap]') || f);
             };
 
             function setError(name, message) {
@@ -622,12 +629,39 @@
                 let firstBad = null;
                 ALL_CHECKED.forEach((name) => {
                     let message = '';
-                    const value = field(name).value.trim();
+                    
+                    // 1. Get the field element first
+                    const currentField = field(name);
+                    
+                    // 2. Skip validation entirely if the field doesn't exist or is disabled
+                    if (!currentField || currentField.disabled) {
+                        return; // This moves on to the next item in ALL_CHECKED
+                    }
+
+                    // 3. Now it is safe to check the value
+                    const value = currentField.value.trim();
+
+                    // Skip validation if the field doesn't exist or is disabled
+                    if (!currentField || currentField.disabled) {
+                        return;
+                    }
+
                     if (names.includes(name)) {
                         if (name === 'passive_route') {
                             const passive = form.querySelector('input[name="passive_type"]:checked');
-                            if (passive && passive.value !== '' && value === '') {
+                            // Ensure it ignores empty strings, 'NO', or '0'
+                            if (passive && !['', 'NO', '0'].includes(passive.value) && value === '') {
                                 message = 'Please select a route for the passive immunization.';
+                            }
+                        } else if (name === 'tetanus_details') {
+                            const tetanus = document.getElementById('tetanus_given');
+                            if (tetanus && tetanus.checked && value === '') {
+                                message = 'Please provide tetanus details.';
+                            }
+                        } else if (name === 'tig_details') {
+                            const tig = document.getElementById('tig_given');
+                            if (tig && tig.checked && value === '') {
+                                message = 'Please provide TIG details.';
                             }
                         } else if (name in REQUIRED && value === '') {
                             message = REQUIRED[name];
@@ -639,8 +673,12 @@
                     setError(name, message);
                     if (message && !firstBad) firstBad = name;
                 });
-                if (firstBad) errorToast.show(); else errorToast.hide();
-                if (firstBad) ringEl(firstBad).scrollIntoView({ behavior: 'smooth', block: 'center' });
+                if (firstBad) errorToast.show();
+                else errorToast.hide();
+                if (firstBad) ringEl(firstBad).scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
                 return !firstBad;
             }
 
@@ -727,10 +765,10 @@
                 setError(el.dataset.errorFor, el.textContent.trim());
             });
         }
-</script>
+    </script>
     <script>
         // Draft-saved toast: closes on the X button or by itself after 4 seconds
-        (function () {
+        (function() {
             const toast = document.getElementById('statusToast');
             if (!toast) return;
             const dismiss = () => {
@@ -744,7 +782,7 @@
     <script>
         // Queue filter: every word typed must match somewhere in the case card
         // (patient name, case no., category, status, incident date)
-        (function () {
+        (function() {
             const input = document.getElementById('queueFilterInput');
             const items = document.querySelectorAll('#queueList .queue-item');
             const noMatch = document.getElementById('queueNoMatch');
@@ -761,15 +799,92 @@
                     if (match) shown++;
                 });
                 if (noMatch) noMatch.classList.toggle('hidden', shown > 0 || items.length === 0);
-                try { sessionStorage.setItem(KEY, input.value); } catch (e) {}
+                try {
+                    sessionStorage.setItem(KEY, input.value);
+                } catch (e) {}
             };
 
             input.addEventListener('input', apply);
             // Keep the filter when moving between sections / selecting a case
-            try { input.value = sessionStorage.getItem(KEY) || ''; } catch (e) {}
+            try {
+                input.value = sessionStorage.getItem(KEY) || '';
+            } catch (e) {}
             apply();
         })();
     </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 1. Tetanus & TIG Checkbox Logic
+            const tetanusCheckbox = document.getElementById('tetanus_given');
+            const tetanusDetails = document.getElementById('tetanus_details');
+
+            const tigCheckbox = document.getElementById('tig_given');
+            const tigDetails = document.getElementById('tig_details');
+
+            function toggleDetailsField(checkbox, textField) {
+                if (checkbox && textField) {
+                    textField.disabled = !checkbox.checked;
+                    if (!checkbox.checked) {
+                        textField.value = '';
+                    }
+                }
+            }
+
+            if (tetanusCheckbox) {
+                tetanusCheckbox.addEventListener('change', () => toggleDetailsField(tetanusCheckbox, tetanusDetails));
+                toggleDetailsField(tetanusCheckbox, tetanusDetails);
+            }
+
+            if (tigCheckbox) {
+                tigCheckbox.addEventListener('change', () => toggleDetailsField(tigCheckbox, tigDetails));
+                toggleDetailsField(tigCheckbox, tigDetails);
+            }
+
+            // 2. Passive Immunization Route Logic
+            const passiveTypeRadios = document.querySelectorAll('input[name="passive_type"]');
+            const passiveRouteInput = document.querySelector('input[name="passive_route"]');
+
+            function toggleRouteSelect() {
+                if (passiveRouteInput) {
+                    // Target the custom dropdown UI elements generated by your PHP function
+                    const dropdownWrapper = passiveRouteInput.closest('[data-dd]');
+                    const dropdownButton = dropdownWrapper.querySelector('[data-dd-trigger]');
+                    const dropdownLabel = dropdownWrapper.querySelector('[data-dd-label]');
+
+                    let isNoSelected = false;
+                    passiveTypeRadios.forEach(radio => {
+                        // Check if the "NO" radio button is the one currently selected
+                        if (radio.checked && (radio.value === 'NO' || radio.value === '' || radio.value === '0')) {
+                            isNoSelected = true;
+                        }
+                    });
+
+                    dropdownButton.disabled = isNoSelected;
+
+                    if (isNoSelected) {
+                        // Add Tailwind classes to make the custom button look disabled
+                        dropdownButton.classList.add('opacity-50', 'cursor-not-allowed', 'bg-slate-100');
+                        passiveRouteInput.value = ''; // Clear the hidden input value
+                        dropdownLabel.textContent = 'Select'; // Reset the visible text
+                        dropdownLabel.classList.remove('text-on-surface');
+                        dropdownLabel.classList.add('text-outline');
+                    } else {
+                        // Remove disabled styling
+                        dropdownButton.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-slate-100');
+                    }
+                }
+            }
+
+            // Attach event listeners to all passive type radio buttons
+            passiveTypeRadios.forEach(radio => {
+                radio.addEventListener('change', toggleRouteSelect);
+            });
+
+            // Initialize on page load
+            toggleRouteSelect();
+        });
+    </script>
+
 </body>
 
 </html>

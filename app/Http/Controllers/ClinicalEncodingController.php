@@ -132,9 +132,9 @@ class ClinicalEncodingController extends Controller
         $validated = $request->validate([
             'patient_weight' => $required . '|numeric|min:0|max:999.99',
             'tetanus_given' => 'nullable|boolean',
-            'tetanus_details' => 'nullable|string|max:200',
+            'tetanus_details' => 'exclude_unless:tetanus_given,true,1|' . $required . '|string|max:200',
             'tig_given' => 'nullable|boolean',
-            'tig_details' => 'nullable|string|max:200',
+            'tig_details' => 'exclude_unless:tig_given,true,1|' . $required . '|string|max:200',
             'vaccine_brand' => $required . '|string|max:100',
             'route' => $required . '|in:ID,IM',
             'dose_type' => $required . '|in:Primary,Booster',
@@ -145,7 +145,7 @@ class ClinicalEncodingController extends Controller
             'passive_given' => 'nullable|boolean',
             'passive_type' => 'nullable|string|max:50',
             // Only needed once a passive immunoglobulin (ERIG/HRIG) is chosen
-            'passive_route' => ($isDraft ? 'nullable' : 'required_with:passive_type') . '|in:IU infiltrate,IM',
+            'passive_route' => 'nullable|required_with:passive_type|in:IU infiltrate,IM',
             'skin_test_due' => 'nullable|date_format:H:i',
             'administered_by' => $required . '|string|max:100',
         ]);

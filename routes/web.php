@@ -26,6 +26,14 @@ Route::prefix('admin')->group(function () {
         return view('admin.dashboard');
     })->name('admin.dashboard');
 
+    Route::get('/spatial-map', function () {
+        $barangayData = DB::table('inflow_general_particulars')
+            ->select('barangay', DB::raw('count(*) as total_cases'))
+            ->groupBy('barangay')
+            ->get();
+        return view('admin.gis_map', compact('barangayData'));
+    })->name('admin.gis_map');
+
     Route::get('/analytics', function () {
         return view('admin.V_and_A');
     })->name('admin.analytics');

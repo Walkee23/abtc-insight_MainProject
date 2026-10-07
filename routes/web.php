@@ -49,8 +49,35 @@ Route::prefix('admin')->group(function () {
     })->name('admin.forecasting');
 
     Route::get('/system-management', function () {
-        return view('admin.USM');
+        $healthWorkersCount = DB::table('users')->where('role', 'Healthworker')->count();
+        $internsCount = DB::table('users')->where('role', 'OJT')->orWhere('role', 'Intern')->count();
+        $staffCount = DB::table('users')->where('role', 'Staff')->count();
+        $users = DB::table('users')->latest()->get();
+
+        return view('admin.USM', compact('healthWorkersCount', 'internsCount', 'staffCount', 'users'));
     })->name('admin.usm');
+
+    Route::post('/system-management/store-user', function (Illuminate\Http\Request $request) {
+        $request->validate([
+            'username'            => 'required|string|max:50|unique:users,username',
+            'full_name'           => 'required|string|max:100',
+            'role'                => 'required|string',
+            'password'            => 'required|min:6',
+            'barangay_assignment' => 'nullable|string|max:100',
+        ]);
+
+        DB::table('users')->insert([
+            'username'            => $request->username,
+            'password_hash'       => bcrypt($request->password),
+            'full_name'           => $request->full_name,
+            'role'                => $request->role,
+            'is_active'           => 1,
+            'created_at'          => now(),
+            'barangay_assignment' => $request->role === 'BHW' ? $request->barangay_assignment : null,
+        ]);
+
+        return redirect()->route('admin.usm')->with('success', 'User account created successfully!');
+    })->name('admin.store-user');
 });
 
 // Staff Routes

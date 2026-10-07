@@ -118,9 +118,6 @@
                     <a  class="text-slate-600 hover:text-blue-600 transition-colors" href="{{ route('patient.register') }}">Patient Registration</a>
                     <a  class="text-slate-600 hover:text-blue-600 transition-colors" href="{{ route('patient.tracking.portal') }}">Tracking Portal</a>
                 </div>
-                <button type="button" class="bg-primary text-on-primary px-5 py-2 rounded-full font-semibold active:scale-95 transition-transform" onclick="window.location.href='{{ route('login') }}';">
-                    Login
-                </button>
             </div>
         </div>
         <!-- Separation Line -->

@@ -12,7 +12,7 @@ Route::get('/', function () {
     return view('welcome_portal');
 });
 
-Route::get('/login', function () {
+Route::get('/cchd-secure-portal', function () {
     return view('auth.login');
 })->name('login');
 

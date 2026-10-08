@@ -147,6 +147,10 @@
                     <span class="material-symbols-outlined">manage_accounts</span>
                     <span class="font-['Inter'] text-sm tracking-wide">User & System Management</span>
                 </a>
+                <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 hover:text-blue-600 transition-all hover:bg-slate-100" href="{{ route('admin.gis_map') }}">
+                    <span class="material-symbols-outlined">map</span>
+                    <span class="text-sm tracking-wide">Spatial Map</span>
+                </a>
             </nav>
         </div>
         <div class="px-6 mt-auto pb-8">

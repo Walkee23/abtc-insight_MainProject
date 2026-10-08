@@ -409,12 +409,11 @@
                                         <p class="mt-1 ml-1 text-[10px] text-on-surface-variant/80 italic">Used for passive immunoglobulin dosage.</p>
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Administered By <span class="text-error">*</span></label>
-                                        <input name="administered_by" data-field="administered_by" type="text"
-                                            value="{{ $val('administered_by') }}"
-                                            class="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 ring-1 ring-transparent focus:ring-2 focus:ring-primary/20 font-medium"
-                                            placeholder="Name of attending health worker" />
-                                        <p data-error-for="administered_by" class="mt-1 ml-1 text-xs font-semibold text-error {{ $errors->has('administered_by') ? '' : 'hidden' }}">{{ $errors->first('administered_by') }}</p>
+                                        <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Administered By</label>
+                                        <input type="text" readonly tabindex="-1"
+                                            value="{{ Auth::user()->full_name ?? ($section->administered_by ?? '') }}"
+                                            class="w-full bg-surface-container-high border-none rounded-lg py-3 px-4 font-medium text-on-surface-variant cursor-not-allowed select-none focus:ring-0"
+                                            placeholder="Logged-in health worker" />
                                     </div>
                                     <div>
                                         <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">30-min Skin Test Due</label>
@@ -590,7 +589,6 @@
                 route: 'Please select a route.',
                 dose_type: 'Please select a dose type.',
                 patient_weight: 'Please enter the patient weight.',
-                administered_by: 'Please enter who administered the dose.',
                 day0_date: 'Please set the Day 0 date.',
             };
             const DATE_FIELDS = ['day0_date', 'day3_date', 'day7_date', 'day28_date'];

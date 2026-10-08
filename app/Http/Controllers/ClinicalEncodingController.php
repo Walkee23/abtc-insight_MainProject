@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class ClinicalEncodingController extends Controller
@@ -161,8 +162,13 @@ class ClinicalEncodingController extends Controller
             // Only needed once a passive immunoglobulin (ERIG/HRIG) is chosen
             'passive_route' => 'nullable|required_with:passive_type|in:IU infiltrate,IM',
             'skin_test_due' => 'nullable|date_format:H:i',
-            'administered_by' => $required . '|string|max:100',
         ]);
+
+        // Administered by is always the logged-in health worker: never taken from the form
+        // (a guest session leaves whatever was saved before untouched)
+        if ($name = Auth::user()->full_name ?? null) {
+            $validated['administered_by'] = $name;
+        }
 
         $validated['tetanus_given'] = $request->boolean('tetanus_given');
         $validated['tig_given'] = $request->boolean('tig_given');
@@ -264,8 +270,9 @@ class ClinicalEncodingController extends Controller
         // Finalized: mark the case Completed so it drops out of the queue
         DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->update(['outcome' => 'Completed']);
 
-        // Last section - send the health worker back to their dashboard
-        return redirect()->route('healthworker.dashboard')
+        // Last section - stay in Clinical Encoding: back to the queue with no case selected,
+        // where the finalized case no longer appears
+        return redirect()->route('healthworker.clinical-encoding')
             ->with('status', 'Clinical encoding completed for this case.');
     }
 

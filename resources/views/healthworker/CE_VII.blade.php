@@ -410,14 +410,10 @@
                                     </div>
                                     <div>
                                         <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Administered By</label>
-                                        <div class="relative">
-                                            <input type="text" readonly tabindex="-1"
-                                                value="{{ Auth::user()->full_name ?? ($section->administered_by ?? '') }}"
-                                                class="w-full bg-surface-container-high border-none rounded-lg py-3 pl-4 pr-10 font-medium text-on-surface-variant cursor-not-allowed select-none focus:ring-0"
-                                                placeholder="Logged-in health worker" />
-                                            <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline text-[18px] pointer-events-none">lock</span>
-                                        </div>
-                                        <p class="mt-1 ml-1 text-[10px] text-on-surface-variant/80 italic">Filled in automatically from your account.</p>
+                                        <input type="text" readonly tabindex="-1"
+                                            value="{{ Auth::user()->full_name ?? ($section->administered_by ?? '') }}"
+                                            class="w-full bg-surface-container-high border-none rounded-lg py-3 px-4 font-medium text-on-surface-variant cursor-not-allowed select-none focus:ring-0"
+                                            placeholder="Logged-in health worker" />
                                     </div>
                                     <div>
                                         <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">30-min Skin Test Due</label>

@@ -460,10 +460,6 @@
                                             </label>
                                         </div>
                                     </div>
-                                    <div class="bg-tertiary-fixed p-4 rounded-lg flex gap-3 items-start border-l-4 border-on-tertiary-fixed-variant shadow-sm">
-                                        <span class="material-symbols-outlined text-on-tertiary-fixed-variant" style="font-variation-settings: 'FILL' 1;">info</span>
-                                        <p class="text-xs text-on-tertiary-fixed-variant font-medium">Check with ABTC health worker for history or record patient's claims if medical documentation is unavailable. Incomplete history may lead to dosage errors.</p>
-                                    </div>
                                     <div id="dose_dates_wrapper" class="grid grid-cols-2 md:grid-cols-4 gap-4 hidden">
                                         <div class="space-y-2">
                                             <label class="block text-[10px] font-bold text-on-surface-variant uppercase">Dose 1 Date</label>
@@ -483,6 +479,11 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div class="bg-tertiary-fixed p-4 rounded-lg flex gap-3 items-start border-l-4 border-on-tertiary-fixed-variant shadow-sm">
+                                        <span class="material-symbols-outlined text-on-tertiary-fixed-variant" style="font-variation-settings: 'FILL' 1;">info</span>
+                                        <p class="text-xs text-on-tertiary-fixed-variant font-medium">Check with ABTC health worker for history or record patient's claims if medical documentation is unavailable. Incomplete history may lead to dosage errors.</p>
+                                    </div>
+
                             </section>
 
                             <!-- Form Submission -->

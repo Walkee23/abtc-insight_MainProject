@@ -475,6 +475,18 @@
             
             const submitBtn = document.getElementById('submitBtn');
 
+            (function () {
+        const t = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        const ymd = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+
+        const oldest = new Date(t);
+        oldest.setFullYear(t.getFullYear() - 125);
+
+        dobInput.max = ymd(t);
+        dobInput.min = ymd(oldest);
+        })();
+
             // Track validation states
             let isAgeValid = true;
             let isContactValid = true;

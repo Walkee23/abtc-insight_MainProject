@@ -289,7 +289,7 @@
                                 </div>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pl-11">
                                     <div class="space-y-4">
-                                        <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Animal Type</label>
+                                        <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Animal Type <span class="text-error">*</label>
                                     <div class="flex flex-wrap gap-4 items-center">
                                         <label class="flex items-center gap-2 text-sm cursor-pointer">
                                             <input class="text-primary focus:ring-primary animal-type-radio" name="animal_type" value="Dog" type="radio" required /> Dog
@@ -317,7 +317,7 @@
                                     </div>
 
                                     <div class="space-y-2">
-                                        <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Date/Time of Bite</label>
+                                        <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Date/Time of Bite <span class="text-error">*</label>
                                         <div class="flex gap-2">
                                             <input id="bite_date_input" class="w-full bg-surface-container-highest border-none rounded-lg text-sm px-4 py-2.5 focus:ring-2 focus:ring-primary/20 transition-all outline-none" name="bite_date" type="date" required />
                                             <input id="bite_time_input" class="w-full bg-surface-container-highest border-none rounded-lg text-sm px-4 py-2.5 focus:ring-2 focus:ring-primary/20 transition-all outline-none" name="bite_time" type="time" />

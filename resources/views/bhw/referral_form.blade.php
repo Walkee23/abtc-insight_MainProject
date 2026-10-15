@@ -594,6 +594,28 @@
                 exposureDate.addEventListener('change', limitExposureTime);
                 exposureTime.addEventListener('change', limitExposureTime);
 
+                // Non-Bite: only Category I is allowed
+const exposureTypeRadios = document.querySelectorAll('input[name="exposure_type"]');
+const categoryRadios = document.querySelectorAll('input[name="exposure_category"]');
+
+function applyCategoryRule() {
+    const selected = document.querySelector('input[name="exposure_type"]:checked');
+    const nonBite = selected && selected.value === 'Non-Bite';
+
+    categoryRadios.forEach(r => {
+        if (r.value === '2' || r.value === '3') {
+            r.disabled = nonBite;
+            if (nonBite && r.checked) r.checked = false;
+            const label = r.closest('label');
+            label.classList.toggle('opacity-40', nonBite);
+            label.classList.toggle('pointer-events-none', nonBite);
+        }
+    });
+}
+
+exposureTypeRadios.forEach(r => r.addEventListener('change', applyCategoryRule));
+applyCategoryRule();
+
             // 4. Preview Button Alert
             document.getElementById('previewBtn').addEventListener('click', function() {
                 alert("Preview functionality: This will open a popup showing how the printed form looks before saving. We can add a Bootstrap/Tailwind Modal here next!");

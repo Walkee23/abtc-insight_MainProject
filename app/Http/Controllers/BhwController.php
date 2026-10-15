@@ -32,10 +32,17 @@ class BhwController extends Controller
 
     public function storeReferral(Request $request)
     {
-        $request->validate([
-             'exposure_category' => 'required|in:1,2,3',
-             'animal_remarks'    => 'nullable|string|max:1000',
-]);
+         $request->validate([
+        'exposure_category' => [
+            'required', 'in:1,2,3',
+            function ($attribute, $value, $fail) use ($request) {
+                if ($request->input('exposure_type') === 'Non-Bite' && (string) $value !== '1') {
+                    $fail('Non-bite exposure can only be Category I.');
+                }
+            },
+        ],
+        'animal_remarks' => 'nullable|string|max:1000',
+    ]);
         $barangayName = $request->input('patient_barangay');
         
         // 1. Get the 3-digit code from the config file, default to '000' if not found

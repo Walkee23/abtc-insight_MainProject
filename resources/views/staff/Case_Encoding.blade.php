@@ -289,7 +289,7 @@
                                 </div>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pl-11">
                                     <div class="space-y-4">
-                                        <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Animal Type</label>
+                                        <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Animal Type <span class="text-error">*</label>
                                     <div class="flex flex-wrap gap-4 items-center">
                                         <label class="flex items-center gap-2 text-sm cursor-pointer">
                                             <input class="text-primary focus:ring-primary animal-type-radio" name="animal_type" value="Dog" type="radio" required /> Dog
@@ -317,10 +317,10 @@
                                     </div>
 
                                     <div class="space-y-2">
-                                        <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Date/Time of Bite</label>
+                                        <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Date/Time of Bite <span class="text-error">*</label>
                                         <div class="flex gap-2">
-                                            <input class="w-full bg-surface-container-highest border-none rounded-lg text-sm px-4 py-2.5 focus:ring-2 focus:ring-primary/20 transition-all outline-none" name="bite_date" type="date" required />
-                                            <input class="w-full bg-surface-container-highest border-none rounded-lg text-sm px-4 py-2.5 focus:ring-2 focus:ring-primary/20 transition-all outline-none" name="bite_time" type="time" />
+                                            <input id="bite_date_input" class="w-full bg-surface-container-highest border-none rounded-lg text-sm px-4 py-2.5 focus:ring-2 focus:ring-primary/20 transition-all outline-none" name="bite_date" type="date" required />
+                                            <input id="bite_time_input" class="w-full bg-surface-container-highest border-none rounded-lg text-sm px-4 py-2.5 focus:ring-2 focus:ring-primary/20 transition-all outline-none" name="bite_time" type="time" />
                                         </div>
                                     </div>
 
@@ -452,17 +452,13 @@
                                     <div class="flex items-center gap-8">
                                         <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Previously Vaccinated?</label>
                                         <div class="flex gap-4">
-                                            <label class="flex items-center gap-2 text-sm cursor-pointer font-bold text-primary">
+                                            <label class="flex items-center gap-2 text-sm cursor-pointer has-[:checked]:font-bold has-[:checked]:text-primary">
                                                 <input class="text-primary focus:ring-primary" id="prev_arv_yes" name="prev_arv_given" value="1" type="radio" /> Yes
                                             </label>
-                                            <label class="flex items-center gap-2 text-sm cursor-pointer">
-                                                <input class="text-primary focus:ring-primary" id="prev_arv_no" name="prev_arv_given" value="0" checked type="radio" /> No
+                                            <label class="flex items-center gap-2 text-sm cursor-pointer has-[:checked]:font-bold has-[:checked]:text-primary">
+                                                <input class="text-primary focus:ring-primary" id="prev_arv_no" name="prev_arv_given" value="0"  type="radio" /> No
                                             </label>
                                         </div>
-                                    </div>
-                                    <div class="bg-tertiary-fixed p-4 rounded-lg flex gap-3 items-start border-l-4 border-on-tertiary-fixed-variant shadow-sm">
-                                        <span class="material-symbols-outlined text-on-tertiary-fixed-variant" style="font-variation-settings: 'FILL' 1;">info</span>
-                                        <p class="text-xs text-on-tertiary-fixed-variant font-medium">Check with ABTC health worker for history or record patient's claims if medical documentation is unavailable. Incomplete history may lead to dosage errors.</p>
                                     </div>
                                     <div id="dose_dates_wrapper" class="grid grid-cols-2 md:grid-cols-4 gap-4 hidden">
                                         <div class="space-y-2">
@@ -483,6 +479,11 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div class="bg-tertiary-fixed p-4 rounded-lg flex gap-3 items-start border-l-4 border-on-tertiary-fixed-variant shadow-sm">
+                                        <span class="material-symbols-outlined text-on-tertiary-fixed-variant" style="font-variation-settings: 'FILL' 1;">info</span>
+                                        <p class="text-xs text-on-tertiary-fixed-variant font-medium">Check with ABTC health worker for history or record patient's claims if medical documentation is unavailable. Incomplete history may lead to dosage errors.</p>
+                                    </div>
+
                             </section>
 
                             <!-- Form Submission -->
@@ -519,6 +520,32 @@ animalTypeRadios.forEach(radio => {
         }
     });
 });
+        // --- Section 3: Limit Date/Time of Bite ---
+         const biteDate = document.getElementById('bite_date_input');
+         const biteTime = document.getElementById('bite_time_input');
+
+         function pad(n) { return String(n).padStart(2, '0'); }
+         function toYMD(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+
+         const nowDate = new Date();
+         const oneYearAgo = new Date(nowDate);
+          oneYearAgo.setFullYear(nowDate.getFullYear() - 1);
+          biteDate.max = toYMD(nowDate);
+          biteDate.min = toYMD(oneYearAgo);
+
+function limitBiteTime() {
+    if (biteDate.value === toYMD(new Date())) {
+        const now = new Date();
+        const maxTime = pad(now.getHours()) + ':' + pad(now.getMinutes());
+        biteTime.max = maxTime;
+        if (biteTime.value > maxTime) biteTime.value = '';
+    } else {
+        biteTime.removeAttribute('max');
+    }
+}
+biteDate.addEventListener('change', limitBiteTime);
+biteTime.addEventListener('change', limitBiteTime); 
+
 
             // --- Section 5: Dose Dates Logic ---
             const yesRadio = document.getElementById('prev_arv_yes');

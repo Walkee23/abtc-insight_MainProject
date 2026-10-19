@@ -295,13 +295,11 @@ class ClinicalEncodingController extends Controller
     {
         DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->firstOrFail();
 
-        // A draft saves whatever is filled in (notes are added visit by visit);
-        // finalizing the record only needs the Day 3 notes
+        // The notes are optional and can be left blank, even when finalizing
         $isDraft = $request->input('action') === 'draft';
-        $required = $isDraft ? 'nullable' : 'required';
 
         $validated = $request->validate([
-            'day3_notes' => $required . '|string|max:5000',
+            'day3_notes' => 'nullable|string|max:5000',
             'day7_notes' => 'nullable|string|max:5000',
             'day28_notes' => 'nullable|string|max:5000',
         ]);

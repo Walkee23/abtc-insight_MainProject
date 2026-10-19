@@ -397,20 +397,12 @@
                                 </div>
                                 <div class="grid grid-cols-2 gap-6 mb-8">
                                     <div>
-                                        <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Patient Weight (kg)@if($bhwWeight === null) <span class="text-error">*</span>@endif</label>
-                                        @if($bhwWeight !== null)
-                                        {{-- Weight comes from the BHW referral: shown read-only, like Administered By --}}
-                                        <input type="text" readonly tabindex="-1" value="{{ $bhwWeight }}"
-                                            class="w-full bg-surface-container-high border-none rounded-lg py-3 px-4 font-medium text-on-surface-variant cursor-not-allowed select-none focus:ring-0" />
-                                        <p class="mt-1 ml-1 text-[10px] text-on-surface-variant/80 italic">Filled in automatically from the BHW referral. Used for passive immunoglobulin dosage.</p>
-                                        @else
-                                        <input name="patient_weight" data-field="patient_weight" type="number" step="0.01" min="0" max="999.99"
-                                            value="{{ $val('patient_weight') }}"
-                                            class="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 ring-1 ring-transparent focus:ring-2 focus:ring-primary/20 font-medium"
-                                            placeholder="e.g. 55.50" />
-                                        <p data-error-for="patient_weight" class="mt-1 ml-1 text-xs font-semibold text-error {{ $errors->has('patient_weight') ? '' : 'hidden' }}">{{ $errors->first('patient_weight') }}</p>
-                                        <p class="mt-1 ml-1 text-[10px] text-on-surface-variant/80 italic">No BHW referral on file, enter it manually. Used for passive immunoglobulin dosage.</p>
-                                        @endif
+                                        <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Patient Weight (kg)</label>
+                                        {{-- Always from the BHW referral and never editable, like Administered By --}}
+                                        <input type="text" readonly tabindex="-1"
+                                            value="{{ $bhwWeight ?? (isset($section->patient_weight) ? rtrim(rtrim(number_format((float) $section->patient_weight, 2, '.', ''), '0'), '.') : '') }}"
+                                            class="w-full bg-surface-container-high border-none rounded-lg py-3 px-4 font-medium text-on-surface-variant cursor-not-allowed select-none focus:ring-0"
+                                            placeholder="From the BHW referral" />
                                     </div>
                                     <div>
                                         <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Administered By</label>
@@ -598,7 +590,6 @@
                 vaccine_brand: 'Please select a vaccine brand.',
                 route: 'Please select a route.',
                 dose_type: 'Please select a dose type.',
-                patient_weight: 'Please enter the patient weight.',
                 day0_date: 'Please set the Day 0 date.',
             };
             const DATE_FIELDS = ['day0_date', 'day3_date', 'day7_date', 'day28_date'];

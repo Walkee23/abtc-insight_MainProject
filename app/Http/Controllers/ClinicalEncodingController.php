@@ -186,7 +186,6 @@ class ClinicalEncodingController extends Controller
         $required = $isDraft ? 'nullable' : 'required';
 
         $validated = $request->validate([
-            'patient_weight' => ($this->bhwWeight($biteCaseId) !== null ? 'nullable' : $required) . '|numeric|min:0|max:999.99',
             'tetanus_given' => 'nullable|boolean',
             'tetanus_details' => 'exclude_unless:tetanus_given,true,1|' . $required . '|string|max:200',
             'tig_given' => 'nullable|boolean',
@@ -204,7 +203,8 @@ class ClinicalEncodingController extends Controller
             'passive_route' => 'nullable|required_with:passive_type|in:IU infiltrate,IM',
         ]);
 
-        // Weight from the BHW referral is authoritative and can't be edited here
+        // Patient weight always comes from the BHW referral, never from the form
+        // (a case with no BHW weight keeps whatever was saved before)
         if (($bhwWeight = $this->bhwWeight($biteCaseId)) !== null) {
             $validated['patient_weight'] = $bhwWeight;
         }

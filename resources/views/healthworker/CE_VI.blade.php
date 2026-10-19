@@ -375,7 +375,8 @@
                                         Category <span class="text-error">*</span></label>
                                     <div class="flex gap-4">
                                         @php
-                                            $selectedCategory = $section->category_of_exposure ?? $case->category ?? '';
+                                            $selectedDeep = old('is_deep', isset($section->is_deep) ? (string) (int) $section->is_deep : null);
+                                            $selectedCategory = $selectedDeep === '1' ? 'III' : ($section->category_of_exposure ?? $case->category ?? '');
                                         @endphp
                                         @foreach(['I', 'II', 'III'] as $cat)
                                         <label class="flex-1 cursor-pointer">
@@ -386,6 +387,25 @@
                                             </div>
                                         </label>
                                         @endforeach
+                                    </div>
+                                    <div class="mt-5">
+                                        <label
+                                            class="block text-xs font-bold text-outline uppercase tracking-wider mb-3">Is
+                                            the wound deep? <span class="text-error">*</span></label>
+                                        <div id="deepBox" class="flex gap-4 rounded-lg ring-1 ring-transparent">
+                                            @foreach(['1' => 'Yes, deep', '0' => 'No, superficial'] as $deepValue => $deepLabel)
+                                            <label class="flex-1 cursor-pointer">
+                                                <input {{ $selectedDeep === (string) $deepValue ? 'checked' : '' }} class="hidden peer" name="is_deep" type="radio" value="{{ $deepValue }}" />
+                                                <div
+                                                    class="py-3 text-center rounded-lg border border-outline-variant/30 peer-checked:bg-primary-container/10 peer-checked:border-primary-container peer-checked:text-primary transition-all">
+                                                    <span class="text-sm font-bold">{{ $deepLabel }}</span>
+                                                </div>
+                                            </label>
+                                            @endforeach
+                                        </div>
+                                        <p class="mt-2 ml-1 text-[11px] text-on-surface-variant italic">A deep (transdermal)
+                                            wound is always Category III.</p>
+                                        <p id="deepError" class="mt-1 ml-1 text-xs font-semibold text-error {{ $errors->has('is_deep') ? '' : 'hidden' }}">{{ $errors->first('is_deep') }}</p>
                                     </div>
                                 </div>
                                 <div>
@@ -408,6 +428,27 @@
                                             </div>
                                         </label>
                                     </div>
+                                </div>
+                                <div class="col-span-2">
+                                    @php
+                                        $selectedTypes = old('wound_types', array_map('trim', explode(',', $section->wound_description ?? '')));
+                                    @endphp
+                                    <label
+                                        class="block text-xs font-bold text-outline uppercase tracking-wider mb-3">Wound
+                                        Description <span class="text-error">*</span>
+                                        <span class="normal-case font-medium">(select all that apply)</span></label>
+                                    <div id="woundTypesBox" class="grid grid-cols-4 gap-3 rounded-lg ring-1 ring-transparent">
+                                        @foreach(\App\Http\Controllers\ClinicalEncodingController::WOUND_TYPES as $type)
+                                        <label class="cursor-pointer">
+                                            <input {{ in_array($type, $selectedTypes, true) ? 'checked' : '' }} class="hidden peer" name="wound_types[]" type="checkbox" value="{{ $type }}" />
+                                            <div
+                                                class="py-3 text-center rounded-lg border border-outline-variant/30 peer-checked:bg-primary-container/10 peer-checked:border-primary-container peer-checked:text-primary transition-all">
+                                                <span class="text-sm font-bold">{{ $type }}</span>
+                                            </div>
+                                        </label>
+                                        @endforeach
+                                    </div>
+                                    <p id="woundTypesError" class="mt-1 ml-1 text-xs font-semibold text-error {{ $errors->has('wound_types') ? '' : 'hidden' }}">{{ $errors->first('wound_types') }}</p>
                                 </div>
                             </div>
                         </div>
@@ -522,29 +563,74 @@
                 return { show, hide };
             })();
 
-            function showSiteError(message) {
-                siteError.textContent = message || siteError.textContent;
-                siteError.classList.toggle('hidden', !message);
-                siteInput.classList.toggle('ring-2', !!message);
-                siteInput.classList.toggle('ring-error', !!message);
-                siteInput.classList.toggle('ring-transparent', !message);
-                if (message) errorToast.show(); else errorToast.hide();
-            }
+            const form = document.getElementById('section6Form');
+            const woundError = document.getElementById('woundTypesError');
+            const deepError = document.getElementById('deepError');
+            const woundBox = document.getElementById('woundTypesBox');
+            const deepBox = document.getElementById('deepBox');
 
-            // Re-apply the red ring for an error rendered by the server
-            if (!siteError.classList.contains('hidden')) showSiteError(siteError.textContent.trim());
-            siteInput.addEventListener('input', () => {
-                if (siteInput.value.trim() !== '') showSiteError('');
+            // Red ring + message for one field; the toast is handled by refreshToast()
+            function setError(errorEl, ringEl, message) {
+                errorEl.textContent = message || errorEl.textContent;
+                errorEl.classList.toggle('hidden', !message);
+                ringEl.classList.toggle('ring-2', !!message);
+                ringEl.classList.toggle('ring-error', !!message);
+                ringEl.classList.toggle('ring-transparent', !message);
+            }
+            const anyError = () => !!form.querySelector('#siteOfBiteError:not(.hidden), #woundTypesError:not(.hidden), #deepError:not(.hidden)');
+            const refreshToast = () => { if (anyError()) errorToast.show(); else errorToast.hide(); };
+
+            const checks = {
+                site: () => siteInput.value.trim() !== '',
+                wound: () => !!form.querySelector('input[name="wound_types[]"]:checked'),
+                deep: () => !!form.querySelector('input[name="is_deep"]:checked'),
+            };
+
+            // Re-apply red rings for errors rendered by the server
+            [[siteError, siteInput], [woundError, woundBox], [deepError, deepBox]].forEach(([el, ring]) => {
+                if (!el.classList.contains('hidden')) setError(el, ring, el.textContent.trim());
             });
+            if (anyError()) errorToast.show();
+
+            // Clear each error as soon as the field is fixed
+            siteInput.addEventListener('input', () => {
+                if (checks.site()) { setError(siteError, siteInput, ''); refreshToast(); }
+            });
+            form.querySelectorAll('input[name="wound_types[]"]').forEach((box) => box.addEventListener('change', () => {
+                if (checks.wound()) { setError(woundError, woundBox, ''); refreshToast(); }
+            }));
+
+            // A deep wound is Category III: picking "deep" selects Cat III, and Cat III stays selected while deep
+            const categoryRadios = form.querySelectorAll('input[name="category_of_exposure"]');
+            const catIII = form.querySelector('input[name="category_of_exposure"][value="III"]');
+            form.querySelectorAll('input[name="is_deep"]').forEach((radio) => radio.addEventListener('change', () => {
+                if (radio.value === '1' && catIII) catIII.checked = true;
+                setError(deepError, deepBox, '');
+                refreshToast();
+            }));
+            categoryRadios.forEach((radio) => radio.addEventListener('change', () => {
+                const deep = form.querySelector('input[name="is_deep"]:checked');
+                if (deep && deep.value === '1' && catIII) catIII.checked = true;
+            }));
 
             nextBtn.addEventListener('click', () => {
                 formActionInput.value = 'next';
-                if (siteInput.value.trim() === '') {
-                    showSiteError('Please enter the site of bite / exposure.');
-                    siteInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                const results = {
+                    site: [checks.site(), siteError, siteInput, 'Please enter the site of bite / exposure.'],
+                    wound: [checks.wound(), woundError, woundBox, 'Please select at least one wound description.'],
+                    deep: [checks.deep(), deepError, deepBox, 'Please tell whether the wound is deep.'],
+                };
+                let first = null;
+                Object.values(results).forEach(([ok, errorEl, ringEl, message]) => {
+                    setError(errorEl, ringEl, ok ? '' : message);
+                    if (!ok && !first) first = ringEl;
+                });
+                if (first) {
+                    errorToast.show();
+                    first.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     return;
                 }
-                document.getElementById('section6Form').submit();
+                form.submit();
             });
 
             if (draftBtn) {

@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\DB;
 
 class ClinicalEncodingController extends Controller
 {
+    /** Wound types the health worker can pick in Section VI (stored comma-separated in wound_description). */
+    public const WOUND_TYPES = ['Punctured', 'Lacerated', 'Avulsion', 'Abrasion'];
+
     /**
      * Only cases Staff has finished (Case Encoding "Complete Encoding" sets the walk-in
      * record to 'Encoded') belong to the Health Worker. A bite_cases row can already
@@ -90,26 +93,40 @@ class ClinicalEncodingController extends Controller
 
         $validated = $request->validate([
             'total_wounds' => $required . '|in:Single,Multiple',
-            'wound_description' => 'nullable|string',
+            // Wound description: one or more of the listed wound types
+            'wound_types' => $isDraft ? 'nullable|array' : 'required|array|min:1',
+            'wound_types.*' => 'in:' . implode(',', self::WOUND_TYPES),
+            'is_deep' => $required . '|in:0,1',
             'site_of_bite' => $required . '|string|max:100',
             'category_of_exposure' => $required . '|in:I,II,III',
         ]);
 
+        $isDeep = isset($validated['is_deep']) ? (int) $validated['is_deep'] : null;
+
+        // Fall back to whatever bite_cases already has if this form hasn't set a
+        // category yet (e.g. very first save). A deep wound is always Category III.
+        $category = $validated['category_of_exposure'] ?? $case->category;
+        if ($isDeep === 1) {
+            $category = 'III';
+        }
+
         DB::table('bite_section6_wound_description')->updateOrInsert(
             ['bite_case_id' => $biteCaseId],
-            array_merge($validated, [
-                // Fall back to whatever bite_cases already has if this form
-                // hasn't set a category yet (e.g. very first save)
-                'category_of_exposure' => $validated['category_of_exposure'] ?? $case->category,
-            ])
+            [
+                'total_wounds' => $validated['total_wounds'] ?? null,
+                'wound_description' => implode(', ', $validated['wound_types'] ?? []) ?: null,
+                'is_deep' => $isDeep,
+                'site_of_bite' => $validated['site_of_bite'] ?? null,
+                'category_of_exposure' => $category,
+            ]
         );
 
         // Keep bite_cases.category in sync, since bite_section6's column
         // comment says it mirrors this value - if the health worker changes
         // it here, bite_cases should reflect the same category.
-        if (!empty($validated['category_of_exposure']) && $validated['category_of_exposure'] !== $case->category) {
+        if ($category !== $case->category) {
             DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->update([
-                'category' => $validated['category_of_exposure'],
+                'category' => $category,
             ]);
         }
 

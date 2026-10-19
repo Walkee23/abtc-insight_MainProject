@@ -431,6 +431,12 @@
                                                 class="rounded text-primary focus:ring-primary/20" />
                                             <span class="text-sm font-medium">Tetanus prophylaxis given</span>
                                         </label>
+                                        <label class="flex items-center gap-2 cursor-pointer mb-3 ml-6">
+                                            <input id="tetanus_by_barangay" name="tetanus_by_barangay" type="checkbox" value="1"
+                                                {{ old('tetanus_by_barangay', $section->tetanus_by_barangay ?? false) ? 'checked' : '' }}
+                                                class="rounded text-primary focus:ring-primary/20" />
+                                            <span class="text-xs font-medium text-on-surface-variant">Given at the barangay (by the BHW)</span>
+                                        </label>
                                         <!-- Added id="tetanus_details" and disabled styling -->
                                         <input id="tetanus_details" name="tetanus_details" type="text"
                                             value="{{ $section->tetanus_details ?? '' }}"
@@ -446,6 +452,12 @@
                                                 {{ ($section->tig_given ?? false) ? 'checked' : '' }}
                                                 class="rounded text-primary focus:ring-primary/20" />
                                             <span class="text-sm font-medium">TIG given</span>
+                                        </label>
+                                        <label class="flex items-center gap-2 cursor-pointer mb-3 ml-6">
+                                            <input id="tig_by_barangay" name="tig_by_barangay" type="checkbox" value="1"
+                                                {{ old('tig_by_barangay', $section->tig_by_barangay ?? false) ? 'checked' : '' }}
+                                                class="rounded text-primary focus:ring-primary/20" />
+                                            <span class="text-xs font-medium text-on-surface-variant">Given at the barangay (by the BHW)</span>
                                         </label>
                                         <!-- Added id="tig_details" and disabled styling -->
                                         <input id="tig_details" name="tig_details" type="text" value="{{ $section->tig_details ?? '' }}"
@@ -826,6 +838,20 @@
                 }
             }
 
+            // "Given at the barangay" implies given; un-ticking given clears the barangay box
+            function linkBarangay(givenBox, barangayBox, details) {
+                if (!givenBox || !barangayBox) return;
+                barangayBox.addEventListener('change', () => {
+                    if (barangayBox.checked) {
+                        givenBox.checked = true;
+                        toggleDetailsField(givenBox, details);
+                    }
+                });
+                givenBox.addEventListener('change', () => {
+                    if (!givenBox.checked) barangayBox.checked = false;
+                });
+            }
+
             if (tetanusCheckbox) {
                 tetanusCheckbox.addEventListener('change', () => toggleDetailsField(tetanusCheckbox, tetanusDetails));
                 toggleDetailsField(tetanusCheckbox, tetanusDetails);
@@ -835,6 +861,9 @@
                 tigCheckbox.addEventListener('change', () => toggleDetailsField(tigCheckbox, tigDetails));
                 toggleDetailsField(tigCheckbox, tigDetails);
             }
+
+            linkBarangay(tetanusCheckbox, document.getElementById('tetanus_by_barangay'), tetanusDetails);
+            linkBarangay(tigCheckbox, document.getElementById('tig_by_barangay'), tigDetails);
 
             // 2. Passive Immunization Route Logic
             const passiveTypeRadios = document.querySelectorAll('input[name="passive_type"]');

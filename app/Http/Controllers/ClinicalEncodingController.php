@@ -215,8 +215,11 @@ class ClinicalEncodingController extends Controller
             $validated['administered_by'] = $name;
         }
 
-        $validated['tetanus_given'] = $request->boolean('tetanus_given');
-        $validated['tig_given'] = $request->boolean('tig_given');
+        // "Given at the barangay (by the BHW)" counts as given
+        $validated['tetanus_by_barangay'] = $request->boolean('tetanus_by_barangay');
+        $validated['tig_by_barangay'] = $request->boolean('tig_by_barangay');
+        $validated['tetanus_given'] = $request->boolean('tetanus_given') || $validated['tetanus_by_barangay'];
+        $validated['tig_given'] = $request->boolean('tig_given') || $validated['tig_by_barangay'];
         $validated['passive_given'] = $request->boolean('passive_given');
         // dose_type is NOT NULL in the table: an unchosen value on a draft is stored
         // as '' (shows as "Select" again) rather than a made-up default

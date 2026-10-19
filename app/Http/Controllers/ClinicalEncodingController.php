@@ -202,7 +202,6 @@ class ClinicalEncodingController extends Controller
             'passive_type' => 'nullable|string|max:50',
             // Only needed once a passive immunoglobulin (ERIG/HRIG) is chosen
             'passive_route' => 'nullable|required_with:passive_type|in:IU infiltrate,IM',
-            'skin_test_due' => 'nullable|date_format:H:i',
         ]);
 
         // Weight from the BHW referral is authoritative and can't be edited here

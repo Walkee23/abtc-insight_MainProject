@@ -395,7 +395,7 @@
                                         {!! $dropdown('dose_type', ['Primary' => 'Primary', 'Booster' => 'Booster'], 'bg-surface-container-low', true) !!}
                                     </div>
                                 </div>
-                                <div class="grid grid-cols-3 gap-6 mb-8">
+                                <div class="grid grid-cols-2 gap-6 mb-8">
                                     <div>
                                         <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Patient Weight (kg)@if($bhwWeight === null) <span class="text-error">*</span>@endif</label>
                                         @if($bhwWeight !== null)
@@ -418,12 +418,6 @@
                                             value="{{ Auth::user()->full_name ?? ($section->administered_by ?? '') }}"
                                             class="w-full bg-surface-container-high border-none rounded-lg py-3 px-4 font-medium text-on-surface-variant cursor-not-allowed select-none focus:ring-0"
                                             placeholder="Logged-in health worker" />
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">30-min Skin Test Due</label>
-                                        <input name="skin_test_due" type="time"
-                                            value="{{ $val('skin_test_due') }}"
-                                            class="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/20 font-medium" />
                                     </div>
                                 </div>
                                 <div class="grid grid-cols-2 gap-6 mb-8">

@@ -149,7 +149,31 @@ class ClinicalEncodingController extends Controller
             ? DB::table('bite_section7_immunization')->where('bite_case_id', $biteCaseId)->first()
             : null;
 
-        return view('healthworker.CE_VII', compact('queue', 'case', 'section'));
+        // Weight taken at the BHW referral, if this patient came through one
+        $bhwWeight = $biteCaseId ? $this->bhwWeight($biteCaseId) : null;
+
+        return view('healthworker.CE_VII', compact('queue', 'case', 'section', 'bhwWeight'));
+    }
+
+    /**
+     * Weight (kg) recorded in the BHW referral vitals for this case, or null when the
+     * patient is a walk-in or the referral has no weight. A case links to its referral
+     * through bite_cases.bhw_referral_id or the reference number on the walk-in record.
+     */
+    private function bhwWeight($biteCaseId): ?string
+    {
+        $weight = DB::table('bite_cases as bc')
+            ->leftJoin('inflow_general_particulars as ig', 'ig.inflow_record_id', '=', 'bc.inflow_record_id')
+            ->join('bhw_referral_info as bri', function ($j) {
+                $j->on('bri.referral_id', '=', 'bc.bhw_referral_id')
+                    ->orOn('bri.reference_no', '=', 'ig.bhw_referral_id');
+            })
+            ->join('bhw_referral_vitals as v', 'v.referral_id', '=', 'bri.referral_id')
+            ->where('bc.bite_case_id', $biteCaseId)
+            ->whereNotNull('v.weight_kg')
+            ->value('v.weight_kg');
+
+        return $weight === null ? null : rtrim(rtrim(number_format((float) $weight, 2, '.', ''), '0'), '.');
     }
 
     public function storeSectionVII(Request $request, $biteCaseId)
@@ -162,7 +186,7 @@ class ClinicalEncodingController extends Controller
         $required = $isDraft ? 'nullable' : 'required';
 
         $validated = $request->validate([
-            'patient_weight' => $required . '|numeric|min:0|max:999.99',
+            'patient_weight' => ($this->bhwWeight($biteCaseId) !== null ? 'nullable' : $required) . '|numeric|min:0|max:999.99',
             'tetanus_given' => 'nullable|boolean',
             'tetanus_details' => 'exclude_unless:tetanus_given,true,1|' . $required . '|string|max:200',
             'tig_given' => 'nullable|boolean',
@@ -180,6 +204,11 @@ class ClinicalEncodingController extends Controller
             'passive_route' => 'nullable|required_with:passive_type|in:IU infiltrate,IM',
             'skin_test_due' => 'nullable|date_format:H:i',
         ]);
+
+        // Weight from the BHW referral is authoritative and can't be edited here
+        if (($bhwWeight = $this->bhwWeight($biteCaseId)) !== null) {
+            $validated['patient_weight'] = $bhwWeight;
+        }
 
         // Administered by is always the logged-in health worker: never taken from the form
         // (a guest session leaves whatever was saved before untouched)

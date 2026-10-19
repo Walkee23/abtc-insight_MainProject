@@ -388,7 +388,7 @@
                                     </div>
                                     <div>
                                         <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Route <span class="text-error">*</span></label>
-                                        {!! $dropdown('route', ['ID' => 'ID (Intradermal, 0.1mL)', 'IM' => 'IM (Intramuscular, 0.5mL)'], 'bg-surface-container-low', true) !!}
+                                        {!! $dropdown('route', ['ID' => 'ID (Intradermal)', 'IM' => 'IM (Intramuscular)'], 'bg-surface-container-low', true) !!}
                                     </div>
                                     <div>
                                         <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Dose Type <span class="text-error">*</span></label>
@@ -397,13 +397,20 @@
                                 </div>
                                 <div class="grid grid-cols-3 gap-6 mb-8">
                                     <div>
-                                        <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Patient Weight (kg) <span class="text-error">*</span></label>
+                                        <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Patient Weight (kg)@if($bhwWeight === null) <span class="text-error">*</span>@endif</label>
+                                        @if($bhwWeight !== null)
+                                        {{-- Weight comes from the BHW referral: shown read-only, like Administered By --}}
+                                        <input type="text" readonly tabindex="-1" value="{{ $bhwWeight }}"
+                                            class="w-full bg-surface-container-high border-none rounded-lg py-3 px-4 font-medium text-on-surface-variant cursor-not-allowed select-none focus:ring-0" />
+                                        <p class="mt-1 ml-1 text-[10px] text-on-surface-variant/80 italic">Filled in automatically from the BHW referral. Used for passive immunoglobulin dosage.</p>
+                                        @else
                                         <input name="patient_weight" data-field="patient_weight" type="number" step="0.01" min="0" max="999.99"
                                             value="{{ $val('patient_weight') }}"
                                             class="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 ring-1 ring-transparent focus:ring-2 focus:ring-primary/20 font-medium"
                                             placeholder="e.g. 55.50" />
                                         <p data-error-for="patient_weight" class="mt-1 ml-1 text-xs font-semibold text-error {{ $errors->has('patient_weight') ? '' : 'hidden' }}">{{ $errors->first('patient_weight') }}</p>
-                                        <p class="mt-1 ml-1 text-[10px] text-on-surface-variant/80 italic">Used for passive immunoglobulin dosage.</p>
+                                        <p class="mt-1 ml-1 text-[10px] text-on-surface-variant/80 italic">No BHW referral on file, enter it manually. Used for passive immunoglobulin dosage.</p>
+                                        @endif
                                     </div>
                                     <div>
                                         <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Administered By</label>

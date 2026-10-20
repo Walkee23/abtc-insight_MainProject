@@ -457,6 +457,8 @@
                                             placeholder="Details (dose, date)..." />
                                     </div>
                                 </div>
+                                {{-- Passive immunization (ERIG/HRIG) only applies to Category III; otherwise only the active vaccine is given --}}
+                                @if($case->category === 'III')
                                 <div class="bg-surface-container-low rounded-xl p-6 mb-8">
                                     <p class="text-xs font-extrabold text-outline uppercase tracking-widest mb-4">Passive
                                         Immunization (Rabies)</p>
@@ -487,6 +489,12 @@
                                         </div>
                                     </div>
                                 </div>
+                                @else
+                                <div class="bg-surface-container-low rounded-xl px-6 py-4 mb-8 flex items-center gap-3">
+                                    <span class="material-symbols-outlined text-outline">info</span>
+                                    <p class="text-xs text-on-surface-variant">Passive immunization (ERIG/HRIG) is only for Category III. This is a Category {{ $case->category }} case, so only the active vaccine is given.</p>
+                                </div>
+                                @endif
                                 <div class="bg-surface-container-low rounded-xl p-6">
                                     <p class="text-xs font-extrabold text-outline uppercase tracking-widest mb-4">Dose
                                         Tracking Grid</p>

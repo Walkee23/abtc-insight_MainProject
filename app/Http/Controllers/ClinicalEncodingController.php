@@ -178,7 +178,12 @@ class ClinicalEncodingController extends Controller
 
     public function storeSectionVII(Request $request, $biteCaseId)
     {
-        DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->firstOrFail();
+        $case = DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->firstOrFail();
+
+        // Passive immunization is only for Category III: nothing is accepted for other categories
+        if ($case->category !== 'III') {
+            $request->merge(['passive_type' => null, 'passive_route' => null]);
+        }
 
         // A draft saves whatever is filled in, required or not; moving on to
         // Section VIII needs the core fields.
@@ -220,7 +225,7 @@ class ClinicalEncodingController extends Controller
         $validated['tig_by_barangay'] = $request->boolean('tig_by_barangay');
         $validated['tetanus_given'] = $request->boolean('tetanus_given') || $validated['tetanus_by_barangay'];
         $validated['tig_given'] = $request->boolean('tig_given') || $validated['tig_by_barangay'];
-        $validated['passive_given'] = $request->boolean('passive_given');
+        $validated['passive_given'] = !empty($validated['passive_type']);
         // dose_type is NOT NULL in the table: an unchosen value on a draft is stored
         // as '' (shows as "Select" again) rather than a made-up default
         $validated['dose_type'] = $validated['dose_type'] ?? '';

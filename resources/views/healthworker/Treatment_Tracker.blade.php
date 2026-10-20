@@ -218,7 +218,6 @@
     </header>
     <!-- MAIN CONTENT AREA -->
     <main class="ml-64 pt-24 min-h-screen flex flex-col relative">
-        <!-- TOP APP BAR (Updated to match SCREEN_12 layout) -->
         <!-- DASHBOARD BODY -->
         <div class="p-8 space-y-8">
             <!-- HEADER SECTION -->
@@ -237,16 +236,16 @@
                         <div>
                             <p class="text-xs font-black uppercase tracking-widest text-slate-400 mb-1">Total Active
                                 Courses</p>
-                            <h3 class="text-4xl font-black text-blue-900 tracking-tighter">142</h3>
+                            <h3 class="text-4xl font-black text-blue-900 tracking-tighter">{{ $stats['active'] }}</h3>
                         </div>
                         <div
                             class="p-3 bg-blue-50 text-blue-600 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-colors">
                             <span class="material-symbols-outlined">person_search</span>
                         </div>
                     </div>
-                    <div class="mt-4 flex items-center gap-2 text-xs font-semibold text-emerald-600">
-                        <span class="material-symbols-outlined text-sm">trending_up</span>
-                        <span>+12% from last week</span>
+                    <div class="mt-4 flex items-center gap-2 text-xs font-semibold {{ $stats['new_this_week'] > 0 ? 'text-emerald-600' : 'text-slate-500' }}">
+                        <span class="material-symbols-outlined text-sm">{{ $stats['new_this_week'] > 0 ? 'trending_up' : 'remove' }}</span>
+                        <span>{{ $stats['new_this_week'] > 0 ? '+' . $stats['new_this_week'] . ' started this week' : 'No new courses this week' }}</span>
                     </div>
                 </div>
                 <div
@@ -255,7 +254,7 @@
                         <div>
                             <p class="text-xs font-black uppercase tracking-widest text-slate-400 mb-1">Due for
                                 Vaccination Today</p>
-                            <h3 class="text-4xl font-black text-on-tertiary-fixed-variant tracking-tighter">18</h3>
+                            <h3 class="text-4xl font-black text-on-tertiary-fixed-variant tracking-tighter">{{ $stats['due_today'] }}</h3>
                         </div>
                         <div
                             class="p-3 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-xl group-hover:bg-tertiary group-hover:text-white transition-colors">
@@ -264,7 +263,7 @@
                     </div>
                     <div class="mt-4 flex items-center gap-2 text-xs font-semibold text-slate-500">
                         <span class="material-symbols-outlined text-sm">schedule</span>
-                        <span>Next update in 2 hours</span>
+                        <span>As of {{ now('Asia/Manila')->format('g:i A') }}</span>
                     </div>
                 </div>
                 <div
@@ -272,266 +271,230 @@
                     <div class="flex justify-between items-start">
                         <div>
                             <p class="text-xs font-black uppercase tracking-widest text-slate-400 mb-1">Missed Doses</p>
-                            <h3 class="text-4xl font-black text-error tracking-tighter">05</h3>
+                            <h3 class="text-4xl font-black text-error tracking-tighter">{{ str_pad($stats['missed'], 2, '0', STR_PAD_LEFT) }}</h3>
                         </div>
                         <div
                             class="p-3 bg-error-container text-on-error-container rounded-xl group-hover:bg-error group-hover:text-white transition-colors">
                             <span class="material-symbols-outlined">warning</span>
                         </div>
                     </div>
-                    <div class="mt-4 flex items-center gap-2 text-xs font-semibold text-error">
-                        <span class="material-symbols-outlined text-sm">error</span>
-                        <span>Requires urgent follow-up</span>
+                    <div class="mt-4 flex items-center gap-2 text-xs font-semibold {{ $stats['missed'] > 0 ? 'text-error' : 'text-emerald-600' }}">
+                        <span class="material-symbols-outlined text-sm">{{ $stats['missed'] > 0 ? 'error' : 'check_circle' }}</span>
+                        <span>{{ $stats['missed'] > 0 ? $stats['missed_patients'] . ' ' . \Illuminate\Support\Str::plural('patient', $stats['missed_patients']) . ' need urgent follow-up' : 'All doses are on schedule' }}</span>
                     </div>
                 </div>
             </div>
             <!-- FILTERS & TABLE SECTION -->
             <div class="bg-surface-container-lowest rounded-2xl shadow-sm overflow-hidden">
                 <!-- Filter Row -->
-                <div class="p-6 bg-surface-container-low flex flex-wrap gap-4 items-center justify-between">
-                    <div class="flex gap-4">
+                <form id="trackerFilters" method="GET" action="{{ route('healthworker.treatment-tracker') }}"
+                    class="p-6 bg-surface-container-low flex flex-wrap gap-4 items-center justify-between">
+                    <input type="hidden" name="q" id="trackerSearch" value="{{ $search }}" />
+                    <div class="flex flex-wrap gap-4 items-center">
                         <div class="relative min-w-[200px]">
-                            <select
+                            <select name="barangay" onchange="this.form.submit()"
                                 class="appearance-none w-full bg-white border-none rounded-lg px-4 py-2 pr-10 text-sm font-semibold text-slate-600 focus:ring-2 focus:ring-blue-500/10 shadow-sm cursor-pointer">
-                                <option>Filter by Barangay</option>
-                                <option>Guadalupe</option>
-                                <option>Lahug</option>
-                                <option>Mabolo</option>
-                                <option>Tisa</option>
+                                <option value="">Filter by Barangay</option>
+                                @foreach($barangays as $b)
+                                <option value="{{ $b }}" {{ $barangay === $b ? 'selected' : '' }}>{{ $b }}</option>
+                                @endforeach
                             </select>
                             <span
                                 class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">expand_more</span>
                         </div>
                         <div class="relative min-w-[200px]">
-                            <select
+                            <select name="status" onchange="this.form.submit()"
                                 class="appearance-none w-full bg-white border-none rounded-lg px-4 py-2 pr-10 text-sm font-semibold text-slate-600 focus:ring-2 focus:ring-blue-500/10 shadow-sm cursor-pointer">
-                                <option>Dose Status: All</option>
-                                <option>Active</option>
-                                <option>Completed</option>
-                                <option>Missed</option>
+                                <option value="all" {{ $status === 'all' ? 'selected' : '' }}>Dose Status: All</option>
+                                <option value="active" {{ $status === 'active' ? 'selected' : '' }}>Active (On Track)</option>
+                                <option value="completed" {{ $status === 'completed' ? 'selected' : '' }}>Completed</option>
+                                <option value="missed" {{ $status === 'missed' ? 'selected' : '' }}>Missed (Late)</option>
                             </select>
                             <span
                                 class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">expand_more</span>
                         </div>
+                        @if($search !== '')
+                        <a href="{{ route('healthworker.treatment-tracker', array_filter(['barangay' => $barangay, 'status' => $status === 'all' ? null : $status])) }}"
+                            class="inline-flex items-center gap-1.5 bg-white rounded-full pl-3 pr-2 py-1.5 text-xs font-semibold text-slate-600 shadow-sm hover:bg-slate-50"
+                            title="Clear search">
+                            Search: "{{ \Illuminate\Support\Str::limit($search, 24) }}"
+                            <span class="material-symbols-outlined text-[16px] text-slate-400">close</span>
+                        </a>
+                        @endif
                     </div>
-                    <button
+                    <a href="{{ route('healthworker.treatment-tracker') }}"
                         class="flex items-center gap-2 text-slate-500 hover:text-blue-600 font-semibold text-sm transition-colors">
                         <span class="material-symbols-outlined">restart_alt</span>
                         Reset Filters
-                    </button>
-                </div>
+                    </a>
+                </form>
                 <!-- Treatment Table -->
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-slate-50/50 border-b border-slate-100">
-                                <th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-400">
+                                <th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap">
                                     Patient Details</th>
                                 <th
-                                    class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-400 text-center">
+                                    class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-400 text-center whitespace-nowrap">
                                     Exposure</th>
-                                <th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-400">
+                                <th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap">
                                     Dose Schedule</th>
-                                <th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-400">
+                                <th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap">
                                     Progress</th>
-                                <th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-400">
+                                <th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap">
                                     Status</th>
                                 <th
-                                    class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-400 text-right">
+                                    class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-400 text-right whitespace-nowrap">
                                     Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
-                            <!-- Row 1 -->
+                            @forelse($tracker as $c)
+                            @php
+                                $nextDate = $c->next ? $c->next['date'] : null;
+                                $nextToday = $nextDate && $nextDate->isSameDay($today);
+                                $overdueDays = $nextDate && $nextDate->lt($today) ? (int) $nextDate->diffInDays($today) : 0;
+                                $catStyle = $c->category === 'III' ? 'bg-secondary-container text-on-secondary-container' : 'bg-slate-100 text-slate-600';
+                                $barColor = $c->state === 'Late' ? 'bg-tertiary' : ($c->state === 'Completed' ? 'bg-emerald-500' : 'bg-blue-600');
+                            @endphp
                             <tr class="hover:bg-blue-50/30 transition-colors group">
                                 <td class="px-6 py-5">
-                                    <div class="flex items-center gap-3">
-                                        <div
-                                            class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500 group-hover:bg-blue-100 group-hover:text-blue-700 transition-colors">
-                                            JD</div>
-                                        <div>
-                                            <p class="text-sm font-bold text-slate-900">Juan Dela Cruz</p>
-                                            <p class="text-[11px] font-mono text-slate-500">CEB-20250110-001</p>
-                                        </div>
-                                    </div>
+                                    <p class="text-sm font-bold text-slate-900 whitespace-nowrap">{{ $c->patient_name }}</p>
+                                    <p class="text-[11px] font-mono text-slate-500 whitespace-nowrap">{{ $c->patient_id }}</p>
                                 </td>
                                 <td class="px-6 py-5 text-center">
                                     <span
-                                        class="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tight">Cat
-                                        III</span>
+                                        class="{{ $catStyle }} px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tight whitespace-nowrap">Cat {{ $c->category }}</span>
                                 </td>
                                 <td class="px-6 py-5">
-                                    <div class="text-xs space-y-1">
+                                    <div class="text-xs space-y-1 whitespace-nowrap">
                                         <div class="flex items-center gap-2 text-slate-500">
                                             <span class="material-symbols-outlined text-sm">history</span>
-                                            <span>Last: Oct 12</span>
+                                            <span>Last: {{ $c->last ? $c->last->format('M d') : 'None yet' }}</span>
                                         </div>
-                                        <div class="flex items-center gap-2 font-bold text-blue-700">
-                                            <span class="material-symbols-outlined text-sm"
-                                                style="font-variation-settings: 'FILL' 1;">event_available</span>
-                                            <span>Next: Oct 15 (Today)</span>
+                                        @if(!$nextDate)
+                                        <div class="flex items-center gap-2 font-medium text-emerald-700">
+                                            <span class="material-symbols-outlined text-sm">task_alt</span>
+                                            <span>Course complete</span>
                                         </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-5">
-                                    <div class="w-32">
-                                        <div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1">
-                                            <span>2/3 Doses</span>
-                                            <span>66%</span>
-                                        </div>
-                                        <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                                            <div class="bg-blue-600 h-full w-[66%]"></div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-5">
-                                    <span
-                                        class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-[10px] font-bold">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                        On Track
-                                    </span>
-                                </td>
-                                <td class="px-6 py-5 text-right">
-                                    <button class="text-slate-400 hover:text-blue-600 transition-colors">
-                                        <span class="material-symbols-outlined">more_vert</span>
-                                    </button>
-                                </td>
-                            </tr>
-                            <!-- Row 2 -->
-                            <tr class="hover:bg-blue-50/30 transition-colors group">
-                                <td class="px-6 py-5">
-                                    <div class="flex items-center gap-3">
-                                        <div
-                                            class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500 group-hover:bg-blue-100 group-hover:text-blue-700 transition-colors">
-                                            MC</div>
-                                        <div>
-                                            <p class="text-sm font-bold text-slate-900">Maria Clara</p>
-                                            <p class="text-[11px] font-mono text-slate-500">CEB-20250214-042</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-5 text-center">
-                                    <span
-                                        class="bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tight">Cat
-                                        II</span>
-                                </td>
-                                <td class="px-6 py-5">
-                                    <div class="text-xs space-y-1">
-                                        <div class="flex items-center gap-2 text-slate-500">
-                                            <span class="material-symbols-outlined text-sm">history</span>
-                                            <span>Last: Oct 10</span>
-                                        </div>
-                                        <div class="flex items-center gap-2 font-medium text-slate-600">
-                                            <span class="material-symbols-outlined text-sm">calendar_month</span>
-                                            <span>Next: Oct 17</span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-5">
-                                    <div class="w-32">
-                                        <div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1">
-                                            <span>1/3 Doses</span>
-                                            <span>33%</span>
-                                        </div>
-                                        <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                                            <div class="bg-blue-400 h-full w-[33%]"></div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-5">
-                                    <span
-                                        class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-[10px] font-bold">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                        On Track
-                                    </span>
-                                </td>
-                                <td class="px-6 py-5 text-right">
-                                    <button class="text-slate-400 hover:text-blue-600 transition-colors">
-                                        <span class="material-symbols-outlined">more_vert</span>
-                                    </button>
-                                </td>
-                            </tr>
-                            <!-- Row 3 -->
-                            <tr class="hover:bg-blue-50/30 transition-colors group">
-                                <td class="px-6 py-5">
-                                    <div class="flex items-center gap-3">
-                                        <div
-                                            class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500 group-hover:bg-blue-100 group-hover:text-blue-700 transition-colors">
-                                            PR</div>
-                                        <div>
-                                            <p class="text-sm font-bold text-slate-900">Pedro Rizal</p>
-                                            <p class="text-[11px] font-mono text-slate-500">CEB-20241215-045</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-5 text-center">
-                                    <span
-                                        class="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tight">Cat
-                                        III</span>
-                                </td>
-                                <td class="px-6 py-5">
-                                    <div class="text-xs space-y-1">
-                                        <div class="flex items-center gap-2 text-slate-500">
-                                            <span class="material-symbols-outlined text-sm">history</span>
-                                            <span>Last: Oct 01</span>
-                                        </div>
+                                        @elseif($overdueDays > 0)
                                         <div class="flex items-center gap-2 font-bold text-error">
                                             <span class="material-symbols-outlined text-sm"
                                                 style="font-variation-settings: 'FILL' 1;">notification_important</span>
-                                            <span>Next: Oct 29</span>
+                                            <span>Due: {{ $nextDate->format('M d') }} ({{ $overdueDays }}d overdue)</span>
                                         </div>
+                                        @elseif($nextToday)
+                                        <div class="flex items-center gap-2 font-bold text-blue-700">
+                                            <span class="material-symbols-outlined text-sm"
+                                                style="font-variation-settings: 'FILL' 1;">event_available</span>
+                                            <span>Next: {{ $nextDate->format('M d') }} (Today)</span>
+                                        </div>
+                                        @else
+                                        <div class="flex items-center gap-2 font-medium text-slate-600">
+                                            <span class="material-symbols-outlined text-sm">calendar_month</span>
+                                            <span>Next: {{ $nextDate->format('M d') }}</span>
+                                        </div>
+                                        @endif
                                     </div>
                                 </td>
                                 <td class="px-6 py-5">
                                     <div class="w-32">
                                         <div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1">
-                                            <span>3/4 Doses</span>
-                                            <span>75%</span>
+                                            <span>{{ $c->given_count }}/{{ $c->total }} Doses</span>
+                                            <span>{{ $c->pct }}%</span>
                                         </div>
                                         <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                                            <div class="bg-tertiary h-full w-[75%]"></div>
+                                            <div class="{{ $barColor }} h-full" style="width: {{ $c->pct }}%"></div>
                                         </div>
                                     </div>
                                 </td>
                                 <td class="px-6 py-5">
+                                    @if($c->state === 'Late')
                                     <span
-                                        class="inline-flex items-center gap-1.5 bg-error-container text-on-error-container px-3 py-1 rounded-full text-[10px] font-bold">
+                                        class="inline-flex items-center gap-1.5 bg-error-container text-on-error-container px-3 py-1 rounded-full text-[10px] font-bold whitespace-nowrap">
                                         <span class="w-1.5 h-1.5 rounded-full bg-error"></span>
                                         Late
                                     </span>
+                                    @elseif($c->state === 'Completed')
+                                    <span
+                                        class="inline-flex items-center gap-1.5 bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-[10px] font-bold whitespace-nowrap">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                        Completed
+                                    </span>
+                                    @else
+                                    <span
+                                        class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-[10px] font-bold whitespace-nowrap">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                        On Track
+                                    </span>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-5 text-right">
-                                    <button class="text-slate-400 hover:text-blue-600 transition-colors">
+                                    <button type="button" class="row-menu text-slate-400 hover:text-blue-600 transition-colors"
+                                        data-case="{{ route('healthworker.ce-vii', ['bite_case_id' => $c->bite_case_id]) }}"
+                                        data-record="{{ route('healthworker.patient-database', ['q' => $c->patient_id]) }}"
+                                        data-tel="{{ $c->contact_num }}" aria-label="Actions for {{ $c->patient_name }}">
                                         <span class="material-symbols-outlined">more_vert</span>
                                     </button>
                                 </td>
                             </tr>
+                            @empty
+                            <tr>
+                                <td colspan="6" class="px-6 py-14 text-center text-sm text-slate-500">
+                                    @if($search !== '' || $barangay !== '' || $status !== 'all')
+                                    No treatment courses match your filters.
+                                    @else
+                                    No active treatment courses yet. A course starts once a case has a Day 0 date in Section VII.
+                                    @endif
+                                </td>
+                            </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
                 <!-- Pagination Footer -->
-                <div class="p-6 border-t border-slate-50 flex items-center justify-between">
-                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Showing 3 of 142 Active
-                        Patients</p>
-                    <div class="flex gap-2">
-                        <button
-                            class="p-2 border border-slate-100 rounded-lg text-slate-400 hover:bg-slate-50 hover:text-blue-600 transition-all">
-                            <span class="material-symbols-outlined">chevron_left</span>
-                        </button>
-                        <button
-                            class="px-4 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-bold border border-blue-100">1</button>
-                        <button
-                            class="px-4 py-1.5 text-slate-500 hover:bg-slate-50 rounded-lg text-sm font-bold">2</button>
-                        <button
-                            class="px-4 py-1.5 text-slate-500 hover:bg-slate-50 rounded-lg text-sm font-bold">3</button>
-                        <button
-                            class="p-2 border border-slate-100 rounded-lg text-slate-400 hover:bg-slate-50 hover:text-blue-600 transition-all">
-                            <span class="material-symbols-outlined">chevron_right</span>
-                        </button>
+                <div class="p-6 border-t border-slate-50 flex flex-wrap items-center justify-between gap-3">
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+                        @if($tracker->total() > 0)
+                        Showing {{ $tracker->firstItem() }}-{{ $tracker->lastItem() }} of {{ $tracker->total() }}
+                        {{ \Illuminate\Support\Str::plural('Course', $tracker->total()) }}
+                        @else
+                        No courses to show
+                        @endif
+                    </p>
+                    @if($tracker->hasPages())
+                    @php
+                        $current = $tracker->currentPage();
+                        $last = $tracker->lastPage();
+                        $window = array_unique(array_filter([1, $current - 1, $current, $current + 1, $last], fn ($n) => $n >= 1 && $n <= $last));
+                        sort($window);
+                        $prev = 0;
+                    @endphp
+                    <div class="flex gap-2 items-center">
+                        @if($tracker->onFirstPage())
+                        <span class="p-2 border border-slate-100 rounded-lg text-slate-300 cursor-not-allowed"><span class="material-symbols-outlined">chevron_left</span></span>
+                        @else
+                        <a href="{{ $tracker->previousPageUrl() }}" class="p-2 border border-slate-100 rounded-lg text-slate-400 hover:bg-slate-50 hover:text-blue-600 transition-all"><span class="material-symbols-outlined">chevron_left</span></a>
+                        @endif
+                        @foreach($window as $n)
+                        @if($n - $prev > 1)
+                        <span class="px-1 text-slate-400 text-sm">...</span>
+                        @endif
+                        <a href="{{ $tracker->url($n) }}"
+                            class="px-4 py-1.5 rounded-lg text-sm font-bold {{ $n === $current ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'text-slate-500 hover:bg-slate-50' }}">{{ $n }}</a>
+                        @php $prev = $n; @endphp
+                        @endforeach
+                        @if($tracker->hasMorePages())
+                        <a href="{{ $tracker->nextPageUrl() }}" class="p-2 border border-slate-100 rounded-lg text-slate-400 hover:bg-slate-50 hover:text-blue-600 transition-all"><span class="material-symbols-outlined">chevron_right</span></a>
+                        @else
+                        <span class="p-2 border border-slate-100 rounded-lg text-slate-300 cursor-not-allowed"><span class="material-symbols-outlined">chevron_right</span></span>
+                        @endif
                     </div>
+                    @endif
                 </div>
             </div>
-            <!-- ANALYTICS PREVIEW CARDS (BOTTOM SECTION) -->
+            <!-- ANALYTICS CARDS (BOTTOM SECTION) -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-8">
                 <div class="bg-surface-container-lowest p-6 rounded-2xl shadow-sm">
                     <div class="flex justify-between items-center mb-6">
@@ -540,54 +503,28 @@
                                 style="font-variation-settings: 'FILL' 1;">bar_chart</span>
                             Compliance Rate Overview
                         </h4>
-                        <button class="text-xs font-bold text-blue-700 bg-blue-50 px-3 py-1 rounded-lg">Last 30
-                            Days</button>
+                        <span class="text-xs font-bold text-blue-700 bg-blue-50 px-3 py-1 rounded-lg">Last 30 Days</span>
                     </div>
+                    @if($compliance->isEmpty())
+                    <p class="h-48 flex items-center justify-center text-sm text-slate-500 text-center">No doses have fallen due in the last 30 days yet.</p>
+                    @else
                     <div class="h-48 w-full flex items-end justify-between gap-4 px-2">
-                        <!-- Simplified Bar Chart -->
-                        <div class="w-full bg-blue-50 h-[80%] rounded-t-lg relative group">
+                        @foreach($compliance as $b)
+                        <div class="w-full bg-blue-50 rounded-t-lg relative group" style="height: {{ max($b->pct, 4) }}%">
                             <div
                                 class="absolute inset-0 bg-blue-600 rounded-t-lg scale-y-0 origin-bottom group-hover:scale-y-100 transition-transform duration-500">
                             </div>
                             <span
-                                class="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-bold text-blue-700 opacity-0 group-hover:opacity-100">80%</span>
+                                class="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-bold text-blue-700 opacity-0 group-hover:opacity-100 whitespace-nowrap">{{ $b->pct }}% · {{ $b->doses }} {{ \Illuminate\Support\Str::plural('dose', $b->doses) }}</span>
                         </div>
-                        <div class="w-full bg-blue-50 h-[65%] rounded-t-lg relative group">
-                            <div
-                                class="absolute inset-0 bg-blue-600 rounded-t-lg scale-y-0 origin-bottom group-hover:scale-y-100 transition-transform duration-500">
-                            </div>
-                            <span
-                                class="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-bold text-blue-700 opacity-0 group-hover:opacity-100">65%</span>
-                        </div>
-                        <div class="w-full bg-blue-50 h-[92%] rounded-t-lg relative group">
-                            <div
-                                class="absolute inset-0 bg-blue-600 rounded-t-lg scale-y-0 origin-bottom group-hover:scale-y-100 transition-transform duration-500">
-                            </div>
-                            <span
-                                class="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-bold text-blue-700 opacity-0 group-hover:opacity-100">92%</span>
-                        </div>
-                        <div class="w-full bg-blue-50 h-[74%] rounded-t-lg relative group">
-                            <div
-                                class="absolute inset-0 bg-blue-600 rounded-t-lg scale-y-0 origin-bottom group-hover:scale-y-100 transition-transform duration-500">
-                            </div>
-                            <span
-                                class="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-bold text-blue-700 opacity-0 group-hover:opacity-100">74%</span>
-                        </div>
-                        <div class="w-full bg-blue-50 h-[88%] rounded-t-lg relative group">
-                            <div
-                                class="absolute inset-0 bg-blue-600 rounded-t-lg scale-y-0 origin-bottom group-hover:scale-y-100 transition-transform duration-500">
-                            </div>
-                            <span
-                                class="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-bold text-blue-700 opacity-0 group-hover:opacity-100">88%</span>
-                        </div>
+                        @endforeach
                     </div>
-                    <div class="flex justify-between mt-4 px-2">
-                        <span class="text-[10px] font-bold text-slate-400">Guadalupe</span>
-                        <span class="text-[10px] font-bold text-slate-400">Lahug</span>
-                        <span class="text-[10px] font-bold text-slate-400">Mabolo</span>
-                        <span class="text-[10px] font-bold text-slate-400">Tisa</span>
-                        <span class="text-[10px] font-bold text-slate-400">Talamban</span>
+                    <div class="flex justify-between gap-4 mt-4 px-2">
+                        @foreach($compliance as $b)
+                        <span class="w-full text-center text-[10px] font-bold text-slate-400 truncate" title="{{ $b->name }}">{{ $b->name }}</span>
+                        @endforeach
                     </div>
+                    @endif
                 </div>
                 <div class="bg-surface-container-lowest p-6 rounded-2xl shadow-sm">
                     <h4 class="text-sm font-bold text-slate-900 mb-6 flex items-center gap-2">
@@ -596,37 +533,94 @@
                         Upcoming Critical Appointments
                     </h4>
                     <div class="space-y-4">
-                        <div
-                            class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border-l-4 border-error">
-                            <div class="flex items-center gap-3">
-                                <span class="material-symbols-outlined text-error">priority_high</span>
-                                <div>
-                                    <p class="text-xs font-bold text-slate-900">Jose Mari Chan (CEB-2025-098)</p>
-                                    <p class="text-[10px] text-slate-500">Final Dose due 1 hour ago</p>
+                        @forelse($appointments as $c)
+                        @php
+                            $date = $c->next['date'];
+                            $isOverdue = $date->lt($today);
+                            $doseName = 'Day ' . $c->next['day'] . ' dose';
+                            $when = $isOverdue ? 'was due ' . $date->format('M d') . ' (' . (int) $date->diffInDays($today) . 'd overdue)'
+                                : ($date->isSameDay($today) ? 'due today' : 'due tomorrow');
+                        @endphp
+                        <div class="flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 border-l-4 {{ $isOverdue ? 'border-error' : 'border-tertiary' }}">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <span class="material-symbols-outlined {{ $isOverdue ? 'text-error' : 'text-tertiary' }}">{{ $isOverdue ? 'priority_high' : 'notifications_active' }}</span>
+                                <div class="min-w-0">
+                                    <p class="text-xs font-bold text-slate-900 truncate">{{ $c->patient_name }} ({{ $c->patient_id }})</p>
+                                    <p class="text-[10px] text-slate-500">{{ $doseName }} {{ $when }}</p>
                                 </div>
                             </div>
-                            <button
-                                class="text-[10px] font-black text-white bg-error px-4 py-1.5 rounded-lg uppercase tracking-tight shadow-md shadow-error/20">Call
-                                Patient</button>
+                            @if($isOverdue && $c->contact_num)
+                            <a href="tel:{{ preg_replace('/[^\d+]/', '', $c->contact_num) }}"
+                                class="shrink-0 text-[10px] font-black text-white bg-error px-4 py-1.5 rounded-lg uppercase tracking-tight shadow-md shadow-error/20 whitespace-nowrap">Call Patient</a>
+                            @else
+                            <a href="{{ route('healthworker.ce-vii', ['bite_case_id' => $c->bite_case_id]) }}"
+                                class="shrink-0 text-[10px] font-black text-slate-600 bg-white border border-slate-200 px-4 py-1.5 rounded-lg uppercase tracking-tight whitespace-nowrap">Open Case</a>
+                            @endif
                         </div>
-                        <div
-                            class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border-l-4 border-tertiary">
-                            <div class="flex items-center gap-3">
-                                <span class="material-symbols-outlined text-tertiary">notifications_active</span>
-                                <div>
-                                    <p class="text-xs font-bold text-slate-900">Angel Locsin (CEB-2025-112)</p>
-                                    <p class="text-[10px] text-slate-500">Day 7 Dose due in 3 hours</p>
-                                </div>
-                            </div>
-                            <button
-                                class="text-[10px] font-black text-slate-600 bg-white border border-slate-200 px-4 py-1.5 rounded-lg uppercase tracking-tight">Remind
-                                SMS</button>
-                        </div>
+                        @empty
+                        <p class="text-sm text-slate-500 text-center py-8">No overdue or upcoming doses right now.</p>
+                        @endforelse
                     </div>
                 </div>
             </div>
         </div>
     </main>
+    <!-- Row action menu (one shared menu, positioned next to the clicked button) -->
+    <div id="rowMenu" class="hidden fixed z-[60] w-52 bg-white rounded-xl shadow-lg border border-slate-100 p-2">
+        <a id="rowMenuCase" href="#" class="flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary rounded-lg transition-colors">
+            <span class="material-symbols-outlined text-[18px]">vaccines</span> Open Immunization
+        </a>
+        <a id="rowMenuRecord" href="#" class="flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary rounded-lg transition-colors">
+            <span class="material-symbols-outlined text-[18px]">badge</span> Patient Record
+        </a>
+        <a id="rowMenuTel" href="#" class="flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary rounded-lg transition-colors">
+            <span class="material-symbols-outlined text-[18px]">call</span> <span id="rowMenuTelText">Call Patient</span>
+        </a>
+    </div>
+    <script>
+        (function () {
+            const menu = document.getElementById('rowMenu');
+            const close = () => menu.classList.add('hidden');
+
+            document.querySelectorAll('.row-menu').forEach((btn) => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (!menu.classList.contains('hidden') && menu.dataset.owner === btn.dataset.case) return close();
+                    menu.dataset.owner = btn.dataset.case;
+                    document.getElementById('rowMenuCase').href = btn.dataset.case;
+                    document.getElementById('rowMenuRecord').href = btn.dataset.record;
+                    const tel = document.getElementById('rowMenuTel');
+                    const number = btn.dataset.tel || '';
+                    tel.classList.toggle('hidden', !number);
+                    tel.href = 'tel:' + number.replace(/[^\d+]/g, '');
+                    document.getElementById('rowMenuTelText').textContent = 'Call ' + number;
+
+                    menu.classList.remove('hidden');
+                    const r = btn.getBoundingClientRect();
+                    const h = menu.offsetHeight;
+                    const top = r.bottom + 6 + h > window.innerHeight ? r.top - h - 6 : r.bottom + 6;
+                    menu.style.top = Math.max(8, top) + 'px';
+                    menu.style.left = Math.max(8, r.right - menu.offsetWidth) + 'px';
+                });
+            });
+            document.addEventListener('click', (e) => { if (!menu.contains(e.target)) close(); });
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+            window.addEventListener('scroll', close, true);
+            window.addEventListener('resize', close);
+
+            // The header search box searches the tracker too (Enter to search)
+            const headerSearch = document.querySelector('header input[type="text"]');
+            const hidden = document.getElementById('trackerSearch');
+            if (headerSearch && hidden) {
+                headerSearch.value = hidden.value;
+                headerSearch.addEventListener('keydown', (e) => {
+                    if (e.key !== 'Enter') return;
+                    hidden.value = headerSearch.value;
+                    hidden.form.requestSubmit();
+                });
+            }
+        })();
+    </script>
 </body>
 
 </html>

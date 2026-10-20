@@ -10,11 +10,11 @@ use Illuminate\Support\Facades\DB;
 class PepComplianceController extends Controller
 {
     /**
-     * PEP Compliance & SMS Logs.
+     * PEP Compliance.
      *
      * Doses are worked out from Section VII (bite_section7_immunization): the Day 0 date
      * sets the schedule (Primary: D0/D3/D7/D28, Booster: D0/D3) and each recorded day date
-     * is the actual dose. SMS stats and logs come from the `sms` table.
+     * is the actual dose.
      */
     public function index(Request $request)
     {
@@ -29,20 +29,15 @@ class PepComplianceController extends Controller
         $onTime = $doses->where('status', 'Completed On Time')->count();
         $missed = $doses->where('status', 'Missed')->count();
         $tomorrow = $this->today()->copy()->addDay();
-        $pendingReminders = $doses->where('status', 'Pending')
+        $dueSoon = $doses->where('status', 'Pending')
             ->filter(fn ($d) => $d->scheduled->lte($tomorrow))->count();
 
         $stats = [
             'completion' => ($completed + $missed) > 0 ? round($completed / ($completed + $missed) * 100, 1) : null,
             'on_time_pct' => $completed > 0 ? (int) round($onTime / $completed * 100) : null,
             'missed' => $missed,
-            'pending_reminders' => $pendingReminders,
+            'due_soon' => $dueSoon,
         ];
-
-        $smsSent = DB::table('sms')->where('status', 'Sent')->count();
-        $smsFailed = DB::table('sms')->where('status', 'Failed')->count();
-        $stats['sms_rate'] = ($smsSent + $smsFailed) > 0 ? round($smsSent / ($smsSent + $smsFailed) * 100, 1) : null;
-        $stats['sms_total'] = DB::table('sms')->count();
 
         // --- Tracking table: needs-attention first ---------------------------
         $rows = $doses->filter(function ($d) use ($status, $search) {
@@ -67,10 +62,6 @@ class PepComplianceController extends Controller
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
-        // --- SMS outreach logs ----------------------------------------------
-        $smsLogs = DB::table('sms')->orderByDesc('send_date')->limit(30)
-            ->get(['sms_type', 'contact_num', 'status', 'send_date', 'error_detail']);
-
         // --- Performance by barangay (completed vs. completed + missed) ------
         $barangays = $doses->groupBy('barangay')->map(function ($group, $name) {
             $done = $group->filter(fn ($d) => str_starts_with($d->status, 'Completed'))->count();
@@ -83,7 +74,7 @@ class PepComplianceController extends Controller
         })->filter(fn ($b) => $b->pct !== null)->sortByDesc('pct')->values()->take(12);
 
         return view('healthworker.PEP_Compliance_&_SMS_Logs', compact(
-            'stats', 'tracking', 'smsLogs', 'barangays', 'search', 'status'
+            'stats', 'tracking', 'barangays', 'search', 'status'
         ));
     }
 

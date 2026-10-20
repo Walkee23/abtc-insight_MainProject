@@ -312,9 +312,14 @@
                         <label class="text-xs font-semibold text-on-surface-variant">Temp (°C)</label>
                         <input type="text" name="temperature" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-center focus:ring-2 focus:ring-primary/20" placeholder="36.5" />
                     </div>
-                    <div class="space-y-2">
-                        <label class="text-xs font-semibold text-on-surface-variant">BP (mmHg)</label>
-                        <input type="text" name="blood_pressure" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-center focus:ring-2 focus:ring-primary/20" placeholder="120/80" />
+                    <div class="space-y-2 col-span-2" id="bpWrapper">
+                        <label class="text-xs font-semibold text-on-surface-variant">BP (mmHg) <span class="font-normal italic">- 3 readings, not needed under 15</span></label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <input type="text" class="bp-reading w-full bg-surface-container-highest border-none rounded-lg px-2 py-3 text-center focus:ring-2 focus:ring-primary/20" placeholder="120/80" maxlength="7" pattern="^\d{2,3}/\d{2,3}$" title="Format: 120/80" />
+                            <input type="text" class="bp-reading w-full bg-surface-container-highest border-none rounded-lg px-2 py-3 text-center focus:ring-2 focus:ring-primary/20" placeholder="118/80" maxlength="7" pattern="^\d{2,3}/\d{2,3}$" title="Format: 118/80" />
+                            <input type="text" class="bp-reading w-full bg-surface-container-highest border-none rounded-lg px-2 py-3 text-center focus:ring-2 focus:ring-primary/20" placeholder="122/82" maxlength="7" pattern="^\d{2,3}/\d{2,3}$" title="Format: 122/82" />
+                        </div>
+                        <input type="hidden" name="blood_pressure" id="bloodPressure">
                     </div>
                     <div class="space-y-2">
                         <label class="text-xs font-semibold text-on-surface-variant">PR (bpm)</label>
@@ -397,7 +402,7 @@
 
                         <div class="space-y-2">
                             <label class="text-xs font-semibold text-on-surface-variant">Animal Condition / Remarks</label>
-                            <textarea name="animal_remarks" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20 resize-none" placeholder="e.g. Foaming at the mouth, aggressive, died after bite..." rows="2"></textarea>
+                            <textarea name="animal_remarks" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20 resize-none" placeholder="e.g. died, lost," rows="2"></textarea>
                         </div>
                         <div class="space-y-2">
                             <label class="text-xs font-semibold text-on-surface-variant">Lab Exam (Optional)</label>
@@ -508,6 +513,34 @@
                     }
                     updateSubmitButton();
                 }
+            });
+
+            // BP rule: none under 15; if any reading is entered, all 3 are required
+            const bpInputs = document.querySelectorAll('.bp-reading');
+            const bpWrapper = document.getElementById('bpWrapper');
+            const bpHidden = document.getElementById('bloodPressure');
+
+            function applyBpRule() {
+                const age = parseInt(ageInput.value, 10);
+                const under15 = !isNaN(age) && age < 15;
+                bpInputs.forEach(i => {
+                    i.disabled = under15;
+                    if (under15) i.value = '';
+                });
+                bpWrapper.classList.toggle('opacity-50', under15);
+            }
+            dobInput.addEventListener('change', applyBpRule);
+            applyBpRule();
+
+            document.getElementById('referralForm').addEventListener('submit', function(e) {
+                const vals = [...bpInputs].map(i => i.value.trim());
+                const filled = vals.filter(v => v !== '').length;
+                if (filled > 0 && filled < 3) {
+                    e.preventDefault();
+                    alert('Please enter all 3 BP measurements, or leave them all blank.');
+                    return;
+                }
+                bpHidden.value = filled === 3 ? vals.join(', ') : '';
             });
 
             // 2. Contact Number Validation

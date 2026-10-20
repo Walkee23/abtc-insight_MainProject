@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 
-<html class="light" lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>BHW Referral Dashboard | Cebu City ABTC Insight</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script id="tailwind-config">
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>BHW Referral Dashboard | Cebu City ABTC Insight</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
+    <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
             theme: {
@@ -78,49 +80,54 @@
             }
         }
     </script>
-<style>
-        body { font-family: 'Inter', sans-serif; }
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
+
         .custom-glass {
             backdrop-filter: blur(12px);
             background: rgba(255, 255, 255, 0.85);
         }
     </style>
 </head>
+
 <body class="bg-surface text-on-surface antialiased">
 
-<aside class="h-screen w-64 fixed left-0 top-0 bg-slate-100 dark:bg-slate-900 flex flex-col pt-6 pb-4 gap-2 z-50">
-    <!-- Brand / Header Section -->
-    <div class="px-6 mb-8">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg">
-                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">health_and_safety</span>
-            </div>
-            <div>
-                <h1 class="text-blue-900 dark:text-blue-50 font-bold text-sm tracking-tight leading-none">ABTC-Insight</h1>
+    <aside class="h-screen w-64 fixed left-0 top-0 bg-slate-100 dark:bg-slate-900 flex flex-col pt-6 pb-4 gap-2 z-50">
+        <!-- Brand / Header Section -->
+        <div class="px-6 mb-8">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg">
+                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">health_and_safety</span>
+                </div>
+                <div>
+                    <h1 class="text-blue-900 dark:text-blue-50 font-bold text-sm tracking-tight leading-none">ABTC-Insight</h1>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Navigation -->
-    <nav class="space-y-1 px-4 dark:bg-slate-900">
-        <!-- My Referrals (Active - Admin Style) -->
-        <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-blue-700 dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600 translate-x-1 duration-150" 
-           href="{{ route('bhw.dashboard') }}">
-            <span class="material-symbols-outlined">assignment_turned_in</span>
-            <span class="font-['Inter'] text-sm tracking-wide">My Referrals</span>
-        </a>
+        <!-- Navigation -->
+        <nav class="space-y-1 px-4 dark:bg-slate-900">
+            <!-- My Referrals (Active - Admin Style) -->
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-blue-700 dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600 translate-x-1 duration-150"
+                href="{{ route('bhw.dashboard') }}">
+                <span class="material-symbols-outlined">assignment_turned_in</span>
+                <span class="font-['Inter'] text-sm tracking-wide">My Referrals</span>
+            </a>
 
-        <!-- Create New Referral (Inactive) -->
-        <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
-           href="{{ route('bhw.referral') }}">
-            <span class="material-symbols-outlined">add_circle</span>
-            <span class="font-['Inter'] text-sm tracking-wide">Create New Referral</span>
-        </a>
-    </nav>
-</aside>
+            <!-- Create New Referral (Inactive) -->
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50"
+                href="{{ route('bhw.referral') }}">
+                <span class="material-symbols-outlined">add_circle</span>
+                <span class="font-['Inter'] text-sm tracking-wide">Create New Referral</span>
+            </a>
+        </nav>
+    </aside>
 
     <!-- Main Canvas Area -->
     <main class="ml-64 min-h-screen relative">
@@ -143,35 +150,35 @@
                     </button>
                 </div>
                 <div class="h-8 w-[1px] bg-outline-variant/30"></div>
-<div class="relative group cursor-pointer">
-    <div class="flex items-center gap-3">
-        <div class="text-right">
-            <p class="text-xs font-bold text-on-surface leading-tight">Test BHW</p>
-            <p class="text-[10px] text-on-surface-variant font-semibold">BHW-Guadalupe</p>
-        </div>
-        <div class="relative">
-            <img alt="Maria Santos Profile" class="w-10 h-10 rounded-full object-cover border-2 border-primary/10" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYXEfbdf1WqBtOmi-7pBaGEzvLw0ec1xSc8n2gxOR_x-J3wdc6kf9vnZ85PaHPIQCh1kv_tVfhn4Rnh61XmI4c6xTOgh7JBQwsuwAvfnnZUe9RXB8MhAI80cZskKvKdKAJZ5k7jnYHili_iuKnZkftjZN3qq74m80X9kjK0qI6g2oqTanqlzZnmzay0Z3RCJlCI04rRH-O2Hxp6Hc061pjAUy_7LOK9etgaYMxprFXpanaIhoYgcdEiaWYUEUrcuw2_cVQ3jnM9k-K" />
-            <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
-        </div>
-    </div>
-    <!-- Hover Dropdown Menu -->
-    <div class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-        <div class="p-2">
-            <a href="#" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary rounded-lg transition-colors">
-                <span class="material-symbols-outlined text-[18px]">person</span>
-                My Profile
-            </a>
-            <div class="h-px bg-slate-100 my-1"></div>
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors text-left cursor-pointer">
-                    <span class="material-symbols-outlined text-[18px]">logout</span>
-                    Log Out
-                </button>
-            </form>
-        </div>
-    </div>
-</div>
+                <div class="relative group cursor-pointer">
+                    <div class="flex items-center gap-3">
+                        <div class="text-right">
+                            <p class="text-xs font-bold text-on-surface leading-tight">Test BHW</p>
+                            <p class="text-[10px] text-on-surface-variant font-semibold">BHW-Guadalupe</p>
+                        </div>
+                        <div class="relative">
+                            <img alt="Maria Santos Profile" class="w-10 h-10 rounded-full object-cover border-2 border-primary/10" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYXEfbdf1WqBtOmi-7pBaGEzvLw0ec1xSc8n2gxOR_x-J3wdc6kf9vnZ85PaHPIQCh1kv_tVfhn4Rnh61XmI4c6xTOgh7JBQwsuwAvfnnZUe9RXB8MhAI80cZskKvKdKAJZ5k7jnYHili_iuKnZkftjZN3qq74m80X9kjK0qI6g2oqTanqlzZnmzay0Z3RCJlCI04rRH-O2Hxp6Hc061pjAUy_7LOK9etgaYMxprFXpanaIhoYgcdEiaWYUEUrcuw2_cVQ3jnM9k-K" />
+                            <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                        </div>
+                    </div>
+                    <!-- Hover Dropdown Menu -->
+                    <div class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                        <div class="p-2">
+                            <a href="#" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary rounded-lg transition-colors">
+                                <span class="material-symbols-outlined text-[18px]">person</span>
+                                My Profile
+                            </a>
+                            <div class="h-px bg-slate-100 my-1"></div>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors text-left cursor-pointer">
+                                    <span class="material-symbols-outlined text-[18px]">logout</span>
+                                    Log Out
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
         </header>
         <!-- Content Canvas -->
         <div class="pt-28 px-10 pb-12">
@@ -250,15 +257,22 @@
                                 </td>
                                 <!-- Exposure Type -->
                                 <td class="px-6 py-4">
-                                    @if($referral->exposure_type === 'Bite')
-                                    <span class="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded">Bite</span>
-                                    @else
-                                    <span class="text-xs font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded">{{ $referral->exposure_type ?? 'N/A' }}</span>
-                                    @endif
+                                    <div class="flex flex-wrap gap-1">
+                                        @foreach(array_filter(array_map('trim', explode(',', $referral->exposure_type ?? ''))) as $type)
+                                        @if($type === 'Bite')
+                                        <span class="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded">Bite</span>
+                                        @else
+                                        <span class="text-xs font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded">{{ $type }}</span>
+                                        @endif
+                                        @endforeach
+                                        @if(empty($referral->exposure_type))
+                                        <span class="text-xs font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded">N/A</span>
+                                        @endif
+                                    </div>
                                 </td>
                                 <!-- Status -->
                                 <td class="px-6 py-4">
-                                                                       @if($referral->status === 'Pending')
+                                    @if($referral->status === 'Pending')
                                     <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
                                         <span class="w-1.5 h-1.5 rounded-full bg-amber-600"></span> Pending
                                     </span>
@@ -329,37 +343,37 @@
         </div>
     </main>
     @if(session('new_referral'))
-<div id="successModal" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-8 text-center">
-        <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-100 flex items-center justify-center">
-            <span class="material-symbols-outlined text-emerald-600 text-4xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
-        </div>
-        <h2 class="text-2xl font-extrabold text-slate-900 mb-1">Referral Submitted!</h2>
-        <p class="text-sm text-slate-500 mb-4">The referral was sent to CHD-ABTC for verification.</p>
-
-        <div class="bg-slate-50 rounded-xl p-4 mb-6 text-left space-y-2">
-            <div class="flex justify-between text-sm">
-                <span class="text-slate-500">Patient</span>
-                <span class="font-bold text-slate-900">{{ session('new_referral')['patient_name'] }}</span>
+    <div id="successModal" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-8 text-center">
+            <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-100 flex items-center justify-center">
+                <span class="material-symbols-outlined text-emerald-600 text-4xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
             </div>
-            <div class="flex justify-between text-sm">
-                <span class="text-slate-500">Reference No.</span>
-                <span class="font-bold text-blue-700">{{ session('new_referral')['reference_no'] }}</span>
-            </div>
-        </div>
+            <h2 class="text-2xl font-extrabold text-slate-900 mb-1">Referral Submitted!</h2>
+            <p class="text-sm text-slate-500 mb-4">The referral was sent to CHD-ABTC for verification.</p>
 
-        <div class="flex gap-3">
-            <button type="button" onclick="document.getElementById('successModal').remove()" class="flex-1 py-3 rounded-xl border-2 border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-all">
-                Close
-            </button>
-            <a href="{{ route('bhw.print', session('new_referral')['id']) }}?autoprint=true" target="_blank" class="flex-1 py-3 rounded-xl bg-primary text-white font-bold flex items-center justify-center gap-2 hover:bg-primary-container transition-all">
-                <span class="material-symbols-outlined text-[18px]">print</span>
-                Print
-            </a>
+            <div class="bg-slate-50 rounded-xl p-4 mb-6 text-left space-y-2">
+                <div class="flex justify-between text-sm">
+                    <span class="text-slate-500">Patient</span>
+                    <span class="font-bold text-slate-900">{{ session('new_referral')['patient_name'] }}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-slate-500">Reference No.</span>
+                    <span class="font-bold text-blue-700">{{ session('new_referral')['reference_no'] }}</span>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button type="button" onclick="document.getElementById('successModal').remove()" class="flex-1 py-3 rounded-xl border-2 border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-all">
+                    Close
+                </button>
+                <a href="{{ route('bhw.print', session('new_referral')['id']) }}?autoprint=true" target="_blank" class="flex-1 py-3 rounded-xl bg-primary text-white font-bold flex items-center justify-center gap-2 hover:bg-primary-container transition-all">
+                    <span class="material-symbols-outlined text-[18px]">print</span>
+                    Print
+                </a>
+            </div>
         </div>
     </div>
-</div>
-@endif
+    @endif
 </body>
 
 </html>

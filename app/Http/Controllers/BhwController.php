@@ -32,30 +32,24 @@ class BhwController extends Controller
 
     public function storeReferral(Request $request)
     {
-         $request->validate([
-        'exposure_category' => [
-            'required', 'in:1,2,3',
-            function ($attribute, $value, $fail) use ($request) {
-                if ($request->input('exposure_type') === 'Non-Bite' && (string) $value !== '1') {
-                    $fail('Non-bite exposure can only be Category I.');
-                }
-            },
-        ],
-        'animal_remarks' => 'nullable|string|max:1000',
-    ]);
+        $request->validate([
+            'exposure_type'   => 'required|array|min:1',
+            'exposure_type.*' => 'in:Bite,Non-Bite',
+            'animal_remarks'  => 'nullable|string|max:1000',
+        ]);
         $barangayName = $request->input('patient_barangay');
-        
+
         // 1. Get the 3-digit code from the config file, default to '000' if not found
         $brgyCode = config("barangays.{$barangayName}", '000');
         $dateStr = Carbon::now()->format('Ymd');
-        
+
         // 2. Count today's referrals for this specific barangay to create the sequence
         $countToday = DB::table('bhw_referral_info')
             ->where('reference_no', 'like', "BRY-{$brgyCode}-{$dateStr}-%")
             ->count();
-            
+
         $sequence = str_pad($countToday + 1, 4, '0', STR_PAD_LEFT);
-        
+
         // 3. Assemble the final unique code
         $referenceNo = "BRY-{$brgyCode}-{$dateStr}-{$sequence}";
 
@@ -91,18 +85,17 @@ class BhwController extends Controller
         // 6. Save the exposure details into the bhw_referral_exposure table
         DB::table('bhw_referral_exposure')->insert([
             'referral_id' => $referralId,
-            'exposure_type' => $request->input('exposure_type'),
+            'exposure_type' => implode(', ', $request->input('exposure_type', [])),
             'exposure_datetime' => $request->input('exposure_date') . ' ' . ($request->input('exposure_time') ?: '00:00:00'),
             'site_of_bite' => $request->input('site_of_bite'),
             'biting_animal' => $request->input('biting_animal'),
             'biting_animal_other' => $request->input('biting_animal_other'),
             'lab_exam' => $request->input('lab_exam'),
             'action_desired' => $request->input('action_desired'),
-            'exposure_category' => $request->input('exposure_category'),
             'animal_remarks' => $request->input('animal_remarks')
         ]);
 
-                // Go to the dashboard and show the success pop-up
+        // Go to the dashboard and show the success pop-up
         return redirect()->route('bhw.dashboard')->with('new_referral', [
             'id'           => $referralId,
             'reference_no' => $referenceNo,
@@ -110,7 +103,7 @@ class BhwController extends Controller
         ]);
     }
 
-    
+
 
     public function printReferral($id)
     {
@@ -129,5 +122,3 @@ class BhwController extends Controller
         return view('bhw.print_referral', compact('referral'));
     }
 }
-
- 

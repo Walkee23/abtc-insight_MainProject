@@ -205,7 +205,7 @@ class ClinicalEncodingController extends Controller
             'passive_given' => 'nullable|boolean',
             'passive_type' => 'nullable|string|max:50',
             // Only needed once a passive immunoglobulin (ERIG/HRIG) is chosen
-            'passive_route' => 'nullable|required_with:passive_type|in:IU infiltrate,IM',
+            'passive_route' => 'nullable|required_with:passive_type|in:ID,SC',
         ]);
 
         // Patient weight always comes from the BHW referral, never from the form

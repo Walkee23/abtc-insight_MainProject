@@ -485,14 +485,9 @@
                                         <div>
                                             <label
                                                 class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Route <span class="text-[10px] normal-case font-medium">(required if ERIG/HRIG)</span></label>
-                                            {!! $dropdown('passive_route', ['IU infiltrate' => 'IU infiltrate', 'IM' => 'IM'], 'bg-white') !!}
+                                            {!! $dropdown('passive_route', ['ID' => 'ID (Intradermal)', 'SC' => 'SC (Subcutaneous)'], 'bg-white') !!}
                                         </div>
                                     </div>
-                                </div>
-                                @else
-                                <div class="bg-surface-container-low rounded-xl px-6 py-4 mb-8 flex items-center gap-3">
-                                    <span class="material-symbols-outlined text-outline">info</span>
-                                    <p class="text-xs text-on-surface-variant">Passive immunization (ERIG/HRIG) is only for Category III. This is a Category {{ $case->category }} case, so only the active vaccine is given.</p>
                                 </div>
                                 @endif
                                 <div class="bg-surface-container-low rounded-xl p-6">

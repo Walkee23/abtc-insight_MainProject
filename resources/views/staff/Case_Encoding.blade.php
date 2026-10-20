@@ -115,7 +115,7 @@
             </div>
         </div>
         <nav class="flex-1 mt-4 space-y-1 px-4">
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50"
                 href="{{ route('staff.newdashboard') }}">
                 <span class="material-symbols-outlined">dashboard</span>
                 <span class="font-['Inter'] text-sm tracking-wide">Dashboard</span>
@@ -124,7 +124,7 @@
                 <span class="material-symbols-outlined">queue</span>
                 <span class="font-['Inter'] text-sm tracking-wide">Queue Management</span>
             </a>
-           
+
             <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-blue-700 dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600 translate-x-1 duration-150" href="{{ route('staff.case-encoding') }}">
                 <span class="material-symbols-outlined">clinical_notes</span>
                 <span class="font-['Inter'] text-sm tracking-wide">Case Encoding</span>
@@ -236,11 +236,11 @@
                             <tbody class="divide-y divide-outline-variant/10">
                                 @forelse($verifiedQueue as $index => $row)
                                 @php
-                                   $rowUrl = route('staff.case-encoding', $row->inflow_record_id);
-                                   $isSelected = isset($selectedPatient) && $selectedPatient->inflow_record_id == $row->inflow_record_id;
+                                $rowUrl = route('staff.case-encoding', $row->inflow_record_id);
+                                $isSelected = isset($selectedPatient) && $selectedPatient->inflow_record_id == $row->inflow_record_id;
                                 @endphp
                                 <tr onclick="window.location='{{ $rowUrl }}'" class="{{ $isSelected ? 'bg-primary/5 hover:bg-primary/10' : 'hover:bg-surface-bright' }} transition-colors cursor-pointer">
-                                   <td class="px-4 py-4 {{ $isSelected ? 'shadow-[inset_4px_0_0_0_#004a93]' : '' }}">
+                                    <td class="px-4 py-4 {{ $isSelected ? 'shadow-[inset_4px_0_0_0_#004a93]' : '' }}">
                                         <p class="font-bold text-on-surface">{{ $row->patient_name }}</p>
                                         <p class="text-[10px] text-on-surface-variant">#{{ $row->inflow_record_id }}</p>
                                     </td>
@@ -281,6 +281,14 @@
                         <form id="caseEncodingForm" action="{{ route('staff.store-case-encoding', $selectedPatient->inflow_record_id ?? 0) }}" method="POST" class="p-8 space-y-12">
                             @csrf
 
+                            @php
+                            $biteDt = !empty($bhwExposure->exposure_datetime) ? \Carbon\Carbon::parse($bhwExposure->exposure_datetime) : null;
+                            $biteDateVal = $biteDt ? $biteDt->format('Y-m-d') : '';
+                            // The BHW form saves 00:00:00 when no time was entered, so treat that as blank
+                            $biteTimeVal = ($biteDt && $biteDt->format('H:i:s') !== '00:00:00') ? $biteDt->format('H:i') : '';
+                            $animal = $bhwExposure->biting_animal ?? '';
+                            @endphp
+
                             <!-- Section 3: Details of Exposure -->
                             <section class="space-y-6">
                                 <div class="flex items-center gap-3">
@@ -290,20 +298,20 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pl-11">
                                     <div class="space-y-4">
                                         <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Animal Type <span class="text-error">*</label>
-                                    <div class="flex flex-wrap gap-4 items-center">
-                                        <label class="flex items-center gap-2 text-sm cursor-pointer">
-                                            <input class="text-primary focus:ring-primary animal-type-radio" name="animal_type" value="Dog" type="radio" required /> Dog
-                                         </label>
-                                       <label class="flex items-center gap-2 text-sm cursor-pointer">
-                                           <input class="text-primary focus:ring-primary animal-type-radio" name="animal_type" value="Cat" type="radio" required /> Cat
-                                       </label>
-                                       <label class="flex items-center gap-2 text-sm cursor-pointer">
-                                          <input class="text-primary focus:ring-primary animal-type-radio" name="animal_type" value="Others" type="radio" required /> Others
-                                         </label>
+                                        <div class="flex flex-wrap gap-4 items-center">
+                                            <label class="flex items-center gap-2 text-sm cursor-pointer">
+                                                <input class="text-primary focus:ring-primary animal-type-radio" name="animal_type" value="Dog" type="radio" required {{ $animal === 'Dog' ? 'checked' : '' }} /> Dog
+                                            </label>
+                                            <label class="flex items-center gap-2 text-sm cursor-pointer">
+                                                <input class="text-primary focus:ring-primary animal-type-radio" name="animal_type" value="Cat" type="radio" required {{ $animal === 'Cat' ? 'checked' : '' }} /> Cat
+                                            </label>
+                                            <label class="flex items-center gap-2 text-sm cursor-pointer">
+                                                <input class="text-primary focus:ring-primary animal-type-radio" name="animal_type" value="Others" type="radio" required {{ $animal === 'Others' ? 'checked' : '' }} /> Others
+                                            </label>
+                                        </div>
+                                        <input id="animal_type_other_input" class=" {{ $animal === 'Others' ? '' : 'hidden' }} w-full bg-surface-container-highest border-none rounded-lg text-xs px-3 py-2 focus:ring-2 focus:ring-primary/20 transition-all outline-none" name="animal_type_other" value="{{ $bhwExposure->biting_animal_other ?? '' }}" placeholder="Specify animal..." type="text" />
                                     </div>
-                                         <input id="animal_type_other_input" class="hidden w-full bg-surface-container-highest border-none rounded-lg text-xs px-3 py-2 focus:ring-2 focus:ring-primary/20 transition-all outline-none" name="animal_type_other" placeholder="Specify animal..." type="text" />
-                                    </div>
-
+ 
                                     <div class="space-y-4">
                                         <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Pet or Stray</label>
                                         <div class="flex gap-4">
@@ -319,8 +327,8 @@
                                     <div class="space-y-2">
                                         <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Date/Time of Bite <span class="text-error">*</label>
                                         <div class="flex gap-2">
-                                            <input id="bite_date_input" class="w-full bg-surface-container-highest border-none rounded-lg text-sm px-4 py-2.5 focus:ring-2 focus:ring-primary/20 transition-all outline-none" name="bite_date" type="date" required />
-                                            <input id="bite_time_input" class="w-full bg-surface-container-highest border-none rounded-lg text-sm px-4 py-2.5 focus:ring-2 focus:ring-primary/20 transition-all outline-none" name="bite_time" type="time" />
+                                            <input id="bite_date_input" class="w-full bg-surface-container-highest border-none rounded-lg text-sm px-4 py-2.5 focus:ring-2 focus:ring-primary/20 transition-all outline-none" name="bite_date" type="date" value="{{ $biteDateVal }}" required />
+                                            <input id="bite_time_input" class="w-full bg-surface-container-highest border-none rounded-lg text-sm px-4 py-2.5 focus:ring-2 focus:ring-primary/20 transition-all outline-none" name="bite_time" type="time" value="{{ $biteTimeVal }}" />
                                         </div>
                                     </div>
 
@@ -334,7 +342,7 @@
                                                 <input class="rounded text-primary focus:ring-primary" name="exposure_type[]" value="Scratch" type="checkbox" /> Scratch
                                             </label>
                                             <label class="flex items-center gap-2 text-sm cursor-pointer">
-                                                <input class="rounded text-primary focus:ring-primary" name="exposure_type[]" value="Bite" type="checkbox" /> Bite
+                                                <input class="rounded text-primary focus:ring-primary" name="exposure_type[]" value="Bite" type="checkbox" {{ ($bhwExposure->exposure_type ?? '') === 'Bite' ? 'checked' : '' }} /> Bite
                                             </label>
                                         </div>
                                     </div>
@@ -456,7 +464,7 @@
                                                 <input class="text-primary focus:ring-primary" id="prev_arv_yes" name="prev_arv_given" value="1" type="radio" /> Yes
                                             </label>
                                             <label class="flex items-center gap-2 text-sm cursor-pointer has-[:checked]:font-bold has-[:checked]:text-primary">
-                                                <input class="text-primary focus:ring-primary" id="prev_arv_no" name="prev_arv_given" value="0"  type="radio" /> No
+                                                <input class="text-primary focus:ring-primary" id="prev_arv_no" name="prev_arv_given" value="0" type="radio" /> No
                                             </label>
                                         </div>
                                     </div>
@@ -480,9 +488,9 @@
                                     </div>
                                 </div>
                                 <div class="bg-tertiary-fixed p-4 rounded-lg flex gap-3 items-start border-l-4 border-on-tertiary-fixed-variant shadow-sm">
-                                        <span class="material-symbols-outlined text-on-tertiary-fixed-variant" style="font-variation-settings: 'FILL' 1;">info</span>
-                                        <p class="text-xs text-on-tertiary-fixed-variant font-medium">Check with ABTC health worker for history or record patient's claims if medical documentation is unavailable. Incomplete history may lead to dosage errors.</p>
-                                    </div>
+                                    <span class="material-symbols-outlined text-on-tertiary-fixed-variant" style="font-variation-settings: 'FILL' 1;">info</span>
+                                    <p class="text-xs text-on-tertiary-fixed-variant font-medium">Check with ABTC health worker for history or record patient's claims if medical documentation is unavailable. Incomplete history may lead to dosage errors.</p>
+                                </div>
 
                             </section>
 
@@ -504,47 +512,52 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // --- Section 3: Animal Type "Others" Logic ---
-const animalTypeRadios = document.querySelectorAll('.animal-type-radio');
-const animalOtherInput = document.getElementById('animal_type_other_input');
+            const animalTypeRadios = document.querySelectorAll('.animal-type-radio');
+            const animalOtherInput = document.getElementById('animal_type_other_input');
 
-animalTypeRadios.forEach(radio => {
-    radio.addEventListener('change', function() {
-        if (this.value === 'Others') {
-            animalOtherInput.classList.remove('hidden');
-            animalOtherInput.required = true;
-            animalOtherInput.focus();
-        } else {
-            animalOtherInput.classList.add('hidden');
-            animalOtherInput.required = false;
-            animalOtherInput.value = '';
-        }
-    });
-});
-        // --- Section 3: Limit Date/Time of Bite ---
-         const biteDate = document.getElementById('bite_date_input');
-         const biteTime = document.getElementById('bite_time_input');
+            animalTypeRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.value === 'Others') {
+                        animalOtherInput.classList.remove('hidden');
+                        animalOtherInput.required = true;
+                        animalOtherInput.focus();
+                    } else {
+                        animalOtherInput.classList.add('hidden');
+                        animalOtherInput.required = false;
+                        animalOtherInput.value = '';
+                    }
+                });
+            });
+            // --- Section 3: Limit Date/Time of Bite ---
+            const biteDate = document.getElementById('bite_date_input');
+            const biteTime = document.getElementById('bite_time_input');
 
-         function pad(n) { return String(n).padStart(2, '0'); }
-         function toYMD(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+            function pad(n) {
+                return String(n).padStart(2, '0');
+            }
 
-         const nowDate = new Date();
-         const oneYearAgo = new Date(nowDate);
-          oneYearAgo.setFullYear(nowDate.getFullYear() - 1);
-          biteDate.max = toYMD(nowDate);
-          biteDate.min = toYMD(oneYearAgo);
+            function toYMD(d) {
+                return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+            }
 
-function limitBiteTime() {
-    if (biteDate.value === toYMD(new Date())) {
-        const now = new Date();
-        const maxTime = pad(now.getHours()) + ':' + pad(now.getMinutes());
-        biteTime.max = maxTime;
-        if (biteTime.value > maxTime) biteTime.value = '';
-    } else {
-        biteTime.removeAttribute('max');
-    }
-}
-biteDate.addEventListener('change', limitBiteTime);
-biteTime.addEventListener('change', limitBiteTime); 
+            const nowDate = new Date();
+            const oneYearAgo = new Date(nowDate);
+            oneYearAgo.setFullYear(nowDate.getFullYear() - 1);
+            biteDate.max = toYMD(nowDate);
+            biteDate.min = toYMD(oneYearAgo);
+
+            function limitBiteTime() {
+                if (biteDate.value === toYMD(new Date())) {
+                    const now = new Date();
+                    const maxTime = pad(now.getHours()) + ':' + pad(now.getMinutes());
+                    biteTime.max = maxTime;
+                    if (biteTime.value > maxTime) biteTime.value = '';
+                } else {
+                    biteTime.removeAttribute('max');
+                }
+            }
+            biteDate.addEventListener('change', limitBiteTime);
+            biteTime.addEventListener('change', limitBiteTime);
 
 
             // --- Section 5: Dose Dates Logic ---
@@ -609,6 +622,12 @@ biteTime.addEventListener('change', limitBiteTime);
                 }
             });
         });
+        // Apply the time limit to a pre-filled bite date
+            limitBiteTime();
+
+            // Required when "Others" is pre-selected
+            const othersChecked = document.querySelector('.animal-type-radio[value="Others"]:checked');
+            if (othersChecked) animalOtherInput.required = true;
     </script>
 </body>
 

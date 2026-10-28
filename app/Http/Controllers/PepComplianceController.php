@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class PepComplianceController extends Controller
@@ -22,7 +23,11 @@ class PepComplianceController extends Controller
         $status = in_array($request->query('status'), ['pending', 'missed', 'completed'], true)
             ? $request->query('status') : 'all';
 
-        $doses = $this->doses();
+        // "mine" (default): the cards and table cover only the doses of the cases assigned to
+        // the logged-in health worker; "all" is the whole facility, read-only
+        $scope = $request->query('scope') === 'all' ? 'all' : 'mine';
+        $allDoses = $this->doses();
+        $doses = $scope === 'mine' ? $allDoses->where('mine', true)->values() : $allDoses;
 
         // --- Summary cards --------------------------------------------------
         $completed = $doses->filter(fn ($d) => str_starts_with($d->status, 'Completed'))->count();
@@ -63,7 +68,8 @@ class PepComplianceController extends Controller
         );
 
         // --- Performance by barangay (completed vs. completed + missed) ------
-        $barangays = $doses->groupBy('barangay')->map(function ($group, $name) {
+        // Always facility-wide: comparing barangays only makes sense across every case
+        $barangays = $allDoses->groupBy('barangay')->map(function ($group, $name) {
             $done = $group->filter(fn ($d) => str_starts_with($d->status, 'Completed'))->count();
             $miss = $group->where('status', 'Missed')->count();
             return (object) [
@@ -74,14 +80,18 @@ class PepComplianceController extends Controller
         })->filter(fn ($b) => $b->pct !== null)->sortByDesc('pct')->values()->take(12);
 
         return view('healthworker.PEP_Compliance_&_SMS_Logs', compact(
-            'stats', 'tracking', 'barangays', 'search', 'status'
+            'stats', 'tracking', 'barangays', 'search', 'status', 'scope'
         ));
     }
 
-    /** Full compliance report as CSV (every scheduled dose). */
-    public function export()
+    /** Compliance report as CSV: the same scope as the page (mine by default, or all). */
+    public function export(Request $request)
     {
-        $doses = $this->doses()->sortBy(fn ($d) => [$d->patient_name, $d->scheduled->timestamp])->values();
+        $doses = $this->doses();
+        if ($request->query('scope') !== 'all') {
+            $doses = $doses->where('mine', true);
+        }
+        $doses = $doses->sortBy(fn ($d) => [$d->patient_name, $d->scheduled->timestamp])->values();
 
         return response()->streamDownload(function () use ($doses) {
             $out = fopen('php://output', 'w');
@@ -114,7 +124,7 @@ class PepComplianceController extends Controller
             ->join('bite_section7_immunization as s7', 's7.bite_case_id', '=', 'bc.bite_case_id')
             ->whereNotNull('s7.day0_date')
             ->get([
-                'bc.bite_case_id', 'bc.case_number', 'bc.category', 'bc.barangay',
+                'bc.bite_case_id', 'bc.case_number', 'bc.category', 'bc.barangay', 'bc.assigned_health_worker_id',
                 'p.patient_id', 'p.patient_name',
                 's7.dose_type', 's7.day0_date', 's7.day3_date', 's7.day7_date', 's7.day28_date',
             ]);
@@ -138,6 +148,7 @@ class PepComplianceController extends Controller
 
                 $doses->push((object) [
                     'bite_case_id' => $c->bite_case_id,
+                    'mine' => Auth::id() !== null && (int) $c->assigned_health_worker_id === (int) Auth::id(),
                     'case_number' => $c->case_number,
                     'patient_id' => $c->patient_id,
                     'patient_name' => $c->patient_name,

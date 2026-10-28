@@ -280,10 +280,18 @@
                 <!-- PEP Compliance Tracking Table -->
                 <div class="bg-surface-container-lowest rounded-lg ghost-border p-6">
                     <div class="flex flex-wrap justify-between items-center gap-3 mb-6">
-                        <h2 class="text-lg font-extrabold tracking-tight text-on-surface">PEP Compliance Tracking</h2>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <h2 class="text-lg font-extrabold tracking-tight text-on-surface">PEP Compliance Tracking</h2>
+                            <div class="flex bg-surface-container-high rounded-full p-0.5">
+                                @foreach(['mine' => 'My Cases', 'all' => 'All Cases'] as $key => $label)
+                                <a href="{{ route('healthworker.compliance', array_filter(['q' => $search, 'status' => $status === 'all' ? null : $status, 'scope' => $key === 'all' ? 'all' : null])) }}"
+                                    class="px-3 py-1 text-xs font-bold rounded-full transition-colors {{ $scope === $key ? 'bg-white text-primary shadow-sm' : 'text-on-surface-variant hover:text-on-surface' }}">{{ $label }}</a>
+                                @endforeach
+                            </div>
+                        </div>
                         <div class="flex gap-2">
                             @foreach(['all' => 'All', 'pending' => 'Pending', 'missed' => 'Missed', 'completed' => 'Completed'] as $key => $label)
-                            <a href="{{ route('healthworker.compliance', array_filter(['q' => $search, 'status' => $key === 'all' ? null : $key])) }}"
+                            <a href="{{ route('healthworker.compliance', array_filter(['q' => $search, 'status' => $key === 'all' ? null : $key, 'scope' => $scope === 'all' ? 'all' : null])) }}"
                                 class="px-3 py-1.5 text-xs font-semibold rounded-full transition-colors {{ $status === $key ? 'bg-primary text-on-primary shadow-sm' : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-variant' }}">{{ $label }}</a>
                             @endforeach
                         </div>
@@ -292,6 +300,9 @@
                         @if($status !== 'all')
                         <input type="hidden" name="status" value="{{ $status }}" />
                         @endif
+                        @if($scope === 'all')
+                        <input type="hidden" name="scope" value="all" />
+                        @endif
                         <div
                             class="flex items-center bg-surface-container-low rounded-lg px-3 py-2 border border-outline-variant/20 focus-within:border-primary/40 transition-all">
                             <span class="material-symbols-outlined text-outline text-[18px]">search</span>
@@ -299,7 +310,7 @@
                                 class="bg-transparent border-none focus:ring-0 text-sm w-full py-0"
                                 placeholder="Search by patient, ID, dose, label or barangay..." />
                             @if($search !== '')
-                            <a href="{{ route('healthworker.compliance', $status !== 'all' ? ['status' => $status] : []) }}"
+                            <a href="{{ route('healthworker.compliance', array_filter(['status' => $status === 'all' ? null : $status, 'scope' => $scope === 'all' ? 'all' : null])) }}"
                                 class="material-symbols-outlined text-outline text-[18px] hover:text-on-surface" title="Clear search">close</a>
                             @endif
                         </div>
@@ -359,9 +370,14 @@
                                         </span>
                                     </td>
                                     <td class="py-4 px-2 text-right">
+                                        @if($dose->mine)
                                         <a href="{{ route('healthworker.ce-vii', ['bite_case_id' => $dose->bite_case_id]) }}"
                                             title="Open case" class="inline-flex p-1 hover:bg-surface-container-high rounded-full"><span
                                                 class="material-symbols-outlined text-sm">open_in_new</span></a>
+                                        @else
+                                        <span title="Assigned to another health worker (view only)" class="inline-flex p-1 text-outline-variant"><span
+                                                class="material-symbols-outlined text-sm">visibility</span></span>
+                                        @endif
                                     </td>
                                 </tr>
                                 @empty
@@ -369,6 +385,8 @@
                                     <td colspan="5" class="py-12 text-center text-sm text-on-surface-variant">
                                         @if($search !== '' || $status !== 'all')
                                         No doses match your search or filter.
+                                        @elseif($scope === 'mine')
+                                        No cases assigned to you yet. Your doses appear here once Staff assigns you a case with a Day 0 date, or switch to "All Cases" to see the whole facility.
                                         @else
                                         No scheduled doses yet. Doses appear here once a case has a Day 0 date in Section VII.
                                         @endif
@@ -409,11 +427,11 @@
                         <h2 class="text-xl font-extrabold tracking-tighter text-on-surface">Compliance Performance by
                             Barangay</h2>
                         <p class="text-sm text-on-surface-variant">Share of due doses that were completed (on time or
-                            late), by barangay</p>
+                            late), by barangay, across all health workers</p>
                     </div>
-                    <a href="{{ route('healthworker.compliance.export') }}"
+                    <a href="{{ route('healthworker.compliance.export', $scope === 'all' ? ['scope' => 'all'] : []) }}"
                         class="px-6 py-3 bg-primary text-on-primary rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-primary/20 active:scale-95 transition-all whitespace-nowrap">
-                        Download Full Compliance Report
+                        Download {{ $scope === 'all' ? 'Facility' : 'My' }} Compliance Report
                         <span class="material-symbols-outlined text-sm">download</span>
                     </a>
                 </div>

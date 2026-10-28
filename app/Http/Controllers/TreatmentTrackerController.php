@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class TreatmentTrackerController extends Controller
@@ -85,6 +86,8 @@ class TreatmentTrackerController extends Controller
             ->join('patients as p', 'p.patient_id', '=', 'bc.patient_id')
             ->join('bite_section7_immunization as s7', 's7.bite_case_id', '=', 'bc.bite_case_id')
             ->whereNotNull('s7.day0_date')
+            // only the cases Staff assigned to the logged-in health worker (none for a new account)
+            ->where('bc.assigned_health_worker_id', Auth::id() ?? 0)
             // only cases Staff has handed over to the Health Worker
             ->whereExists(function ($e) {
                 $e->select(DB::raw(1))->from('inflow_general_particulars as hg')

@@ -3,10 +3,14 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class ClinicalEncodingController extends Controller
 {
+    /** Wound types the health worker can pick in Section VI (stored comma-separated in wound_description). */
+    public const WOUND_TYPES = ['Punctured', 'Lacerated', 'Avulsion', 'Abrasion'];
+
     /**
      * Only cases Staff has finished (Case Encoding "Complete Encoding" sets the walk-in
      * record to 'Encoded') belong to the Health Worker. A bite_cases row can already
@@ -14,11 +18,36 @@ class ClinicalEncodingController extends Controller
      */
     private function handedOff($query, string $alias = 'bc')
     {
-        return $query->whereExists(function ($e) use ($alias) {
+        $query->whereExists(function ($e) use ($alias) {
             $e->select(DB::raw(1))->from('inflow_general_particulars as hg')
                 ->whereColumn('hg.inflow_record_id', $alias . '.inflow_record_id')
                 ->where('hg.status', 'Encoded');
         });
+
+        return $this->assignedToMe($query, $alias);
+    }
+
+    /**
+     * Staff assigns each case to a Health Worker, and a Health Worker only sees their
+     * own cases. A new account has no cases yet; with nobody logged in nothing is shown
+     * (careful: where(col, null) would match every unassigned case instead).
+     */
+    private function assignedToMe($query, string $alias = 'bc')
+    {
+        $userId = Auth::id();
+
+        return $userId
+            ? $query->where($alias . '.assigned_health_worker_id', $userId)
+            : $query->whereRaw('1 = 0');
+    }
+
+    /** A case that is assigned to the logged-in health worker, or a 404. */
+    private function ownCase($biteCaseId)
+    {
+        return $this->assignedToMe(DB::table('bite_cases as bc'))
+            ->where('bc.bite_case_id', $biteCaseId)
+            ->select('bc.*')
+            ->first() ?? abort(404);
     }
 
     /**
@@ -57,7 +86,7 @@ class ClinicalEncodingController extends Controller
      */
     private function getCase($biteCaseId)
     {
-        return DB::table('bite_cases as bc')
+        return $this->assignedToMe(DB::table('bite_cases as bc'))
             ->join('patients as p', 'p.patient_id', '=', 'bc.patient_id')
             ->where('bc.bite_case_id', $biteCaseId)
             ->select('bc.*', 'p.patient_name', 'p.age', 'p.sex', 'p.date_of_birth')
@@ -81,7 +110,7 @@ class ClinicalEncodingController extends Controller
 
     public function storeSectionVI(Request $request, $biteCaseId)
     {
-        $case = DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->firstOrFail();
+        $case = $this->ownCase($biteCaseId);
 
         // A draft saves whatever is filled in; moving on needs the core fields
         $isDraft = $request->input('action') === 'draft';
@@ -89,26 +118,40 @@ class ClinicalEncodingController extends Controller
 
         $validated = $request->validate([
             'total_wounds' => $required . '|in:Single,Multiple',
-            'wound_description' => 'nullable|string',
+            // Wound description: one or more of the listed wound types
+            'wound_types' => $isDraft ? 'nullable|array' : 'required|array|min:1',
+            'wound_types.*' => 'in:' . implode(',', self::WOUND_TYPES),
+            'is_deep' => $required . '|in:0,1',
             'site_of_bite' => $required . '|string|max:100',
             'category_of_exposure' => $required . '|in:I,II,III',
         ]);
 
+        $isDeep = isset($validated['is_deep']) ? (int) $validated['is_deep'] : null;
+
+        // Fall back to whatever bite_cases already has if this form hasn't set a
+        // category yet (e.g. very first save). A deep wound is always Category III.
+        $category = $validated['category_of_exposure'] ?? $case->category;
+        if ($isDeep === 1) {
+            $category = 'III';
+        }
+
         DB::table('bite_section6_wound_description')->updateOrInsert(
             ['bite_case_id' => $biteCaseId],
-            array_merge($validated, [
-                // Fall back to whatever bite_cases already has if this form
-                // hasn't set a category yet (e.g. very first save)
-                'category_of_exposure' => $validated['category_of_exposure'] ?? $case->category,
-            ])
+            [
+                'total_wounds' => $validated['total_wounds'] ?? null,
+                'wound_description' => implode(', ', $validated['wound_types'] ?? []) ?: null,
+                'is_deep' => $isDeep,
+                'site_of_bite' => $validated['site_of_bite'] ?? null,
+                'category_of_exposure' => $category,
+            ]
         );
 
         // Keep bite_cases.category in sync, since bite_section6's column
         // comment says it mirrors this value - if the health worker changes
         // it here, bite_cases should reflect the same category.
-        if (!empty($validated['category_of_exposure']) && $validated['category_of_exposure'] !== $case->category) {
+        if ($category !== $case->category) {
             DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->update([
-                'category' => $validated['category_of_exposure'],
+                'category' => $category,
             ]);
         }
 
@@ -131,12 +174,41 @@ class ClinicalEncodingController extends Controller
             ? DB::table('bite_section7_immunization')->where('bite_case_id', $biteCaseId)->first()
             : null;
 
-        return view('healthworker.CE_VII', compact('queue', 'case', 'section'));
+        // Weight taken at the BHW referral, if this patient came through one
+        $bhwWeight = $biteCaseId ? $this->bhwWeight($biteCaseId) : null;
+
+        return view('healthworker.CE_VII', compact('queue', 'case', 'section', 'bhwWeight'));
+    }
+
+    /**
+     * Weight (kg) recorded in the BHW referral vitals for this case, or null when the
+     * patient is a walk-in or the referral has no weight. A case links to its referral
+     * through bite_cases.bhw_referral_id or the reference number on the walk-in record.
+     */
+    private function bhwWeight($biteCaseId): ?string
+    {
+        $weight = DB::table('bite_cases as bc')
+            ->leftJoin('inflow_general_particulars as ig', 'ig.inflow_record_id', '=', 'bc.inflow_record_id')
+            ->join('bhw_referral_info as bri', function ($j) {
+                $j->on('bri.referral_id', '=', 'bc.bhw_referral_id')
+                    ->orOn('bri.reference_no', '=', 'ig.bhw_referral_id');
+            })
+            ->join('bhw_referral_vitals as v', 'v.referral_id', '=', 'bri.referral_id')
+            ->where('bc.bite_case_id', $biteCaseId)
+            ->whereNotNull('v.weight_kg')
+            ->value('v.weight_kg');
+
+        return $weight === null ? null : rtrim(rtrim(number_format((float) $weight, 2, '.', ''), '0'), '.');
     }
 
     public function storeSectionVII(Request $request, $biteCaseId)
     {
-        DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->firstOrFail();
+        $case = $this->ownCase($biteCaseId);
+
+        // Passive immunization is only for Category III: nothing is accepted for other categories
+        if ($case->category !== 'III') {
+            $request->merge(['passive_type' => null, 'passive_route' => null]);
+        }
 
         // A draft saves whatever is filled in, required or not; moving on to
         // Section VIII needs the core fields.
@@ -144,7 +216,6 @@ class ClinicalEncodingController extends Controller
         $required = $isDraft ? 'nullable' : 'required';
 
         $validated = $request->validate([
-            'patient_weight' => $required . '|numeric|min:0|max:999.99',
             'tetanus_given' => 'nullable|boolean',
             'tetanus_details' => 'exclude_unless:tetanus_given,true,1|' . $required . '|string|max:200',
             'tig_given' => 'nullable|boolean',
@@ -159,14 +230,27 @@ class ClinicalEncodingController extends Controller
             'passive_given' => 'nullable|boolean',
             'passive_type' => 'nullable|string|max:50',
             // Only needed once a passive immunoglobulin (ERIG/HRIG) is chosen
-            'passive_route' => 'nullable|required_with:passive_type|in:IU infiltrate,IM',
-            'skin_test_due' => 'nullable|date_format:H:i',
-            'administered_by' => $required . '|string|max:100',
+            'passive_route' => 'nullable|required_with:passive_type|in:ID,SC',
         ]);
 
-        $validated['tetanus_given'] = $request->boolean('tetanus_given');
-        $validated['tig_given'] = $request->boolean('tig_given');
-        $validated['passive_given'] = $request->boolean('passive_given');
+        // Patient weight always comes from the BHW referral, never from the form
+        // (a case with no BHW weight keeps whatever was saved before)
+        if (($bhwWeight = $this->bhwWeight($biteCaseId)) !== null) {
+            $validated['patient_weight'] = $bhwWeight;
+        }
+
+        // Administered by is always the logged-in health worker: never taken from the form
+        // (a guest session leaves whatever was saved before untouched)
+        if ($name = Auth::user()->full_name ?? null) {
+            $validated['administered_by'] = $name;
+        }
+
+        // "Given at the barangay (by the BHW)" counts as given
+        $validated['tetanus_by_barangay'] = $request->boolean('tetanus_by_barangay');
+        $validated['tig_by_barangay'] = $request->boolean('tig_by_barangay');
+        $validated['tetanus_given'] = $request->boolean('tetanus_given') || $validated['tetanus_by_barangay'];
+        $validated['tig_given'] = $request->boolean('tig_given') || $validated['tig_by_barangay'];
+        $validated['passive_given'] = !empty($validated['passive_type']);
         // dose_type is NOT NULL in the table: an unchosen value on a draft is stored
         // as '' (shows as "Select" again) rather than a made-up default
         $validated['dose_type'] = $validated['dose_type'] ?? '';
@@ -200,7 +284,7 @@ class ClinicalEncodingController extends Controller
 
     public function storeSectionVIII(Request $request, $biteCaseId)
     {
-        DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->firstOrFail();
+        $this->ownCase($biteCaseId);
 
         // Nothing is required in this section; a draft just stays on the page
         $isDraft = $request->input('action') === 'draft';
@@ -239,15 +323,13 @@ class ClinicalEncodingController extends Controller
 
     public function storeSectionIX(Request $request, $biteCaseId)
     {
-        DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->firstOrFail();
+        $this->ownCase($biteCaseId);
 
-        // A draft saves whatever is filled in (notes are added visit by visit);
-        // finalizing the record only needs the Day 3 notes
+        // The notes are optional and can be left blank, even when finalizing
         $isDraft = $request->input('action') === 'draft';
-        $required = $isDraft ? 'nullable' : 'required';
 
         $validated = $request->validate([
-            'day3_notes' => $required . '|string|max:5000',
+            'day3_notes' => 'nullable|string|max:5000',
             'day7_notes' => 'nullable|string|max:5000',
             'day28_notes' => 'nullable|string|max:5000',
         ]);
@@ -264,8 +346,9 @@ class ClinicalEncodingController extends Controller
         // Finalized: mark the case Completed so it drops out of the queue
         DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->update(['outcome' => 'Completed']);
 
-        // Last section - send the health worker back to their dashboard
-        return redirect()->route('healthworker.dashboard')
+        // Last section - stay in Clinical Encoding: back to the queue with no case selected,
+        // where the finalized case no longer appears
+        return redirect()->route('healthworker.clinical-encoding')
             ->with('status', 'Clinical encoding completed for this case.');
     }
 
@@ -369,13 +452,9 @@ class ClinicalEncodingController extends Controller
                 'text' => $v->patient_name . ' (Cat ' . $v->category . ') is ready for clinical encoding.',
             ];
         }
-        $doses = DB::table('bite_section7_immunization as s7')
-            ->join('bite_cases as bc', 'bc.bite_case_id', '=', 's7.bite_case_id')
+        $doses = $this->handedOff(DB::table('bite_section7_immunization as s7')
+            ->join('bite_cases as bc', 'bc.bite_case_id', '=', 's7.bite_case_id'))
             ->join('patients as p', 'p.patient_id', '=', 'bc.patient_id')
-            ->whereExists(function ($e) {
-                $e->select(DB::raw(1))->from('inflow_general_particulars as hg')
-                    ->whereColumn('hg.inflow_record_id', 'bc.inflow_record_id')->where('hg.status', 'Encoded');
-            })
             ->get(['p.patient_name', 's7.day0_date', 's7.day3_date', 's7.day7_date', 's7.day28_date']);
         foreach ($doses as $d) {
             foreach ([0, 3, 7, 28] as $day) {

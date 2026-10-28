@@ -18,11 +18,36 @@ class ClinicalEncodingController extends Controller
      */
     private function handedOff($query, string $alias = 'bc')
     {
-        return $query->whereExists(function ($e) use ($alias) {
+        $query->whereExists(function ($e) use ($alias) {
             $e->select(DB::raw(1))->from('inflow_general_particulars as hg')
                 ->whereColumn('hg.inflow_record_id', $alias . '.inflow_record_id')
                 ->where('hg.status', 'Encoded');
         });
+
+        return $this->assignedToMe($query, $alias);
+    }
+
+    /**
+     * Staff assigns each case to a Health Worker, and a Health Worker only sees their
+     * own cases. A new account has no cases yet; with nobody logged in nothing is shown
+     * (careful: where(col, null) would match every unassigned case instead).
+     */
+    private function assignedToMe($query, string $alias = 'bc')
+    {
+        $userId = Auth::id();
+
+        return $userId
+            ? $query->where($alias . '.assigned_health_worker_id', $userId)
+            : $query->whereRaw('1 = 0');
+    }
+
+    /** A case that is assigned to the logged-in health worker, or a 404. */
+    private function ownCase($biteCaseId)
+    {
+        return $this->assignedToMe(DB::table('bite_cases as bc'))
+            ->where('bc.bite_case_id', $biteCaseId)
+            ->select('bc.*')
+            ->first() ?? abort(404);
     }
 
     /**
@@ -61,7 +86,7 @@ class ClinicalEncodingController extends Controller
      */
     private function getCase($biteCaseId)
     {
-        return DB::table('bite_cases as bc')
+        return $this->assignedToMe(DB::table('bite_cases as bc'))
             ->join('patients as p', 'p.patient_id', '=', 'bc.patient_id')
             ->where('bc.bite_case_id', $biteCaseId)
             ->select('bc.*', 'p.patient_name', 'p.age', 'p.sex', 'p.date_of_birth')
@@ -85,7 +110,7 @@ class ClinicalEncodingController extends Controller
 
     public function storeSectionVI(Request $request, $biteCaseId)
     {
-        $case = DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->firstOrFail();
+        $case = $this->ownCase($biteCaseId);
 
         // A draft saves whatever is filled in; moving on needs the core fields
         $isDraft = $request->input('action') === 'draft';
@@ -178,7 +203,7 @@ class ClinicalEncodingController extends Controller
 
     public function storeSectionVII(Request $request, $biteCaseId)
     {
-        $case = DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->firstOrFail();
+        $case = $this->ownCase($biteCaseId);
 
         // Passive immunization is only for Category III: nothing is accepted for other categories
         if ($case->category !== 'III') {
@@ -259,7 +284,7 @@ class ClinicalEncodingController extends Controller
 
     public function storeSectionVIII(Request $request, $biteCaseId)
     {
-        DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->firstOrFail();
+        $this->ownCase($biteCaseId);
 
         // Nothing is required in this section; a draft just stays on the page
         $isDraft = $request->input('action') === 'draft';
@@ -298,7 +323,7 @@ class ClinicalEncodingController extends Controller
 
     public function storeSectionIX(Request $request, $biteCaseId)
     {
-        DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->firstOrFail();
+        $this->ownCase($biteCaseId);
 
         // The notes are optional and can be left blank, even when finalizing
         $isDraft = $request->input('action') === 'draft';
@@ -427,13 +452,9 @@ class ClinicalEncodingController extends Controller
                 'text' => $v->patient_name . ' (Cat ' . $v->category . ') is ready for clinical encoding.',
             ];
         }
-        $doses = DB::table('bite_section7_immunization as s7')
-            ->join('bite_cases as bc', 'bc.bite_case_id', '=', 's7.bite_case_id')
+        $doses = $this->handedOff(DB::table('bite_section7_immunization as s7')
+            ->join('bite_cases as bc', 'bc.bite_case_id', '=', 's7.bite_case_id'))
             ->join('patients as p', 'p.patient_id', '=', 'bc.patient_id')
-            ->whereExists(function ($e) {
-                $e->select(DB::raw(1))->from('inflow_general_particulars as hg')
-                    ->whereColumn('hg.inflow_record_id', 'bc.inflow_record_id')->where('hg.status', 'Encoded');
-            })
             ->get(['p.patient_name', 's7.day0_date', 's7.day3_date', 's7.day7_date', 's7.day28_date']);
         foreach ($doses as $d) {
             foreach ([0, 3, 7, 28] as $day) {

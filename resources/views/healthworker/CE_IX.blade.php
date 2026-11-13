@@ -247,9 +247,6 @@
                             </p>
                             <div class="flex gap-2">
                                 <span
-                                    class="px-2 py-0.5 bg-error-container text-on-error-container text-[10px] font-bold rounded-full"> CAT
-                                    {{ $item->category }}</span>
-                                <span
                                     class="px-2 py-0.5 {{ $item->encoding_status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : ($item->encoding_status === 'In Progress' ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface-container-high text-on-surface-variant') }} text-[10px] font-bold rounded-full">{{ $item->encoding_status }}</span>
                             </div>
                         </a>
@@ -347,16 +344,6 @@
                         @csrf
                         <input type="hidden" name="action" id="formActionInput" value="next" />
                         @php $val = fn ($key, $default = '') => old($key, $section->$key ?? $default); @endphp
-                        {{-- Toast: fixed bottom-right, auto-dismisses after 4s (same look as the draft-saved toast) --}}
-                        <div id="formErrorBanner" role="alert"
-                            class="{{ $errors->any() ? '' : 'hidden opacity-0' }} fixed bottom-6 right-8 z-50 max-w-sm flex items-center gap-3 bg-error-container text-on-error-container text-sm font-semibold pl-4 pr-2 py-3 rounded-lg shadow-lg shadow-blue-900/10 border border-error/20 transition-opacity duration-300">
-                            <span class="material-symbols-outlined text-[18px]">error</span>
-                            <span class="flex-1">Please fill in all required fields before continuing.</span>
-                            <button type="button" id="formErrorToastClose" aria-label="Dismiss"
-                                class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-black/5 transition-colors">
-                                <span class="material-symbols-outlined text-[18px]">close</span>
-                            </button>
-                        </div>
                         <div class="step-content" id="step4">
                             <div class="flex items-center gap-3 mb-8">
                                 <span
@@ -367,11 +354,10 @@
                             <div class="space-y-6">
                                 @foreach(['day3_notes' => 'Day 3 Notes', 'day7_notes' => 'Day 7 Notes', 'day28_notes' => 'Day 28 Notes'] as $key => $label)
                                 <div>
-                                    <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-3">{{ $label }}@if($key === 'day3_notes') <span class="text-error">*</span>@endif</label>
-                                    <textarea name="{{ $key }}" data-field="{{ $key }}"
-                                        class="w-full bg-surface-container-low border-none rounded-xl p-4 ring-1 ring-transparent focus:ring-2 focus:ring-primary/20 text-sm resize-none h-28"
+                                    <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-3">{{ $label }}</label>
+                                    <textarea name="{{ $key }}" maxlength="5000"
+                                        class="w-full bg-surface-container-low border-none rounded-xl p-4 focus:ring-2 focus:ring-primary/20 text-sm resize-none h-28"
                                         placeholder="Wound healing observations, adverse reactions, or follow-up notes for this visit...">{{ $val($key) }}</textarea>
-                                    <p data-error-for="{{ $key }}" class="mt-1 ml-1 text-xs font-semibold text-error {{ $errors->has($key) ? '' : 'hidden' }}">{{ $errors->first($key) }}</p>
                                 </div>
                                 @endforeach
                             </div>
@@ -414,92 +400,20 @@
         const nextBtn = document.getElementById('nextBtn');
 
         if (nextBtn) {
-            const form = document.getElementById('section9Form');
             const draftBtn = document.getElementById('draftBtn');
             const formActionInput = document.getElementById('formActionInput');
-            const banner = document.getElementById('formErrorBanner');
-            // Required-fields toast: closes on the X button or by itself after 4 seconds
-            const errorToast = (() => {
-                let timer;
-                const hide = () => {
-                    clearTimeout(timer);
-                    banner.classList.add('opacity-0');
-                    setTimeout(() => {
-                        if (banner.classList.contains('opacity-0')) banner.classList.add('hidden');
-                    }, 300);
-                };
-                const show = () => {
-                    clearTimeout(timer);
-                    banner.classList.remove('hidden');
-                    void banner.offsetWidth; // let the fade-in transition run
-                    banner.classList.remove('opacity-0');
-                    timer = setTimeout(hide, 4000);
-                };
-                document.getElementById('formErrorToastClose').addEventListener('click', hide);
-                if (!banner.classList.contains('hidden')) show(); // errors rendered by the server
-                return { show, hide };
-            })();
 
-            // Required to finalize the record. Drafts skip these.
-            const REQUIRED = {
-                day3_notes: 'Please enter the Day 3 notes.',
-            };
-
-            const field = (name) => form.querySelector(`[data-field="${name}"]`);
-            const errorEl = (name) => form.querySelector(`[data-error-for="${name}"]`);
-
-            function setError(name, message) {
-                const input = field(name);
-                const el = errorEl(name);
-                input.classList.toggle('ring-2', !!message);
-                input.classList.toggle('ring-error', !!message);
-                input.classList.toggle('ring-transparent', !message);
-                if (el) {
-                    if (message) el.textContent = message;
-                    el.classList.toggle('hidden', !message);
-                }
-            }
-
-            function validate() {
-                let firstBad = null;
-                Object.keys(REQUIRED).forEach((name) => {
-                    const message = field(name).value.trim() === '' ? REQUIRED[name] : '';
-                    setError(name, message);
-                    if (message && !firstBad) firstBad = name;
-                });
-                if (firstBad) {
-                    errorToast.show();
-                    field(firstBad).scrollIntoView({ behavior: 'smooth', block: 'center' });
-                } else {
-                    errorToast.hide();
-                }
-                return !firstBad;
-            }
-
-            // Clear a field's error as soon as the user fixes it
-            form.querySelectorAll('[data-field]').forEach((input) => {
-                input.addEventListener('input', () => {
-                    if (input.value.trim() !== '') setError(input.dataset.field, '');
-                    if (!form.querySelector('[data-error-for]:not(.hidden)')) errorToast.hide();
-                });
-            });
-
+            // The notes are optional, so Save and Finalize just submits
             nextBtn.addEventListener('click', () => {
                 formActionInput.value = 'next';
-                if (validate()) form.submit();
+                document.getElementById('section9Form').submit();
             });
 
             if (draftBtn) {
                 draftBtn.addEventListener('click', () => {
-                    // A draft saves whatever is filled in, required or not
                     formActionInput.value = 'draft';
                 });
             }
-
-            // Re-apply red rings for errors rendered by the server
-            form.querySelectorAll('[data-error-for]:not(.hidden)').forEach((el) => {
-                setError(el.dataset.errorFor, el.textContent.trim());
-            });
         }
     </script>
     <script>

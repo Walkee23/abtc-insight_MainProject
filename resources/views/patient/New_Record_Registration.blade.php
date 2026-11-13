@@ -250,16 +250,24 @@
             <div class="col-span-2">
               <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5 ml-1">BHW Referral ID
                 <span class="text-error">*</span></label>
-              <input
-                class="w-full bg-surface-container-highest border-none rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all @error('bhw_referral_id') ring-2 ring-error @enderror"
-                name="bhw_referral_id" id="bhwReferralInput" value="{{ old('bhw_referral_id') }}"
-                pattern="BRY-\d{3}-\d{8}-\d{4}"
-                placeholder="e.g., BRY-001-20260501-0023" required=""
-                type="text" />
+
+              <div class="flex gap-2">
+                <input
+                  class="w-full bg-surface-container-highest border-none rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all @error('bhw_referral_id') ring-2 ring-error @enderror"
+                  name="bhw_referral_id" id="bhwReferralInput" value="{{ old('bhw_referral_id') }}"
+                  pattern="BRY-\d{3}-\d{8}-\d{4}"
+                  placeholder="e.g., BRY-001-20260501-0023" required=""
+                  type="text" />
+
+                <button type="button" id="autofillBtn" class="bg-primary-container text-white px-5 py-3 rounded-lg text-sm font-bold hover:opacity-90 transition-opacity whitespace-nowrap">
+                  Autofill
+                </button>
+              </div>
+
               <p class="mt-1.5 ml-1 text-[10px] text-on-surface-variant/80 italic" id="bhwReferralHint">Enter the referral ID provided by
                 your Barangay Health Worker. Format: BRY-[BARANGAY CODE]-[YYYYMMDD]-[SEQ], e.g. BRY-001-20260501-0023.</p>
               @error('bhw_referral_id')
-                <p class="mt-1.5 ml-1 text-[11px] text-error font-semibold">{{ $message }}</p>
+              <p class="mt-1.5 ml-1 text-[11px] text-error font-semibold">{{ $message }}</p>
               @enderror
             </div>
             <div class="col-span-2 grid grid-cols-[1fr_1fr_70px] gap-3">
@@ -483,7 +491,7 @@
     }
 
     // Update the age display live as the user types or picks a date
-    dobInput.addEventListener('input', function () {
+    dobInput.addEventListener('input', function() {
       if (!this.value) {
         ageInput.value = '';
         return;
@@ -493,7 +501,7 @@
     });
 
     // Only validate once the user has finished with the field (on blur), not while typing
-    dobInput.addEventListener('blur', function () {
+    dobInput.addEventListener('blur', function() {
       if (!this.value) return;
       const age = calculateAge(this.value);
       if (age > 125) {
@@ -527,7 +535,7 @@
       bhwReferralHint.classList.add('text-on-surface-variant/80', 'italic');
     }
 
-    bhwReferralInput.addEventListener('blur', function () {
+    bhwReferralInput.addEventListener('blur', function() {
       if (!this.value.trim()) return;
       if (!isBhwReferralFormatValid(this.value)) {
         showBhwReferralError('Invalid format. Use BRY-[BARANGAY CODE]-[YYYYMMDD]-[SEQ], e.g. BRY-001-20260501-0023.');
@@ -536,7 +544,7 @@
       }
     });
 
-    bhwReferralInput.addEventListener('input', function () {
+    bhwReferralInput.addEventListener('input', function() {
       // Clear the error as soon as they start fixing it, rather than waiting for blur again
       if (bhwReferralInput.classList.contains('ring-error') && isBhwReferralFormatValid(this.value)) {
         clearBhwReferralError();
@@ -544,7 +552,7 @@
     });
 
     // Also guard on submit in case a value slipped through
-    document.querySelector('form').addEventListener('submit', function (e) {
+    document.querySelector('form').addEventListener('submit', function(e) {
       if (dobInput.value) {
         const age = calculateAge(dobInput.value);
         if (age > 125) {
@@ -565,7 +573,12 @@
     // Interactive progress indicator: a step is only checked off once every
     // required field within that step is actually filled in.
     const totalSteps = 4;
-    const stepDone = { 1: false, 2: false, 3: false, 4: false };
+    const stepDone = {
+      1: false,
+      2: false,
+      3: false,
+      4: false
+    };
 
     const ACTIVE_CIRCLE = 'w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold shadow-lg shadow-primary/20 transition-all';
     const DONE_CIRCLE = 'w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold transition-all';
@@ -663,7 +676,7 @@
     }
 
     // Middle initial: only ever a single letter followed by a period, max 2 characters
-    middleInitialInput.addEventListener('input', function () {
+    middleInitialInput.addEventListener('input', function() {
       const letter = this.value.replace(/[^a-zA-Z]/g, '').charAt(0);
       this.value = letter ? letter.toUpperCase() + '.' : '';
       updateFullNameHidden();
@@ -689,7 +702,7 @@
         dropdown.classList.remove('hidden');
       }
 
-      display.addEventListener('click', function (e) {
+      display.addEventListener('click', function(e) {
         e.stopPropagation();
         if (dropdown.classList.contains('hidden')) {
           renderOptions();
@@ -698,7 +711,7 @@
         }
       });
 
-      dropdown.addEventListener('click', function (e) {
+      dropdown.addEventListener('click', function(e) {
         if (e.target.classList.contains('simple-option')) {
           hiddenInput.value = e.target.getAttribute('data-value');
           displayText.textContent = e.target.textContent;
@@ -708,7 +721,7 @@
         }
       });
 
-      document.addEventListener('click', function (e) {
+      document.addEventListener('click', function(e) {
         if (!display.contains(e.target) && !dropdown.contains(e.target)) {
           dropdown.classList.add('hidden');
         }
@@ -723,16 +736,32 @@
       };
     }
 
-    const validateSex = setupSimpleDropdown('sexDisplay', 'sexDisplayText', 'sexInput', 'sexDropdown', [
-      { value: 'male', label: 'Male' },
-      { value: 'female', label: 'Female' },
+    const validateSex = setupSimpleDropdown('sexDisplay', 'sexDisplayText', 'sexInput', 'sexDropdown', [{
+        value: 'male',
+        label: 'Male'
+      },
+      {
+        value: 'female',
+        label: 'Female'
+      },
     ], 'Sex');
 
-    const validateCivilStatus = setupSimpleDropdown('civilStatusDisplay', 'civilStatusDisplayText', 'civilStatusInput', 'civilStatusDropdown', [
-      { value: 'single', label: 'Single' },
-      { value: 'married', label: 'Married' },
-      { value: 'widowed', label: 'Widowed' },
-      { value: 'separated', label: 'Separated' },
+    const validateCivilStatus = setupSimpleDropdown('civilStatusDisplay', 'civilStatusDisplayText', 'civilStatusInput', 'civilStatusDropdown', [{
+        value: 'single',
+        label: 'Single'
+      },
+      {
+        value: 'married',
+        label: 'Married'
+      },
+      {
+        value: 'widowed',
+        label: 'Widowed'
+      },
+      {
+        value: 'separated',
+        label: 'Separated'
+      },
     ], 'Civil Status');
 
     function validatePhilhealthSelected() {
@@ -745,7 +774,7 @@
     }
 
     // Guard on submit: Sex, Civil Status, and PhilHealth selection must be picked
-    document.querySelector('form').addEventListener('submit', function (e) {
+    document.querySelector('form').addEventListener('submit', function(e) {
       if (!validateSex() || !validateCivilStatus() || !validatePhilhealthSelected()) {
         e.preventDefault();
       }
@@ -769,15 +798,15 @@
       barangayDropdown.classList.remove('hidden');
     }
 
-    barangayInput.addEventListener('focus', function () {
+    barangayInput.addEventListener('focus', function() {
       renderBarangayOptions(this.value);
     });
 
-    barangayInput.addEventListener('input', function () {
+    barangayInput.addEventListener('input', function() {
       renderBarangayOptions(this.value);
     });
 
-    barangayDropdown.addEventListener('click', function (e) {
+    barangayDropdown.addEventListener('click', function(e) {
       if (e.target.classList.contains('barangay-option')) {
         barangayInput.value = e.target.textContent;
         barangayDropdown.classList.add('hidden');
@@ -785,7 +814,7 @@
       }
     });
 
-    document.addEventListener('click', function (e) {
+    document.addEventListener('click', function(e) {
       if (!barangayInput.contains(e.target) && !barangayDropdown.contains(e.target)) {
         barangayDropdown.classList.add('hidden');
       }
@@ -796,7 +825,7 @@
     const priorityOptions = document.querySelectorAll('.priority-option');
 
     priorityOptions.forEach(option => {
-      option.addEventListener('click', function (e) {
+      option.addEventListener('click', function(e) {
         // Prevent the button from submitting the form immediately
         e.preventDefault();
 
@@ -837,7 +866,7 @@
     const philhealthMemberDobInput = document.getElementById('philhealthMemberDobInput');
 
     philhealthRadios.forEach(radio => {
-      radio.addEventListener('change', function () {
+      radio.addEventListener('change', function() {
         if (this.value === 'yes') {
           philhealthDetails.classList.remove('hidden');
         } else {
@@ -859,8 +888,8 @@
     // Clear Form: native reset only clears input/select values, so this cleans up
     // everything else that JS controls (progress steps, dropdown display text,
     // PhilHealth toggle, and highlighted priority cards)
-    document.querySelector('form').addEventListener('reset', function () {
-      setTimeout(function () {
+    document.querySelector('form').addEventListener('reset', function() {
+      setTimeout(function() {
         // Reset progress indicator back to step 1
         stepDone[1] = false;
         stepDone[2] = false;
@@ -979,7 +1008,10 @@
       // Restore Sex dropdown
       if (draft.sex) {
         sexInput.value = draft.sex;
-        const sexLabels = { male: 'Male', female: 'Female' };
+        const sexLabels = {
+          male: 'Male',
+          female: 'Female'
+        };
         sexDisplayText.textContent = sexLabels[draft.sex] || draft.sex;
         sexDisplayText.classList.remove('text-on-surface-variant');
         sexDisplayText.classList.add('text-on-surface');
@@ -988,7 +1020,12 @@
       // Restore Civil Status dropdown
       if (draft.civilStatus) {
         civilStatusInput.value = draft.civilStatus;
-        const civilLabels = { single: 'Single', married: 'Married', widowed: 'Widowed', separated: 'Separated' };
+        const civilLabels = {
+          single: 'Single',
+          married: 'Married',
+          widowed: 'Widowed',
+          separated: 'Separated'
+        };
         civilStatusDisplayText.textContent = civilLabels[draft.civilStatus] || draft.civilStatus;
         civilStatusDisplayText.classList.remove('text-on-surface-variant');
         civilStatusDisplayText.classList.add('text-on-surface');
@@ -1038,12 +1075,92 @@
     // listener (age cap, BHW format, Sex/Civil Status/PhilHealth) has already
     // had a chance to call preventDefault() - just check the outcome instead
     // of re-running those checks (which would re-trigger their alert() calls).
-    registrationForm.addEventListener('submit', function (e) {
+    registrationForm.addEventListener('submit', function(e) {
       if (!e.defaultPrevented) {
         clearDraft();
       }
     });
+    // --- BHW Referral Autofill Logic ---
+    document.getElementById('autofillBtn').addEventListener('click', function() {
+      const referralId = document.getElementById('bhwReferralInput').value.trim();
+
+      // Validate format using your existing function before sending request
+      if (referralId && isBhwReferralFormatValid(referralId)) {
+
+        // Update button state to show it's loading
+        const btn = this;
+        const originalText = btn.textContent;
+        btn.textContent = 'Loading...';
+        btn.disabled = true;
+
+        fetch(`/get-referral-data/${referralId}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              // Map the text inputs
+              document.getElementById('surnameInput').value = data.data.last_name || '';
+              document.getElementById('givenNameInput').value = data.data.first_name || '';
+              document.getElementById('middleInitialInput').value = data.data.middle_initial || '';
+              document.getElementById('contactNumberInput').value = data.data.contact_number || '';
+              document.getElementById('dobInput').value = data.data.date_of_birth || '';
+
+              // Map custom Sex dropdown
+              if (data.data.sex) {
+                document.getElementById('sexInput').value = data.data.sex;
+                const sexText = document.getElementById('sexDisplayText');
+                sexText.textContent = data.data.sex.charAt(0).toUpperCase() + data.data.sex.slice(1);
+                sexText.classList.remove('text-on-surface-variant');
+                sexText.classList.add('text-on-surface');
+              }
+
+              // Map custom Civil Status dropdown
+              if (data.data.civil_status) {
+                document.getElementById('civilStatusInput').value = data.data.civil_status;
+                const civilText = document.getElementById('civilStatusDisplayText');
+                civilText.textContent = data.data.civil_status.charAt(0).toUpperCase() + data.data.civil_status.slice(1);
+                civilText.classList.remove('text-on-surface-variant');
+                civilText.classList.add('text-on-surface');
+              }
+
+              // Programmatically dispatch 'input' events so your existing UI scripts 
+              // (progress bar, name merger, autosave) recognize the newly filled data
+              ['surnameInput', 'givenNameInput', 'middleInitialInput', 'contactNumberInput', 'dobInput'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el.value) el.dispatchEvent(new Event('input', {
+                  bubbles: true
+                }));
+              });
+
+              // Trigger blur on DOB to calculate the age
+              if (document.getElementById('dobInput').value) {
+                document.getElementById('dobInput').dispatchEvent(new Event('blur'));
+              }
+
+              // Recalculate progress steps to reflect new data
+              if (typeof recalcSteps === 'function') {
+                recalcSteps();
+              }
+
+              clearBhwReferralError();
+            } else {
+              // Use your existing error UI function for a clean display
+              showBhwReferralError(data.message || 'Referral ID not found in the database.');
+            }
+          })
+          .catch(error => {
+            console.error('Error fetching data:', error);
+            showBhwReferralError('Network error. Could not retrieve data.');
+          })
+          .finally(() => {
+            // Restore button state
+            btn.textContent = originalText;
+            btn.disabled = false;
+          });
+      } else {
+        showBhwReferralError('Please enter a valid Referral ID first.');
+      }
+    });
   </script>
 </body>
-
+    
 </html>

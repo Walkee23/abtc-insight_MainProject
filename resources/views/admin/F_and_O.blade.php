@@ -224,8 +224,7 @@
                     <div>
                         <h2 class="text-2xl font-bold text-on-surface tracking-tight">Patient Volume Forecasting</h2>
                         <p class="text-on-surface-variant text-sm mt-1">
-                            @if($forecast['status'] === 'ok'){{ $forecast['method'] }} Exponential Smoothing Model@else Exponential Smoothing Model @endif
-                            · walk-in registrations per {{ $periods[$period]['unit'] }}
+                            {{ $forecast['status'] === 'ok' ? $forecast['method'] : 'Exponential Smoothing' }} · patients per {{ $periods[$period]['unit'] }}
                         </p>
                     </div>
                     <div class="flex flex-col items-end gap-2">
@@ -299,7 +298,7 @@
                             @endforeach
                         </div>
                         @if($forecast['status'] === 'ok' && !$forecast['seasonal'])
-                        <p class="text-[10px] text-outline italic">Gamma only takes effect once there are {{ 2 * $periods[$period]['season'] }} or more completed {{ $periods[$period]['unit'] }}s of data.</p>
+                        <p class="text-[10px] text-outline italic">Gamma applies once there are {{ 2 * $periods[$period]['season'] }}+ completed {{ $periods[$period]['unit'] }}s.</p>
                         @endif
                     </form>
                 </div>
@@ -355,7 +354,7 @@
                     <script type="application/json" id="forecastData">@json(['history' => $forecast['history'], 'future' => $forecast['future']])</script>
                     <p class="text-[11px] text-outline mt-3">
                         {{ $saved > 0 ? $saved . ' forecast rows saved' . ($lastSaved ? ', last on ' . \Carbon\Carbon::parse($lastSaved)->format('M d, Y g:i A') : '') . '.' : 'No forecast saved yet.' }}
-                        The current {{ $periods[$period]['unit'] }} is still in progress, so it is the first forecast step rather than part of the history.
+                        The current {{ $periods[$period]['unit'] }} is still in progress, so it starts the forecast.
                     </p>
                     @elseif($forecast['status'] === 'short')
                     <div class="h-[240px] flex flex-col items-center justify-center text-center gap-2">
@@ -376,7 +375,7 @@
                 <div class="flex justify-between items-end">
                     <div>
                         <h2 class="text-2xl font-bold text-on-surface tracking-tight">Outbreak Detection &amp; Monitoring</h2>
-                        <p class="text-on-surface-variant text-sm mt-1">Cases in the last 7 days ({{ $outbreak['from'] }} – {{ $outbreak['to'] }}) compared with each barangay's average week over the 4 weeks before</p>
+                        <p class="text-on-surface-variant text-sm mt-1">Last 7 days ({{ $outbreak['from'] }} – {{ $outbreak['to'] }}) vs. each barangay's usual week</p>
                     </div>
                     <button type="button" id="toggleAllBarangays"
                         class="flex items-center gap-2 px-4 py-2 text-primary font-bold text-sm hover:bg-primary/5 rounded-lg transition-colors">
@@ -439,12 +438,12 @@
                         @endforeach
                         <p id="noAlerts" class="{{ count($alerts) ? 'hidden' : '' }} text-sm text-on-surface-variant bg-surface-container-low rounded-xl px-5 py-6 text-center">
                             @if(empty($outbreak['list']))
-                            No cases were registered in the last 5 weeks, so there is nothing to compare yet.
+                            No cases in the last 5 weeks yet.
                             @else
-                            No barangay is above its usual level right now. Use "View All Barangays" to see every barangay with cases.
+                            No barangay is above its usual level.
                             @endif
                         </p>
-                        <p class="text-[11px] text-outline px-2">Spike: 3+ cases and more than double the weekly average. Watch: 2+ cases and at least 1.5× the average. Barangays that normally have none count as new activity.</p>
+                        <p class="text-[11px] text-outline px-2">Spike: 3+ cases, over 2× the usual week. Watch: 2+ cases, 1.5× or more.</p>
                     </div>
                 </div>
             </section>

@@ -148,6 +148,8 @@ Route::get('/patient/New_patient', function () {
     return view('patient.New_Record_Registration');
 })->name('patient.new-patient');
 
+Route::get('/get-referral-data/{referral_id}', [PatientController::class, 'getReferralData'])->name('get.referral.data');
+
 Route::get('/patient/Returning_Patient', function () {
     return view('patient.Returning_Patient_Registration');
 })->name('patient.returning-patient');

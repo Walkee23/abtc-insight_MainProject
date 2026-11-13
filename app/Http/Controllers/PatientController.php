@@ -7,6 +7,70 @@ use Illuminate\Support\Facades\DB;
 
 class PatientController extends Controller
 {
+    public function getReferralData($referral_id)
+    {
+        $referral = DB::table('bhw_referral_info')
+            ->where('reference_no', $referral_id)
+            ->where('status', 'Pending')
+            ->first();
+
+        if (!$referral) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Referral ID not found or has already been used.'
+            ]);
+        }
+
+        $fullName = trim($referral->patient_name ?? '');
+        $lastName = '';
+        $firstName = '';
+        $middleInitial = '';
+
+        // Handle names formatted with a comma (e.g., "Dela Cruz, Juan, P." or "Dela Cruz, Juan P.")
+        if (strpos($fullName, ',') !== false) {
+            $parts = array_map('trim', explode(',', $fullName));
+            $lastName = $parts[0];
+
+            if (isset($parts[2])) {
+                $firstName = $parts[1];
+                $middleInitial = $parts[2];
+            } elseif (isset($parts[1])) {
+                $givenParts = explode(' ', $parts[1]);
+                $lastWord = end($givenParts);
+                if (strlen(trim($lastWord, '.')) === 1) {
+                    $middleInitial = array_pop($givenParts);
+                }
+                $firstName = implode(' ', $givenParts);
+            }
+        } else {
+            // Handle names formatted without a comma (e.g., "Juan P. Dela Cruz")
+            $parts = explode(' ', $fullName);
+            if (count($parts) > 1) {
+                $lastName = array_pop($parts);
+                $secondToLast = end($parts);
+                if (strlen(trim($secondToLast, '.')) === 1) {
+                    $middleInitial = array_pop($parts);
+                }
+                $firstName = implode(' ', $parts);
+            } else {
+                $firstName = $fullName;
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'last_name'      => $lastName,
+                'first_name'     => $firstName,
+                'middle_initial' => str_replace('.', '', $middleInitial),
+                'contact_number' => $referral->contact_num ?? '',
+                'date_of_birth'  => $referral->date_of_birth ?? '',
+                'sex'            => strtolower($referral->gender ?? ''),
+                'civil_status'   => strtolower($referral->civil_status ?? '')
+            ]
+        ]);
+    }
+
     // Search for an existing patient by name or ID
     public function search(Request $request)
     {

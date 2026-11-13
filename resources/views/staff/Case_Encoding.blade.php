@@ -313,7 +313,7 @@
                                     </div>
  
                                     <div class="space-y-4">
-                                        <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Pet or Stray</label>
+                                        <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Pet or Stray  <span class="text-error">*</label>
                                         <div class="flex gap-4">
                                             <label class="flex items-center gap-2 text-sm cursor-pointer">
                                                 <input class="text-primary focus:ring-primary" name="pet_status" value="Pet" type="radio" /> Pet
@@ -333,7 +333,7 @@
                                     </div>
 
                                     <div class="space-y-4">
-                                        <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Exposure Type</label>
+                                        <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Exposure Type  <span class="text-error">*</label>
                                         <div class="flex gap-4">
                                             <label class="flex items-center gap-2 text-sm cursor-pointer">
                                                 <input class="rounded text-primary focus:ring-primary" name="exposure_type[]" value="Lick" type="checkbox" /> Lick

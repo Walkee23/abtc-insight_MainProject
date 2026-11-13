@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Create New Referral | Cebu City ABTC Insight</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -81,107 +82,113 @@
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
-        body { font-family: 'Inter', sans-serif; background-color: #f7f9fb; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fb;
+        }
+
         .glass-header {
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
         }
     </style>
 </head>
+
 <body class="text-on-surface">
 
-<aside class="h-screen w-64 fixed left-0 top-0 bg-slate-100 dark:bg-slate-900 flex flex-col pt-6 pb-4 gap-2 z-50">
-    <!-- Brand / Header Section -->
-    <div class="px-6 mb-8">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg">
-                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">health_and_safety</span>
+    <aside class="h-screen w-64 fixed left-0 top-0 bg-slate-100 dark:bg-slate-900 flex flex-col pt-6 pb-4 gap-2 z-50">
+        <!-- Brand / Header Section -->
+        <div class="px-6 mb-8">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg">
+                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">health_and_safety</span>
+                </div>
+                <div>
+                    <h1 class="text-blue-900 dark:text-blue-50 font-bold text-sm tracking-tight leading-none">ABTC-Insight</h1>
+                </div>
             </div>
-            <div>
-                <h1 class="text-blue-900 dark:text-blue-50 font-bold text-sm tracking-tight leading-none">ABTC-Insight</h1>
-            </div>
         </div>
-    </div>
 
-    <!-- Navigation -->
-    <nav class="space-y-1 px-4 dark:bg-slate-900">
-        <!-- My Referrals (Inactive) -->
-        <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
-           href="{{ route('bhw.dashboard') }}">
-            <span class="material-symbols-outlined">assignment_turned_in</span>
-            <span class="font-['Inter'] text-sm tracking-wide">My Referrals</span>
-        </a>
-
-        <!-- Create New Referral (Active - Admin Style) -->
-        <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-blue-700 dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600 translate-x-1 duration-150" 
-           href="{{ route('bhw.referral') }}">
-            <span class="material-symbols-outlined">add_circle</span>
-            <span class="font-['Inter'] text-sm tracking-wide">Create New Referral</span>
-        </a>
-    </nav>
-</aside>
-
-<div class="mt-auto px-4 pb-4">
-<a href="{{ route('bhw.dashboard') }}" class="w-full py-4 bg-primary text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:bg-primary-container transition-all">
-<span class="material-symbols-outlined">arrow_back</span>
-<span class="text-sm">Back to Referrals</span>
-</a>
-</div>
-</aside>
-
-<!-- Top App Bar -->
-<header class="fixed top-0 right-0 w-[calc(100%-16rem)] z-40 bg-surface-bright/85 backdrop-blur-xl flex justify-between items-center h-20 px-8 border-b border-outline-variant/10 shadow-sm">
-<div class="flex items-center gap-4">
-<div class="relative">
-<span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400">search</span>
-<input class="pl-12 pr-6 py-2.5 bg-slate-100 border-none rounded-full text-sm focus:ring-2 focus:ring-primary/20 w-96 transition-all" placeholder="Search referrals, patients..." type="text"/>
-</div>
-</div>
-<div class="flex items-center gap-8">
-<div class="flex items-center gap-2">
-<button class="p-2 text-slate-400 hover:text-primary transition-colors">
-<span class="material-symbols-outlined">help</span>
-</button>
-<button class="p-2 text-slate-400 hover:text-primary transition-colors relative">
-<span class="material-symbols-outlined">notifications</span>
-<span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-</button>
-</div>
-<div class="h-8 w-px bg-slate-200"></div>
-<div class="relative group cursor-pointer">
-    <div class="flex items-center gap-4">
-        <div class="text-right">
-            <p class="text-xs font-bold text-on-surface leading-tight">{{ auth()->user()->full_name ?? 'Test BHW' }}</p>
-            <p class="text-[10px] text-on-surface-variant font-semibold">BHW - {{ auth()->user()->barangay_assignment ?? 'Guadalupe' }}</p>
-        </div>
-        <div class="relative">
-            <img alt="Test BHW Profile" class="w-10 h-10 rounded-full object-cover border-2 border-primary/10" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYXEfbdf1WqBtOmi-7pBaGEzvLw0ec1xSc8n2gxOR_x-J3wdc6kf9vnZ85PaHPIQCh1kv_tVfhn4Rnh61XmI4c6xTOgh7JBQwsuwAvfnnZUe9RXB8MhAI80cZskKvKdKAJZ5k7jnYHili_iuKnZkftjZN3qq74m80X9kjK0qI6g2oqTanqlzZnmzay0Z3RCJlCI04rRH-O2Hxp6Hc061pjAUy_7LOK9etgaYMxprFXpanaIhoYgcdEiaWYUEUrcuw2_cVQ3jnM9k-K" />
-            <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
-        </div>
-    </div>
-    <!-- Hover Dropdown Menu -->
-    <div class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-        <div class="p-2">
-            <a href="#" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary rounded-lg transition-colors">
-                <span class="material-symbols-outlined text-[18px]">person</span>
-                My Profile
+        <!-- Navigation -->
+        <nav class="space-y-1 px-4 dark:bg-slate-900">
+            <!-- My Referrals (Inactive) -->
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50"
+                href="{{ route('bhw.dashboard') }}">
+                <span class="material-symbols-outlined">assignment_turned_in</span>
+                <span class="font-['Inter'] text-sm tracking-wide">My Referrals</span>
             </a>
-            <div class="h-px bg-slate-100 my-1"></div>
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors text-left cursor-pointer">
-                    <span class="material-symbols-outlined text-[18px]">logout</span>
-                    Log Out
-                </button>
-            </form>
-        </div>
+
+            <!-- Create New Referral (Active - Admin Style) -->
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-blue-700 dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600 translate-x-1 duration-150"
+                href="{{ route('bhw.referral') }}">
+                <span class="material-symbols-outlined">add_circle</span>
+                <span class="font-['Inter'] text-sm tracking-wide">Create New Referral</span>
+            </a>
+        </nav>
+    </aside>
+
+    <div class="mt-auto px-4 pb-4">
+        <a href="{{ route('bhw.dashboard') }}" class="w-full py-4 bg-primary text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:bg-primary-container transition-all">
+            <span class="material-symbols-outlined">arrow_back</span>
+            <span class="text-sm">Back to Referrals</span>
+        </a>
     </div>
-</div>
-</header>
+    </aside>
+
+    <!-- Top App Bar -->
+    <header class="fixed top-0 right-0 w-[calc(100%-16rem)] z-40 bg-surface-bright/85 backdrop-blur-xl flex justify-between items-center h-20 px-8 border-b border-outline-variant/10 shadow-sm">
+        <div class="flex items-center gap-4">
+            <div class="relative">
+                <span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400">search</span>
+                <input class="pl-12 pr-6 py-2.5 bg-slate-100 border-none rounded-full text-sm focus:ring-2 focus:ring-primary/20 w-96 transition-all" placeholder="Search referrals, patients..." type="text" />
+            </div>
+        </div>
+        <div class="flex items-center gap-8">
+            <div class="flex items-center gap-2">
+                <button class="p-2 text-slate-400 hover:text-primary transition-colors">
+                    <span class="material-symbols-outlined">help</span>
+                </button>
+                <button class="p-2 text-slate-400 hover:text-primary transition-colors relative">
+                    <span class="material-symbols-outlined">notifications</span>
+                    <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                </button>
+            </div>
+            <div class="h-8 w-px bg-slate-200"></div>
+            <div class="relative group cursor-pointer">
+                <div class="flex items-center gap-4">
+                    <div class="text-right">
+                        <p class="text-xs font-bold text-on-surface leading-tight">{{ auth()->user()->full_name ?? 'Test BHW' }}</p>
+                        <p class="text-[10px] text-on-surface-variant font-semibold">BHW - {{ auth()->user()->barangay_assignment ?? 'Guadalupe' }}</p>
+                    </div>
+                    <div class="relative">
+                        <img alt="Test BHW Profile" class="w-10 h-10 rounded-full object-cover border-2 border-primary/10" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYXEfbdf1WqBtOmi-7pBaGEzvLw0ec1xSc8n2gxOR_x-J3wdc6kf9vnZ85PaHPIQCh1kv_tVfhn4Rnh61XmI4c6xTOgh7JBQwsuwAvfnnZUe9RXB8MhAI80cZskKvKdKAJZ5k7jnYHili_iuKnZkftjZN3qq74m80X9kjK0qI6g2oqTanqlzZnmzay0Z3RCJlCI04rRH-O2Hxp6Hc061pjAUy_7LOK9etgaYMxprFXpanaIhoYgcdEiaWYUEUrcuw2_cVQ3jnM9k-K" />
+                        <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                    </div>
+                </div>
+                <!-- Hover Dropdown Menu -->
+                <div class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <div class="p-2">
+                        <a href="#" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary rounded-lg transition-colors">
+                            <span class="material-symbols-outlined text-[18px]">person</span>
+                            My Profile
+                        </a>
+                        <div class="h-px bg-slate-100 my-1"></div>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors text-left cursor-pointer">
+                                <span class="material-symbols-outlined text-[18px]">logout</span>
+                                Log Out
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+    </header>
 
     <!-- Main Content Canvas -->
     <main class="pt-24 pb-20 px-12 min-h-screen bg-surface ml-64">
-        
+
         <!-- Header & Breadcrumbs -->
         <div class="mb-10">
             <a class="text-primary flex items-center gap-2 text-sm font-medium hover:underline mb-4 group" href="{{ route('bhw.dashboard') }}">
@@ -237,25 +244,25 @@
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
                     <div class="md:col-span-4 space-y-2">
-    <label class="text-xs font-semibold text-on-surface-variant ml-1">First Name <span class="text-error">*</span></label>
-    <input type="text" name="first_name" id="firstName" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Juan" required/>
-</div>
-<div class="md:col-span-2 space-y-2">
-    <label class="text-xs font-semibold text-on-surface-variant ml-1">M.I.</label>
-    <input type="text" name="middle_initial" id="middleInitial" maxlength="2" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-center uppercase focus:ring-2 focus:ring-primary/20 transition-all" placeholder="D."/>
-</div>
-<div class="md:col-span-6 space-y-2">
-    <label class="text-xs font-semibold text-on-surface-variant ml-1">Last Name <span class="text-error">*</span></label>
-    <input type="text" name="last_name" id="lastName" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Dela Cruz" required/>
-</div>
-<input type="hidden" name="patient_name" id="patientName">
+                        <label class="text-xs font-semibold text-on-surface-variant ml-1">First Name <span class="text-error">*</span></label>
+                        <input type="text" name="first_name" id="firstName" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Juan" required />
+                    </div>
+                    <div class="md:col-span-2 space-y-2">
+                        <label class="text-xs font-semibold text-on-surface-variant ml-1">M.I.</label>
+                        <input type="text" name="middle_initial" id="middleInitial" maxlength="2" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-center uppercase focus:ring-2 focus:ring-primary/20 transition-all" placeholder="D." />
+                    </div>
+                    <div class="md:col-span-6 space-y-2">
+                        <label class="text-xs font-semibold text-on-surface-variant ml-1">Last Name <span class="text-error">*</span></label>
+                        <input type="text" name="last_name" id="lastName" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Dela Cruz" required />
+                    </div>
+                    <input type="hidden" name="patient_name" id="patientName">
                     <div class="md:col-span-4 space-y-2">
                         <label class="text-xs font-semibold text-on-surface-variant ml-1">Date of Birth <span class="text-error">*</span></label>
-                        <input type="date" name="date_of_birth" id="dob" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" required/>
+                        <input type="date" name="date_of_birth" id="dob" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" required />
                     </div>
                     <div class="md:col-span-2 space-y-2">
                         <label class="text-xs font-semibold text-on-surface-variant ml-1">Age</label>
-                        <input type="text" name="age" id="age" class="w-full bg-surface-container border-none rounded-lg px-4 py-3 text-on-surface-variant italic" placeholder="Calculated" readonly/>
+                        <input type="text" name="age" id="age" class="w-full bg-surface-container border-none rounded-lg px-4 py-3 text-on-surface-variant italic" placeholder="Calculated" readonly />
                         <p id="ageError" class="text-[10px] text-error hidden mt-1">Age must be 0 to 125.</p>
                     </div>
                     <div class="md:col-span-3 space-y-2">
@@ -278,16 +285,16 @@
                     </div>
                     <div class="md:col-span-4 space-y-2">
                         <label class="text-xs font-semibold text-on-surface-variant ml-1">Contact Number <span class="text-error">*</span></label>
-                        <input type="tel" name="contact_num" id="contactNum" inputmode="numeric" maxlength="11" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" placeholder="+63 000 000 0000" pattern="^09\d{9}$" required/>
+                        <input type="tel" name="contact_num" id="contactNum" inputmode="numeric" maxlength="11" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" placeholder="+63 000 000 0000" pattern="^09\d{9}$" required />
                         <p id="contactError" class="text-[10px] text-error hidden mt-1">Must be exactly 11 digits and start with 09.</p>
                     </div>
                     <div class="md:col-span-12 space-y-2">
                         <label class="text-xs font-semibold text-on-surface-variant ml-1">Address (Barangay) <span class="text-error">*</span></label>
                         <div class="flex gap-4">
-                            <input type="text" class="w-48 bg-surface-container border-none rounded-lg px-4 py-3 font-semibold text-primary" value="{{ auth()->user()->barangay_assignment ?? 'Guadalupe' }}" readonly/>
-                            <input type="text" name="street_address" class="flex-1 bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" placeholder="Street, Sitio, or Landmark" required/>
+                            <input type="text" class="w-48 bg-surface-container border-none rounded-lg px-4 py-3 font-semibold text-primary" value="{{ auth()->user()->barangay_assignment ?? 'Guadalupe' }}" readonly />
+                            <input type="text" name="street_address" class="flex-1 bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" placeholder="Street, Sitio, or Landmark" required />
 
-                           </div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -303,27 +310,32 @@
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
                     <div class="space-y-2">
                         <label class="text-xs font-semibold text-on-surface-variant">Temp (°C)</label>
-                        <input type="text" name="temperature" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-center focus:ring-2 focus:ring-primary/20" placeholder="36.5"/>
+                        <input type="text" name="temperature" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-center focus:ring-2 focus:ring-primary/20" placeholder="36.5" />
                     </div>
-                    <div class="space-y-2">
-                        <label class="text-xs font-semibold text-on-surface-variant">BP (mmHg)</label>
-                        <input type="text" name="blood_pressure" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-center focus:ring-2 focus:ring-primary/20" placeholder="120/80"/>
+                    <div class="space-y-2 col-span-2" id="bpWrapper">
+                        <label class="text-xs font-semibold text-on-surface-variant">BP (mmHg) <span class="font-normal italic">- 3 readings, not needed under 15</span></label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <input type="text" class="bp-reading w-full bg-surface-container-highest border-none rounded-lg px-2 py-3 text-center focus:ring-2 focus:ring-primary/20" placeholder="120/80" maxlength="7" pattern="^\d{2,3}/\d{2,3}$" title="Format: 120/80" />
+                            <input type="text" class="bp-reading w-full bg-surface-container-highest border-none rounded-lg px-2 py-3 text-center focus:ring-2 focus:ring-primary/20" placeholder="118/80" maxlength="7" pattern="^\d{2,3}/\d{2,3}$" title="Format: 118/80" />
+                            <input type="text" class="bp-reading w-full bg-surface-container-highest border-none rounded-lg px-2 py-3 text-center focus:ring-2 focus:ring-primary/20" placeholder="122/82" maxlength="7" pattern="^\d{2,3}/\d{2,3}$" title="Format: 122/82" />
+                        </div>
+                        <input type="hidden" name="blood_pressure" id="bloodPressure">
                     </div>
                     <div class="space-y-2">
                         <label class="text-xs font-semibold text-on-surface-variant">PR (bpm)</label>
-                        <input type="number" name="pulse_rate" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-center focus:ring-2 focus:ring-primary/20" placeholder="72"/>
+                        <input type="number" name="pulse_rate" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-center focus:ring-2 focus:ring-primary/20" placeholder="72" />
                     </div>
                     <div class="space-y-2">
                         <label class="text-xs font-semibold text-on-surface-variant">RR (cpm)</label>
-                        <input type="number" name="respiratory_rate" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-center focus:ring-2 focus:ring-primary/20" placeholder="16"/>
+                        <input type="number" name="respiratory_rate" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-center focus:ring-2 focus:ring-primary/20" placeholder="16" />
                     </div>
                     <div class="space-y-2">
                         <label class="text-xs font-semibold text-on-surface-variant">Height (cm)</label>
-                        <input type="number" step="0.1" name="height_cm" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-center focus:ring-2 focus:ring-primary/20" placeholder="170"/>
+                        <input type="number" step="0.1" name="height_cm" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-center focus:ring-2 focus:ring-primary/20" placeholder="170" />
                     </div>
                     <div class="space-y-2">
                         <label class="text-xs font-semibold text-on-surface-variant">Weight (kg)</label>
-                        <input type="number" step="0.1" name="weight_kg" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-center focus:ring-2 focus:ring-primary/20" placeholder="65.0"/>
+                        <input type="number" step="0.1" name="weight_kg" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-center focus:ring-2 focus:ring-primary/20" placeholder="65.0" />
                     </div>
                 </div>
             </section>
@@ -339,17 +351,17 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div class="space-y-6">
                         <div class="space-y-2">
-                            <label class="text-xs font-semibold text-on-surface-variant">Exposure Type <span class="text-error">*</span></label>
+                            <label class="text-xs font-semibold text-on-surface-variant">Exposure Type <span class="text-error">*</span> <span class="font-normal italic">(select all that apply)</span></label>
                             <div class="flex gap-4">
                                 <label class="flex-1 cursor-pointer">
-                                    <input type="radio" class="hidden peer" name="exposure_type" value="Bite" required/>
+                                    <input type="checkbox" class="hidden peer exposure-type-check" name="exposure_type[]" value="Bite" />
                                     <div class="p-4 border-2 border-outline-variant/20 rounded-xl flex flex-col items-center gap-2 peer-checked:border-primary peer-checked:bg-primary/5 transition-all">
                                         <span class="material-symbols-outlined">medical_mask</span>
                                         <span class="font-bold text-sm">Bite</span>
                                     </div>
                                 </label>
                                 <label class="flex-1 cursor-pointer">
-                                    <input type="radio" class="hidden peer" name="exposure_type" value="Non-Bite" required/>
+                                    <input type="checkbox" class="hidden peer exposure-type-check" name="exposure_type[]" value="Non-Bite" />
                                     <div class="p-4 border-2 border-outline-variant/20 rounded-xl flex flex-col items-center gap-2 peer-checked:border-primary peer-checked:bg-primary/5 transition-all">
                                         <span class="material-symbols-outlined">clean_hands</span>
                                         <span class="font-bold text-sm">Non-Bite</span>
@@ -357,20 +369,20 @@
                                 </label>
                             </div>
                         </div>
-                        
+
                         <!-- Split Date and Time of Exposure -->
                         <div class="space-y-2">
                             <label class="text-xs font-semibold text-on-surface-variant">Date and Time of Exposure <span class="text-error">*</span></label>
                             <div class="flex gap-4">
-                                <input type="date" id="exposureDate" name="exposure_date" class="flex-1 bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" required title="Date of exposure is required"/>
-                                <input type="time" id="exposureTime" name="exposure_time" class="flex-1 bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" title="Time of exposure is optional"/>
+                                <input type="date" id="exposureDate" name="exposure_date" class="flex-1 bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" required title="Date of exposure is required" />
+                                <input type="time" id="exposureTime" name="exposure_time" class="flex-1 bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" title="Time of exposure is optional" />
                             </div>
                             <p class="text-[10px] text-on-surface-variant italic mt-1">Time is optional if exact time is unknown.</p>
                         </div>
-                        
+
                         <div class="space-y-2">
                             <label class="text-xs font-semibold text-on-surface-variant">Anatomic Site of Bite <span class="text-error">*</span></label>
-                            <input type="text" name="site_of_bite" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" placeholder="e.g. Left distal forearm" required/>
+                            <input type="text" name="site_of_bite" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" placeholder="e.g. Left distal forearm" required />
                         </div>
                     </div>
                     <div class="space-y-6">
@@ -383,43 +395,18 @@
                                     <option value="Cat">Cat</option>
                                     <option value="Others">Others</option>
                                 </select>
-                                <input type="text" name="biting_animal_other" id="animalOthers" class="bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" placeholder="Specify if 'Others'" disabled/>
+                                <input type="text" name="biting_animal_other" id="animalOthers" class="bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" placeholder="Specify if 'Others'" disabled />
                             </div>
                         </div>
-                        <div class="space-y-2">
-    <label class="text-xs font-semibold text-on-surface-variant">Exposure Category <span class="text-error">*</span></label>
-    <div class="flex gap-3">
-        <label class="flex-1 cursor-pointer">
-            <input type="radio" class="hidden peer" name="exposure_category" value="1" required/>
-            <div class="p-3 border-2 border-outline-variant/20 rounded-xl text-center peer-checked:border-primary peer-checked:bg-primary/5 transition-all">
-                <span class="font-bold text-sm">Category I</span>
-                <p class="text-[10px] text-on-surface-variant">Lick</p>
-            </div>
-        </label>
-        <label class="flex-1 cursor-pointer">
-            <input type="radio" class="hidden peer" name="exposure_category" value="2"/>
-            <div class="p-3 border-2 border-outline-variant/20 rounded-xl text-center peer-checked:border-primary peer-checked:bg-primary/5 transition-all">
-                <span class="font-bold text-sm">Category II</span>
-                <p class="text-[10px] text-on-surface-variant">Nibble</p>
-            </div>
-        </label>
-        <label class="flex-1 cursor-pointer">
-            <input type="radio" class="hidden peer" name="exposure_category" value="3"/>
-            <div class="p-3 border-2 border-outline-variant/20 rounded-xl text-center peer-checked:border-primary peer-checked:bg-primary/5 transition-all">
-                <span class="font-bold text-sm">Category III</span>
-                <p class="text-[10px] text-on-surface-variant">Bite</p>
-            </div>
-        </label>
-    </div>
-</div>
 
-<div class="space-y-2">
-    <label class="text-xs font-semibold text-on-surface-variant">Animal Condition / Remarks</label>
-    <textarea name="animal_remarks" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20 resize-none" placeholder="e.g. Foaming at the mouth, aggressive, died after bite..." rows="2"></textarea>
-</div>
+
+                        <div class="space-y-2">
+                            <label class="text-xs font-semibold text-on-surface-variant">Animal Condition / Remarks</label>
+                            <textarea name="animal_remarks" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20 resize-none" placeholder="e.g. died, lost," rows="2"></textarea>
+                        </div>
                         <div class="space-y-2">
                             <label class="text-xs font-semibold text-on-surface-variant">Lab Exam (Optional)</label>
-                            <input type="text" name="lab_exam" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" placeholder="e.g. Rapid Rabies Test results"/>
+                            <input type="text" name="lab_exam" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" placeholder="e.g. Rapid Rabies Test results" />
                         </div>
                         <div class="space-y-2">
                             <label class="text-xs font-semibold text-on-surface-variant">Action Desired / Remarks</label>
@@ -465,15 +452,27 @@
     <!-- JavaScript for Form Logic -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            
+
             const dobInput = document.getElementById('dob');
             const ageInput = document.getElementById('age');
             const ageError = document.getElementById('ageError');
-            
+
             const contactInput = document.getElementById('contactNum');
             const contactError = document.getElementById('contactError');
-            
+
             const submitBtn = document.getElementById('submitBtn');
+
+            (function() {
+                const t = new Date();
+                const pad = n => String(n).padStart(2, '0');
+                const ymd = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+
+                const oldest = new Date(t);
+                oldest.setFullYear(t.getFullYear() - 125);
+
+                dobInput.max = ymd(t);
+                dobInput.min = ymd(oldest);
+            })();
 
             // Track validation states
             let isAgeValid = true;
@@ -492,20 +491,20 @@
 
             // 1. Age Calculation and Validation
             dobInput.addEventListener('change', function() {
-                if(this.value) {
+                if (this.value) {
                     const birthDate = new Date(this.value);
                     const today = new Date();
                     let age = today.getFullYear() - birthDate.getFullYear();
                     const monthDiff = today.getMonth() - birthDate.getMonth();
-                    
+
                     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
                         age--;
                     }
-                    
+
                     ageInput.value = age;
 
                     // Restrict age between 0 and 125
-                    if(age < 0 || age > 125) {
+                    if (age < 0 || age > 125) {
                         ageError.classList.remove('hidden');
                         isAgeValid = false;
                     } else {
@@ -516,11 +515,39 @@
                 }
             });
 
+            // BP rule: none under 15; if any reading is entered, all 3 are required
+            const bpInputs = document.querySelectorAll('.bp-reading');
+            const bpWrapper = document.getElementById('bpWrapper');
+            const bpHidden = document.getElementById('bloodPressure');
+
+            function applyBpRule() {
+                const age = parseInt(ageInput.value, 10);
+                const under15 = !isNaN(age) && age < 15;
+                bpInputs.forEach(i => {
+                    i.disabled = under15;
+                    if (under15) i.value = '';
+                });
+                bpWrapper.classList.toggle('opacity-50', under15);
+            }
+            dobInput.addEventListener('change', applyBpRule);
+            applyBpRule();
+
+            document.getElementById('referralForm').addEventListener('submit', function(e) {
+                const vals = [...bpInputs].map(i => i.value.trim());
+                const filled = vals.filter(v => v !== '').length;
+                if (filled > 0 && filled < 3) {
+                    e.preventDefault();
+                    alert('Please enter all 3 BP measurements, or leave them all blank.');
+                    return;
+                }
+                bpHidden.value = filled === 3 ? vals.join(', ') : '';
+            });
+
             // 2. Contact Number Validation
             contactInput.addEventListener('input', function() {
                 this.value = this.value.replace(/\D/g, '').slice(0, 11);
                 const regex = /^09\d{9}$/;
-                
+
                 // Show error only if there is text and it doesn't match the format
                 if (this.value.length > 0 && !regex.test(this.value)) {
                     contactError.classList.remove('hidden');
@@ -537,7 +564,7 @@
             const animalOthers = document.getElementById('animalOthers');
 
             animalSelect.addEventListener('change', function() {
-                if(this.value === 'Others') {
+                if (this.value === 'Others') {
                     animalOthers.disabled = false;
                     animalOthers.required = true;
                     animalOthers.focus();
@@ -548,39 +575,56 @@
                 }
             });
             // 5. Build patient_name from first / MI / last on submit
-           document.getElementById('referralForm').addEventListener('submit', function() {
-           const first = document.getElementById('firstName').value.trim();
-           const mi    = document.getElementById('middleInitial').value.trim().replace('.', '');
-           const last  = document.getElementById('lastName').value.trim();
-           document.getElementById('patientName').value =
-            last + ', ' + first + (mi ? ' ' + mi.toUpperCase() + '.' : '');
-});
+            document.getElementById('referralForm').addEventListener('submit', function() {
+                const first = document.getElementById('firstName').value.trim();
+                const mi = document.getElementById('middleInitial').value.trim().replace('.', '');
+                const last = document.getElementById('lastName').value.trim();
+                document.getElementById('patientName').value =
+                    last + ', ' + first + (mi ? ' ' + mi.toUpperCase() + '.' : '');
+            });
 
-           // 6. Limit exposure date and time
-           const exposureDate = document.getElementById('exposureDate');
-           const exposureTime = document.getElementById('exposureTime');
+            // 6. Limit exposure date and time
+            const exposureDate = document.getElementById('exposureDate');
+            const exposureTime = document.getElementById('exposureTime');
 
-           function pad(n) { return String(n).padStart(2, '0'); }
-           function toYMD(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+            function pad(n) {
+                return String(n).padStart(2, '0');
+            }
 
-           const now0 = new Date();
-           const oneYearAgo = new Date(now0);
-                oneYearAgo.setFullYear(now0.getFullYear() - 1);
-                exposureDate.max = toYMD(now0);
-                exposureDate.min = toYMD(oneYearAgo);
+            function toYMD(d) {
+                return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+            }
 
-        function limitExposureTime() {
-            if (exposureDate.value === toYMD(new Date())) {
-            const now = new Date();
-            const maxTime = pad(now.getHours()) + ':' + pad(now.getMinutes());
-                exposureTime.max = maxTime;
-            if (exposureTime.value > maxTime) exposureTime.value = '';
-    } else {
-            exposureTime.removeAttribute('max');
-    }
-}
-                exposureDate.addEventListener('change', limitExposureTime);
-                exposureTime.addEventListener('change', limitExposureTime);
+            const now0 = new Date();
+            const oneYearAgo = new Date(now0);
+            oneYearAgo.setFullYear(now0.getFullYear() - 1);
+            exposureDate.max = toYMD(now0);
+            exposureDate.min = toYMD(oneYearAgo);
+
+            function limitExposureTime() {
+                if (exposureDate.value === toYMD(new Date())) {
+                    const now = new Date();
+                    const maxTime = pad(now.getHours()) + ':' + pad(now.getMinutes());
+                    exposureTime.max = maxTime;
+                    if (exposureTime.value > maxTime) exposureTime.value = '';
+                } else {
+                    exposureTime.removeAttribute('max');
+                }
+            }
+            exposureDate.addEventListener('change', limitExposureTime);
+            exposureTime.addEventListener('change', limitExposureTime);
+
+            // At least one exposure type must be chosen
+            const typeChecks = document.querySelectorAll('.exposure-type-check');
+            document.getElementById('referralForm').addEventListener('submit', function(e) {
+                if (![...typeChecks].some(c => c.checked)) {
+                    e.preventDefault();
+                    alert('Please select at least one exposure type (Bite or Non-Bite).');
+                }
+            });
+
+            exposureTypeRadios.forEach(r => r.addEventListener('change', applyCategoryRule));
+            applyCategoryRule();
 
             // 4. Preview Button Alert
             document.getElementById('previewBtn').addEventListener('click', function() {
@@ -590,4 +634,5 @@
         });
     </script>
 </body>
+
 </html>

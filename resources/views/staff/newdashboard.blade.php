@@ -142,8 +142,55 @@
     </aside>
 
     <!-- Main Content Area -->
-    <main class="flex-1 flex flex-col ml-64 p-8">
-        
+    <main class="flex-1 flex flex-col ml-64">
+                <!-- TopNavBar -->
+        <div class="flex justify-end items-center w-full h-16 px-8 sticky top-0 z-30 bg-white/85 dark:bg-slate-950/85 backdrop-blur-md shadow-sm shadow-slate-200/50 dark:shadow-none border-b border-slate-100/50">
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-1 border-r border-outline-variant/20 pr-4">
+                    <button class="p-2 text-slate-500 hover:bg-surface-container-high rounded-full transition-colors relative">
+                        <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+                        <span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-white"></span>
+                    </button>
+                    <button class="p-2 text-slate-500 hover:bg-surface-container-high rounded-full transition-colors">
+                        <span class="material-symbols-outlined" data-icon="help">help</span>
+                    </button>
+                </div>
+
+                <div class="relative group cursor-pointer pl-2">
+                    <div class="flex items-center gap-3">
+                        <div class="text-right hidden sm:block">
+                            <p class="text-xs font-bold text-on-surface leading-tight">Staff</p>
+                            <p class="text-[10px] text-on-surface-variant leading-tight">ABTC Staff</p>
+                        </div>
+                        <div class="relative w-9 h-9">
+                            <div class="w-9 h-9 rounded-full overflow-hidden ring-2 ring-slate-100 border border-slate-200">
+                                <img alt="Staff Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCG2nKFZGyYwHKRYoCQT3e-DFv4lhmbOaefZN_pNQ6HkWmU6VSYzY9h1P_RiS1yqN4hdqhLCiP4K6Ea7gARSWG6HK0qt5boVFtv4S1YiWv2O1vutB_s88IrPG_wB7x02LuJj9pA0d9mKcPXNHWbCr_BIg-CKtC_tZCmVz1DmJURoecp6Re7uXEhv9FI1dvVxhWIOr9RdMIXbtQRUjsSOkEc-i5gI18j8iBFPISCiDNXnFP_TQidoFnFp1cFnCO6SpZTN3UK4BIZ1wd1" />
+                            </div>
+                            <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                        </div>
+                    </div>
+                    <!-- Hover Dropdown Menu -->
+                    <div class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                        <div class="p-2">
+                            <a href="#" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary rounded-lg transition-colors">
+                                <span class="material-symbols-outlined text-[18px]">person</span>
+                                My Profile
+                            </a>
+                            <div class="h-px bg-slate-100 my-1"></div>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors text-left cursor-pointer">
+                                    <span class="material-symbols-outlined text-[18px]">logout</span>
+                                    Log Out
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-8">
         <!-- Header Section -->
         <header class="flex justify-between items-center mb-8">
             <div>

@@ -35,7 +35,8 @@ class BhwController extends Controller
         $request->validate([
             'exposure_type'   => 'required|array|min:1',
             'exposure_type.*' => 'in:Bite,Non-Bite',
-            'animal_remarks'  => 'nullable|string|max:1000',
+            'animal_remarks'  => 'required|in:Healthy,Sick,Dead,Lost/Stray',
+            'obs_14_days' => 'nullable|date|before_or_equal:today',
         ]);
         $barangayName = $request->input('patient_barangay');
 

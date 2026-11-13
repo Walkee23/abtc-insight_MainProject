@@ -493,26 +493,32 @@
                                 <div class="bg-surface-container-low rounded-xl p-6">
                                     <p class="text-xs font-extrabold text-outline uppercase tracking-widest mb-4">Dose
                                         Tracking Grid</p>
-                                    <div class="grid grid-cols-4 gap-4">
-                                        <div data-field-wrap="day0_date" class="bg-white p-4 rounded-lg border border-primary/20 ring-1 ring-transparent">
+                                    <div class="grid grid-cols-5 gap-3">
+                                        <div data-field-wrap="day0_date" class="bg-white p-3 rounded-lg border border-primary/20 ring-1 ring-transparent">
                                             <p class="text-[10px] font-bold text-primary uppercase mb-1">Day 0 <span class="text-error">*</span></p>
                                             <input name="day0_date" data-field="day0_date" type="date" max="{{ now()->toDateString() }}" value="{{ $val('day0_date') }}"
                                                 class="w-full text-[10px] font-bold text-on-surface bg-transparent border-none p-0 focus:ring-0" />
                                             <p data-error-for="day0_date" class="mt-1 text-xs font-semibold text-error {{ $errors->has('day0_date') ? '' : 'hidden' }}">{{ $errors->first('day0_date') }}</p>
                                         </div>
-                                        <div data-field-wrap="day3_date" class="bg-white p-4 rounded-lg border border-outline-variant/30 ring-1 ring-transparent">
+                                        <div data-field-wrap="day3_date" class="bg-white p-3 rounded-lg border border-outline-variant/30 ring-1 ring-transparent">
                                             <p class="text-[10px] font-bold text-outline uppercase mb-1">Day 3</p>
                                             <input name="day3_date" data-field="day3_date" type="date" max="{{ now()->toDateString() }}" value="{{ $val('day3_date') }}"
                                                 class="w-full text-[10px] font-bold text-on-surface bg-transparent border-none p-0 focus:ring-0" />
                                             <p data-error-for="day3_date" class="mt-1 text-xs font-semibold text-error {{ $errors->has('day3_date') ? '' : 'hidden' }}">{{ $errors->first('day3_date') }}</p>
                                         </div>
-                                        <div data-field-wrap="day7_date" class="bg-white p-4 rounded-lg border border-outline-variant/30 ring-1 ring-transparent">
+                                        <div data-field-wrap="day7_date" class="bg-white p-3 rounded-lg border border-outline-variant/30 ring-1 ring-transparent">
                                             <p class="text-[10px] font-bold text-outline uppercase mb-1">Day 7</p>
                                             <input name="day7_date" data-field="day7_date" type="date" max="{{ now()->toDateString() }}" value="{{ $val('day7_date') }}"
                                                 class="w-full text-[10px] font-bold text-on-surface bg-transparent border-none p-0 focus:ring-0" />
                                             <p data-error-for="day7_date" class="mt-1 text-xs font-semibold text-error {{ $errors->has('day7_date') ? '' : 'hidden' }}">{{ $errors->first('day7_date') }}</p>
                                         </div>
-                                        <div data-field-wrap="day28_date" class="bg-white p-4 rounded-lg border border-outline-variant/30 ring-1 ring-transparent">
+                                        <div data-field-wrap="day14_date" class="bg-white p-3 rounded-lg border border-outline-variant/30 ring-1 ring-transparent">
+                                            <p class="text-[10px] font-bold text-outline uppercase mb-1">Day 14</p>
+                                            <input name="day14_date" data-field="day14_date" type="date" max="{{ now()->toDateString() }}" value="{{ $val('day14_date') }}"
+                                                class="w-full text-[10px] font-bold text-on-surface bg-transparent border-none p-0 focus:ring-0" />
+                                            <p data-error-for="day14_date" class="mt-1 text-xs font-semibold text-error {{ $errors->has('day14_date') ? '' : 'hidden' }}">{{ $errors->first('day14_date') }}</p>
+                                        </div>
+                                        <div data-field-wrap="day28_date" class="bg-white p-3 rounded-lg border border-outline-variant/30 ring-1 ring-transparent">
                                             <p class="text-[10px] font-bold text-outline uppercase mb-1">Day 28</p>
                                             <input name="day28_date" data-field="day28_date" type="date" max="{{ now()->toDateString() }}" value="{{ $val('day28_date') }}"
                                                 class="w-full text-[10px] font-bold text-on-surface bg-transparent border-none p-0 focus:ring-0" />
@@ -595,8 +601,8 @@
                 dose_type: 'Please select a dose type.',
                 day0_date: 'Please set the Day 0 date.',
             };
-            const DATE_FIELDS = ['day0_date', 'day3_date', 'day7_date', 'day28_date'];
-            const ALL_CHECKED = Object.keys(REQUIRED).concat(['passive_route', 'day3_date', 'day7_date', 'day28_date', 'tetanus_details', 'tig_details']);
+            const DATE_FIELDS = ['day0_date', 'day3_date', 'day7_date', 'day14_date', 'day28_date'];
+            const ALL_CHECKED = Object.keys(REQUIRED).concat(['passive_route', 'day3_date', 'day7_date', 'day14_date', 'day28_date', 'tetanus_details', 'tig_details']);
 
             const field = (name) => form.querySelector(`[data-field="${name}"]`);
             const errorEl = (name) => form.querySelector(`[data-error-for="${name}"]`);

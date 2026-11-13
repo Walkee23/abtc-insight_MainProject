@@ -281,6 +281,7 @@
                   'In Progress' => 'bg-primary/10 text-primary',
                   'Awaiting Encoding' => 'bg-tertiary-fixed text-on-tertiary-fixed-variant',
                   'Completed' => 'bg-surface-container-high text-on-surface-variant',
+                  'Discharged' => 'bg-emerald-100 text-emerald-700',
                   'No Case' => 'bg-surface-container-high text-on-surface-variant',
                 ][$patient->pep_status];
               @endphp
@@ -424,6 +425,7 @@
         'In Progress': 'bg-primary/10 text-primary',
         'Awaiting Encoding': 'bg-tertiary-fixed text-on-tertiary-fixed-variant',
         'Completed': 'bg-surface-container-high text-on-surface-variant',
+        'Discharged': 'bg-emerald-100 text-emerald-700',
       };
 
       const el = (tag, cls, text) => {

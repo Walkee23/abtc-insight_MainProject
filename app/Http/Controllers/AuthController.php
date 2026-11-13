@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Support\Audit;
 use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
@@ -21,6 +22,7 @@ class AuthController extends Controller
             
             // 3. Get the user's role from the database
             $role = Auth::user()->role;
+            Audit::log('login', "Signed in as {$role}");
             
             // 4. Send them to the correct dashboard based on their role
             if ($role === 'Admin') {
@@ -38,6 +40,8 @@ class AuthController extends Controller
         }
 
         // 5. If it fails, send them back with an error
+        Audit::log('login_failed', "Failed sign-in attempt for username '{$request->input('username')}'", $request->input('username'));
+
         return back()->withErrors([
             'username' => 'The provided credentials do not match our records.',
         ]);
@@ -45,6 +49,7 @@ class AuthController extends Controller
     
     public function logout(Request $request)
     {
+        Audit::log('logout', 'Signed out');
         Auth::logout();
         
         $request->session()->invalidate();

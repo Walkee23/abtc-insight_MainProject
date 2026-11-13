@@ -11,6 +11,7 @@ use App\Http\Controllers\PatientDatabaseController;
 use App\Http\Controllers\PepComplianceController;
 use App\Http\Controllers\TreatmentTrackerController;
 use App\Http\Controllers\ForecastingController;
+use App\Http\Controllers\SystemToolsController;
 use Illuminate\Http\Request;
 
 Route::get('/', function () {
@@ -55,6 +56,13 @@ Route::prefix('admin')->group(function () {
         $staffCount = DB::table('users')->where('role', 'Staff')->count();
         $users = DB::table('users')->latest()->get();
 
+        // Catch up on an auto-backup that was due while no scheduler was running
+        try {
+            \App\Support\DatabaseBackup::runIfDue();
+        } catch (\Throwable $e) {
+            // the page must still open
+        }
+
         return view('admin.USM', compact('healthWorkersCount', 'internsCount', 'staffCount', 'users'));
     })->name('admin.usm');
 
@@ -77,8 +85,23 @@ Route::prefix('admin')->group(function () {
             'barangay_assignment' => $request->role === 'BHW' ? $request->barangay_assignment : null,
         ]);
 
+        \App\Support\Audit::log('user_created', "Created {$request->role} account '{$request->username}' ({$request->full_name})");
+
         return redirect()->route('admin.usm')->with('success', 'User account created successfully!');
     })->name('admin.store-user');
+
+    // System tools (Admin only, enforced in the controller): backups, auto-backup, audit logs, health
+    Route::prefix('system')->group(function () {
+        Route::get('/backups', [SystemToolsController::class, 'backups'])->name('admin.system.backups');
+        Route::post('/backups', [SystemToolsController::class, 'createBackup'])->name('admin.system.backups.create');
+        Route::get('/backups/{file}', [SystemToolsController::class, 'downloadBackup'])->name('admin.system.backups.download');
+        Route::delete('/backups/{file}', [SystemToolsController::class, 'deleteBackup'])->name('admin.system.backups.delete');
+        Route::get('/auto-backup', [SystemToolsController::class, 'autoBackup'])->name('admin.system.auto-backup');
+        Route::post('/auto-backup', [SystemToolsController::class, 'saveAutoBackup'])->name('admin.system.auto-backup.save');
+        Route::get('/audit-logs', [SystemToolsController::class, 'auditLogs'])->name('admin.system.audit-logs');
+        Route::get('/audit-logs/export', [SystemToolsController::class, 'exportAuditLogs'])->name('admin.system.audit-logs.export');
+        Route::get('/health', [SystemToolsController::class, 'health'])->name('admin.system.health');
+    });
 });
 
 // Staff Routes

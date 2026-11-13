@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+
 <html class="light" lang="en">
 
 <head>
@@ -183,7 +185,8 @@
                     </div>
 
                     <!-- Hover Dropdown Menu -->
-                    <div class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <div class="absolute right-0 top-full pt-2 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                        <div class="bg-white rounded-xl shadow-lg border border-slate-100">
                         <div class="p-2">
                             <a href="#" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary rounded-lg transition-colors">
                                 <span class="material-symbols-outlined text-[18px]">person</span>
@@ -199,6 +202,7 @@
                                     Log Out
                                 </button>
                             </form>
+                        </div>
                         </div>
                     </div>
                 </div>
@@ -306,7 +310,7 @@
                     <div class="flex flex-wrap justify-between items-start gap-4 mb-6">
                         <div class="flex flex-col gap-2">
                             <span class="text-[10px] font-bold text-outline uppercase tracking-widest">
-                                @if($forecast['status'] === 'ok')Historical data ({{ $forecast['points'] }} {{ $periods[$period]['unit'] }}s)@else Historical data @endif
+                                Historical data
                             </span>
                             <div class="flex items-center gap-4">
                                 <div class="flex items-center gap-2">

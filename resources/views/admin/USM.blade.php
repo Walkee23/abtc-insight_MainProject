@@ -257,6 +257,10 @@
             </section>
         </div>
 
+    </div>
+    </main>
+
+    <!-- Modals sit outside the content container: its space-y-8 margin would offset the fixed overlays -->
         <!-- ========================================================= -->
         <!-- POP-UP MODAL: CREATE NEW USER                             -->
         <!-- ========================================================= -->
@@ -496,8 +500,6 @@
             </div>
         </div>
 
-    </div>
-    </main>
 
     <!-- Pop-up Modal Script -->
     <script>

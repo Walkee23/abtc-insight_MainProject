@@ -698,6 +698,7 @@
                 backup_downloaded: ['Backup download', 'bg-violet-100 text-violet-700'],
                 backup_settings: ['Backup settings', 'bg-violet-100 text-violet-700'],
                 forecast_saved: ['Forecast saved', 'bg-sky-100 text-sky-700'],
+                case_discharged: ['Case discharged', 'bg-emerald-100 text-emerald-700'],
             };
             let auditPage = 1, auditLast = 1, searchTimer;
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Support\Audit;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -10,6 +11,9 @@ class ClinicalEncodingController extends Controller
 {
     /** Wound types the health worker can pick in Section VI (stored comma-separated in wound_description). */
     public const WOUND_TYPES = ['Punctured', 'Lacerated', 'Avulsion', 'Abrasion'];
+
+    /** bite_cases.outcome of a Category I case the health worker discharged (no vaccine needed). */
+    public const DISCHARGED = 'Discharged (Cat. I)';
 
     /**
      * Only cases Staff has finished (Case Encoding "Complete Encoding" sets the walk-in
@@ -63,7 +67,7 @@ class ClinicalEncodingController extends Controller
             ->leftJoin('bite_section9_progress_notes as s9', 's9.bite_case_id', '=', 'bc.bite_case_id')
             // Finalized cases (Section IX saved and finalized) leave the queue
             ->where(function ($q) {
-                $q->whereNull('bc.outcome')->orWhere('bc.outcome', '<>', 'Completed');
+                $q->whereNull('bc.outcome');
             })
             ->select(
                 'bc.bite_case_id',
@@ -112,8 +116,9 @@ class ClinicalEncodingController extends Controller
     {
         $case = $this->ownCase($biteCaseId);
 
-        // A draft saves whatever is filled in; moving on needs the core fields
+        // A draft saves whatever is filled in; moving on (or discharging) needs the core fields
         $isDraft = $request->input('action') === 'draft';
+        $isDischarge = $request->input('action') === 'discharge';
         $required = $isDraft ? 'nullable' : 'required';
 
         $validated = $request->validate([
@@ -133,6 +138,11 @@ class ClinicalEncodingController extends Controller
         $category = $validated['category_of_exposure'] ?? $case->category;
         if ($isDeep === 1) {
             $category = 'III';
+        }
+
+        // Only a Category I patient can be discharged: no vaccine is needed
+        if ($isDischarge && $category !== 'I') {
+            return back()->withInput()->withErrors(['category_of_exposure' => 'Only Category I patients can be discharged.']);
         }
 
         DB::table('bite_section6_wound_description')->updateOrInsert(
@@ -157,6 +167,15 @@ class ClinicalEncodingController extends Controller
 
         if ($isDraft) {
             return back()->with('status', 'Section VI saved as draft.');
+        }
+
+        if ($isDischarge) {
+            DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->update(['outcome' => self::DISCHARGED]);
+            Audit::log('case_discharged', "Discharged case #{$case->case_number} of patient {$case->patient_id} (Category I, no vaccine needed)");
+
+            // The case leaves the queue, so go back to Clinical Encoding with nothing selected
+            return redirect()->route('healthworker.clinical-encoding')
+                ->with('status', 'Patient discharged: Category I, no vaccine needed.');
         }
 
         return redirect()->route('healthworker.ce-vii', ['bite_case_id' => $biteCaseId]);
@@ -360,9 +379,9 @@ class ClinicalEncodingController extends Controller
     {
         $today = now()->toDateString();
 
-        // Cases still in Clinical Encoding / PEP (finalized ones have outcome = 'Completed')
+        // Cases still in Clinical Encoding / PEP (finalized or discharged ones have an outcome)
         $unfinished = fn () => $this->handedOff(DB::table('bite_cases as bc'))->where(function ($q) {
-            $q->whereNull('bc.outcome')->orWhere('bc.outcome', '<>', 'Completed');
+            $q->whereNull('bc.outcome');
         });
 
         $stats = [

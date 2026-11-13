@@ -44,53 +44,97 @@
 
 <body class="bg-surface text-on-surface">
     <!-- Sidebar -->
-    <aside class="h-screen w-64 fixed left-0 top-0 bg-slate-100 flex flex-col pt-6 pb-4 gap-2 z-50">
-        <div class="px-6 mb-8 flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg">
-                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">health_and_safety</span>
+    <aside class="h-screen w-64 fixed left-0 top-0 bg-slate-50 dark:bg-slate-900 flex flex-col border-r border-slate-200/50 dark:border-slate-800/50 z-50">
+        <div class="px-6 py-8">
+            <div class="flex items-center gap-3 mb-10">
+                <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                    <span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">health_and_safety</span>
+                </div>
+                <div>
+                    <h1 class="font-black uppercase text-primary dark:text-blue-100 text-sm tracking-wider leading-none">ABTC-Insight</h1>
+                </div>
             </div>
-            <h1 class="text-blue-900 font-bold text-sm tracking-tight leading-none">ABTC-Insight Admin</h1>
+            <nav class="space-y-1">
+                <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100" href="{{ route('admin.dashboard') }}">
+                    <span class="material-symbols-outlined">dashboard</span>
+                    <span class="font-['Inter'] text-sm tracking-wide">Main Overview</span>
+                </a>
+                <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100" href="{{ route('admin.analytics') }}">
+                    <span class="material-symbols-outlined">analytics</span>
+                    <span class="font-['Inter'] text-sm tracking-wide">Analytics</span>
+                </a>
+                <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100" href="{{ route('admin.compliance') }}">
+                    <span class="material-symbols-outlined">security</span>
+                    <span class="font-['Inter'] text-sm tracking-wide">PEP Compliance & SMS Logs</span>
+                </a>
+                <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100" href="{{ route('admin.forecasting') }}">
+                    <span class="material-symbols-outlined">query_stats</span>
+                    <span class="font-['Inter'] text-sm tracking-wide">Forecasting & Outbreak Detection</span>
+                </a>
+                <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100" href="{{ route('admin.usm') }}">
+                    <span class="material-symbols-outlined">manage_accounts</span>
+                    <span class="font-['Inter'] text-sm tracking-wide">User & System Management</span>
+                </a>
+                <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-blue-700 dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600 translate-x-1 duration-150" href="{{ route('admin.gis_map') }}">
+                    <span class="material-symbols-outlined">map</span>
+                    <span class="font-['Inter'] text-sm tracking-wide">Spatial Map</span>
+                </a>
+            </nav>
         </div>
-        <nav class="space-y-1 px-4">
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 hover:text-blue-600 transition-all hover:bg-slate-100" href="{{ route('admin.dashboard') }}">
-                <span class="material-symbols-outlined">dashboard</span>
-                <span class="text-sm tracking-wide">Dashboard</span>
-            </a>
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 hover:text-blue-600 transition-all hover:bg-slate-100" href="{{ route('admin.analytics') }}">
-                <span class="material-symbols-outlined">analytics</span>
-                <span class="text-sm tracking-wide">Analytics</span>
-            </a>
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 hover:text-blue-600 transition-all hover:bg-slate-100" href="{{ route('admin.compliance') }}">
-                <span class="material-symbols-outlined">verified_user</span>
-                <span class="text-sm tracking-wide">Compliance</span>
-            </a>
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 hover:text-blue-600 transition-all hover:bg-slate-100" href="{{ route('admin.usm') }}">
-                <span class="material-symbols-outlined">settings</span>
-                <span class="text-sm tracking-wide">System Management</span>
-            </a>
-            <!-- Active State for Spatial Map -->
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-blue-700 font-bold bg-blue-50 border-l-4 border-blue-600 translate-x-1 duration-150" href="{{ route('admin.gis_map') }}">
-                <span class="material-symbols-outlined">map</span>
-                <span class="text-sm tracking-wide">Spatial Map</span>
-            </a>
-        </nav>
     </aside>
 
-    <!-- Top Navbar -->
-    <header class="fixed top-0 w-full h-16 bg-slate-50/85 backdrop-blur-md shadow-sm z-40 flex items-center px-8 justify-end">
-        <div class="flex items-center gap-3">
-            <div class="text-right">
-                <p class="text-xs font-bold text-on-surface leading-tight">Admin User</p>
-                <p class="text-[10px] text-slate-500">System Administrator</p>
-            </div>
-            <div class="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-primary">
-                <span class="material-symbols-outlined text-[20px]">person</span>
-            </div>
-        </div>
-    </header>
 
     <!-- Main Content -->
-    <main class="ml-64 pt-20 p-8 min-h-screen">
+    <main class="ml-64 flex-1 flex flex-col min-w-0">
+        <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-md px-8 py-3 flex justify-between items-center border-b border-slate-100">
+            <div class="flex items-center gap-6 flex-1">
+                <div class="relative w-full max-w-md group">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+                    <input class="w-full pl-10 pr-4 py-2 bg-slate-100 border-none rounded-full text-sm focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-400" placeholder="Search analytics or case IDs..." type="text" />
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button class="p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors active:scale-95 duration-200">
+                    <span class="material-symbols-outlined text-xl">notifications</span>
+                </button>
+                <button class="p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors active:scale-95 duration-200 mr-2">
+                    <span class="material-symbols-outlined text-xl">help</span>
+                </button>
+                <!-- User Profile Section with Dropdown -->
+                <div class="relative group cursor-pointer pl-4 border-l border-slate-200">
+                    <div class="flex items-center gap-3">
+                        <div class="text-right">
+                            <p class="text-xs font-bold text-slate-900">{{ Auth::user()->full_name ?? 'Dr. Maria Santos' }}</p>
+                            <p class="text-[10px] text-slate-500 font-medium">{{ Auth::user()->role ?? 'Health Administrator' }}</p>
+                        </div>
+                        <div class="w-9 h-9 rounded-full overflow-hidden ring-2 ring-slate-100 border border-slate-200">
+                            <img alt="Admin Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAWLozmctqDvlYpuogkSKhuQXYqgyRVKTkvnu27_vfksbBi0fRp_28CpvFMkWokTvJIwFCvycusJ03sd70MxGv-IN-9EoSewtoGCMoJCboWhZiyXr9Zka7bBUMXl7Htj8b_rELNobmm3tu5deKHeXDYC1OZQpXtFhCTDycSm3-mjAqV-0zADcM6iNlwgsTmbuHbbvihLUWj2DhK1AdlgzJR_geD3xRe39h4TMEC10LJqKK5azvYdpi-szDRrOG0jL1N9x6qJeeLjIj9" />
+                        </div>
+                    </div>
+
+                    <!-- Hover Dropdown Menu -->
+                    <div class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                        <div class="p-2">
+                            <a href="#" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary rounded-lg transition-colors">
+                                <span class="material-symbols-outlined text-[18px]">person</span>
+                                My Profile
+                            </a>
+                            <div class="h-px bg-slate-100 my-1"></div>
+
+                            <!-- Secure Logout Form -->
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors text-left">
+                                    <span class="material-symbols-outlined text-[18px]">logout</span>
+                                    Log Out
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <div class="p-8">
         <div class="max-w-[1600px] mx-auto">
             <h2 class="text-2xl font-extrabold tracking-tight text-on-surface mb-6">Barangay Spatial Distribution</h2>
 
@@ -99,6 +143,7 @@
                 <div id="gisMap" class="w-full h-[650px] rounded-lg z-10 border border-outline-variant/20"></div>
             </div>
         </div>
+    </div>
     </main>
 
     <!-- Leaflet JS -->

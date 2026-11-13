@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class PatientDatabaseController extends Controller
@@ -29,6 +30,10 @@ class PatientDatabaseController extends Controller
     {
         $search = trim((string) $request->query('q', ''));
         $status = in_array($request->query('status'), ['active', 'completed'], true) ? $request->query('status') : 'all';
+        // The database is shared by all health workers; "mine" narrows it to the patients
+        // that have a case assigned to the logged-in health worker
+        $scope = $request->query('scope') === 'mine' ? 'mine' : 'all';
+        $userId = Auth::id() ?? 0;
 
         // A case is "unfinished" until Clinical Encoding is finalized (outcome = 'Completed')
         $unfinishedCase = function ($q) {
@@ -66,6 +71,14 @@ class PatientDatabaseController extends Controller
             });
         }
 
+        if ($scope === 'mine') {
+            $query->whereExists(function ($q) use ($userId) {
+                $this->handedOff($q->select(DB::raw(1))->from('bite_cases as mc'), 'mc')
+                    ->whereColumn('mc.patient_id', 'p.patient_id')
+                    ->where('mc.assigned_health_worker_id', $userId);
+            });
+        }
+
         if ($status === 'active') {
             $query->whereExists($unfinishedCase);
         } elseif ($status === 'completed') {
@@ -91,7 +104,7 @@ class PatientDatabaseController extends Controller
             ->orderByDesc('bc.date_verified')
             ->get([
                 'bc.bite_case_id', 'bc.patient_id', 'bc.case_number', 'bc.category', 'bc.barangay',
-                'bc.date_verified', 'bc.outcome',
+                'bc.date_verified', 'bc.outcome', 'bc.assigned_health_worker_id',
                 's6.wound_desc_id', 's9.progress_id', 's7.day0_date',
             ])
             ->groupBy('patient_id');
@@ -100,7 +113,7 @@ class PatientDatabaseController extends Controller
 
         $records = [];
         foreach ($patients as $patient) {
-            $patientCases = ($cases[$patient->patient_id] ?? collect())->map(function ($c) {
+            $patientCases = ($cases[$patient->patient_id] ?? collect())->map(function ($c) use ($userId) {
                 $finished = $c->outcome === 'Completed';
                 return [
                     'bite_case_id' => $c->bite_case_id,
@@ -111,6 +124,8 @@ class PatientDatabaseController extends Controller
                     'status' => $finished ? 'Completed'
                         : (($c->progress_id || $c->wound_desc_id || $c->day0_date) ? 'In Progress' : 'Awaiting Encoding'),
                     'finished' => $finished,
+                    // Only the assigned health worker can open a case in Clinical Encoding
+                    'mine' => (int) $c->assigned_health_worker_id === $userId,
                 ];
             })->values();
 
@@ -133,6 +148,6 @@ class PatientDatabaseController extends Controller
             ];
         }
 
-        return view('healthworker.Patient_Lookup&DB', compact('patients', 'records', 'search', 'status'));
+        return view('healthworker.Patient_Lookup&DB', compact('patients', 'records', 'search', 'status', 'scope'));
     }
 }

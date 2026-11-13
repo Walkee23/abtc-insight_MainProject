@@ -10,6 +10,7 @@ use App\Http\Controllers\ClinicalEncodingController;
 use App\Http\Controllers\PatientDatabaseController;
 use App\Http\Controllers\PepComplianceController;
 use App\Http\Controllers\TreatmentTrackerController;
+use App\Http\Controllers\ForecastingController;
 use Illuminate\Http\Request;
 
 Route::get('/', function () {
@@ -45,9 +46,8 @@ Route::prefix('admin')->group(function () {
         return view('admin.pep_comp');
     })->name('admin.compliance');
 
-    Route::get('/forecasting', function () {
-        return view('admin.F_and_O');
-    })->name('admin.forecasting');
+    Route::get('/forecasting', [ForecastingController::class, 'index'])->name('admin.forecasting');
+    Route::post('/forecasting/save', [ForecastingController::class, 'save'])->name('admin.forecasting.save');
 
     Route::get('/system-management', function () {
         $healthWorkersCount = DB::table('users')->where('role', 'Healthworker')->count();

@@ -445,7 +445,7 @@
                                     @if($search !== '' || $barangay !== '' || $status !== 'all')
                                     No treatment courses match your filters.
                                     @else
-                                    No active treatment courses yet. A course starts once a case has a Day 0 date in Section VII.
+                                    No cases assigned to you yet. A course appears here once Staff assigns you a case and it has a Day 0 date in Section VII.
                                     @endif
                                 </td>
                             </tr>

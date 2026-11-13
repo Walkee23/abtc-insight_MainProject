@@ -232,6 +232,9 @@
           @if($status !== 'all')
           <input type="hidden" name="status" value="{{ $status }}" />
           @endif
+          @if($scope === 'mine')
+          <input type="hidden" name="scope" value="mine" />
+          @endif
           <div
             class="flex items-center bg-surface-container-lowest rounded-lg px-3 py-2.5 border border-outline-variant/20 focus-within:border-primary/40 transition-all">
             <span class="material-symbols-outlined text-outline text-[18px]">search</span>
@@ -239,16 +242,21 @@
               class="bg-transparent border-none focus:ring-0 text-sm w-full py-0"
               placeholder="Search by name, patient ID or barangay..." />
             @if($search !== '')
-            <a href="{{ route('healthworker.patient-database', $status !== 'all' ? ['status' => $status] : []) }}"
+            <a href="{{ route('healthworker.patient-database', array_filter(['status' => $status === 'all' ? null : $status, 'scope' => $scope === 'mine' ? 'mine' : null])) }}"
               class="material-symbols-outlined text-outline text-[18px] hover:text-on-surface" title="Clear search">close</a>
             @endif
           </div>
         </form>
         <div class="flex gap-2">
           @foreach(['all' => 'All Patients', 'active' => 'Active PEP', 'completed' => 'Completed'] as $key => $label)
-          <a href="{{ route('healthworker.patient-database', array_filter(['q' => $search, 'status' => $key === 'all' ? null : $key])) }}"
+          <a href="{{ route('healthworker.patient-database', array_filter(['q' => $search, 'status' => $key === 'all' ? null : $key, 'scope' => $scope === 'mine' ? 'mine' : null])) }}"
             class="px-4 py-2 text-sm font-semibold rounded-full transition-colors {{ $status === $key ? 'bg-primary text-on-primary shadow-sm' : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-variant' }}">{{ $label }}</a>
           @endforeach
+          <a href="{{ route('healthworker.patient-database', array_filter(['q' => $search, 'status' => $status === 'all' ? null : $status, 'scope' => $scope === 'mine' ? null : 'mine'])) }}"
+            title="Only patients with a case assigned to you"
+            class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-full border transition-colors {{ $scope === 'mine' ? 'bg-primary text-on-primary border-primary shadow-sm' : 'bg-white text-on-surface-variant border-outline-variant/40 hover:bg-surface-container-low' }}">
+            <span class="material-symbols-outlined text-[18px]">person</span> My Patients
+          </a>
         </div>
       </div>
       <!-- Table Container with Tonal Depth -->
@@ -297,7 +305,9 @@
               @empty
               <tr>
                 <td colspan="7" class="px-6 py-14 text-center text-sm text-on-surface-variant">
-                  @if($search !== '' || $status !== 'all')
+                  @if($scope === 'mine' && $search === '' && $status === 'all')
+                  No patients assigned to you yet. Switch off "My Patients" to browse everyone.
+                  @elseif($search !== '' || $status !== 'all' || $scope === 'mine')
                   No patients match your search or filter.
                   @else
                   No patients yet. Patients appear here once Staff verifies them.
@@ -455,9 +465,14 @@
                       el('p', 'text-[11px] text-on-surface-variant', c.date + (c.barangay ? ' · ' + c.barangay : '')));
           const side = el('div', 'flex items-center gap-3 shrink-0');
           side.append(el('span', 'px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ' + (statusStyle[c.status] || ''), c.status));
-          const open = el('a', 'text-primary font-bold text-xs hover:underline decoration-2 underline-offset-4 whitespace-nowrap', 'Open');
-          open.href = clinicalUrl + '/' + c.bite_case_id;
-          side.append(open);
+          if (c.mine) {
+            const open = el('a', 'text-primary font-bold text-xs hover:underline decoration-2 underline-offset-4 whitespace-nowrap', 'Open');
+            open.href = clinicalUrl + '/' + c.bite_case_id;
+            side.append(open);
+          } else {
+            // Assigned to another health worker: viewable here, but not editable
+            side.append(el('span', 'text-outline text-xs font-semibold whitespace-nowrap', 'View only'));
+          }
           row.append(info, side);
           list.append(row);
         });

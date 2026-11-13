@@ -9,6 +9,8 @@ use App\Http\Controllers\StaffController;
 use App\Http\Controllers\ClinicalEncodingController;
 use App\Http\Controllers\PatientDatabaseController;
 use App\Http\Controllers\PepComplianceController;
+use App\Http\Controllers\TreatmentTrackerController;
+use App\Http\Controllers\ForecastingController;
 use Illuminate\Http\Request;
 
 Route::get('/', function () {
@@ -44,9 +46,8 @@ Route::prefix('admin')->group(function () {
         return view('admin.pep_comp');
     })->name('admin.compliance');
 
-    Route::get('/forecasting', function () {
-        return view('admin.F_and_O');
-    })->name('admin.forecasting');
+    Route::get('/forecasting', [ForecastingController::class, 'index'])->name('admin.forecasting');
+    Route::post('/forecasting/save', [ForecastingController::class, 'save'])->name('admin.forecasting.save');
 
     Route::get('/system-management', function () {
         $healthWorkersCount = DB::table('users')->where('role', 'Healthworker')->count();
@@ -119,9 +120,7 @@ Route::prefix('healthworker')->group(function () {
         ->name('healthworker.ce-ix');
     Route::post('/clinical-encoding/section-ix/{bite_case_id}', [ClinicalEncodingController::class, 'storeSectionIX']);
 
-    Route::get('/treatment-tracker', function () {
-        return view('healthworker.Treatment_Tracker');
-    })->name('healthworker.treatment-tracker');
+    Route::get('/treatment-tracker', [TreatmentTrackerController::class, 'index'])->name('healthworker.treatment-tracker');
 
     Route::get('/patient-database', [PatientDatabaseController::class, 'index'])->name('healthworker.patient-database');
 
@@ -148,6 +147,8 @@ Route::get('/patient/register', function () {
 Route::get('/patient/New_patient', function () {
     return view('patient.New_Record_Registration');
 })->name('patient.new-patient');
+
+Route::get('/get-referral-data/{referral_id}', [PatientController::class, 'getReferralData'])->name('get.referral.data');
 
 Route::get('/patient/Returning_Patient', function () {
     return view('patient.Returning_Patient_Registration');

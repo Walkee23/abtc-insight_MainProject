@@ -223,7 +223,7 @@
     <main class="ml-64 pt-24 min-h-screen bg-surface">
         <div class="p-8">
             <!-- Summary Stats -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <!-- PEP Completion -->
                 <div
                     class="bg-surface-container-lowest p-5 rounded-lg ghost-border hover:shadow-md transition-all duration-300">
@@ -242,22 +242,7 @@
                         class="text-label-sm text-[10px] font-bold uppercase text-on-surface-variant tracking-widest mt-1">
                         PEP Completion Rate</p>
                 </div>
-                <!-- SMS Success -->
-                <div
-                    class="bg-surface-container-lowest p-5 rounded-lg ghost-border hover:shadow-md transition-all duration-300">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="p-2 bg-secondary/10 rounded-lg">
-                            <span class="material-symbols-outlined text-secondary" data-icon="sms">sms</span>
-                        </div>
-                        <span
-                            class="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full italic whitespace-nowrap">{{ $stats['sms_total'] }} {{ \Illuminate\Support\Str::plural('message', $stats['sms_total']) }}</span>
-                    </div>
-                    <p class="text-display-md text-3xl font-black text-on-surface tracking-tight">{{ $stats['sms_rate'] !== null ? rtrim(rtrim(number_format($stats['sms_rate'], 1), '0'), '.') . '%' : '—' }}</p>
-                    <p
-                        class="text-label-sm text-[10px] font-bold uppercase text-on-surface-variant tracking-widest mt-1">
-                        SMS Success Rate</p>
-                </div>
-                <!-- Pending Reminders -->
+                <!-- Doses Due Soon -->
                 <div
                     class="bg-surface-container-lowest p-5 rounded-lg ghost-border hover:shadow-md transition-all duration-300">
                     <div class="flex justify-between items-start mb-4">
@@ -268,10 +253,10 @@
                         <span
                             class="text-xs font-bold text-on-tertiary-fixed-variant bg-tertiary-fixed px-2 py-1 rounded-full whitespace-nowrap">Due within 24h</span>
                     </div>
-                    <p class="text-display-md text-3xl font-black text-on-surface tracking-tight">{{ $stats['pending_reminders'] }}</p>
+                    <p class="text-display-md text-3xl font-black text-on-surface tracking-tight">{{ $stats['due_soon'] }}</p>
                     <p
                         class="text-label-sm text-[10px] font-bold uppercase text-on-surface-variant tracking-widest mt-1">
-                        Pending Reminders</p>
+                        Doses Due Soon</p>
                 </div>
                 <!-- Late Follow-ups -->
                 <div
@@ -291,14 +276,22 @@
                 </div>
             </div>
             <!-- Main Content: Tracking & Logs -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-                <!-- Left Column: PEP Compliance Tracking Table -->
-                <div class="lg:col-span-2 bg-surface-container-lowest rounded-lg ghost-border p-6">
+            <div class="grid grid-cols-1 gap-8 mb-8">
+                <!-- PEP Compliance Tracking Table -->
+                <div class="bg-surface-container-lowest rounded-lg ghost-border p-6">
                     <div class="flex flex-wrap justify-between items-center gap-3 mb-6">
-                        <h2 class="text-lg font-extrabold tracking-tight text-on-surface">PEP Compliance Tracking</h2>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <h2 class="text-lg font-extrabold tracking-tight text-on-surface">PEP Compliance Tracking</h2>
+                            <div class="flex bg-surface-container-high rounded-full p-0.5">
+                                @foreach(['mine' => 'My Cases', 'all' => 'All Cases'] as $key => $label)
+                                <a href="{{ route('healthworker.compliance', array_filter(['q' => $search, 'status' => $status === 'all' ? null : $status, 'scope' => $key === 'all' ? 'all' : null])) }}"
+                                    class="px-3 py-1 text-xs font-bold rounded-full transition-colors {{ $scope === $key ? 'bg-white text-primary shadow-sm' : 'text-on-surface-variant hover:text-on-surface' }}">{{ $label }}</a>
+                                @endforeach
+                            </div>
+                        </div>
                         <div class="flex gap-2">
                             @foreach(['all' => 'All', 'pending' => 'Pending', 'missed' => 'Missed', 'completed' => 'Completed'] as $key => $label)
-                            <a href="{{ route('healthworker.compliance', array_filter(['q' => $search, 'status' => $key === 'all' ? null : $key])) }}"
+                            <a href="{{ route('healthworker.compliance', array_filter(['q' => $search, 'status' => $key === 'all' ? null : $key, 'scope' => $scope === 'all' ? 'all' : null])) }}"
                                 class="px-3 py-1.5 text-xs font-semibold rounded-full transition-colors {{ $status === $key ? 'bg-primary text-on-primary shadow-sm' : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-variant' }}">{{ $label }}</a>
                             @endforeach
                         </div>
@@ -307,6 +300,9 @@
                         @if($status !== 'all')
                         <input type="hidden" name="status" value="{{ $status }}" />
                         @endif
+                        @if($scope === 'all')
+                        <input type="hidden" name="scope" value="all" />
+                        @endif
                         <div
                             class="flex items-center bg-surface-container-low rounded-lg px-3 py-2 border border-outline-variant/20 focus-within:border-primary/40 transition-all">
                             <span class="material-symbols-outlined text-outline text-[18px]">search</span>
@@ -314,7 +310,7 @@
                                 class="bg-transparent border-none focus:ring-0 text-sm w-full py-0"
                                 placeholder="Search by patient, ID, dose, label or barangay..." />
                             @if($search !== '')
-                            <a href="{{ route('healthworker.compliance', $status !== 'all' ? ['status' => $status] : []) }}"
+                            <a href="{{ route('healthworker.compliance', array_filter(['status' => $status === 'all' ? null : $status, 'scope' => $scope === 'all' ? 'all' : null])) }}"
                                 class="material-symbols-outlined text-outline text-[18px] hover:text-on-surface" title="Clear search">close</a>
                             @endif
                         </div>
@@ -374,9 +370,14 @@
                                         </span>
                                     </td>
                                     <td class="py-4 px-2 text-right">
+                                        @if($dose->mine)
                                         <a href="{{ route('healthworker.ce-vii', ['bite_case_id' => $dose->bite_case_id]) }}"
                                             title="Open case" class="inline-flex p-1 hover:bg-surface-container-high rounded-full"><span
                                                 class="material-symbols-outlined text-sm">open_in_new</span></a>
+                                        @else
+                                        <span title="Assigned to another health worker (view only)" class="inline-flex p-1 text-outline-variant"><span
+                                                class="material-symbols-outlined text-sm">visibility</span></span>
+                                        @endif
                                     </td>
                                 </tr>
                                 @empty
@@ -384,6 +385,8 @@
                                     <td colspan="5" class="py-12 text-center text-sm text-on-surface-variant">
                                         @if($search !== '' || $status !== 'all')
                                         No doses match your search or filter.
+                                        @elseif($scope === 'mine')
+                                        No cases assigned to you yet. Your doses appear here once Staff assigns you a case with a Day 0 date, or switch to "All Cases" to see the whole facility.
                                         @else
                                         No scheduled doses yet. Doses appear here once a case has a Day 0 date in Section VII.
                                         @endif
@@ -416,48 +419,6 @@
                     </div>
                     @endif
                 </div>
-                <!-- Right Column: SMS Outreach Logs -->
-                <div class="bg-surface-container-lowest rounded-lg ghost-border p-6 flex flex-col">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-lg font-extrabold tracking-tight text-on-surface">SMS Outreach Logs</h2>
-                        <span
-                            class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full uppercase tracking-tighter">Live</span>
-                    </div>
-                    <div class="space-y-4 flex-1" id="smsList">
-                        @forelse($smsLogs as $i => $log)
-                        @php
-                            $isSent = $log->status === 'Sent';
-                            $isFailed = $log->status === 'Failed';
-                        @endphp
-                        <div class="sms-item {{ $i >= 5 ? 'hidden' : '' }} flex items-start gap-3 p-3 rounded-lg hover:bg-surface-container-low transition-colors">
-                            <div class="mt-1 p-1.5 {{ $isSent ? 'bg-green-100' : ($isFailed ? 'bg-error-container' : 'bg-blue-100') }} rounded-full">
-                                <span class="material-symbols-outlined text-xs {{ $isSent ? 'text-green-700' : ($isFailed ? 'text-error' : 'text-blue-700') }}"
-                                    style="font-variation-settings: 'FILL' 1;">{{ $isSent ? 'check_circle' : ($isFailed ? 'error' : 'pending') }}</span>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <div class="flex justify-between gap-2">
-                                    <p class="text-sm font-bold text-on-surface truncate">{{ $log->contact_num }}</p>
-                                    <span class="text-[10px] text-on-surface-variant whitespace-nowrap">{{ \Carbon\Carbon::parse($log->send_date)->diffForHumans(null, true, true) }} ago</span>
-                                </div>
-                                <p class="text-xs text-on-surface-variant font-medium">{{ $log->sms_type }}</p>
-                                @if($isFailed && $log->error_detail)
-                                <p class="text-[11px] text-error mt-0.5 truncate" title="{{ $log->error_detail }}">{{ $log->error_detail }}</p>
-                                @endif
-                                <span
-                                    class="text-[9px] font-black {{ $isSent ? 'text-green-700' : ($isFailed ? 'text-error' : 'text-blue-600') }} uppercase tracking-widest mt-1 block">{{ $log->status }}</span>
-                            </div>
-                        </div>
-                        @empty
-                        <p class="text-xs text-on-surface-variant text-center py-8">No SMS sent yet. Reminders and late follow-ups will be logged here.</p>
-                        @endforelse
-                    </div>
-                    @if($smsLogs->count() > 5)
-                    <button type="button" id="smsToggle"
-                        class="mt-6 w-full py-2.5 text-xs font-bold text-primary border border-primary/20 rounded-lg hover:bg-primary/5 transition-colors">
-                        View All SMS History ({{ $smsLogs->count() }})
-                    </button>
-                    @endif
-                </div>
             </div>
             <!-- Bottom Section: Performance by Barangay -->
             <div class="bg-surface-container-lowest rounded-lg ghost-border p-8">
@@ -466,11 +427,11 @@
                         <h2 class="text-xl font-extrabold tracking-tighter text-on-surface">Compliance Performance by
                             Barangay</h2>
                         <p class="text-sm text-on-surface-variant">Share of due doses that were completed (on time or
-                            late), by barangay</p>
+                            late), by barangay, across all health workers</p>
                     </div>
-                    <a href="{{ route('healthworker.compliance.export') }}"
+                    <a href="{{ route('healthworker.compliance.export', $scope === 'all' ? ['scope' => 'all'] : []) }}"
                         class="px-6 py-3 bg-primary text-on-primary rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-primary/20 active:scale-95 transition-all whitespace-nowrap">
-                        Download Full Compliance Report
+                        Download {{ $scope === 'all' ? 'Facility' : 'My' }} Compliance Report
                         <span class="material-symbols-outlined text-sm">download</span>
                     </a>
                 </div>
@@ -498,19 +459,6 @@
     </main>
     <script>
         (function () {
-            // Show / hide the older SMS entries
-            const toggle = document.getElementById('smsToggle');
-            if (toggle) {
-                const older = document.querySelectorAll('#smsList .sms-item:nth-child(n+6)');
-                const total = document.querySelectorAll('#smsList .sms-item').length;
-                let open = false;
-                toggle.addEventListener('click', () => {
-                    open = !open;
-                    older.forEach((el) => el.classList.toggle('hidden', !open));
-                    toggle.textContent = open ? 'Show Less' : 'View All SMS History (' + total + ')';
-                });
-            }
-
             // The header search box searches the compliance table too (Enter to search)
             const headerSearch = document.querySelector('header input[type="text"]');
             const pageSearch = document.getElementById('complianceSearchInput');

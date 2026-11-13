@@ -247,9 +247,6 @@
                             </p>
                             <div class="flex gap-2">
                                 <span
-                                    class="px-2 py-0.5 bg-error-container text-on-error-container text-[10px] font-bold rounded-full"> CAT
-                                    {{ $item->category }}</span>
-                                <span
                                     class="px-2 py-0.5 {{ $item->encoding_status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : ($item->encoding_status === 'In Progress' ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface-container-high text-on-surface-variant') }} text-[10px] font-bold rounded-full">{{ $item->encoding_status }}</span>
                             </div>
                         </a>
@@ -387,40 +384,32 @@
                                 <div class="grid grid-cols-[1fr_auto_auto] gap-6 mb-8">
                                     <div>
                                         <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Vaccine Brand <span class="text-error">*</span></label>
-                                        {!! $dropdown('vaccine_brand', ['VERORAB' => 'VERORAB (PVRV)', 'SPEEDA' => 'SPEEDA (PVRV)', 'VAXIRAB' => 'VAXIRAB (PCEC)']) !!}
+                                        {!! $dropdown('vaccine_brand', ['VERORAB' => 'VERORAB (PVRV)', 'SPEEDA' => 'SPEEDA (PVRV)', 'VAXIRAB' => 'VAXIRAB (PCEC)', 'ABHAYRAB' => 'ABHAYRAB (PVRV)']) !!}
                                     </div>
                                     <div>
                                         <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Route <span class="text-error">*</span></label>
-                                        {!! $dropdown('route', ['ID' => 'ID (Intradermal, 0.1mL)', 'IM' => 'IM (Intramuscular, 0.5mL)'], 'bg-surface-container-low', true) !!}
+                                        {!! $dropdown('route', ['ID' => 'ID (Intradermal)', 'IM' => 'IM (Intramuscular)'], 'bg-surface-container-low', true) !!}
                                     </div>
                                     <div>
                                         <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Dose Type <span class="text-error">*</span></label>
                                         {!! $dropdown('dose_type', ['Primary' => 'Primary', 'Booster' => 'Booster'], 'bg-surface-container-low', true) !!}
                                     </div>
                                 </div>
-                                <div class="grid grid-cols-3 gap-6 mb-8">
+                                <div class="grid grid-cols-2 gap-6 mb-8">
                                     <div>
-                                        <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Patient Weight (kg) <span class="text-error">*</span></label>
-                                        <input name="patient_weight" data-field="patient_weight" type="number" step="0.01" min="0" max="999.99"
-                                            value="{{ $val('patient_weight') }}"
-                                            class="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 ring-1 ring-transparent focus:ring-2 focus:ring-primary/20 font-medium"
-                                            placeholder="e.g. 55.50" />
-                                        <p data-error-for="patient_weight" class="mt-1 ml-1 text-xs font-semibold text-error {{ $errors->has('patient_weight') ? '' : 'hidden' }}">{{ $errors->first('patient_weight') }}</p>
-                                        <p class="mt-1 ml-1 text-[10px] text-on-surface-variant/80 italic">Used for passive immunoglobulin dosage.</p>
+                                        <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Patient Weight (kg)</label>
+                                        {{-- Always from the BHW referral and never editable, like Administered By --}}
+                                        <input type="text" readonly tabindex="-1"
+                                            value="{{ $bhwWeight ?? (isset($section->patient_weight) ? rtrim(rtrim(number_format((float) $section->patient_weight, 2, '.', ''), '0'), '.') : '') }}"
+                                            class="w-full bg-surface-container-high border-none rounded-lg py-3 px-4 font-medium text-on-surface-variant cursor-not-allowed select-none focus:ring-0"
+                                            placeholder="From the BHW referral" />
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Administered By <span class="text-error">*</span></label>
-                                        <input name="administered_by" data-field="administered_by" type="text"
-                                            value="{{ $val('administered_by') }}"
-                                            class="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 ring-1 ring-transparent focus:ring-2 focus:ring-primary/20 font-medium"
-                                            placeholder="Name of attending health worker" />
-                                        <p data-error-for="administered_by" class="mt-1 ml-1 text-xs font-semibold text-error {{ $errors->has('administered_by') ? '' : 'hidden' }}">{{ $errors->first('administered_by') }}</p>
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">30-min Skin Test Due</label>
-                                        <input name="skin_test_due" type="time"
-                                            value="{{ $val('skin_test_due') }}"
-                                            class="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/20 font-medium" />
+                                        <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Administered By</label>
+                                        <input type="text" readonly tabindex="-1"
+                                            value="{{ Auth::user()->full_name ?? ($section->administered_by ?? '') }}"
+                                            class="w-full bg-surface-container-high border-none rounded-lg py-3 px-4 font-medium text-on-surface-variant cursor-not-allowed select-none focus:ring-0"
+                                            placeholder="Logged-in health worker" />
                                     </div>
                                 </div>
                                 <div class="grid grid-cols-2 gap-6 mb-8">
@@ -433,6 +422,12 @@
                                                 {{ ($section->tetanus_given ?? false) ? 'checked' : '' }}
                                                 class="rounded text-primary focus:ring-primary/20" />
                                             <span class="text-sm font-medium">Tetanus prophylaxis given</span>
+                                        </label>
+                                        <label class="flex items-center gap-2 cursor-pointer mb-3 ml-6">
+                                            <input id="tetanus_by_barangay" name="tetanus_by_barangay" type="checkbox" value="1"
+                                                {{ old('tetanus_by_barangay', $section->tetanus_by_barangay ?? false) ? 'checked' : '' }}
+                                                class="rounded text-primary focus:ring-primary/20" />
+                                            <span class="text-xs font-medium text-on-surface-variant">Given at the barangay (by the BHW)</span>
                                         </label>
                                         <!-- Added id="tetanus_details" and disabled styling -->
                                         <input id="tetanus_details" name="tetanus_details" type="text"
@@ -450,12 +445,20 @@
                                                 class="rounded text-primary focus:ring-primary/20" />
                                             <span class="text-sm font-medium">TIG given</span>
                                         </label>
+                                        <label class="flex items-center gap-2 cursor-pointer mb-3 ml-6">
+                                            <input id="tig_by_barangay" name="tig_by_barangay" type="checkbox" value="1"
+                                                {{ old('tig_by_barangay', $section->tig_by_barangay ?? false) ? 'checked' : '' }}
+                                                class="rounded text-primary focus:ring-primary/20" />
+                                            <span class="text-xs font-medium text-on-surface-variant">Given at the barangay (by the BHW)</span>
+                                        </label>
                                         <!-- Added id="tig_details" and disabled styling -->
                                         <input id="tig_details" name="tig_details" type="text" value="{{ $section->tig_details ?? '' }}"
                                             class="w-full bg-white border-none rounded-lg py-2.5 px-4 text-sm focus:ring-2 focus:ring-primary/20 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed transition-all"
                                             placeholder="Details (dose, date)..." />
                                     </div>
                                 </div>
+                                {{-- Passive immunization (ERIG/HRIG) only applies to Category III; otherwise only the active vaccine is given --}}
+                                @if($case->category === 'III')
                                 <div class="bg-surface-container-low rounded-xl p-6 mb-8">
                                     <p class="text-xs font-extrabold text-outline uppercase tracking-widest mb-4">Passive
                                         Immunization (Rabies)</p>
@@ -482,10 +485,11 @@
                                         <div>
                                             <label
                                                 class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Route <span class="text-[10px] normal-case font-medium">(required if ERIG/HRIG)</span></label>
-                                            {!! $dropdown('passive_route', ['IU infiltrate' => 'IU infiltrate', 'IM' => 'IM'], 'bg-white') !!}
+                                            {!! $dropdown('passive_route', ['ID' => 'ID (Intradermal)', 'SC' => 'SC (Subcutaneous)'], 'bg-white') !!}
                                         </div>
                                     </div>
                                 </div>
+                                @endif
                                 <div class="bg-surface-container-low rounded-xl p-6">
                                     <p class="text-xs font-extrabold text-outline uppercase tracking-widest mb-4">Dose
                                         Tracking Grid</p>
@@ -589,8 +593,6 @@
                 vaccine_brand: 'Please select a vaccine brand.',
                 route: 'Please select a route.',
                 dose_type: 'Please select a dose type.',
-                patient_weight: 'Please enter the patient weight.',
-                administered_by: 'Please enter who administered the dose.',
                 day0_date: 'Please set the Day 0 date.',
             };
             const DATE_FIELDS = ['day0_date', 'day3_date', 'day7_date', 'day28_date'];
@@ -830,6 +832,20 @@
                 }
             }
 
+            // "Given at the barangay" implies given; un-ticking given clears the barangay box
+            function linkBarangay(givenBox, barangayBox, details) {
+                if (!givenBox || !barangayBox) return;
+                barangayBox.addEventListener('change', () => {
+                    if (barangayBox.checked) {
+                        givenBox.checked = true;
+                        toggleDetailsField(givenBox, details);
+                    }
+                });
+                givenBox.addEventListener('change', () => {
+                    if (!givenBox.checked) barangayBox.checked = false;
+                });
+            }
+
             if (tetanusCheckbox) {
                 tetanusCheckbox.addEventListener('change', () => toggleDetailsField(tetanusCheckbox, tetanusDetails));
                 toggleDetailsField(tetanusCheckbox, tetanusDetails);
@@ -839,6 +855,9 @@
                 tigCheckbox.addEventListener('change', () => toggleDetailsField(tigCheckbox, tigDetails));
                 toggleDetailsField(tigCheckbox, tigDetails);
             }
+
+            linkBarangay(tetanusCheckbox, document.getElementById('tetanus_by_barangay'), tetanusDetails);
+            linkBarangay(tigCheckbox, document.getElementById('tig_by_barangay'), tigDetails);
 
             // 2. Passive Immunization Route Logic
             const passiveTypeRadios = document.querySelectorAll('input[name="passive_type"]');

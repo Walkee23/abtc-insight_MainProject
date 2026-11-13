@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use App\Support\Audit;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -68,6 +69,7 @@ class ForecastingController extends Controller
             ];
         }
         DB::table('forecasting')->insert($rows);
+        Audit::log('forecast_saved', 'Saved ' . count($rows) . ' ' . self::PERIODS[$period]['label'] . ' forecast rows (' . $forecast['method'] . ', alpha ' . $params['alpha'] . ')');
 
         return redirect()->route('admin.forecasting', ['period' => $period] + $this->paramQuery($params))
             ->with('success', count($rows) . ' ' . self::PERIODS[$period]['unit'] . ' forecasts saved.');

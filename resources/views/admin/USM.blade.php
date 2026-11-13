@@ -505,10 +505,14 @@
     <script>
         function openUserModal() {
             document.getElementById('createUserModal').classList.remove('hidden');
+            document.documentElement.classList.add('overflow-hidden');
+            document.body.classList.add('overflow-hidden');
         }
 
         function closeUserModal() {
             document.getElementById('createUserModal').classList.add('hidden');
+            document.documentElement.classList.remove('overflow-hidden');
+            document.body.classList.remove('overflow-hidden');
         }
 
         function toggleBarangayField(role) {
@@ -561,8 +565,13 @@
             $('toolToastClose').addEventListener('click', () => $('toolToast').classList.add('hidden'));
 
             const modals = document.querySelectorAll('[data-modal]');
-            const openModal = (id) => $(id).classList.remove('hidden');
-            const closeModals = () => modals.forEach((m) => m.classList.add('hidden'));
+            // The page behind an open pop-up must not scroll
+            const lockScroll = (on) => {
+                document.documentElement.classList.toggle('overflow-hidden', on);
+                document.body.classList.toggle('overflow-hidden', on);
+            };
+            const openModal = (id) => { $(id).classList.remove('hidden'); lockScroll(true); };
+            const closeModals = () => { modals.forEach((m) => m.classList.add('hidden')); lockScroll(false); };
             modals.forEach((m) => {
                 m.addEventListener('click', (e) => { if (e.target === m) closeModals(); });
                 m.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', closeModals));

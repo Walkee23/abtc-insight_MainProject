@@ -50,6 +50,7 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         
-        return redirect('/');
+        // Every role (Admin, Staff, Health Worker, BHW) lands back on the login page
+        return redirect()->route('login');
     }
 }

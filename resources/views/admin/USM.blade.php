@@ -298,7 +298,7 @@
                     <div>
                         <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Role</label>
                         <select name="role" id="userRoleSelect" onchange="toggleBarangayField(this.value)" required 
-                                class="w-full text-xs rounded-xl border-slate-200 focus:border-blue-600 focus:ring-blue-600 py-2.5 px-3">
+                                class="w-full text-xs rounded-xl border-slate-200 focus:border-blue-600 focus:ring-blue-600 py-2.5 pl-3 pr-9">
                             <option value="Staff">Staff</option>
                             <option value="Health Worker">Health Worker</option>
                             <option value="Admin">Admin</option>
@@ -388,14 +388,14 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Frequency</label>
-                                <select id="autoFrequency" class="w-full text-xs rounded-xl border-slate-200 focus:border-blue-600 focus:ring-blue-600 py-2.5 px-3">
+                                <select id="autoFrequency" class="w-full text-xs rounded-xl border-slate-200 focus:border-blue-600 focus:ring-blue-600 py-2.5 pl-3 pr-9">
                                     <option value="daily">Daily</option>
                                     <option value="weekly">Weekly</option>
                                 </select>
                             </div>
                             <div id="autoDayBox" class="hidden">
                                 <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Day</label>
-                                <select id="autoDay" class="w-full text-xs rounded-xl border-slate-200 focus:border-blue-600 focus:ring-blue-600 py-2.5 px-3">
+                                <select id="autoDay" class="w-full text-xs rounded-xl border-slate-200 focus:border-blue-600 focus:ring-blue-600 py-2.5 pl-3 pr-9">
                                     <option value="0">Sunday</option><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option>
                                     <option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option>
                                 </select>
@@ -440,7 +440,7 @@
                         <span class="material-symbols-outlined text-slate-400 text-[18px]">search</span>
                         <input id="auditSearch" type="text" placeholder="Search user, action, details or IP..." class="bg-transparent border-none focus:ring-0 text-xs w-full py-0" />
                     </div>
-                    <select id="auditCategory" class="text-xs rounded-xl border-slate-200 focus:border-blue-600 focus:ring-blue-600 py-2 px-3">
+                    <select id="auditCategory" class="min-w-[170px] text-xs font-semibold text-slate-700 rounded-xl border-slate-200 focus:border-blue-600 focus:ring-blue-600 py-2.5 pl-3 pr-10 cursor-pointer">
                         <option value="">All activity</option>
                         <option value="auth">Sign-ins</option>
                         <option value="users">User accounts</option>

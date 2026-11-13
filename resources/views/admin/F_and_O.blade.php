@@ -306,7 +306,7 @@
                     <div class="flex flex-wrap justify-between items-start gap-4 mb-6">
                         <div class="flex flex-col gap-2">
                             <span class="text-[10px] font-bold text-outline uppercase tracking-widest">
-                                @if($forecast['status'] === 'ok')Historical data ({{ $forecast['points'] }} {{ $periods[$period]['unit'] }}s)@else Historical data @endif
+                                Historical data
                             </span>
                             <div class="flex items-center gap-4">
                                 <div class="flex items-center gap-2">

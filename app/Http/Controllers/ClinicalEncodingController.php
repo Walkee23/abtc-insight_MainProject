@@ -245,6 +245,7 @@ class ClinicalEncodingController extends Controller
             'day0_date' => $required . '|date|before_or_equal:today',
             'day3_date' => 'nullable|date|before_or_equal:today',
             'day7_date' => 'nullable|date|before_or_equal:today',
+            'day14_date' => 'nullable|date|before_or_equal:today',
             'day28_date' => 'nullable|date|before_or_equal:today',
             'passive_given' => 'nullable|boolean',
             'passive_type' => 'nullable|string|max:50',
@@ -474,9 +475,9 @@ class ClinicalEncodingController extends Controller
         $doses = $this->handedOff(DB::table('bite_section7_immunization as s7')
             ->join('bite_cases as bc', 'bc.bite_case_id', '=', 's7.bite_case_id'))
             ->join('patients as p', 'p.patient_id', '=', 'bc.patient_id')
-            ->get(['p.patient_name', 's7.day0_date', 's7.day3_date', 's7.day7_date', 's7.day28_date']);
+            ->get(['p.patient_name', 's7.day0_date', 's7.day3_date', 's7.day7_date', 's7.day14_date', 's7.day28_date']);
         foreach ($doses as $d) {
-            foreach ([0, 3, 7, 28] as $day) {
+            foreach ([0, 3, 7, 14, 28] as $day) {
                 $date = $d->{'day' . $day . '_date'};
                 if ($date) {
                     $activity[] = (object) [

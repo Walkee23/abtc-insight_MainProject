@@ -348,8 +348,23 @@
                         </div>
                     </div>
                     @if($forecast['status'] === 'ok')
-                    <div class="h-[340px] w-full relative">
-                        <svg id="forecastChart" class="w-full h-full" viewBox="0 0 1000 340" preserveAspectRatio="xMidYMid meet"></svg>
+                    <div class="flex flex-wrap items-center justify-between gap-3 mb-4 pb-4 border-b border-outline-variant/10">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <span class="text-[10px] font-bold text-outline uppercase tracking-widest">Date Range</span>
+                            <div id="rangePresets" class="bg-surface-container-low p-1 rounded-lg flex gap-1"></div>
+                            <div class="flex items-center gap-2 text-xs text-on-surface-variant">
+                                <input id="rangeFrom" type="date" aria-label="From date"
+                                    class="bg-surface-container-low border-none rounded-lg px-3 py-1.5 text-xs font-semibold focus:ring-2 focus:ring-primary/20" />
+                                <span>to</span>
+                                <input id="rangeTo" type="date" aria-label="To date"
+                                    class="bg-surface-container-low border-none rounded-lg px-3 py-1.5 text-xs font-semibold focus:ring-2 focus:ring-primary/20" />
+                            </div>
+                        </div>
+                        <p id="rangeSummary" class="text-xs font-semibold text-on-surface-variant"></p>
+                    </div>
+                    <div id="chartWrap" class="relative w-full" style="aspect-ratio: 1000 / 340;">
+                        <svg id="forecastChart" data-period="{{ $period }}" class="w-full h-full block touch-none" viewBox="0 0 1000 340" preserveAspectRatio="xMidYMid meet"></svg>
+                        <div id="chartTip" class="hidden pointer-events-none absolute z-10 bg-slate-900/95 text-white rounded-lg px-3 py-2 shadow-xl text-xs leading-snug whitespace-nowrap"></div>
                     </div>
                     <script type="application/json" id="forecastData">@json(['history' => $forecast['history'], 'future' => $forecast['future']])</script>
                     <p class="text-[11px] text-outline mt-3">
@@ -479,21 +494,70 @@
                 toggleLabel.textContent = showAll ? 'Show Priority Alerts' : 'View All Barangays';
             });
 
-            // Forecast chart (SVG): actual line, dashed forecast and its confidence band
+            // Forecast chart (SVG): actual line, dashed forecast and its confidence band,
+            // with a date range for the history and a hover tooltip showing the cases
             const dataEl = document.getElementById('forecastData');
             const svg = document.getElementById('forecastChart');
             if (dataEl && svg) {
                 const { history, future } = JSON.parse(dataEl.textContent);
+                const period = svg.dataset.period;
+                const unit = { daily: 'day', weekly: 'week', monthly: 'month' }[period];
+                const wrap = document.getElementById('chartWrap');
+                const tip = document.getElementById('chartTip');
+                const fromEl = document.getElementById('rangeFrom');
+                const toEl = document.getElementById('rangeTo');
+                const summary = document.getElementById('rangeSummary');
+                const presetBox = document.getElementById('rangePresets');
+                const firstDate = history[0].date;
+                const lastDate = history[history.length - 1].date;
+
                 const W = 1000, H = 340, left = 44, right = 16, top = 16, bottom = 34;
-                const all = history.concat(future);
-                const n = all.length;
-                const maxVal = Math.max(1, ...history.map((p) => p.value), ...future.map((p) => p.upper));
-                const step = maxVal <= 4 ? 1 : Math.pow(10, Math.floor(Math.log10(maxVal / 4)));
-                const niceStep = [1, 2, 5, 10].map((m) => m * step).find((s) => maxVal / s <= 5) || step * 10;
-                const yMax = Math.ceil(maxVal / niceStep) * niceStep;
-                const x = (i) => left + (n === 1 ? 0 : i * (W - left - right) / (n - 1));
-                const y = (v) => top + (1 - v / yMax) * (H - top - bottom);
                 const NS = 'http://www.w3.org/2000/svg';
+                const fmt = (v) => String(Math.round(v * 10) / 10);
+                const plural = (n, word) => n + ' ' + word + (n === 1 ? '' : 's');
+
+                // Date range: presets are measured back from the latest completed period
+                fromEl.min = toEl.min = firstDate;
+                fromEl.max = toEl.max = lastDate;
+                fromEl.value = firstDate;
+                toEl.value = lastDate;
+
+                // [label, number of latest periods]; null = everything
+                const presets = {
+                    daily: [['14D', 14], ['30D', 30]],
+                    weekly: [['4W', 4], ['12W', 12]],
+                    monthly: [['6M', 6], ['12M', 12]],
+                }[period].concat([['All', null]]);
+                const presetFrom = (count) => (count === null ? firstDate : history[Math.max(0, history.length - count)].date);
+                presets.forEach(([label, days]) => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.textContent = label;
+                    btn.dataset.days = days === null ? 'all' : days;
+                    btn.addEventListener('click', () => {
+                        fromEl.value = presetFrom(days);
+                        toEl.value = lastDate;
+                        render();
+                    });
+                    presetBox.appendChild(btn);
+                });
+                const styleButtons = () => presetBox.querySelectorAll('button').forEach((btn) => {
+                    const days = btn.dataset.days === 'all' ? null : Number(btn.dataset.days);
+                    const on = fromEl.value === presetFrom(days) && toEl.value === lastDate;
+                    btn.className = 'px-3 py-1 text-[11px] font-bold rounded-md transition-all ' +
+                        (on ? 'bg-surface-container-lowest text-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-high');
+                });
+                [fromEl, toEl].forEach((el) => el.addEventListener('change', () => {
+                    // keep from <= to
+                    if (fromEl.value && toEl.value && fromEl.value > toEl.value) {
+                        if (el === fromEl) toEl.value = fromEl.value; else fromEl.value = toEl.value;
+                    }
+                    render();
+                }));
+
+                let plotted = [];
+                let hoverLine = null, hoverRing = null;
+
                 const add = (tag, attrs, text) => {
                     const el = document.createElementNS(NS, tag);
                     Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
@@ -502,38 +566,113 @@
                     return el;
                 };
 
-                for (let v = 0; v <= yMax + 1e-9; v += niceStep) {
-                    add('line', { x1: left, x2: W - right, y1: y(v), y2: y(v), stroke: '#eceef0', 'stroke-width': 1 });
-                    add('text', { x: left - 8, y: y(v) + 4, 'text-anchor': 'end', 'font-size': 11, fill: '#717782' }, Math.round(v * 10) / 10);
+                function render() {
+                    svg.replaceChildren();
+                    tip.classList.add('hidden');
+                    plotted = [];
+                    const from = fromEl.value || firstDate;
+                    const to = toEl.value || lastDate;
+                    const hist = history.filter((p) => p.date >= from && p.date <= to);
+                    const total = hist.reduce((sum, p) => sum + p.value, 0);
+                    summary.textContent = hist.length
+                        ? 'Showing ' + plural(hist.length, unit) + ' · ' + plural(Math.round(total * 10) / 10, 'case') + ' in range'
+                        : 'No data in this range';
+                    styleButtons();
+
+                    if (!hist.length) {
+                        add('text', { x: W / 2, y: H / 2, 'text-anchor': 'middle', 'font-size': 14, fill: '#717782' }, 'No historical data in the selected range.');
+                        return;
+                    }
+
+                    // The forecast continues from the latest period, so it only shows when the range reaches it
+                    const fut = hist[hist.length - 1].date === lastDate ? future : [];
+                    const all = hist.concat(fut);
+                    const n = all.length;
+                    const maxVal = Math.max(1, ...hist.map((p) => p.value), ...fut.map((p) => p.upper));
+                    const step = maxVal <= 4 ? 1 : Math.pow(10, Math.floor(Math.log10(maxVal / 4)));
+                    const niceStep = [1, 2, 5, 10].map((m) => m * step).find((st) => maxVal / st <= 5) || step * 10;
+                    const yMax = Math.ceil(maxVal / niceStep) * niceStep;
+                    const x = (i) => left + (n === 1 ? (W - left - right) / 2 : i * (W - left - right) / (n - 1));
+                    const y = (v) => top + (1 - v / yMax) * (H - top - bottom);
+
+                    for (let v = 0; v <= yMax + 1e-9; v += niceStep) {
+                        add('line', { x1: left, x2: W - right, y1: y(v), y2: y(v), stroke: '#eceef0', 'stroke-width': 1 });
+                        add('text', { x: left - 8, y: y(v) + 4, 'text-anchor': 'end', 'font-size': 11, fill: '#717782' }, fmt(v));
+                    }
+                    const ticks = Math.min(n, 8);
+                    for (let t = 0; t < ticks; t++) {
+                        const i = ticks === 1 ? 0 : Math.round(t * (n - 1) / (ticks - 1));
+                        add('text', { x: x(i), y: H - 10, 'text-anchor': t === ticks - 1 && ticks > 1 ? 'end' : 'middle', 'font-size': 11, fill: '#717782' }, all[i].label);
+                    }
+
+                    const h = hist.length;
+                    if (fut.length) {
+                        const dx = (x(h - 1) + x(h)) / 2;
+                        add('line', { x1: dx, x2: dx, y1: top, y2: H - bottom, stroke: '#c1c7d3', 'stroke-dasharray': '4,4' });
+                        add('text', { x: dx + 6, y: top + 10, 'font-size': 10, 'font-weight': 700, fill: '#717782' }, 'FORECAST');
+
+                        const upper = [[x(h - 1), y(hist[h - 1].value)]].concat(fut.map((p, k) => [x(h + k), y(p.upper)]));
+                        const lower = [[x(h - 1), y(hist[h - 1].value)]].concat(fut.map((p, k) => [x(h + k), y(p.lower)])).reverse();
+                        add('polygon', { points: upper.concat(lower).map((pt) => pt.join(',')).join(' '), fill: '#004a93', 'fill-opacity': 0.07 });
+                    }
+
+                    add('path', { d: hist.map((p, i) => (i ? 'L' : 'M') + x(i) + ',' + y(p.value)).join(' '), fill: 'none', stroke: '#004a93', 'stroke-width': 3, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' });
+                    if (fut.length) {
+                        add('path', { d: 'M' + x(h - 1) + ',' + y(hist[h - 1].value) + fut.map((p, k) => ' L' + x(h + k) + ',' + y(p.value)).join(''), fill: 'none', stroke: '#004a93', 'stroke-opacity': 0.6, 'stroke-width': 3, 'stroke-dasharray': '8,4', 'stroke-linecap': 'round' });
+                    }
+
+                    const r = n > 40 ? 2.5 : 4;
+                    hist.forEach((p, i) => { add('circle', { cx: x(i), cy: y(p.value), r, fill: '#004a93', stroke: '#004a93', 'stroke-width': 2 }); plotted.push({ x: x(i), y: y(p.value), p, kind: 'actual' }); });
+                    fut.forEach((p, k) => { add('circle', { cx: x(h + k), cy: y(p.value), r, fill: '#ffffff', stroke: '#004a93', 'stroke-width': 2 }); plotted.push({ x: x(h + k), y: y(p.value), p, kind: 'forecast' }); });
+
+                    // Hover guides sit on top of everything else
+                    hoverLine = add('line', { x1: 0, x2: 0, y1: top, y2: H - bottom, stroke: '#004a93', 'stroke-opacity': 0.35, 'stroke-width': 1.5, visibility: 'hidden' });
+                    hoverRing = add('circle', { cx: 0, cy: 0, r: 7, fill: 'none', stroke: '#004a93', 'stroke-width': 2.5, visibility: 'hidden' });
                 }
-                const ticks = Math.min(n, 8);
-                for (let t = 0; t < ticks; t++) {
-                    const i = ticks === 1 ? 0 : Math.round(t * (n - 1) / (ticks - 1));
-                    add('text', { x: x(i), y: H - 10, 'text-anchor': 'middle', 'font-size': 11, fill: '#717782' }, all[i].label);
+
+                function showTip(point, rect) {
+                    hoverLine.setAttribute('x1', point.x); hoverLine.setAttribute('x2', point.x); hoverLine.setAttribute('visibility', 'visible');
+                    hoverRing.setAttribute('cx', point.x); hoverRing.setAttribute('cy', point.y); hoverRing.setAttribute('visibility', 'visible');
+
+                    const p = point.p;
+                    tip.replaceChildren();
+                    const title = document.createElement('div');
+                    title.className = 'font-bold';
+                    title.textContent = p.label;
+                    const line = document.createElement('div');
+                    line.textContent = point.kind === 'actual'
+                        ? plural(p.value, 'case') + ' (actual)'
+                        : fmt(p.value) + ' cases (predicted)';
+                    tip.append(title, line);
+                    if (point.kind === 'forecast') {
+                        const range = document.createElement('div');
+                        range.className = 'text-slate-300';
+                        range.textContent = 'Range: ' + fmt(p.lower) + ' – ' + fmt(p.upper);
+                        tip.appendChild(range);
+                    }
+
+                    tip.classList.remove('hidden');
+                    const px = point.x / W * rect.width, py = point.y / H * rect.height;
+                    const tw = tip.offsetWidth, th = tip.offsetHeight;
+                    tip.style.left = Math.min(Math.max(8, px - tw / 2), rect.width - tw - 8) + 'px';
+                    tip.style.top = (py - th - 14 < 0 ? py + 16 : py - th - 14) + 'px';
                 }
 
-                const h = history.length;
-                // divider between history and forecast
-                const dx = (x(h - 1) + x(h)) / 2;
-                add('line', { x1: dx, x2: dx, y1: top, y2: H - bottom, stroke: '#c1c7d3', 'stroke-dasharray': '4,4' });
-                add('text', { x: dx + 6, y: top + 10, 'font-size': 10, 'font-weight': 700, fill: '#717782' }, 'FORECAST');
+                // The nearest point to the pointer (anywhere along the chart) is highlighted
+                svg.addEventListener('pointermove', (e) => {
+                    if (!plotted.length) return;
+                    const rect = svg.getBoundingClientRect();
+                    const vx = (e.clientX - rect.left) * (W / rect.width);
+                    let best = plotted[0];
+                    plotted.forEach((pt) => { if (Math.abs(pt.x - vx) < Math.abs(best.x - vx)) best = pt; });
+                    showTip(best, rect);
+                });
+                svg.addEventListener('pointerleave', () => {
+                    tip.classList.add('hidden');
+                    if (hoverLine) { hoverLine.setAttribute('visibility', 'hidden'); hoverRing.setAttribute('visibility', 'hidden'); }
+                });
 
-                // confidence band, starting from the last actual point
-                const upper = [[x(h - 1), y(history[h - 1].value)]].concat(future.map((p, k) => [x(h + k), y(p.upper)]));
-                const lower = [[x(h - 1), y(history[h - 1].value)]].concat(future.map((p, k) => [x(h + k), y(p.lower)])).reverse();
-                add('polygon', { points: upper.concat(lower).map((p) => p.join(',')).join(' '), fill: '#004a93', 'fill-opacity': 0.07 });
-
-                add('path', { d: history.map((p, i) => (i ? 'L' : 'M') + x(i) + ',' + y(p.value)).join(' '), fill: 'none', stroke: '#004a93', 'stroke-width': 3, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' });
-                add('path', { d: 'M' + x(h - 1) + ',' + y(history[h - 1].value) + future.map((p, k) => ' L' + x(h + k) + ',' + y(p.value)).join(''), fill: 'none', stroke: '#004a93', 'stroke-opacity': 0.6, 'stroke-width': 3, 'stroke-dasharray': '8,4', 'stroke-linecap': 'round' });
-
-                const dot = (i, value, label, solid) => {
-                    const c = add('circle', { cx: x(i), cy: y(value), r: n > 40 ? 2.5 : 4, fill: solid ? '#004a93' : '#ffffff', stroke: '#004a93', 'stroke-width': 2 });
-                    const tip = document.createElementNS(NS, 'title');
-                    tip.textContent = label;
-                    c.appendChild(tip);
-                };
-                history.forEach((p, i) => dot(i, p.value, p.label + ': ' + p.value + ' patients', true));
-                future.forEach((p, k) => dot(h + k, p.value, p.label + ': ' + p.value + ' predicted (' + p.lower + ' – ' + p.upper + ')', false));
+                render();
             }
 
             // Toast

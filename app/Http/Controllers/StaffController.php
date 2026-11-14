@@ -139,8 +139,16 @@ class StaffController extends Controller
         } elseif ($verifiedQueue->isNotEmpty()) {
             $selectedPatient = $verifiedQueue->first();
         }
+            $bhwExposure = null;
+        if ($selectedPatient) {
+            $bhwExposure = DB::table('bite_cases')
+        ->join('bhw_referral_exposure', 'bite_cases.bhw_referral_id', '=', 'bhw_referral_exposure.referral_id')
+        ->where('bite_cases.inflow_record_id', $selectedPatient->inflow_record_id)
+        ->select('bhw_referral_exposure.*')
+        ->first();
+        }
 
-        return view('staff.Case_Encoding', compact('verifiedQueue', 'selectedPatient', 'search'));
+        return view('staff.Case_Encoding', compact('verifiedQueue', 'selectedPatient', 'search', 'bhwExposure'));
     }
 
     public function storeCaseEncoding(Request $request, string $inflow_record_id)

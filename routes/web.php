@@ -9,7 +9,8 @@ use App\Http\Controllers\StaffController;
 use App\Http\Controllers\ClinicalEncodingController;
 use App\Http\Controllers\PatientDatabaseController;
 use App\Http\Controllers\PepComplianceController;
-
+use App\Http\Controllers\visualAnalyticsController;
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\TreatmentTrackerController;
 use App\Http\Controllers\ForecastingController;
 use App\Http\Controllers\ItDashboardController;

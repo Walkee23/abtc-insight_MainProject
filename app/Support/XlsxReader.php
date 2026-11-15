@@ -1,0 +1,363 @@
+<?php
+
+namespace App\Support;
+
+use RuntimeException;
+use XMLReader;
+
+/**
+ * Minimal, dependency-free reader for .xlsx workbooks (and plain .csv files).
+ *
+ * An .xlsx file is a ZIP of XML parts. This class reads the ZIP's central directory itself and
+ * inflates entries with gzinflate(), so it works on a stock XAMPP/PHP install without the zip
+ * extension or Composer packages. Rows are streamed with XMLReader, so large sheets (tens of
+ * thousands of rows) are read without loading the whole sheet into memory.
+ *
+ * Usage:
+ *     $reader = new XlsxReader($path);              // or XlsxReader::open($path, 'xlsx'|'csv')
+ *     foreach ($reader->rows() as $rowNumber => $cells) { ... }   // $cells: [0 => 'A', 1 => 'B', ...]
+ */
+class XlsxReader
+{
+    private string $path;
+    private string $type;
+
+    /** @var array<string, array{offset:int, csize:int, size:int, method:int}> */
+    private array $entries = [];
+
+    /** @var resource|null */
+    private $zip = null;
+
+    /** @var string[]|null */
+    private ?array $shared = null;
+
+    private ?array $dateStyles = null;
+
+    public function __construct(string $path, ?string $type = null)
+    {
+        if (!is_file($path)) {
+            throw new RuntimeException('The uploaded file could not be found.');
+        }
+        $this->path = $path;
+        $this->type = $type ?: strtolower(pathinfo($path, PATHINFO_EXTENSION));
+
+        if ($this->type === 'xlsx') {
+            $this->openZip();
+        } elseif ($this->type !== 'csv') {
+            throw new RuntimeException('Only .xlsx and .csv files can be imported.');
+        }
+    }
+
+    public function __destruct()
+    {
+        if (is_resource($this->zip)) {
+            fclose($this->zip);
+        }
+    }
+
+    // ------------------------------------------------------------------ public API
+
+    /**
+     * Stream the rows of the first worksheet. Keys are 1-based row numbers; values are lists of
+     * cell strings indexed from 0 (column A). Dates stored as Excel serial numbers are converted
+     * to Y-m-d strings. Completely empty rows are skipped.
+     *
+     * @return \Generator<int, array<int, string>>
+     */
+    public function rows(): \Generator
+    {
+        if ($this->type === 'csv') {
+            yield from $this->csvRows();
+            return;
+        }
+
+        $sheet = $this->firstSheetPath();
+        $shared = $this->sharedStrings();
+        $dateStyles = $this->dateStyleIds();
+
+        $xml = new XMLReader();
+        $xml->XML($this->read($sheet), null, LIBXML_NONET | LIBXML_COMPACT | LIBXML_PARSEHUGE);
+
+        $rowNumber = 0;
+        while ($xml->read()) {
+            if ($xml->nodeType !== XMLReader::ELEMENT || $xml->name !== 'row') {
+                continue;
+            }
+            $rowNumber = (int) ($xml->getAttribute('r') ?: $rowNumber + 1);
+            $cells = [];
+            $nextCol = 0;
+
+            if (!$xml->isEmptyElement) {
+                $depth = $xml->depth;
+                while ($xml->read() && !($xml->nodeType === XMLReader::END_ELEMENT && $xml->depth === $depth)) {
+                    if ($xml->nodeType !== XMLReader::ELEMENT || $xml->name !== 'c') {
+                        continue;
+                    }
+                    $ref = $xml->getAttribute('r');
+                    $col = $ref ? $this->columnIndex($ref) : $nextCol;
+                    $nextCol = $col + 1;
+                    $type = $xml->getAttribute('t');
+                    $style = (int) $xml->getAttribute('s');
+
+                    $value = '';
+                    if (!$xml->isEmptyElement) {
+                        $cellDepth = $xml->depth;
+                        while ($xml->read() && !($xml->nodeType === XMLReader::END_ELEMENT && $xml->depth === $cellDepth)) {
+                            if ($xml->nodeType !== XMLReader::ELEMENT) {
+                                continue;
+                            }
+                            if ($xml->name === 'v') {
+                                $value = $xml->readString();
+                            } elseif ($xml->name === 't' && $type === 'inlineStr') {
+                                $value .= $xml->readString();
+                            }
+                        }
+                    }
+
+                    if ($type === 's') {
+                        $value = $shared[(int) $value] ?? '';
+                    } elseif ($type === 'b') {
+                        $value = $value === '1' ? 'TRUE' : 'FALSE';
+                    } elseif (($type === null || $type === 'n' || $type === '') && $value !== '' && is_numeric($value) && isset($dateStyles[$style])) {
+                        $value = $this->excelDate((float) $value);
+                    }
+                    $cells[$col] = trim((string) $value);
+                }
+            }
+
+            if ($cells && array_filter($cells, fn ($v) => $v !== '')) {
+                $max = max(array_keys($cells));
+                $filled = [];
+                for ($i = 0; $i <= $max; $i++) {
+                    $filled[$i] = $cells[$i] ?? '';
+                }
+                yield $rowNumber => $filled;
+            }
+        }
+        $xml->close();
+    }
+
+    // ------------------------------------------------------------------ CSV
+
+    private function csvRows(): \Generator
+    {
+        $fh = fopen($this->path, 'r');
+        if (!$fh) {
+            throw new RuntimeException('The file could not be opened.');
+        }
+        // skip a UTF-8 byte order mark
+        if (fread($fh, 3) !== "\xEF\xBB\xBF") {
+            rewind($fh);
+        }
+        $n = 0;
+        while (($row = fgetcsv($fh, 0, ',', '"', '\\')) !== false) {
+            $n++;
+            $row = array_map(fn ($v) => trim((string) $v), $row);
+            if (array_filter($row, fn ($v) => $v !== '')) {
+                yield $n => $row;
+            }
+        }
+        fclose($fh);
+    }
+
+    // ------------------------------------------------------------------ ZIP handling
+
+    private function openZip(): void
+    {
+        $this->zip = fopen($this->path, 'rb');
+        if (!$this->zip) {
+            throw new RuntimeException('The file could not be opened.');
+        }
+        $size = filesize($this->path);
+        if ($size < 22) {
+            throw new RuntimeException('This does not look like an Excel (.xlsx) file.');
+        }
+
+        // locate the End Of Central Directory record (last 64 KB at most)
+        $tail = min($size, 65557);
+        fseek($this->zip, $size - $tail);
+        $buf = fread($this->zip, $tail);
+        $pos = strrpos($buf, "PK\x05\x06");
+        if ($pos === false) {
+            throw new RuntimeException('This does not look like an Excel (.xlsx) file.');
+        }
+        $eocd = unpack('vdisk/vcdisk/vrecs/vtotal/Vcdsize/Vcdoffset', substr($buf, $pos + 4, 18));
+
+        fseek($this->zip, $eocd['cdoffset']);
+        $cd = fread($this->zip, $eocd['cdsize']);
+        $p = 0;
+        for ($i = 0; $i < $eocd['total']; $i++) {
+            if (substr($cd, $p, 4) !== "PK\x01\x02") {
+                break;
+            }
+            $h = unpack('vmade/vneed/vflags/vmethod/vtime/vdate/Vcrc/Vcsize/Vsize/vnlen/vxlen/vclen/vdisk/viattr/Veattr/Voffset', substr($cd, $p + 4, 42));
+            $name = substr($cd, $p + 46, $h['nlen']);
+            $this->entries[$name] = ['offset' => $h['offset'], 'csize' => $h['csize'], 'size' => $h['size'], 'method' => $h['method']];
+            $p += 46 + $h['nlen'] + $h['xlen'] + $h['clen'];
+        }
+
+        if (!isset($this->entries['[Content_Types].xml']) && !isset($this->entries['xl/workbook.xml'])) {
+            throw new RuntimeException('This does not look like an Excel (.xlsx) file.');
+        }
+    }
+
+    private function has(string $name): bool
+    {
+        return isset($this->entries[$name]);
+    }
+
+    private function read(string $name): string
+    {
+        $e = $this->entries[$name] ?? null;
+        if (!$e) {
+            throw new RuntimeException("The workbook is missing {$name}.");
+        }
+        fseek($this->zip, $e['offset']);
+        $lh = fread($this->zip, 30);
+        if (substr($lh, 0, 4) !== "PK\x03\x04") {
+            throw new RuntimeException('The Excel file is damaged.');
+        }
+        $l = unpack('vnlen/vxlen', substr($lh, 26, 4));
+        fseek($this->zip, $e['offset'] + 30 + $l['nlen'] + $l['xlen']);
+        $data = $e['csize'] > 0 ? fread($this->zip, $e['csize']) : '';
+
+        if ($e['method'] === 0) {
+            return $data;
+        }
+        if ($e['method'] === 8) {
+            $out = @gzinflate($data);
+            if ($out === false) {
+                throw new RuntimeException('The Excel file is damaged.');
+            }
+            return $out;
+        }
+        throw new RuntimeException('This Excel file uses an unsupported compression method.');
+    }
+
+    // ------------------------------------------------------------------ workbook parts
+
+    private function firstSheetPath(): string
+    {
+        // workbook.xml lists the sheets in order; workbook.xml.rels maps their ids to part names
+        if ($this->has('xl/workbook.xml') && $this->has('xl/_rels/workbook.xml.rels')) {
+            $wb = @simplexml_load_string($this->read('xl/workbook.xml'));
+            $rels = @simplexml_load_string($this->read('xl/_rels/workbook.xml.rels'));
+            if ($wb && $rels) {
+                $wb->registerXPathNamespace('m', 'http://schemas.openxmlformats.org/spreadsheetml/2006/main');
+                $sheets = $wb->xpath('//m:sheets/m:sheet');
+                if ($sheets) {
+                    $rid = (string) $sheets[0]->attributes('http://schemas.openxmlformats.org/officeDocument/2006/relationships')['id'];
+                    foreach ($rels->Relationship as $rel) {
+                        if ((string) $rel['Id'] === $rid) {
+                            $target = (string) $rel['Target'];
+                            $path = ltrim($target[0] === '/' ? $target : 'xl/' . $target, '/');
+                            if ($this->has($path)) {
+                                return $path;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if ($this->has('xl/worksheets/sheet1.xml')) {
+            return 'xl/worksheets/sheet1.xml';
+        }
+        throw new RuntimeException('The workbook has no worksheet to read.');
+    }
+
+    /** @return string[] */
+    private function sharedStrings(): array
+    {
+        if ($this->shared !== null) {
+            return $this->shared;
+        }
+        $this->shared = [];
+        if (!$this->has('xl/sharedStrings.xml')) {
+            return $this->shared;
+        }
+        $xml = new XMLReader();
+        $xml->XML($this->read('xl/sharedStrings.xml'), null, LIBXML_NONET | LIBXML_PARSEHUGE);
+        while ($xml->read()) {
+            if ($xml->nodeType === XMLReader::ELEMENT && $xml->name === 'si') {
+                // an <si> is either a plain <t> or several rich-text <r><t> runs; phonetic runs (<rPh>) are ignored
+                $text = '';
+                if (!$xml->isEmptyElement) {
+                    $depth = $xml->depth;
+                    while ($xml->read() && !($xml->nodeType === XMLReader::END_ELEMENT && $xml->depth === $depth)) {
+                        if ($xml->nodeType === XMLReader::ELEMENT && $xml->name === 'rPh') {
+                            $xml->next();
+                            continue;
+                        }
+                        if ($xml->nodeType === XMLReader::ELEMENT && $xml->name === 't') {
+                            $text .= $xml->readString();
+                        }
+                    }
+                }
+                $this->shared[] = $text;
+            }
+        }
+        $xml->close();
+        return $this->shared;
+    }
+
+    /** Style ids (cellXfs indexes) whose number format is a date/time. @return array<int,true> */
+    private function dateStyleIds(): array
+    {
+        if ($this->dateStyles !== null) {
+            return $this->dateStyles;
+        }
+        $this->dateStyles = [];
+        if (!$this->has('xl/styles.xml')) {
+            return $this->dateStyles;
+        }
+        $styles = @simplexml_load_string($this->read('xl/styles.xml'));
+        if (!$styles) {
+            return $this->dateStyles;
+        }
+
+        $custom = [];
+        if (isset($styles->numFmts)) {
+            foreach ($styles->numFmts->numFmt as $nf) {
+                $custom[(int) $nf['numFmtId']] = (string) $nf['formatCode'];
+            }
+        }
+        $builtinDates = [14, 15, 16, 17, 18, 19, 20, 21, 22, 45, 46, 47];
+
+        $i = 0;
+        if (isset($styles->cellXfs)) {
+            foreach ($styles->cellXfs->xf as $xf) {
+                $id = (int) $xf['numFmtId'];
+                $isDate = in_array($id, $builtinDates, true);
+                if (!$isDate && isset($custom[$id])) {
+                    $code = preg_replace('/"[^"]*"|\[[^\]]*\]|\\\\./', '', $custom[$id]);
+                    $isDate = (bool) preg_match('/[dmyhs]/i', $code);
+                }
+                if ($isDate) {
+                    $this->dateStyles[$i] = true;
+                }
+                $i++;
+            }
+        }
+        return $this->dateStyles;
+    }
+
+    // ------------------------------------------------------------------ helpers
+
+    private function columnIndex(string $ref): int
+    {
+        $letters = preg_replace('/[^A-Za-z]/', '', $ref);
+        $n = 0;
+        foreach (str_split(strtoupper($letters)) as $ch) {
+            $n = $n * 26 + (ord($ch) - 64);
+        }
+        return max(0, $n - 1);
+    }
+
+    private function excelDate(float $serial): string
+    {
+        // Excel counts days from 1899-12-30 (the 1900 leap-year bug is already absorbed by that epoch)
+        $days = (int) floor($serial);
+        $dt = (new \DateTimeImmutable('1899-12-30 00:00:00'))->modify("+{$days} days");
+        return $dt->format('Y-m-d');
+    }
+}

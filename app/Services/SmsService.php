@@ -33,6 +33,7 @@ class SmsService
                 ->join('patients as p', 'p.patient_id', '=', 'bc.patient_id')
                 ->whereNotNull('i.day0_date')
                 ->where('bc.category', '!=', 'I') // Category I needs no vaccine course
+                ->where('p.contact_num', '!=', '') // imported historical cases have no phone number to text
                 ->whereRaw("COALESCE(i.day{$n}_date, DATE_ADD(i.day0_date, INTERVAL {$n} DAY)) = ?", [$date])
                 ->select('bc.bite_case_id', 'bc.patient_id', 'p.patient_name', 'p.contact_num')
                 ->get()

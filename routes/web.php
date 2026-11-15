@@ -91,6 +91,8 @@ Route::prefix('admin')->group(function () {
         Route::get('/audit-logs', [SystemToolsController::class, 'auditLogs'])->name('admin.system.audit-logs');
         Route::get('/audit-logs/export', [SystemToolsController::class, 'exportAuditLogs'])->name('admin.system.audit-logs.export');
         Route::get('/health', [SystemToolsController::class, 'health'])->name('admin.system.health');
+        Route::post('/import-cases', [SystemToolsController::class, 'importCases'])->name('admin.system.import-cases');
+        Route::get('/import-cases/template', [SystemToolsController::class, 'importTemplate'])->name('admin.system.import-cases.template');
     });
 });
 

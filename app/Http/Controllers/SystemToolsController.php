@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Support\Audit;
+use App\Support\BiteCaseImporter;
 use App\Support\DatabaseBackup;
+use App\Support\XlsxReader;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -206,6 +208,76 @@ class SystemToolsController extends Controller
             }
             fclose($out);
         }, 'audit-logs-' . now(self::TZ)->format('Ymd-His') . '.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    // ------------------------------------------------------ bite case import
+
+    /** Upload an Excel/CSV sheet of animal bite cases. With check_only=1 nothing is saved (everything is rolled back). */
+    public function importCases(Request $request): JsonResponse
+    {
+        $this->admin();
+
+        $limit = BiteCaseImporter::uploadLimitBytes();
+        if (!$request->hasFile('file') && (int) $request->server('CONTENT_LENGTH') > $limit) {
+            return response()->json(['message' => 'This file is larger than the ' . round($limit / 1048576) . ' MB this server accepts. Ask whoever runs the server to raise upload_max_filesize and post_max_size in php.ini, or split the sheet into smaller files.'], 422);
+        }
+
+        // validated by hand: this app only renders JSON errors for api/* routes, so validate() would redirect
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'file'       => 'required|file|max:' . (int) floor($limit / 1024),
+            'check_only' => 'nullable|boolean',
+        ], [
+            'file.required' => 'Choose an Excel (.xlsx) or .csv file first.',
+            'file.file'     => 'The upload did not finish. Please choose the file again.',
+            'file.uploaded' => 'The upload failed - the file may be larger than the server allows. Try a smaller file.',
+            'file.max'      => 'The file is larger than the ' . round($limit / 1048576) . ' MB this server accepts. Split it into smaller sheets.',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['message' => $validator->errors()->first()], 422);
+        }
+
+        $file = $request->file('file');
+        $ext = strtolower($file->getClientOriginalExtension());
+        if (!in_array($ext, ['xlsx', 'csv'], true)) {
+            return response()->json(['message' => 'Only Excel (.xlsx) or .csv files can be imported. Older .xls files must be saved as .xlsx first.'], 422);
+        }
+
+        $checkOnly = $request->boolean('check_only');
+
+        try {
+            $result = (new BiteCaseImporter($checkOnly))->import(new XlsxReader($file->getRealPath(), $ext));
+        } catch (\InvalidArgumentException|\RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        } catch (\Throwable $e) {
+            report($e);
+            return response()->json(['message' => 'The import stopped because of an unexpected error. Nothing was saved.'], 500);
+        }
+
+        $result['error_count'] = count($result['errors']);
+        $result['errors'] = array_slice($result['errors'], 0, 100);
+        $result['file'] = $file->getClientOriginalName();
+
+        if ($checkOnly) {
+            Audit::log('import_check', "Checked bite case file \"{$result['file']}\": {$result['imported']} rows ready, {$result['duplicates']} already in the system, {$result['failed']} with problems (nothing saved)");
+        } else {
+            Audit::log('import_cases', "Imported bite cases from \"{$result['file']}\": {$result['imported']} saved, {$result['duplicates']} already in the system, {$result['failed']} skipped");
+        }
+
+        return response()->json($result);
+    }
+
+    /** CSV with the expected columns and one fictional example row (opens in Excel). */
+    public function importTemplate()
+    {
+        $this->admin();
+
+        return response()->streamDownload(function () {
+            $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF");   // BOM so Excel reads the file as UTF-8
+            fputcsv($out, BiteCaseImporter::templateHeaders());
+            fputcsv($out, BiteCaseImporter::templateExample());
+            fclose($out);
+        }, 'animal-bite-cases-template.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
     // ----------------------------------------------------------- health check

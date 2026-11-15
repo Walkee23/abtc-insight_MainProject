@@ -370,7 +370,7 @@
                         <svg id="forecastChart" data-period="{{ $period }}" class="w-full h-full block touch-none" viewBox="0 0 1000 340" preserveAspectRatio="xMidYMid meet"></svg>
                         <div id="chartTip" class="hidden pointer-events-none absolute z-10 bg-slate-900/95 text-white rounded-lg px-3 py-2 shadow-xl text-xs leading-snug whitespace-nowrap"></div>
                     </div>
-                    <script type="application/json" id="forecastData">@json(['history' => $forecast['history'], 'future' => $forecast['future']])</script>
+                    <script type="application/json" id="forecastData">@json(['history' => $forecast['history'], 'future' => $forecast['future'], 'window' => $forecast['window']])</script>
                     <p class="text-[11px] text-outline mt-3">
                         {{ $saved > 0 ? $saved . ' forecast rows saved' . ($lastSaved ? ', last on ' . \Carbon\Carbon::parse($lastSaved)->format('M d, Y g:i A') : '') . '.' : 'No forecast saved yet.' }}
                         The current {{ $periods[$period]['unit'] }} is still in progress, so it starts the forecast.
@@ -503,7 +503,7 @@
             const dataEl = document.getElementById('forecastData');
             const svg = document.getElementById('forecastChart');
             if (dataEl && svg) {
-                const { history, future } = JSON.parse(dataEl.textContent);
+                const { history, future, window: fitWindow } = JSON.parse(dataEl.textContent);
                 const period = svg.dataset.period;
                 const unit = { daily: 'day', weekly: 'week', monthly: 'month' }[period];
                 const wrap = document.getElementById('chartWrap');
@@ -523,15 +523,20 @@
                 // Date range: presets are measured back from the latest completed period
                 fromEl.min = toEl.min = firstDate;
                 fromEl.max = toEl.max = lastDate;
+                // opens on everything with data; the presets (including the model window) zoom in on the latest periods
                 fromEl.value = firstDate;
                 toEl.value = lastDate;
 
                 // [label, number of latest periods]; null = everything
-                const presets = {
+                const presetList = {
                     daily: [['14D', 14], ['30D', 30]],
                     weekly: [['4W', 4], ['12W', 12]],
                     monthly: [['6M', 6], ['12M', 12]],
-                }[period].concat([['All', null]]);
+                }[period];
+                // the model window is a preset too, unless it already covers everything
+                const suffix = { daily: 'D', weekly: 'W', monthly: 'M' }[period];
+                if (fitWindow < history.length && !presetList.some(([, c]) => c === fitWindow)) presetList.push([fitWindow + suffix, fitWindow]);
+                const presets = presetList.concat([['All', null]]);
                 const presetFrom = (count) => (count === null ? firstDate : history[Math.max(0, history.length - count)].date);
                 presets.forEach(([label, days]) => {
                     const btn = document.createElement('button');
@@ -626,8 +631,9 @@
                     }
 
                     const r = n > 40 ? 2.5 : 4;
-                    hist.forEach((p, i) => { add('circle', { cx: x(i), cy: y(p.value), r, fill: '#004a93', stroke: '#004a93', 'stroke-width': 2 }); plotted.push({ x: x(i), y: y(p.value), p, kind: 'actual' }); });
-                    fut.forEach((p, k) => { add('circle', { cx: x(h + k), cy: y(p.value), r, fill: '#ffffff', stroke: '#004a93', 'stroke-width': 2 }); plotted.push({ x: x(h + k), y: y(p.value), p, kind: 'forecast' }); });
+                    const dots = n <= 150;   // hundreds of dots just clutter the line; the hover ring marks the point instead
+                    hist.forEach((p, i) => { if (dots) add('circle', { cx: x(i), cy: y(p.value), r, fill: '#004a93', stroke: '#004a93', 'stroke-width': 2 }); plotted.push({ x: x(i), y: y(p.value), p, kind: 'actual' }); });
+                    fut.forEach((p, k) => { if (dots) add('circle', { cx: x(h + k), cy: y(p.value), r, fill: '#ffffff', stroke: '#004a93', 'stroke-width': 2 }); plotted.push({ x: x(h + k), y: y(p.value), p, kind: 'forecast' }); });
 
                     // Hover guides sit on top of everything else
                     hoverLine = add('line', { x1: 0, x2: 0, y1: top, y2: H - bottom, stroke: '#004a93', 'stroke-opacity': 0.35, 'stroke-width': 1.5, visibility: 'hidden' });

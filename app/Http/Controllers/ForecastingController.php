@@ -122,13 +122,14 @@ class ForecastingController extends Controller
         for ($d = $this->bucketStart($firstDate, $period); $d->lt($currentStart); $d = $this->next($d, $period)) {
             $starts[] = $d->copy();
         }
-        $starts = array_slice($starts, -$cfg['history']);
         if (count($starts) < 3) {
             return array_merge($base, ['status' => 'short', 'points' => count($starts)]);
         }
 
+        // The chart can show all of the history; the model only learns from the latest window
         $counts = $this->countsPerBucket($period);
-        $y = array_map(fn ($d) => (float) ($counts[$d->toDateString()] ?? 0), $starts);
+        $allY = array_map(fn ($d) => (float) ($counts[$d->toDateString()] ?? 0), $starts);
+        $y = array_slice($allY, -$cfg['history']);
         $n = count($y);
 
         $fit = $this->holtWinters($y, $cfg['season'], $params['alpha'], $params['beta'], $params['gamma']);
@@ -165,7 +166,8 @@ class ForecastingController extends Controller
             'confidence' => $confidence,
             'mape' => $mape === null ? null : round($mape, 1),
             'mape_label' => $mapeLabel,
-            'history' => array_map(fn ($d, $v) => ['date' => $d->toDateString(), 'label' => $this->label($d, $period), 'value' => $v], $starts, $y),
+            'history' => array_map(fn ($d, $v) => ['date' => $d->toDateString(), 'label' => $this->label($d, $period), 'value' => $v], $starts, $allY),
+            'window' => $n,
             'future' => $future,
             'next_value' => $future[0]['value'],
             'total_horizon' => round(array_sum(array_column($future, 'value')), 1),

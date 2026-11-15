@@ -212,55 +212,111 @@ class SystemToolsController extends Controller
 
     // ------------------------------------------------------ bite case import
 
-    /** Upload an Excel/CSV sheet of animal bite cases. With check_only=1 nothing is saved (everything is rolled back). */
+    // The file is sent in small pieces (see importChunk) so it never runs into PHP's upload_max_filesize /
+    // post_max_size - those limits apply to one request, and every piece is smaller than that.
+
+    private function importDir(): string
+    {
+        $dir = storage_path('app/imports');
+        if (!is_dir($dir)) {
+            mkdir($dir, 0775, true);
+        }
+        return $dir;
+    }
+
+    /** Path of a (possibly unfinished) upload; the id is a random 32-character hex string made by the browser. */
+    private function importPath(?string $id): ?string
+    {
+        return is_string($id) && preg_match('/^[a-f0-9]{32}$/', $id) ? $this->importDir() . DIRECTORY_SEPARATOR . $id . '.part' : null;
+    }
+
+    /** Receives one piece of an upload and appends it to the file being assembled. */
+    public function importChunk(Request $request): JsonResponse
+    {
+        $this->admin();
+
+        $path = $this->importPath($request->input('upload_id'));
+        $offset = $request->input('offset');
+        $piece = $request->file('chunk');
+        if (!$path || !ctype_digit((string) $offset)) {
+            return response()->json(['message' => 'The upload could not be started. Please try again.'], 422);
+        }
+        if (!$piece || !$piece->isValid()) {
+            return response()->json(['message' => 'A piece of the file did not arrive. Please try again.'], 422);
+        }
+        $offset = (int) $offset;
+
+        if ($offset === 0) {
+            // a fresh upload: also sweep up abandoned ones (older than a day)
+            foreach (glob($this->importDir() . DIRECTORY_SEPARATOR . '*.part') ?: [] as $old) {
+                if (filemtime($old) < time() - 86400) {
+                    @unlink($old);
+                }
+            }
+            @unlink($path);
+        } elseif (!is_file($path) || filesize($path) !== $offset) {
+            return response()->json(['message' => 'The upload pieces arrived out of order. Please try again.'], 409);
+        }
+
+        if ($offset + $piece->getSize() > BiteCaseImporter::MAX_FILE_BYTES) {
+            @unlink($path);
+            return response()->json(['message' => 'The file is larger than ' . round(BiteCaseImporter::MAX_FILE_BYTES / 1048576) . ' MB. Split it into smaller sheets.'], 422);
+        }
+
+        $in = fopen($piece->getRealPath(), 'rb');
+        $out = fopen($path, 'ab');
+        stream_copy_to_stream($in, $out);
+        fclose($in);
+        fclose($out);
+
+        return response()->json(['received' => filesize($path)]);
+    }
+
+    /**
+     * Imports a sheet that was uploaded with importChunk(). With check_only=1 nothing is saved (everything is rolled
+     * back) and the uploaded file is kept, so the real import that follows does not need to upload it again.
+     */
     public function importCases(Request $request): JsonResponse
     {
         $this->admin();
 
-        $limit = BiteCaseImporter::uploadLimitBytes();
-        if (!$request->hasFile('file') && (int) $request->server('CONTENT_LENGTH') > $limit) {
-            return response()->json(['message' => 'This file is larger than the ' . round($limit / 1048576) . ' MB this server accepts. Ask whoever runs the server to raise upload_max_filesize and post_max_size in php.ini, or split the sheet into smaller files.'], 422);
+        // answered by hand: this app only renders JSON errors for api/* routes, so validate() would redirect
+        $path = $this->importPath($request->input('upload_id'));
+        $name = trim((string) $request->input('filename'));
+        if (!$path || !is_file($path)) {
+            return response()->json(['message' => 'The uploaded file was not found on the server. Please choose it again.'], 422);
         }
-
-        // validated by hand: this app only renders JSON errors for api/* routes, so validate() would redirect
-        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
-            'file'       => 'required|file|max:' . (int) floor($limit / 1024),
-            'check_only' => 'nullable|boolean',
-        ], [
-            'file.required' => 'Choose an Excel (.xlsx) or .csv file first.',
-            'file.file'     => 'The upload did not finish. Please choose the file again.',
-            'file.uploaded' => 'The upload failed - the file may be larger than the server allows. Try a smaller file.',
-            'file.max'      => 'The file is larger than the ' . round($limit / 1048576) . ' MB this server accepts. Split it into smaller sheets.',
-        ]);
-        if ($validator->fails()) {
-            return response()->json(['message' => $validator->errors()->first()], 422);
-        }
-
-        $file = $request->file('file');
-        $ext = strtolower($file->getClientOriginalExtension());
+        $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
         if (!in_array($ext, ['xlsx', 'csv'], true)) {
+            @unlink($path);
             return response()->json(['message' => 'Only Excel (.xlsx) or .csv files can be imported. Older .xls files must be saved as .xlsx first.'], 422);
         }
+        $name = mb_substr(basename(str_replace('\\', '/', $name)), 0, 120);
 
         $checkOnly = $request->boolean('check_only');
 
         try {
-            $result = (new BiteCaseImporter($checkOnly))->import(new XlsxReader($file->getRealPath(), $ext));
+            $result = (new BiteCaseImporter($checkOnly))->import(new XlsxReader($path, $ext));
         } catch (\InvalidArgumentException|\RuntimeException $e) {
+            @unlink($path);
             return response()->json(['message' => $e->getMessage()], 422);
         } catch (\Throwable $e) {
             report($e);
             return response()->json(['message' => 'The import stopped because of an unexpected error. Nothing was saved.'], 500);
         }
 
+        if (!$checkOnly) {
+            @unlink($path);
+        }
+
         $result['error_count'] = count($result['errors']);
         $result['errors'] = array_slice($result['errors'], 0, 100);
-        $result['file'] = $file->getClientOriginalName();
+        $result['file'] = $name;
 
         if ($checkOnly) {
-            Audit::log('import_check', "Checked bite case file \"{$result['file']}\": {$result['imported']} rows ready, {$result['duplicates']} already in the system, {$result['failed']} with problems (nothing saved)");
+            Audit::log('import_check', "Checked bite case file \"{$name}\": {$result['imported']} rows ready, {$result['duplicates']} already in the system, {$result['failed']} with problems (nothing saved)");
         } else {
-            Audit::log('import_cases', "Imported bite cases from \"{$result['file']}\": {$result['imported']} saved, {$result['duplicates']} already in the system, {$result['failed']} skipped");
+            Audit::log('import_cases', "Imported bite cases from \"{$name}\": {$result['imported']} saved, {$result['duplicates']} already in the system, {$result['failed']} skipped");
         }
 
         return response()->json($result);

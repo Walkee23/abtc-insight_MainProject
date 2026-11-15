@@ -532,7 +532,7 @@
 
                     <label for="importFile" id="importDrop" class="flex flex-col items-center justify-center gap-1 border-2 border-dashed border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/40 rounded-xl px-4 py-6 cursor-pointer transition-colors text-center">
                         <span class="material-symbols-outlined text-[30px] text-slate-300">description</span>
-                        <span id="importFileName" class="text-xs font-bold text-slate-600">Click to choose a file (.xlsx or .csv, up to {{ round(\App\Support\BiteCaseImporter::uploadLimitBytes() / 1048576) }} MB)</span>
+                        <span id="importFileName" class="text-xs font-bold text-slate-600">Click to choose a file (.xlsx or .csv, up to {{ round(\App\Support\BiteCaseImporter::MAX_FILE_BYTES / 1048576) }} MB)</span>
                         <input type="file" id="importFile" accept=".xlsx,.csv" class="sr-only">
                     </label>
 
@@ -857,8 +857,11 @@
 
             // ------------------------------------------------------ import bite cases
             const IMPORT_URL = @json(route('admin.system.import-cases'));
-            const IMPORT_LIMIT = @json(\App\Support\BiteCaseImporter::uploadLimitBytes());
-            const IMPORT_HINT = 'Click to choose a file (.xlsx or .csv, up to ' + Math.round(IMPORT_LIMIT / 1048576) + ' MB)';
+            const CHUNK_URL = @json(route('admin.system.import-cases.chunk'));
+            const IMPORT_MAX = @json(\App\Support\BiteCaseImporter::MAX_FILE_BYTES);
+            const IMPORT_CHUNK = @json(\App\Support\BiteCaseImporter::chunkBytes());   // always below the server's per-request upload limit
+            const IMPORT_HINT = 'Click to choose a file (.xlsx or .csv, up to ' + Math.round(IMPORT_MAX / 1048576) + ' MB)';
+            let uploaded = null;   // {file, id}: the copy already on the server (kept after "Check only", so importing needs no second upload)
             const importFile = $('importFile');
             const importCheck = $('importCheckOnly');
             const runImportBtn = $('runImport');
@@ -876,6 +879,7 @@
                 importResult.classList.add('hidden');
                 importResult.replaceChildren();
                 importCheck.checked = true;
+                uploaded = null;
                 syncImportButton();
             }
             const fmt = (n) => Number(n).toLocaleString();
@@ -940,14 +944,17 @@
                 $('importFileName').textContent = f ? f.name + ' (' + (f.size / 1048576).toFixed(1) + ' MB)' : IMPORT_HINT;
                 importResult.replaceChildren();
                 importResult.classList.add('hidden');
-                if (f && f.size > IMPORT_LIMIT) {
-                    // PHP would silently drop the upload: say why instead
+                uploaded = null;
+                const problem = !f ? null
+                    : !/\.(xlsx|csv)$/i.test(f.name) ? '"' + f.name + '" is not an Excel (.xlsx) or .csv file. Older .xls files must be saved as .xlsx first.'
+                    : f.size === 0 ? '"' + f.name + '" is empty.'
+                    : f.size > IMPORT_MAX ? '"' + f.name + '" is ' + (f.size / 1048576).toFixed(1) + ' MB. The limit is ' + Math.round(IMPORT_MAX / 1048576) + ' MB - split the sheet into smaller files.'
+                    : null;
+                if (problem) {
                     importFile.value = '';
                     $('importFileName').textContent = IMPORT_HINT;
                     const box = el('div', 'rounded-xl px-4 py-3 text-xs font-bold bg-red-50 text-red-700 flex items-start gap-2');
-                    box.append(el('span', 'material-symbols-outlined text-[18px]', 'error'),
-                        el('span', 'leading-snug', '"' + f.name + '" is ' + (f.size / 1048576).toFixed(1) + ' MB, but this server accepts files up to ' + Math.round(IMPORT_LIMIT / 1048576) +
-                            ' MB. Raise upload_max_filesize and post_max_size in php.ini (then restart the server), or split the sheet into smaller files.'));
+                    box.append(el('span', 'material-symbols-outlined text-[18px]', 'error'), el('span', 'leading-snug', problem));
                     importResult.append(box);
                     importResult.classList.remove('hidden');
                 }
@@ -959,13 +966,17 @@
                 const check = importCheck.checked;
                 if (!check && !window.confirm('Import "' + f.name + '" into the system now?\n\nTip: run "Check only" first. A database backup beforehand is also a good idea.')) return;
 
-                const body = new FormData();
-                body.append('file', f);
-                body.append('check_only', check ? '1' : '0');
                 runImportBtn.disabled = true;
-                $('runImportLabel').textContent = check ? 'Checking...' : 'Importing...';
+                importCheck.disabled = true;
                 importResult.classList.add('hidden');
                 try {
+                    const id = await uploadFile(f);
+                    const body = new FormData();
+                    body.append('upload_id', id);
+                    body.append('filename', f.name);
+                    body.append('check_only', check ? '1' : '0');
+                    $('runImportLabel').textContent = check ? 'Checking...' : 'Importing...';
+                    if (!check) uploaded = null;   // the server deletes its copy after a real import
                     const data = await api(IMPORT_URL, { method: 'POST', body });
                     renderImport(data);
                     toast(check ? 'File checked - nothing was saved.' : fmt(data.imported) + ' bite cases imported.', true);
@@ -976,9 +987,32 @@
                     box.append(el('span', 'material-symbols-outlined text-[18px]', 'error'), el('span', 'leading-snug', e.message));
                     importResult.append(box);
                     importResult.classList.remove('hidden');
+                    uploaded = null;
                 }
+                importCheck.disabled = false;
                 syncImportButton();
             });
+
+            // Sends the file in pieces of IMPORT_CHUNK bytes: each request stays under PHP's upload limits, whatever the file's size
+            async function uploadFile(f) {
+                if (uploaded && uploaded.file === f) return uploaded.id;
+                const rnd = new Uint8Array(16);
+                crypto.getRandomValues(rnd);
+                const id = Array.from(rnd, (b) => b.toString(16).padStart(2, '0')).join('');
+                let offset = 0;
+                while (offset < f.size) {
+                    const piece = f.slice(offset, offset + IMPORT_CHUNK);
+                    const part = new FormData();
+                    part.append('upload_id', id);
+                    part.append('offset', String(offset));
+                    part.append('chunk', piece, 'part');
+                    $('runImportLabel').textContent = 'Uploading ' + Math.round(offset / f.size * 100) + '%';
+                    await api(CHUNK_URL, { method: 'POST', body: part });
+                    offset += piece.size;
+                }
+                uploaded = { file: f, id };
+                return id;
+            }
         })();
     </script>
 </body>

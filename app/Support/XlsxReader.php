@@ -33,6 +33,9 @@ class XlsxReader
 
     private ?array $dateStyles = null;
 
+    /** @var string[] temp files holding inflated parts; removed in the destructor */
+    private array $temps = [];
+
     public function __construct(string $path, ?string $type = null)
     {
         if (!is_file($path)) {
@@ -52,6 +55,9 @@ class XlsxReader
     {
         if (is_resource($this->zip)) {
             fclose($this->zip);
+        }
+        foreach ($this->temps as $f) {
+            @unlink($f);
         }
     }
 
@@ -75,8 +81,9 @@ class XlsxReader
         $shared = $this->sharedStrings();
         $dateStyles = $this->dateStyleIds();
 
+        // the sheet can inflate to hundreds of MB: stream it through a temp file instead of holding it in memory
         $xml = new XMLReader();
-        $xml->XML($this->read($sheet), null, LIBXML_NONET | LIBXML_COMPACT | LIBXML_PARSEHUGE);
+        $xml->open($this->extract($sheet), null, LIBXML_NONET | LIBXML_COMPACT | LIBXML_PARSEHUGE);
 
         $rowNumber = 0;
         while ($xml->read()) {
@@ -234,6 +241,55 @@ class XlsxReader
         throw new RuntimeException('This Excel file uses an unsupported compression method.');
     }
 
+    /** Inflates one part of the workbook into a temp file (in 1 MB steps) and returns the file's path. */
+    private function extract(string $name): string
+    {
+        $e = $this->entries[$name] ?? null;
+        if (!$e) {
+            throw new RuntimeException("The workbook is missing {$name}.");
+        }
+        fseek($this->zip, $e['offset']);
+        $lh = fread($this->zip, 30);
+        if (substr($lh, 0, 4) !== "PK\x03\x04") {
+            throw new RuntimeException('The Excel file is damaged.');
+        }
+        $l = unpack('vnlen/vxlen', substr($lh, 26, 4));
+        fseek($this->zip, $e['offset'] + 30 + $l['nlen'] + $l['xlen']);
+
+        $path = tempnam(sys_get_temp_dir(), 'xlsx');
+        $this->temps[] = $path;
+        $out = fopen($path, 'wb');
+
+        $remaining = $e['csize'];
+        if ($e['method'] === 0) {
+            while ($remaining > 0) {
+                $chunk = fread($this->zip, min($remaining, 1048576));
+                fwrite($out, $chunk);
+                $remaining -= strlen($chunk);
+            }
+        } elseif ($e['method'] === 8) {
+            $ctx = inflate_init(ZLIB_ENCODING_RAW);
+            while ($remaining > 0) {
+                $chunk = fread($this->zip, min($remaining, 1048576));
+                if ($chunk === '' || $chunk === false) {
+                    break;
+                }
+                $remaining -= strlen($chunk);
+                $data = @inflate_add($ctx, $chunk, $remaining > 0 ? ZLIB_NO_FLUSH : ZLIB_FINISH);
+                if ($data === false) {
+                    fclose($out);
+                    throw new RuntimeException('The Excel file is damaged.');
+                }
+                fwrite($out, $data);
+            }
+        } else {
+            fclose($out);
+            throw new RuntimeException('This Excel file uses an unsupported compression method.');
+        }
+        fclose($out);
+        return $path;
+    }
+
     // ------------------------------------------------------------------ workbook parts
 
     private function firstSheetPath(): string
@@ -276,7 +332,7 @@ class XlsxReader
             return $this->shared;
         }
         $xml = new XMLReader();
-        $xml->XML($this->read('xl/sharedStrings.xml'), null, LIBXML_NONET | LIBXML_PARSEHUGE);
+        $xml->open($this->extract('xl/sharedStrings.xml'), null, LIBXML_NONET | LIBXML_PARSEHUGE);
         while ($xml->read()) {
             if ($xml->nodeType === XMLReader::ELEMENT && $xml->name === 'si') {
                 // an <si> is either a plain <t> or several rich-text <r><t> runs; phonetic runs (<rPh>) are ignored

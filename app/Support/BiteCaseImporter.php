@@ -99,8 +99,14 @@ class BiteCaseImporter
         }
     }
 
-    /** The largest upload this PHP accepts: the smaller of upload_max_filesize and post_max_size, in bytes. */
-    public static function uploadLimitBytes(): int
+    /** Largest sheet accepted, in bytes (it is uploaded in pieces, so this is not tied to php.ini's upload limits). */
+    public const MAX_FILE_BYTES = 100 * 1048576;
+
+    /**
+     * Size of one upload piece: half of what a single request may carry (the smaller of upload_max_filesize and
+     * post_max_size, default 2 MB), between 128 KB and 1 MB, so a piece always fits however strict php.ini is.
+     */
+    public static function chunkBytes(): int
     {
         $toBytes = function (string $v): int {
             $v = trim($v);
@@ -113,7 +119,8 @@ class BiteCaseImporter
             };
         };
         $limits = array_filter([$toBytes((string) ini_get('upload_max_filesize')), $toBytes((string) ini_get('post_max_size'))]);
-        return $limits ? min(min($limits), 30 * 1048576) : 30 * 1048576;
+        $limit = $limits ? min($limits) : 2 * 1048576;
+        return max(131072, min(1048576, (int) floor($limit / 2)));
     }
 
     /** Official sheet headers, for the downloadable template. */

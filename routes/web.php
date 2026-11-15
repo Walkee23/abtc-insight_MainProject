@@ -12,6 +12,7 @@ use App\Http\Controllers\PepComplianceController;
 use App\Http\Controllers\TreatmentTrackerController;
 use App\Http\Controllers\ForecastingController;
 use App\Http\Controllers\ItDashboardController;
+use App\Http\Controllers\GisMapController;
 use Illuminate\Http\Request;
 
 
@@ -32,13 +33,8 @@ Route::prefix('admin')->group(function () {
         return view('admin.dashboard');
     })->name('admin.dashboard');
 
-    Route::get('/spatial-map', function () {
-        $barangayData = DB::table('inflow_general_particulars')
-            ->select('barangay', DB::raw('count(*) as total_cases'))
-            ->groupBy('barangay')
-            ->get();
-        return view('admin.gis_map', compact('barangayData'));
-    })->name('admin.gis_map');
+    Route::get('/spatial-map', [GisMapController::class, 'index'])->name('admin.gis_map');
+    Route::get('/spatial-map/data', [GisMapController::class, 'data'])->name('admin.gis_map.data');
 
     Route::get('/analytics', function () {
         return view('admin.V_and_A');
@@ -89,7 +85,7 @@ Route::prefix('staff')->group(function () {
     Route::get('/dashboard', [StaffController::class, 'newDashboard'])->name('staff.newdashboard');
     Route::get('/queue', [StaffController::class, 'dashboard'])->name('staff.dashboard');
     Route::post('/staff/call-patient/{inflowRecordId}', [App\Http\Controllers\StaffController::class, 'callPatient'])
-    ->name('staff.call-patient');
+        ->name('staff.call-patient');
 
     Route::get('/case-encoding/{inflow_record_id?}', [StaffController::class, 'caseEncoding'])->name('staff.case-encoding');
     Route::post('/case-encoding/{inflow_record_id}/store', [StaffController::class, 'storeCaseEncoding'])->name('staff.store-case-encoding');

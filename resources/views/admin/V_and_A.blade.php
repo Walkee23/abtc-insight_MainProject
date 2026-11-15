@@ -328,18 +328,7 @@
                     </div>
                 </div>
 
-                <!-- Card 5: PEP Completion -->
-                <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 shadow-sm overflow-hidden relative">
-                    <p class="text-xs font-bold uppercase text-on-surface-variant/60 tracking-widest mb-4">PEP Completion</p>
-                    <div class="flex items-end justify-between">
-                        <h3 class="text-4xl font-black text-on-surface tracking-tighter">{{ $analyticsPepCompletion ?? 0 }}%</h3>
-                        <div class="flex-1 h-8 ml-4 mb-1 overflow-hidden">
-                            <svg class="w-full h-full stroke-primary fill-none stroke-2" viewBox="0 0 100 30">
-                                <path d="M0,25 Q10,20 20,22 T40,15 T60,18 T80,5 T100,10"></path>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
+               
             </div>
 
             <!-- SECTION 4 — CHARTS & RANKINGS GRID -->

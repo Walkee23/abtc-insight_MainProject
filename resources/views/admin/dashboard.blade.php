@@ -320,7 +320,6 @@
                                             <option value="{{ $value }}" {{ (int) $bitePeriod === (int) $value ? 'selected' : '' }}>{{ $text }}</option>
                                         @endforeach
                                     </select>
-                                    <span class="material-symbols-outlined pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[18px] text-slate-400">expand_more</span>
                                 </div>
                             @endif
 
@@ -330,7 +329,6 @@
                                         <option value="{{ $y }}" {{ (int) $biteYear === (int) $y ? 'selected' : '' }}>{{ $y }}</option>
                                     @endforeach
                                 </select>
-                                <span class="material-symbols-outlined pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[18px] text-slate-400">expand_more</span>
                             </div>
                             </div>
                         </div>

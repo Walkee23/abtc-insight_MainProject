@@ -15,9 +15,20 @@
     if (window.__csSelect) return;
     window.__csSelect = true;
 
-    var CHECK = '<svg class="cs-check" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 10.5l3.6 3.6 7.4-8.2"/></svg>';
+    // one chevron for every dropdown on every page (grey when closed, blue and flipped while the menu is open)
+    function chevron(color, open) {
+        return 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 20 20\' fill=\'none\' stroke=\'' + color
+            + '\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpath d=\''
+            + (open ? 'M5 12.5l5-5 5 5' : 'M5 7.5l5 5 5-5') + '\'/%3E%3C/svg%3E")';
+    }
+    var SEL = 'select:not([multiple]):not([size]):not([data-native])';
 
     var CSS = [
+        SEL + '{-webkit-appearance:none;-moz-appearance:none;appearance:none;background-image:' + chevron('%2364748b', false) + ';',
+        'background-repeat:no-repeat;background-position:right .8rem center;background-size:1rem 1rem;padding-right:2.4rem;text-overflow:ellipsis}',
+        SEL + ':hover{background-image:' + chevron('%23334155', false) + '}',
+        SEL + '.cs-open{background-image:' + chevron('%23004a93', true) + '}',
+        SEL + ':disabled{background-image:' + chevron('%23cbd5e1', false) + '}',
         '.cs-menu{position:fixed;z-index:2147483000;box-sizing:border-box;padding:6px;background:#fff;color:#334155;',
         'border:1px solid rgba(15,23,42,.08);border-radius:14px;overflow-y:auto;overscroll-behavior:contain;',
         'box-shadow:0 16px 36px -10px rgba(15,23,42,.22),0 4px 12px -4px rgba(15,23,42,.10);',
@@ -36,8 +47,6 @@
         '.cs-opt[aria-selected="true"].cs-active{background:#dbeafe}',
         '.cs-opt.cs-empty .cs-txt{color:#94a3b8;font-weight:500}',
         '.cs-opt.cs-disabled{opacity:.4;cursor:not-allowed}',
-        '.cs-check{flex:none;width:15px;height:15px;color:#004a93;opacity:0;transform:scale(.6);transition:opacity .12s ease,transform .12s ease}',
-        '.cs-opt[aria-selected="true"] .cs-check{opacity:1;transform:none}',
         '.cs-group{padding:10px 10px 4px;font-size:.78em;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#94a3b8;cursor:default}',
         '.cs-group:first-child{padding-top:4px}',
         /* dark pages */
@@ -45,8 +54,7 @@
         '.cs-dark .cs-opt.cs-active{background:#334155;color:#fff}',
         '.cs-dark .cs-opt[aria-selected="true"]{background:rgba(59,130,246,.18);color:#93c5fd}',
         '.cs-dark .cs-opt[aria-selected="true"].cs-active{background:rgba(59,130,246,.3)}',
-        '.cs-dark .cs-check{color:#93c5fd}',
-        '@media (prefers-reduced-motion:reduce){.cs-menu,.cs-opt,.cs-check{transition:none}}'
+        '@media (prefers-reduced-motion:reduce){.cs-menu,.cs-opt{transition:none}}'
     ].join('');
 
     var style = document.createElement('style');
@@ -89,7 +97,6 @@
             txt.className = 'cs-txt';
             txt.textContent = (opt.text || '').trim() || ' ';
             el.appendChild(txt);
-            el.insertAdjacentHTML('beforeend', CHECK);
             menu.appendChild(el);
             items.push({ opt: opt, el: el, disabled: disabled });
         }
@@ -171,6 +178,7 @@
 
         state = { select: select, menu: menu, items: built.items, active: -1 };
         select.setAttribute('aria-expanded', 'true');
+        select.classList.add('cs-open');
 
         var cur = -1;
         built.items.forEach(function (it, i) { if (it.opt.selected && cur < 0) cur = i; });
@@ -183,6 +191,7 @@
         var s = state.select, menu = state.menu;
         state = null;
         s.removeAttribute('aria-expanded');
+        s.classList.remove('cs-open');
         menu.classList.remove('cs-show');
         setTimeout(function () { if (menu.parentNode) menu.parentNode.removeChild(menu); }, 140);
         if (refocus) { try { s.focus({ preventScroll: true }); } catch (e) { s.focus(); } }

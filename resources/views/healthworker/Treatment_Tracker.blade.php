@@ -298,8 +298,6 @@
                                 <option value="{{ $b }}" {{ $barangay === $b ? 'selected' : '' }}>{{ $b }}</option>
                                 @endforeach
                             </select>
-                            <span
-                                class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">expand_more</span>
                         </div>
                         <div class="relative min-w-[200px]">
                             <select name="status" onchange="this.form.submit()"
@@ -309,8 +307,6 @@
                                 <option value="completed" {{ $status === 'completed' ? 'selected' : '' }}>Completed</option>
                                 <option value="missed" {{ $status === 'missed' ? 'selected' : '' }}>Missed (Late)</option>
                             </select>
-                            <span
-                                class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">expand_more</span>
                         </div>
                         @if($search !== '')
                         <a href="{{ route('healthworker.treatment-tracker', array_filter(['barangay' => $barangay, 'status' => $status === 'all' ? null : $status])) }}"

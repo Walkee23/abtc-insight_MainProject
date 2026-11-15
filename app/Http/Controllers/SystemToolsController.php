@@ -296,7 +296,10 @@ class SystemToolsController extends Controller
         $checkOnly = $request->boolean('check_only');
 
         try {
-            $result = (new BiteCaseImporter($checkOnly))->import(new XlsxReader($path, $ext));
+            // the year in the file name ("2025-ANIMAL-BITE-CASES.xlsx") fills in bite dates written without a year
+            $result = (new BiteCaseImporter($checkOnly))
+                ->forYear(BiteCaseImporter::yearFromFilename($name))
+                ->import(new XlsxReader($path, $ext));
         } catch (\InvalidArgumentException|\RuntimeException $e) {
             @unlink($path);
             return response()->json(['message' => $e->getMessage()], 422);

@@ -524,6 +524,7 @@
                     <p class="text-xs text-slate-500 leading-relaxed">
                         Upload an Excel (<b>.xlsx</b>) or <b>.csv</b> sheet of animal bite cases, one row per patient. Columns are found by their heading
                         (name, age, gender, birthdate, barangay, biting animal, category, 1st&ndash;3rd dose, outcome, wound, site, date of bite ...), so their order does not matter.
+                        An Excel file can have several tabs (for example one per month): <b>every tab</b> that is a bite case list is imported, and other tabs (summaries, reports) are skipped.
                         Each row is saved as a full case that the analytics, forecasting and map pages use. Rows already in the system are skipped, so the same file can be imported twice safely.
                     </p>
                     <a href="{{ route('admin.system.import-cases.template') }}" class="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 hover:underline">
@@ -913,6 +914,23 @@
                 detail.push(fmt(r.new_patients) + ' new patient' + (r.new_patients === 1 ? '' : 's') + (r.repeat_patients ? ', ' + fmt(r.repeat_patients) + ' repeat bite' + (r.repeat_patients === 1 ? '' : 's') + ' of existing patients' : ''));
                 importResult.append(el('p', 'text-[11px] text-slate-500', detail.join(' \u00b7 ')));
 
+                if (r.sheets && r.sheets.length > 1) {
+                    const box = el('div', 'rounded-xl border border-slate-100 overflow-hidden');
+                    const head = el('div', 'grid grid-cols-5 gap-2 px-4 py-2 bg-slate-50 text-[10px] font-bold text-slate-500 uppercase tracking-wider');
+                    ['Tab', 'Rows', r.dry_run ? 'Ready' : 'Imported', 'Existing', 'Skipped'].forEach((t, i) => head.append(el('span', i ? 'text-right' : '', t)));
+                    box.append(head);
+                    const list = el('div', 'max-h-40 overflow-y-auto divide-y divide-slate-100');
+                    r.sheets.forEach((s) => {
+                        const line = el('div', 'grid grid-cols-5 gap-2 px-4 py-1.5 text-xs text-slate-600');
+                        line.append(el('span', 'font-bold text-slate-700 truncate', s.name), el('span', 'text-right', fmt(s.total)),
+                            el('span', 'text-right text-emerald-700 font-bold', fmt(s.imported)), el('span', 'text-right', fmt(s.duplicates)),
+                            el('span', 'text-right ' + (s.failed ? 'text-red-600 font-bold' : ''), fmt(s.failed)));
+                        list.append(line);
+                    });
+                    box.append(list);
+                    importResult.append(box);
+                }
+
                 if (r.warnings && r.warnings.length) {
                     const box = el('div', 'rounded-xl bg-amber-50 border border-amber-100 px-4 py-3 space-y-1');
                     box.append(el('p', 'text-[11px] font-bold text-amber-700 uppercase tracking-wider', 'Notes'));
@@ -928,7 +946,7 @@
                     const list = el('div', 'max-h-48 overflow-y-auto divide-y divide-slate-100');
                     r.errors.forEach((e) => {
                         const row = el('div', 'flex gap-3 px-4 py-2 text-xs');
-                        row.append(el('span', 'font-bold text-slate-700 w-16 shrink-0', 'Row ' + e.row), el('span', 'text-slate-600', e.message));
+                        row.append(el('span', 'font-bold text-slate-700 shrink-0 ' + (e.sheet ? 'w-28' : 'w-16'), (e.sheet ? e.sheet + ' · row ' : 'Row ') + e.row), el('span', 'text-slate-600', e.message));
                         list.append(row);
                     });
                     if (r.error_count > r.errors.length) list.append(el('p', 'px-4 py-2 text-xs text-slate-400', 'Showing the first ' + r.errors.length + ' of ' + fmt(r.error_count) + '.'));

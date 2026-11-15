@@ -33,6 +33,9 @@ class XlsxReader
 
     private ?array $dateStyles = null;
 
+    /** @var array<int, array{name:string, path:string}>|null */
+    private ?array $sheetList = null;
+
     /** @var string[] temp files holding inflated parts; removed in the destructor */
     private array $temps = [];
 
@@ -64,26 +67,30 @@ class XlsxReader
     // ------------------------------------------------------------------ public API
 
     /**
-     * Stream the rows of the first worksheet. Keys are 1-based row numbers; values are lists of
+     * Stream the rows of one worksheet (the first by default; see sheetNames()). Keys are 1-based row numbers; values are lists of
      * cell strings indexed from 0 (column A). Dates stored as Excel serial numbers are converted
      * to Y-m-d strings. Completely empty rows are skipped.
      *
      * @return \Generator<int, array<int, string>>
      */
-    public function rows(): \Generator
+    public function rows(int $sheetIndex = 0): \Generator
     {
         if ($this->type === 'csv') {
             yield from $this->csvRows();
             return;
         }
 
-        $sheet = $this->firstSheetPath();
+        $sheets = $this->sheetList();
+        if (!isset($sheets[$sheetIndex])) {
+            throw new RuntimeException('That sheet does not exist in the workbook.');
+        }
         $shared = $this->sharedStrings();
         $dateStyles = $this->dateStyleIds();
 
         // the sheet can inflate to hundreds of MB: stream it through a temp file instead of holding it in memory
+        $file = $this->extract($sheets[$sheetIndex]['path']);
         $xml = new XMLReader();
-        $xml->open($this->extract($sheet), null, LIBXML_NONET | LIBXML_COMPACT | LIBXML_PARSEHUGE);
+        $xml->open($file, null, LIBXML_NONET | LIBXML_COMPACT | LIBXML_PARSEHUGE);
 
         $rowNumber = 0;
         while ($xml->read()) {
@@ -126,7 +133,7 @@ class XlsxReader
                     } elseif ($type === 'b') {
                         $value = $value === '1' ? 'TRUE' : 'FALSE';
                     } elseif (($type === null || $type === 'n' || $type === '') && $value !== '' && is_numeric($value) && isset($dateStyles[$style])) {
-                        $value = $this->excelDate((float) $value);
+                        $value = $this->excelDate((float) $value) ?? $value;
                     }
                     $cells[$col] = trim((string) $value);
                 }
@@ -142,6 +149,9 @@ class XlsxReader
             }
         }
         $xml->close();
+        // this sheet is done: free its temp file now instead of keeping every sheet on disk until the end
+        @unlink($file);
+        $this->temps = array_values(array_diff($this->temps, [$file]));
     }
 
     // ------------------------------------------------------------------ CSV
@@ -292,33 +302,46 @@ class XlsxReader
 
     // ------------------------------------------------------------------ workbook parts
 
-    private function firstSheetPath(): string
+    /** @return array<int, array{name:string, path:string}> the worksheets in tab order (hidden ones included) */
+    private function sheetList(): array
     {
+        if ($this->sheetList !== null) {
+            return $this->sheetList;
+        }
+        $list = [];
         // workbook.xml lists the sheets in order; workbook.xml.rels maps their ids to part names
         if ($this->has('xl/workbook.xml') && $this->has('xl/_rels/workbook.xml.rels')) {
             $wb = @simplexml_load_string($this->read('xl/workbook.xml'));
             $rels = @simplexml_load_string($this->read('xl/_rels/workbook.xml.rels'));
             if ($wb && $rels) {
+                $targets = [];
+                foreach ($rels->Relationship as $rel) {
+                    $target = (string) $rel['Target'];
+                    $targets[(string) $rel['Id']] = ltrim($target !== '' && $target[0] === '/' ? $target : 'xl/' . $target, '/');
+                }
                 $wb->registerXPathNamespace('m', 'http://schemas.openxmlformats.org/spreadsheetml/2006/main');
-                $sheets = $wb->xpath('//m:sheets/m:sheet');
-                if ($sheets) {
-                    $rid = (string) $sheets[0]->attributes('http://schemas.openxmlformats.org/officeDocument/2006/relationships')['id'];
-                    foreach ($rels->Relationship as $rel) {
-                        if ((string) $rel['Id'] === $rid) {
-                            $target = (string) $rel['Target'];
-                            $path = ltrim($target[0] === '/' ? $target : 'xl/' . $target, '/');
-                            if ($this->has($path)) {
-                                return $path;
-                            }
-                        }
+                foreach ($wb->xpath('//m:sheets/m:sheet') ?: [] as $sheet) {
+                    $rid = (string) $sheet->attributes('http://schemas.openxmlformats.org/officeDocument/2006/relationships')['id'];
+                    $path = $targets[$rid] ?? '';
+                    if ($path !== '' && $this->has($path)) {
+                        $list[] = ['name' => (string) $sheet['name'], 'path' => $path];
                     }
                 }
             }
         }
-        if ($this->has('xl/worksheets/sheet1.xml')) {
-            return 'xl/worksheets/sheet1.xml';
+        if (!$list && $this->has('xl/worksheets/sheet1.xml')) {
+            $list[] = ['name' => 'Sheet1', 'path' => 'xl/worksheets/sheet1.xml'];
         }
-        throw new RuntimeException('The workbook has no worksheet to read.');
+        if (!$list) {
+            throw new RuntimeException('The workbook has no worksheet to read.');
+        }
+        return $this->sheetList = $list;
+    }
+
+    /** Names of the sheets (tabs) in the file, in order. A CSV file counts as one sheet. */
+    public function sheetNames(): array
+    {
+        return $this->type === 'csv' ? ['CSV'] : array_column($this->sheetList(), 'name');
     }
 
     /** @return string[] */
@@ -409,8 +432,12 @@ class XlsxReader
         return max(0, $n - 1);
     }
 
-    private function excelDate(float $serial): string
+    private function excelDate(float $serial): ?string
     {
+        // a number that is not a plausible date (a typo in a date-formatted cell): keep the cell's own text
+        if ($serial < 1 || $serial > 2958465) {
+            return null;
+        }
         // Excel counts days from 1899-12-30 (the 1900 leap-year bug is already absorbed by that epoch)
         $days = (int) floor($serial);
         $dt = (new \DateTimeImmutable('1899-12-30 00:00:00'))->modify("+{$days} days");

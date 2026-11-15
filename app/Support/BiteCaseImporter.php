@@ -47,11 +47,12 @@ class BiteCaseImporter
         'stray'     => ['STRAY'],
         'remarks'   => ['REMARKS', 'REMARK', 'NOTES'],
         'outcome'   => ['TREATMENTOUTCOME', 'OUTCOME'],
-        'wound'     => ['TYPEOFWOUND', 'WOUNDTYPE', 'WOUND'],
+        'wound'     => ['TYPEOFWOUND', 'WOUNDTYPE', 'WOUND', 'TYPEOFBITE'],
         'site'      => ['SITEOFBITE', 'BITESITE', 'SITE'],
-        'bitedate'  => ['DATEANDTIMEOFBITE', 'DATEOFBITE', 'BITEDATE', 'DATEOFINCIDENT', 'DATEOFEXPOSURE'],
+        'bitedate'  => ['DATEANDTIMEOFBITE', 'DATEOFBITE', 'BITEDATE', 'DATEOFINCIDENT', 'DATEOFEXPOSURE',
+                        'DATEANDTIMEOFBITTINGINCIDENT', 'DATEANDTIMEOFBITINGINCIDENT', 'DATEOFBITTINGINCIDENT', 'DATEOFBITINGINCIDENT'],
         'animalvax' => ['VACCINATIONSTATUSOFBITTINGANIMAL', 'VACCINATIONSTATUSOFBITINGANIMAL', 'ANIMALVACCINATIONSTATUS', 'ANIMALVAXSTATUS'],
-        'circ'      => ['CIRCUMSTANCESOFBITE', 'CIRCUMSTANCES', 'CIRCUMSTANCE'],
+        'circ'      => ['CIRCUMSTANCESOFBITE', 'CIRCUMSTANCES', 'CIRCUMSTANCE', 'PROVOKED', 'PROVOKEDUNPROVOKED'],
         'contact'   => ['CONTACTNUMBER', 'CONTACTNO', 'CONTACT', 'MOBILE', 'MOBILENUMBER', 'PHONE'],
     ];
 
@@ -76,6 +77,8 @@ class BiteCaseImporter
     ];
 
     private bool $dryRun;
+
+    private ?int $yearHint = null;
 
     /** @var array<string,string> normalised barangay => official spelling */
     private array $barangays = [];
@@ -150,62 +153,98 @@ class BiteCaseImporter
         @set_time_limit(0);
         @ini_set('memory_limit', '768M');
 
-        $map = null;
         $stats = ['total' => 0, 'imported' => 0, 'duplicates' => 0, 'failed' => 0, 'new_patients' => 0, 'repeat_patients' => 0,
-            'date_from' => null, 'date_to' => null, 'errors' => [], 'warnings' => [], 'dry_run' => $this->dryRun];
+            'date_from' => null, 'date_to' => null, 'errors' => [], 'warnings' => [], 'sheets' => [], 'skipped_sheets' => [],
+            'dry_run' => $this->dryRun];
         $unknownBarangays = [];
+        $multi = count($reader->sheetNames()) > 1;
+        $sheetProblem = null;
 
         DB::beginTransaction();
         try {
             $this->preload();
 
-            foreach ($reader->rows() as $rowNo => $cells) {
-                if ($map === null) {
-                    // the header is the first row that names the required columns (title rows above it are ignored)
-                    $candidate = $this->mapHeaders($cells);
-                    if ($candidate && !array_diff_key(self::REQUIRED, $candidate)) {
-                        $map = $candidate;
-                        if (!isset($map['bitedate']) && !isset($map['d1'])) {
-                            throw new InvalidArgumentException('The sheet needs a "DATE AND TIME OF BITE" column (or a "1ST DOSE" column to use instead).');
-                        }
-                    } elseif ($rowNo > 15) {
-                        throw $this->missingColumns($candidate ?? []);
-                    }
-                    continue;
-                }
+            // every tab of the workbook is read; tabs that are not bite case lists (summaries, reports,
+            // pre-exposure lists...) are recognised by their columns and skipped
+            foreach ($reader->sheetNames() as $sheetIndex => $sheetName) {
+                $map = null;
+                $mark = $stats;
+                $tabMonth = $this->yearHint ? $this->monthOfTab($sheetName) : null;
 
-                $stats['total']++;
-                try {
-                    $row = $this->parseRow($cells, $map, $unknownBarangays);
-                    $key = $row['dedupe'];
-                    if (isset($this->seen[$key])) {
-                        $stats['duplicates']++;
+                foreach ($reader->rows($sheetIndex) as $rowNo => $cells) {
+                    if ($map === null) {
+                        // the header is the first row that names the required columns (title rows above it are ignored)
+                        $candidate = $this->mapHeaders($cells);
+                        if ($candidate && !array_diff_key(self::REQUIRED, $candidate)) {
+                            if (!isset($candidate['animal']) && !isset($candidate['bitedate']) && !isset($candidate['category'])) {
+                                break; // names and birthdates, but no bite information: not a bite case list
+                            }
+                            if (!isset($candidate['bitedate']) && !isset($candidate['d1'])) {
+                                $sheetProblem ??= 'The sheet needs a "DATE AND TIME OF BITE" column (or a "1ST DOSE" column to use instead).';
+                                break;
+                            }
+                            $map = $candidate;
+                        } elseif ($rowNo > 15) {
+                            break;
+                        }
                         continue;
                     }
 
-                    $isNewPatient = null;
-                    DB::transaction(function () use ($row, &$isNewPatient) {
-                        $isNewPatient = $this->store($row);
-                    });
+                    $stats['total']++;
+                    try {
+                        $row = $this->parseRow($cells, $map, $unknownBarangays);
+                        $key = $row['dedupe'];
+                        if (isset($this->seen[$key])) {
+                            $stats['duplicates']++;
+                            continue;
+                        }
 
-                    $this->seen[$key] = true;
-                    $stats['imported']++;
-                    $isNewPatient ? $stats['new_patients']++ : $stats['repeat_patients']++;
-                    $day = substr($row['bite_at'], 0, 10);
-                    if ($stats['date_from'] === null || $day < $stats['date_from']) { $stats['date_from'] = $day; }
-                    if ($stats['date_to'] === null || $day > $stats['date_to']) { $stats['date_to'] = $day; }
-                } catch (InvalidArgumentException $e) {
-                    $stats['failed']++;
-                    $this->addError($stats, $rowNo, $e->getMessage());
-                } catch (\Throwable $e) {
-                    $stats['failed']++;
-                    $this->addError($stats, $rowNo, 'Could not be saved (' . class_basename($e) . ').');
-                    report($e);
+                        if ($tabMonth) {
+                            // a month tab (with a known year) holds bites from about that month; anything much further
+                            // away is almost always a typo in the year, and would distort the monthly analytics
+                            $day = substr($row['bite_at'], 0, 10);
+                            $first = Carbon::create($this->yearHint, $tabMonth, 1);
+                            if ($day < $first->copy()->subMonths(6)->toDateString() || $day > $first->copy()->addMonth()->endOfMonth()->toDateString()) {
+                                throw new InvalidArgumentException("Date of bite ({$day}) is far from the {$sheetName} tab - please check the year.");
+                            }
+                        }
+
+                        $isNewPatient = null;
+                        DB::transaction(function () use ($row, &$isNewPatient) {
+                            $isNewPatient = $this->store($row);
+                        });
+
+                        $this->seen[$key] = true;
+                        $stats['imported']++;
+                        $isNewPatient ? $stats['new_patients']++ : $stats['repeat_patients']++;
+                        $day = substr($row['bite_at'], 0, 10);
+                        if ($stats['date_from'] === null || $day < $stats['date_from']) { $stats['date_from'] = $day; }
+                        if ($stats['date_to'] === null || $day > $stats['date_to']) { $stats['date_to'] = $day; }
+                    } catch (InvalidArgumentException $e) {
+                        $stats['failed']++;
+                        $this->addError($stats, $rowNo, $e->getMessage(), $multi ? $sheetName : null);
+                    } catch (\Throwable $e) {
+                        $stats['failed']++;
+                        $this->addError($stats, $rowNo, 'Could not be saved (' . class_basename($e) . ').', $multi ? $sheetName : null);
+                        report($e);
+                    }
                 }
+
+                if ($map === null) {
+                    $stats['skipped_sheets'][] = $sheetName;
+                    continue;
+                }
+                $stats['sheets'][] = [
+                    'name'       => $sheetName,
+                    'total'      => $stats['total'] - $mark['total'],
+                    'imported'   => $stats['imported'] - $mark['imported'],
+                    'duplicates' => $stats['duplicates'] - $mark['duplicates'],
+                    'failed'     => $stats['failed'] - $mark['failed'],
+                ];
             }
 
-            if ($map === null) {
-                throw $this->missingColumns([]);
+            if (!$stats['sheets']) {
+                throw $sheetProblem ? new InvalidArgumentException($sheetProblem) : $this->missingColumns([]);
             }
 
             $this->dryRun ? DB::rollBack() : DB::commit();
@@ -224,13 +263,18 @@ class BiteCaseImporter
         if ($stats['total'] === 0) {
             $stats['warnings'][] = 'The sheet has a header row but no data rows under it.';
         }
+        if ($stats['skipped_sheets']) {
+            $n = count($stats['skipped_sheets']);
+            $stats['warnings'][] = $n . ($n === 1 ? ' sheet was' : ' sheets were') . ' skipped because ' . ($n === 1 ? 'it is' : 'they are')
+                . ' not an animal bite case list: ' . implode(', ', $stats['skipped_sheets']) . '.';
+        }
 
         return $stats;
     }
 
-    private function addError(array &$stats, int $row, string $message): void
+    private function addError(array &$stats, int $row, string $message, ?string $sheet = null): void
     {
-        $stats['errors'][] = ['row' => $row, 'message' => $message];
+        $stats['errors'][] = ['row' => $row, 'message' => $message] + ($sheet !== null ? ['sheet' => $sheet] : []);
     }
 
     // ------------------------------------------------------------------ headers
@@ -301,8 +345,12 @@ class BiteCaseImporter
         }
 
         // --- dates
-        $d1 = $this->date($get('d1'))['date'] ?? null;
-        $bite = $this->date($get('bitedate'));
+        $d1 = $this->date($get('d1'), $this->yearHint)['date'] ?? null;
+        // a bite date written without a year ("10/5, 3PM") takes the year of the 1st dose, else the year of the file
+        $bite = $this->date($get('bitedate'), $d1 ? (int) substr($d1, 0, 4) : $this->yearHint);
+        if (!empty($bite['guessed']) && $d1 && $bite['date'] > Carbon::parse($d1)->addDay()->toDateString()) {
+            $bite = $this->date($get('bitedate'), (int) substr($d1, 0, 4) - 1);   // a December bite treated in January
+        }
         $biteDate = $bite['date'] ?? $d1;
         if (!$biteDate) {
             throw new InvalidArgumentException('Missing or unreadable date of bite.');
@@ -368,7 +416,8 @@ class BiteCaseImporter
         };
 
         $circ = strtoupper($get('circ'));
-        $provoked = $circ === 'P' || str_starts_with($circ, 'PROV') ? 1 : (($circ === 'U' || str_starts_with($circ, 'UNPROV')) ? 0 : null);
+        // P = provoked; U / UP = unprovoked (the monthly sheets switch between the two spellings)
+        $provoked = $circ === 'P' || str_starts_with($circ, 'PROV') ? 1 : (in_array($circ, ['U', 'UP'], true) || str_starts_with($circ, 'UNPROV') ? 0 : null);
         $circParts = [];
         if ($provoked !== null) { $circParts[] = $provoked ? 'Provoked' : 'Unprovoked'; }
         $strayText = $get('stray');
@@ -494,34 +543,72 @@ class BiteCaseImporter
      * Understands ISO dates, m/d/yy[yy] text (US order, the way the sheets were typed) with an optional time,
      * and "N/A"-style filler. Returns ['date' => 'Y-m-d', 'time' => 'H:i:s'|null] or [].
      */
-    private function date(string $raw): array
+    private function date(string $raw, ?int $yearHint = null): array
     {
         $s = trim($raw);
         if ($s === '' || !preg_match('/\d/', $s)) {
             return [];
         }
         $y = $mo = $d = null;
+        $guessed = false;
+        // an impossible time typed in the sheet ("21:60") is dropped; the date is still used
+        $clock = fn (int $h, int $min): ?string => $h <= 23 && $min <= 59 ? sprintf('%02d:%02d:00', $h, $min) : null;
+        $timeOf = function (string $rest) use ($clock): ?string {
+            if (preg_match('/(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m?\.?/i', $rest, $t)) {
+                return $clock((int) $t[1] % 12 + (strtolower($t[3]) === 'p' ? 12 : 0), (int) ($t[2] ?? 0));
+            }
+            if (preg_match('/(\d{1,2}):(\d{2})/', $rest, $t)) {
+                return $clock((int) $t[1], (int) $t[2]);
+            }
+            return null;
+        };
         if (preg_match('/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2}):(\d{2}))?/', $s, $m)) {
             [$y, $mo, $d] = [(int) $m[1], (int) $m[2], (int) $m[3]];
-            $time = isset($m[4]) ? sprintf('%02d:%02d:00', $m[4], $m[5]) : null;
+            $time = isset($m[4]) ? $clock((int) $m[4], (int) $m[5]) : null;
         } elseif (preg_match('/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})(.*)$/', $s, $m)) {
             [$a, $b, $y] = [(int) $m[1], (int) $m[2], (int) $m[3]];
             [$mo, $d] = $a > 12 && $b <= 12 ? [$b, $a] : [$a, $b];   // 25/12/24 can only be day/month
             if ($y < 100) { $y += 2000; }
-            $time = null;
-            if (preg_match('/(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m?\.?/i', $m[4], $t)) {
-                $h = (int) $t[1] % 12 + (strtolower($t[3]) === 'p' ? 12 : 0);
-                $time = sprintf('%02d:%02d:00', $h, (int) ($t[2] ?? 0));
-            } elseif (preg_match('/(\d{1,2}):(\d{2})/', $m[4], $t)) {
-                $time = sprintf('%02d:%02d:00', (int) $t[1], (int) $t[2]);
-            }
+            $time = $timeOf($m[4]);
+        } elseif ($yearHint && preg_match('/^(\d{1,2})[\/\-.](\d{1,2})(?![\d\/\-.])(.*)$/', $s, $m)) {
+            // month/day without a year, e.g. "10/5, 3PM"
+            [$a, $b] = [(int) $m[1], (int) $m[2]];
+            [$mo, $d] = $a > 12 && $b <= 12 ? [$b, $a] : [$a, $b];
+            $y = $yearHint;
+            $guessed = true;
+            $time = $timeOf($m[3]);
         } else {
             return [];
         }
         if (!checkdate($mo, $d, $y)) {
             return [];
         }
-        return ['date' => sprintf('%04d-%02d-%02d', $y, $mo, $d), 'time' => $time];
+        return ['date' => sprintf('%04d-%02d-%02d', $y, $mo, $d), 'time' => $time, 'guessed' => $guessed];
+    }
+
+    /** The year written in a file name ("2025-ANIMAL-BITE-CASES.xlsx"), used for dates that have no year. */
+    public static function yearFromFilename(string $name): ?int
+    {
+        return preg_match('/(?<!\d)(20\d{2})(?!\d)/', $name, $m) ? (int) $m[1] : null;
+    }
+
+    /** Year to assume for bite dates written without one, and the year of month-named tabs. */
+    public function forYear(?int $year): static
+    {
+        $this->yearHint = $year;
+        return $this;
+    }
+
+    /** Month number (1-12) when a tab is named after a month (JANUARY, Feb, ...), else null. */
+    private function monthOfTab(string $name): ?int
+    {
+        $n = strtoupper(trim($name));
+        foreach (['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'] as $i => $full) {
+            if ($n === $full || $n === substr($full, 0, 3) || ($n === 'SEPT' && $i === 8)) {
+                return $i + 1;
+            }
+        }
+        return null;
     }
 
     // ------------------------------------------------------------------ writing

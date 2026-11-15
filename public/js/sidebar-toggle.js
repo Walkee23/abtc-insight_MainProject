@@ -2,8 +2,9 @@
  * Collapsible sidebar for every page that has one (Admin, Health Worker, Staff, BHW).
  *
  * A hamburger button is added beside the "ABTC-INSIGHT" logo name. Collapsed, the sidebar
- * shrinks to a narrow rail that shows only the icons (hover an icon for its name) and the
- * page content slides over to fill the space. The choice is remembered across pages.
+ * shrinks to a narrow rail that shows only the icons (hover an icon for its name), the
+ * hamburger disappears and the logo becomes the button that expands it again. The page
+ * content slides over to fill the space. The choice is remembered across pages.
  *
  * Loaded in the <head> so a remembered "collapsed" state is applied before the page paints.
  */
@@ -39,10 +40,13 @@
         'html.sb-collapsed .pl-72{padding-left:7rem !important}',
         'html.sb-collapsed .w-\\[calc\\(100\\%-16rem\\)\\]{width:calc(100% - 5rem) !important}',
 
-        /* brand: hamburger above the logo, name hidden */
-        'html.sb-collapsed aside .sb-brand{flex-direction:column;align-items:center;gap:.75rem !important}',
+        /* brand: only the logo stays, and it expands the sidebar when clicked */
+        'html.sb-collapsed aside .sb-brand{justify-content:center}',
         'html.sb-collapsed aside .sb-brand-name{display:none !important}',
-        'html.sb-collapsed aside .sb-toggle{margin-left:0 !important;order:-1}',
+        'html.sb-collapsed aside .sb-toggle{display:none !important}',
+        'html.sb-collapsed aside .sb-logo{cursor:pointer;transition:transform .15s,box-shadow .15s}',
+        'html.sb-collapsed aside .sb-logo:hover{transform:scale(1.08);box-shadow:0 0 0 3px rgba(0,74,147,.25)}',
+        'html.sb-collapsed aside .sb-logo:focus-visible{outline:2px solid #004a93;outline-offset:3px}',
         'html.sb-collapsed aside .px-6{padding-left:.75rem !important;padding-right:.75rem !important}',
 
         /* links: icons only, centred */
@@ -98,17 +102,40 @@
         btn.innerHTML = '<span class="material-symbols-outlined">menu</span>';
         row.appendChild(btn);
 
+        // the logo: inert while expanded, "expand" button while collapsed
+        var logo = row.firstElementChild === nameEl ? null : row.firstElementChild;
+        if (logo === btn) logo = null;
+        if (logo) logo.classList.add('sb-logo');
+
         function sync() {
             var collapsed = root.classList.contains('sb-collapsed');
             btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-            btn.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
-            btn.title = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+            btn.setAttribute('aria-label', 'Collapse sidebar');
+            btn.title = 'Collapse sidebar';
+            if (!logo) return;
+            if (collapsed) {
+                logo.setAttribute('role', 'button');
+                logo.setAttribute('tabindex', '0');
+                logo.setAttribute('aria-label', 'Expand sidebar');
+                logo.title = 'Expand sidebar';
+            } else {
+                ['role', 'tabindex', 'aria-label', 'title'].forEach(function (a) { logo.removeAttribute(a); });
+            }
         }
-        btn.addEventListener('click', function () {
+        function toggle() {
             var collapsed = root.classList.toggle('sb-collapsed');
             save(collapsed);
             sync();
-        });
+            // let maps and charts re-fit the space once the sidebar has finished moving
+            setTimeout(function () { window.dispatchEvent(new Event('resize')); }, 260);
+        }
+        btn.addEventListener('click', toggle);
+        if (logo) {
+            logo.addEventListener('click', function () { if (root.classList.contains('sb-collapsed')) toggle(); });
+            logo.addEventListener('keydown', function (e) {
+                if ((e.key === 'Enter' || e.key === ' ') && root.classList.contains('sb-collapsed')) { e.preventDefault(); toggle(); }
+            });
+        }
         sync();
     }
 

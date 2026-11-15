@@ -86,6 +86,7 @@
             border: 1px solid rgba(193, 199, 211, 0.15);
         }
     </style>
+    <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
 </head>
 <body class="text-on-surface antialiased">
 <!-- SideNavBar -->

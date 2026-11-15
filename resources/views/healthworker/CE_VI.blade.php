@@ -95,6 +95,7 @@
             display: none;
         }
     </style>
+    <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
 </head>
     
     <aside class="h-screen w-64 fixed left-0 top-0 bg-slate-100 dark:bg-slate-900 flex flex-col pt-6 pb-4 gap-2 z-50">

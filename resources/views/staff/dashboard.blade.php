@@ -98,6 +98,7 @@
             display: none;
         }
     </style>
+    <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
 </head>
 
 <body class="text-on-surface select-none">

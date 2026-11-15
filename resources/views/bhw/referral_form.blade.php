@@ -93,6 +93,7 @@
             -webkit-backdrop-filter: blur(12px);
         }
     </style>
+    <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
 </head>
 
 <body class="text-on-surface">

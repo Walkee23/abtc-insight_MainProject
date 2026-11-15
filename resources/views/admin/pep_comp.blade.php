@@ -108,6 +108,7 @@
             border-radius: 10px;
         }
     </style>
+    <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
 </head>
 
 <body class="bg-surface font-body selection:bg-primary-fixed selection:text-on-primary-fixed">

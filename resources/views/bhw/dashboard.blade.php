@@ -94,6 +94,7 @@
             background: rgba(255, 255, 255, 0.85);
         }
     </style>
+    <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
 </head>
 
 <body class="bg-surface text-on-surface antialiased">

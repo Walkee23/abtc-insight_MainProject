@@ -93,6 +93,7 @@
             backdrop-filter: blur(16px);
         }
     </style>
+    <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
 </head>
 
 <body class="text-on-surface select-none flex min-h-screen">

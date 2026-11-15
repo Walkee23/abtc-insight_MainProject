@@ -97,6 +97,7 @@
             border-radius: 10px;
         }
     </style>
+    <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
 </head>
 
 <body class="bg-surface text-on-surface flex min-h-screen">

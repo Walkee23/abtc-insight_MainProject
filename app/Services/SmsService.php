@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\Log;
 
 class SmsService
 {
+    /** Gap between queued texts. 20 seconds = 3 texts per minute. Change it here. */
+    public const SECONDS_BETWEEN_SMS = 20;
+
     /** Day offsets after Day 0 that get a reminder. D0 is given at the clinic, so it is skipped. */
     public const REMINDER_OFFSETS = ['D3' => 3, 'D7' => 7, 'D28' => 28];
 
@@ -79,7 +82,9 @@ class SmsService
                 'status'       => 'Pending',
             ]);
 
-            SendSmsReminderJob::dispatch($smsId);
+            // Spread the texts out so the gateway isn't hit all at once
+            SendSmsReminderJob::dispatch($smsId)
+                ->delay(now()->addSeconds($queued * self::SECONDS_BETWEEN_SMS));
             $queued++;
         }
 
@@ -122,9 +127,24 @@ class SmsService
             return ['ok' => false, 'body' => $e->getMessage()];
         }
 
-        $ok = $response->successful();
-        $ok ? Log::info("SMS sent to {$phone}") : Log::error('SMS failed: ' . $response->body());
+        $body = $response->body();
+        $ok   = $response->successful();
 
-        return ['ok' => $ok, 'body' => $response->body()];
+        // Some gateways answer HTTP 200 even when they reject the message,
+        // so also treat an error-looking JSON body as a failure.
+        $json = $response->json();
+        if ($ok && is_array($json)) {
+            $status = $json['status'] ?? null;
+            if (! empty($json['error']) || ! empty($json['errors'])
+                || (is_string($status) && in_array(strtolower($status), ['error', 'failed', 'fail'], true))
+                || (is_numeric($status) && (int) $status >= 400)) {
+                $ok = false;
+            }
+        }
+
+        // The full API reply is always written to storage/logs/laravel.log
+        $ok ? Log::info("SMS to {$phone} accepted: {$body}") : Log::error("SMS to {$phone} rejected: {$body}");
+
+        return ['ok' => $ok, 'body' => $body];
     }
 }

@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class visualAnalyticsController extends Controller
 {
@@ -14,66 +16,7 @@ class visualAnalyticsController extends Controller
      */
    public function visualAnalytics(Request $request)
 {
-    $query = DB::table('inflow_general_particulars')
-        ->leftJoin('bite_cases', 'inflow_general_particulars.inflow_record_id', '=', 'bite_cases.inflow_record_id');
-
-    // --- APPLY FILTERS ---
-    if ($request->filled('date_from')) {
-        $query->whereDate('inflow_general_particulars.queue_date', '>=', $request->date_from);
-    }
-    if ($request->filled('date_to')) {
-        $query->whereDate('inflow_general_particulars.queue_date', '<=', $request->date_to);
-    }
-    if ($request->filled('health_area')) {
-        // Assuming health area is mapped or checked via barangay/location if applicable
-        $query->where('inflow_general_particulars.barangay', 'LIKE', '%' . $request->health_area . '%');
-    }
-    if ($request->filled('barangay')) {
-        $query->where('inflow_general_particulars.barangay', 'LIKE', '%' . $request->barangay . '%');
-    }
-    if ($request->filled('sex') && $request->sex != 'All') {
-        $query->where('inflow_general_particulars.sex', $request->sex);
-    }
-    if ($request->filled('age_min')) {
-        $query->where('inflow_general_particulars.age', '>=', $request->age_min);
-    }
-    if ($request->filled('age_max')) {
-        $query->where('inflow_general_particulars.age', '<=', $request->age_max);
-    }
-
-        $group = $request->get('group');
-        if (!$request->filled('date_from') && !$request->filled('date_to')) {
-            if ($group == 'daily') {
-                // Direkta na nga karong adlawa ra gyud ang i-filter. Kung walay record, mo-zero dayon.
-                $query->whereDate('inflow_general_particulars.queue_date', today());
-         } elseif ($group == 'weekly') {
-            // Current week lang: 7-adlaw nga block gikan sa 1st sa bulan (parehas sa chart)
-            $today        = now();
-            $startOfMonth = $today->copy()->startOfMonth();
-            $endOfMonth   = $today->copy()->endOfMonth();
-
-            $currentWeek = (int) ceil($today->day / 7);   // Nov 14 = Wk 2
-            $weekStart   = $startOfMonth->copy()->addDays(7 * ($currentWeek - 1));
-            $weekEnd     = $weekStart->copy()->addDays(6)->min($endOfMonth);
-
-            $query->whereBetween('inflow_general_particulars.queue_date', [
-                $weekStart->toDateString(),
-                $weekEnd->toDateString(),
-            ]);
-
-        } elseif ($group == 'monthly') {
-            $query->whereYear('inflow_general_particulars.queue_date', date('Y'))
-                  ->whereMonth('inflow_general_particulars.queue_date', date('m'));
-        } elseif ($group == 'quarterly') {
-            $query->where('inflow_general_particulars.queue_date', '>=', now()->subMonths(3));
-        } elseif ($group == 'yearly') {
-            $query->whereYear('inflow_general_particulars.queue_date', date('Y'));
-        }
-    }
-
-    if ($request->filled('health_area')) {
-        $query->where('inflow_general_particulars.barangay', 'LIKE', '%' . $request->health_area . '%');
-    }
+    $query = $this->analyticsQuery($request);
 
     // --- KPI METRICS ---
     $analyticsTotalBites = (clone $query)->count();
@@ -453,38 +396,126 @@ public function generateReport(Request $request)
     ]);
 }
 
+    /**
+     * Export the filtered results of the Visual Analytics page as CSV.
+     * Only the rows matching the filters currently applied on the page are exported.
+     */
     public function exportCsv(Request $request): StreamedResponse
     {
-        $filename = 'abtc_insight_report_' . date('Y-m-d') . '.csv';
+        // the file contains patient names, so only a logged-in Admin may download it
+        abort_unless(Auth::check() && Auth::user()->role === 'Admin', 403, 'Please log in as an Admin to export results.');
 
-        return response()->streamDownload(function () use ($request) {
-            $handle = fopen('php://output', 'w');
-            
-            // CSV Header Column Names
-            fputcsv($handle, ['Case ID', 'Patient Name', 'Barangay', 'Category', 'Date Verified']);
+        $query = $this->analyticsQuery($request)
+            ->select(
+                'inflow_general_particulars.queue_id',
+                'inflow_general_particulars.queue_date',
+                'inflow_general_particulars.patient_name',
+                'inflow_general_particulars.age',
+                'inflow_general_particulars.sex',
+                'inflow_general_particulars.barangay',
+                'bite_cases.category',
+                'bite_cases.case_number',
+                'bite_cases.outcome'
+            )
+            ->orderByDesc('inflow_general_particulars.queue_date')
+            ->orderByDesc('inflow_general_particulars.inflow_record_id');
 
-            // Gamiton ang parehong query structure aron maapil ang mga saktong filters sa CSV
-            $cases = DB::table('bite_cases')
-                ->join('inflow_general_particulars', 'bite_cases.inflow_record_id', '=', 'inflow_general_particulars.inflow_record_id')
-                ->select('bite_cases.bite_case_id', 'inflow_general_particulars.patient_name', 'inflow_general_particulars.barangay', 'bite_cases.category', 'bite_cases.date_verified');
+        $filename = 'abtc_insight_filtered_results_' . date('Y-m-d_His') . '.csv';
 
-            // Pwede sab nimo butangan og filter ang export kung gusto nimo sundon ang current view
-            $cases = $cases->cursor();
+        // a cell that starts with = + - @ would be run as a formula when the file is opened in Excel
+        $safe = fn ($v) => is_string($v) && $v !== '' && strpbrk($v[0], "=+-@\t\r") !== false ? "'" . $v : $v;
 
-            foreach ($cases as $row) {
-                fputcsv($handle, [
-                    $row->bite_case_id,
-                    $row->patient_name,
-                    $row->barangay,
-                    $row->category,
-                    $row->date_verified
+        return response()->streamDownload(function () use ($query, $safe) {
+            $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF"); // UTF-8 BOM so Excel shows names with accents correctly
+            fputcsv($out, ['Queue ID', 'Date', 'Patient Name', 'Age', 'Sex', 'Barangay', 'Category', 'Case No.', 'Outcome']);
+
+            foreach ($query->cursor() as $r) {
+                fputcsv($out, [
+                    $safe($r->queue_id),
+                    $r->queue_date,
+                    $safe($r->patient_name),
+                    $r->age,
+                    $r->sex,
+                    $safe($r->barangay),
+                    $r->category,
+                    $r->case_number,
+                    $r->outcome,
                 ]);
             }
-
-            fclose($handle);
+            fclose($out);
         }, $filename, [
-            'Content-Type' => 'text/csv',
+            'Content-Type' => 'text/csv; charset=UTF-8',
         ]);
+    }
+    /**
+     * The rows behind the Visual Analytics page with the page's filters applied.
+     * Used by the page and by the CSV export, so both always show the same results.
+     */
+    private function analyticsQuery(Request $request)
+    {
+    $query = DB::table('inflow_general_particulars')
+        ->leftJoin('bite_cases', 'inflow_general_particulars.inflow_record_id', '=', 'bite_cases.inflow_record_id');
+
+    // --- APPLY FILTERS ---
+    if ($request->filled('date_from')) {
+        $query->whereDate('inflow_general_particulars.queue_date', '>=', $request->date_from);
+    }
+    if ($request->filled('date_to')) {
+        $query->whereDate('inflow_general_particulars.queue_date', '<=', $request->date_to);
+    }
+    if ($request->filled('health_area')) {
+        // Assuming health area is mapped or checked via barangay/location if applicable
+        $query->where('inflow_general_particulars.barangay', 'LIKE', '%' . $request->health_area . '%');
+    }
+    if ($request->filled('barangay')) {
+        $query->where('inflow_general_particulars.barangay', 'LIKE', '%' . $request->barangay . '%');
+    }
+    if ($request->filled('sex') && $request->sex != 'All') {
+        $query->where('inflow_general_particulars.sex', $request->sex);
+    }
+    if ($request->filled('age_min')) {
+        $query->where('inflow_general_particulars.age', '>=', $request->age_min);
+    }
+    if ($request->filled('age_max')) {
+        $query->where('inflow_general_particulars.age', '<=', $request->age_max);
+    }
+
+        $group = $request->get('group');
+        if (!$request->filled('date_from') && !$request->filled('date_to')) {
+            if ($group == 'daily') {
+                // Direkta na nga karong adlawa ra gyud ang i-filter. Kung walay record, mo-zero dayon.
+                $query->whereDate('inflow_general_particulars.queue_date', today());
+         } elseif ($group == 'weekly') {
+            // Current week lang: 7-adlaw nga block gikan sa 1st sa bulan (parehas sa chart)
+            $today        = now();
+            $startOfMonth = $today->copy()->startOfMonth();
+            $endOfMonth   = $today->copy()->endOfMonth();
+
+            $currentWeek = (int) ceil($today->day / 7);   // Nov 14 = Wk 2
+            $weekStart   = $startOfMonth->copy()->addDays(7 * ($currentWeek - 1));
+            $weekEnd     = $weekStart->copy()->addDays(6)->min($endOfMonth);
+
+            $query->whereBetween('inflow_general_particulars.queue_date', [
+                $weekStart->toDateString(),
+                $weekEnd->toDateString(),
+            ]);
+
+        } elseif ($group == 'monthly') {
+            $query->whereYear('inflow_general_particulars.queue_date', date('Y'))
+                  ->whereMonth('inflow_general_particulars.queue_date', date('m'));
+        } elseif ($group == 'quarterly') {
+            $query->where('inflow_general_particulars.queue_date', '>=', now()->subMonths(3));
+        } elseif ($group == 'yearly') {
+            $query->whereYear('inflow_general_particulars.queue_date', date('Y'));
+        }
+    }
+
+    if ($request->filled('health_area')) {
+        $query->where('inflow_general_particulars.barangay', 'LIKE', '%' . $request->health_area . '%');
+    }
+
+    return $query;
     }
 
 public function exportMonthlyCsv(Request $request)

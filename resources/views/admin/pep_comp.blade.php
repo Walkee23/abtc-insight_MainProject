@@ -143,6 +143,10 @@
                     <span class="material-symbols-outlined">manage_accounts</span>
                     <span class="font-['Inter'] text-sm tracking-wide">User & System Management</span>
                 </a>
+                <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100" href="{{ route('admin.gis_map') }}">
+                    <span class="material-symbols-outlined">map</span>
+                    <span class="font-['Inter'] text-sm tracking-wide">Spatial Map</span>
+                </a>
             </nav>
         </div>
     </aside>
@@ -176,7 +180,8 @@
                     </div>
 
                     <!-- Hover Dropdown Menu -->
-                    <div class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <div class="absolute right-0 top-full pt-2 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                        <div class="bg-white rounded-xl shadow-lg border border-slate-100">
                         <div class="p-2">
                             <a href="#" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary rounded-lg transition-colors">
                                 <span class="material-symbols-outlined text-[18px]">person</span>
@@ -192,6 +197,7 @@
                                     Log Out
                                 </button>
                             </form>
+                        </div>
                         </div>
                     </div>
                 </div>

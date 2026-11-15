@@ -6,13 +6,19 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\BhwController;
 use App\Http\Controllers\StaffController;
+use App\Http\Controllers\ClinicalEncodingController;
+use App\Http\Controllers\PatientDatabaseController;
+use App\Http\Controllers\PepComplianceController;
+use App\Http\Controllers\TreatmentTrackerController;
+use App\Http\Controllers\ForecastingController;
+use App\Http\Controllers\SystemToolsController;
 use Illuminate\Http\Request;
 
 Route::get('/', function () {
     return view('welcome_portal');
 });
 
-Route::get('/login', function () {
+Route::get('/cchd-secure-portal', function () {
     return view('auth.login');
 })->name('login');
 
@@ -25,6 +31,14 @@ Route::prefix('admin')->group(function () {
         return view('admin.dashboard');
     })->name('admin.dashboard');
 
+    Route::get('/spatial-map', function () {
+        $barangayData = DB::table('inflow_general_particulars')
+            ->select('barangay', DB::raw('count(*) as total_cases'))
+            ->groupBy('barangay')
+            ->get();
+        return view('admin.gis_map', compact('barangayData'));
+    })->name('admin.gis_map');
+
     Route::get('/analytics', function () {
         return view('admin.V_and_A');
     })->name('admin.analytics');
@@ -33,64 +47,108 @@ Route::prefix('admin')->group(function () {
         return view('admin.pep_comp');
     })->name('admin.compliance');
 
-    Route::get('/forecasting', function () {
-        return view('admin.F_and_O');
-    })->name('admin.forecasting');
+    Route::get('/forecasting', [ForecastingController::class, 'index'])->name('admin.forecasting');
+    Route::post('/forecasting/save', [ForecastingController::class, 'save'])->name('admin.forecasting.save');
 
     Route::get('/system-management', function () {
-        return view('admin.USM');
+        $healthWorkersCount = DB::table('users')->where('role', 'Healthworker')->count();
+        $internsCount = DB::table('users')->where('role', 'OJT')->orWhere('role', 'Intern')->count();
+        $staffCount = DB::table('users')->where('role', 'Staff')->count();
+        $users = DB::table('users')->latest()->get();
+
+        // Catch up on an auto-backup that was due while no scheduler was running
+        try {
+            \App\Support\DatabaseBackup::runIfDue();
+        } catch (\Throwable $e) {
+            // the page must still open
+        }
+
+        return view('admin.USM', compact('healthWorkersCount', 'internsCount', 'staffCount', 'users'));
     })->name('admin.usm');
+
+    Route::post('/system-management/store-user', function (Illuminate\Http\Request $request) {
+        $request->validate([
+            'username'            => 'required|string|max:50|unique:users,username',
+            'full_name'           => 'required|string|max:100',
+            'role'                => 'required|string',
+            'password'            => 'required|min:6',
+            'barangay_assignment' => 'nullable|string|max:100',
+        ]);
+
+        DB::table('users')->insert([
+            'username'            => $request->username,
+            'password_hash'       => bcrypt($request->password),
+            'full_name'           => $request->full_name,
+            'role'                => $request->role,
+            'is_active'           => 1,
+            'created_at'          => now(),
+            'barangay_assignment' => $request->role === 'BHW' ? $request->barangay_assignment : null,
+        ]);
+
+        \App\Support\Audit::log('user_created', "Created {$request->role} account '{$request->username}' ({$request->full_name})");
+
+        return redirect()->route('admin.usm')->with('success', 'User account created successfully!');
+    })->name('admin.store-user');
+
+    // System tools (Admin only, enforced in the controller): backups, auto-backup, audit logs, health
+    Route::prefix('system')->group(function () {
+        Route::get('/backups', [SystemToolsController::class, 'backups'])->name('admin.system.backups');
+        Route::post('/backups', [SystemToolsController::class, 'createBackup'])->name('admin.system.backups.create');
+        Route::get('/backups/{file}', [SystemToolsController::class, 'downloadBackup'])->name('admin.system.backups.download');
+        Route::delete('/backups/{file}', [SystemToolsController::class, 'deleteBackup'])->name('admin.system.backups.delete');
+        Route::get('/auto-backup', [SystemToolsController::class, 'autoBackup'])->name('admin.system.auto-backup');
+        Route::post('/auto-backup', [SystemToolsController::class, 'saveAutoBackup'])->name('admin.system.auto-backup.save');
+        Route::get('/audit-logs', [SystemToolsController::class, 'auditLogs'])->name('admin.system.audit-logs');
+        Route::get('/audit-logs/export', [SystemToolsController::class, 'exportAuditLogs'])->name('admin.system.audit-logs.export');
+        Route::get('/health', [SystemToolsController::class, 'health'])->name('admin.system.health');
+    });
 });
 
 // Staff Routes
 Route::prefix('staff')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('staff.dashboard');
-    })->name('staff.dashboard');
+    // ---  Route now directs to StaffController@dashboard instead of inline view ---
+    Route::get('/dashboard', [StaffController::class, 'newDashboard'])->name('staff.newdashboard');
+    Route::get('/queue', [StaffController::class, 'dashboard'])->name('staff.dashboard');
+    Route::post('/staff/call-patient/{inflowRecordId}', [App\Http\Controllers\StaffController::class, 'callPatient'])
+    ->name('staff.call-patient');
 
-    Route::get('/case-encoding', [StaffController::class, 'caseEncoding'])->name('staff.case-encoding');
+    Route::get('/case-encoding/{inflow_record_id?}', [StaffController::class, 'caseEncoding'])->name('staff.case-encoding');
+    Route::post('/case-encoding/{inflow_record_id}/store', [StaffController::class, 'storeCaseEncoding'])->name('staff.store-case-encoding');
 
-    Route::get('/patient-lookup', function () {
-        return view('staff.Patient_Lookup');
-    })->name('staff.patient-lookup');
+    Route::get('/patient-lookup', [StaffController::class, 'patientLookup'])->name('staff.patient-lookup');
 
     Route::get('/patient-verification', [StaffController::class, 'patientVerification'])->name('staff.patient-verification');
     Route::post('/verify-attendance/{inflow_record_id}', [StaffController::class, 'verifyAttendance'])->name('staff.verify-attendance');
+    Route::post('/staff/bhw-referral/{referral_id}/verify', [StaffController::class, 'verifyBhwReferral'])->name('staff.verify-bhw-referral');
 });
 
 // Healthworker Routes
 Route::prefix('healthworker')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('healthworker.dashboard');
-    })->name('healthworker.dashboard');
+    Route::get('/dashboard', [ClinicalEncodingController::class, 'dashboard'])->name('healthworker.dashboard');
 
-    Route::get('/clinical-encoding', function () {
-        return view('healthworker.CE_VI');
-    })->name('healthworker.clinical-encoding');
+    // Clinical Encoding (Sections VI-IX), connected to the real bite_cases queue
+    Route::get('/clinical-encoding/{bite_case_id?}', [ClinicalEncodingController::class, 'sectionVI'])
+        ->name('healthworker.clinical-encoding');
+    Route::post('/clinical-encoding/{bite_case_id}', [ClinicalEncodingController::class, 'storeSectionVI']);
 
-    Route::get('/clinical-encoding/section-vii', function () {
-        return view('healthworker.CE_VII');
-    })->name('healthworker.ce-vii');
+    Route::get('/clinical-encoding/section-vii/{bite_case_id?}', [ClinicalEncodingController::class, 'sectionVII'])
+        ->name('healthworker.ce-vii');
+    Route::post('/clinical-encoding/section-vii/{bite_case_id}', [ClinicalEncodingController::class, 'storeSectionVII']);
 
-    Route::get('/clinical-encoding/section-viii', function () {
-        return view('healthworker.CE_VIII');
-    })->name('healthworker.ce-viii');
+    Route::get('/clinical-encoding/section-viii/{bite_case_id?}', [ClinicalEncodingController::class, 'sectionVIII'])
+        ->name('healthworker.ce-viii');
+    Route::post('/clinical-encoding/section-viii/{bite_case_id}', [ClinicalEncodingController::class, 'storeSectionVIII']);
 
-    Route::get('/clinical-encoding/section-ix', function () {
-        return view('healthworker.CE_IX');
-    })->name('healthworker.ce-ix');
+    Route::get('/clinical-encoding/section-ix/{bite_case_id?}', [ClinicalEncodingController::class, 'sectionIX'])
+        ->name('healthworker.ce-ix');
+    Route::post('/clinical-encoding/section-ix/{bite_case_id}', [ClinicalEncodingController::class, 'storeSectionIX']);
 
-    Route::get('/treatment-tracker', function () {
-        return view('healthworker.Treatment_Tracker');
-    })->name('healthworker.treatment-tracker');
+    Route::get('/treatment-tracker', [TreatmentTrackerController::class, 'index'])->name('healthworker.treatment-tracker');
 
-    Route::get('/patient-database', function () {
-        return view('healthworker.Patient_Lookup&DB');
-    })->name('healthworker.patient-database');
+    Route::get('/patient-database', [PatientDatabaseController::class, 'index'])->name('healthworker.patient-database');
 
-    Route::get('/compliance', function () {
-        return view('healthworker.PEP_Compliance_&_SMS_Logs');
-    })->name('healthworker.compliance');
+    Route::get('/compliance', [PepComplianceController::class, 'index'])->name('healthworker.compliance');
+    Route::get('/compliance/export', [PepComplianceController::class, 'export'])->name('healthworker.compliance.export');
 });
 
 // BHW Routes (referral dashboard, referral form, submission, print)
@@ -113,6 +171,8 @@ Route::get('/patient/New_patient', function () {
     return view('patient.New_Record_Registration');
 })->name('patient.new-patient');
 
+Route::get('/get-referral-data/{referral_id}', [PatientController::class, 'getReferralData'])->name('get.referral.data');
+
 Route::get('/patient/Returning_Patient', function () {
     return view('patient.Returning_Patient_Registration');
 })->name('patient.returning-patient');
@@ -131,6 +191,18 @@ Route::get('/patient/queue/priority', function () {
 
 // Walk-in New Patient self-registration (Section I + II)
 Route::post('/patient/new-submit', function (Request $request) {
+    // BHW Referral ID must match a real referral on file - reject if not found
+    $referralId = $request->input('bhw_referral_id');
+    $referralExists = DB::table('bhw_referral_info')
+        ->where('reference_no', $referralId)
+        ->exists();
+
+    if (!$referralExists) {
+        return back()
+            ->withErrors(['bhw_referral_id' => 'This BHW Referral ID was not found. Please check it and try again.'])
+            ->withInput();
+    }
+
     $isPriority = $request->input('priority_status') !== 'none';
     $prefix = $isPriority ? 'P' : 'N';
     $queueDate = now()->toDateString();
@@ -147,6 +219,7 @@ Route::post('/patient/new-submit', function (Request $request) {
         'queue_id' => $queueId,
         'queue_date' => $queueDate,
         'id_number' => $request->input('valid_id_number'),
+        'bhw_referral_id' => $referralId,
         'patient_name' => $request->input('full_name'),
         'age' => $request->input('age'),
         'sex' => ucfirst($request->input('sex')),

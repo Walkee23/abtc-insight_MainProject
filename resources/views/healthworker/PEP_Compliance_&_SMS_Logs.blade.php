@@ -102,46 +102,58 @@
 </head>
 
 <body class="bg-surface text-on-surface">
-    <!-- SideNavBar -->
-    <aside
-        class="h-screen w-64 fixed left-0 top-0 bg-slate-50 dark:bg-slate-900 flex flex-col border-r border-slate-200/50 dark:border-slate-800/50 py-6 font-['Inter'] tracking-tight z-50">
-        <div class="px-6 mb-10 flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-on-primary">
-                <span class="material-symbols-outlined"
-                    style="font-variation-settings: 'FILL' 1;">health_and_safety</span>
+
+<aside class="h-screen w-64 fixed left-0 top-0 bg-slate-100 dark:bg-slate-900 flex flex-col pt-6 pb-4 gap-2 z-50">
+    <!-- Brand / Header Section -->
+    <div class="px-6 mb-8">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">health_and_safety</span>
             </div>
             <div>
-                <h1 class="text-lg font-bold text-blue-900 dark:text-blue-100 leading-none">ABTC-Insight</h1>
+                <h1 class="text-blue-900 dark:text-blue-50 font-bold text-sm tracking-tight leading-none">ABTC-Insight</h1>
             </div>
         </div>
-        <nav class="flex-1 space-y-1 px-3">
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg border-l-4 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all"
-                href="{{ route('healthworker.dashboard') }}">
-                <span class="material-symbols-outlined">dashboard</span>
-                <span class="text-sm">Dashboard</span>
-            </a>
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg border-l-4 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all"
-                href="{{ route('healthworker.clinical-encoding') }}">
-                <span class="material-symbols-outlined">medical_services</span>
-                <span class="text-sm">Clinical Encoding</span>
-            </a>
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg border-l-4 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all"
-                href="{{ route('healthworker.treatment-tracker') }}">
-                <span class="material-symbols-outlined">monitor_heart</span>
-                <span class="text-sm">Treatment Tracker</span>
-            </a>
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg border-l-4 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all"
-                href="{{ route('healthworker.patient-database') }}">
-                <span class="material-symbols-outlined">database</span>
-                <span class="text-sm">Patient Database</span>
-            </a>
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg border-l-4 border-blue-700 text-blue-700 bg-blue-50 dark:bg-blue-900/20 font-semibold transition-all"
-                href="{{ route('healthworker.compliance') }}">
-                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">verified_user</span>
-                <span class="text-sm">Compliance</span>
-            </a>
-        </nav>
-    </aside>
+    </div>
+
+    <!-- Navigation sits right beneath it -->
+    <nav class="space-y-1 px-4 dark:bg-slate-900">
+        <!-- Dashboard (Inactive) -->
+        <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
+           href="{{ route('healthworker.dashboard') }}">
+            <span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+            <span class="font-['Inter'] text-sm tracking-wide">Dashboard</span>
+        </a>
+
+        <!-- Clinical Encoding (Inactive) -->
+        <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
+           href="{{ route('healthworker.clinical-encoding') }}">
+            <span class="material-symbols-outlined" data-icon="medical_services">medical_services</span>
+            <span class="font-['Inter'] text-sm tracking-wide">Clinical Encoding</span>
+        </a>
+
+        <!-- Treatment Tracker (Inactive) -->
+        <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
+           href="{{ route('healthworker.treatment-tracker') }}">
+            <span class="material-symbols-outlined" data-icon="monitor_heart">monitor_heart</span>
+            <span class="font-['Inter'] text-sm tracking-wide">Treatment Tracker</span>
+        </a>
+
+        <!-- Patient Database (Inactive) -->
+        <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
+           href="{{ route('healthworker.patient-database') }}">
+            <span class="material-symbols-outlined" data-icon="database">database</span>
+            <span class="font-['Inter'] text-sm tracking-wide">Patient Database</span>
+        </a>
+
+        <!-- Compliance / PEP Compliance (Active - Admin Style) -->
+        <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-blue-700 dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600 translate-x-1 duration-150" 
+           href="{{ route('healthworker.compliance') }}">
+            <span class="material-symbols-outlined" data-icon="verified_user">verified_user</span>
+            <span class="font-['Inter'] text-sm tracking-wide">PEP Compliance</span>
+        </a>
+    </nav>
+</aside>
     <header
         class="fixed top-0 w-full h-16 bg-slate-50/85 dark:bg-slate-900/85 backdrop-blur-md shadow-sm shadow-blue-900/5 z-40">
         <div class="flex justify-between items-center px-8 h-16 w-full">
@@ -178,8 +190,8 @@
                 <div class="h-8 w-[1px] bg-slate-200 dark:bg-slate-800 mx-2"></div>
                 <div class="flex items-center gap-3 cursor-pointer group relative">
                     <div class="text-right hidden lg:block">
-                        <p class="text-xs font-bold text-on-surface leading-tight font-['Inter']">Dr. Elena Santos</p>
-                        <p class="text-[10px] text-on-surface-variant font-['Inter']">Senior Health Worker</p>
+                        <p class="text-xs font-bold text-on-surface leading-tight font-['Inter']">{{ Auth::user()->full_name ?? 'Dr. Elena Santos' }}</p>
+                        <p class="text-[10px] text-on-surface-variant font-['Inter']">{{ Auth::user()->role ?? 'Senior Health Worker' }}</p>
                     </div>
                     <img alt="Health Worker Profile"
                         class="w-9 h-9 rounded-full object-cover ring-2 ring-primary/10 group-hover:ring-primary/30 transition-all"
@@ -209,10 +221,9 @@
     </header>
     <!-- Main Content Area -->
     <main class="ml-64 pt-24 min-h-screen bg-surface">
-        <!-- TopNavBar -->
         <div class="p-8">
             <!-- Summary Stats -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <!-- PEP Completion -->
                 <div
                     class="bg-surface-container-lowest p-5 rounded-lg ghost-border hover:shadow-md transition-all duration-300">
@@ -220,29 +231,18 @@
                         <div class="p-2 bg-primary/10 rounded-lg">
                             <span class="material-symbols-outlined text-primary" data-icon="task_alt">task_alt</span>
                         </div>
-                        <span class="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">+2.4%</span>
+                        @if($stats['on_time_pct'] !== null)
+                        <span class="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full whitespace-nowrap">{{ $stats['on_time_pct'] }}% on time</span>
+                        @else
+                        <span class="text-xs font-medium text-on-surface-variant bg-surface-container-high px-2 py-1 rounded-full whitespace-nowrap">No doses yet</span>
+                        @endif
                     </div>
-                    <p class="text-display-md text-3xl font-black text-on-surface tracking-tight">94.2%</p>
+                    <p class="text-display-md text-3xl font-black text-on-surface tracking-tight">{{ $stats['completion'] !== null ? rtrim(rtrim(number_format($stats['completion'], 1), '0'), '.') . '%' : '—' }}</p>
                     <p
                         class="text-label-sm text-[10px] font-bold uppercase text-on-surface-variant tracking-widest mt-1">
                         PEP Completion Rate</p>
                 </div>
-                <!-- SMS Success -->
-                <div
-                    class="bg-surface-container-lowest p-5 rounded-lg ghost-border hover:shadow-md transition-all duration-300">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="p-2 bg-secondary/10 rounded-lg">
-                            <span class="material-symbols-outlined text-secondary" data-icon="sms">sms</span>
-                        </div>
-                        <span
-                            class="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full italic">Stable</span>
-                    </div>
-                    <p class="text-display-md text-3xl font-black text-on-surface tracking-tight">98.8%</p>
-                    <p
-                        class="text-label-sm text-[10px] font-bold uppercase text-on-surface-variant tracking-widest mt-1">
-                        SMS Success Rate</p>
-                </div>
-                <!-- Pending Reminders -->
+                <!-- Doses Due Soon -->
                 <div
                     class="bg-surface-container-lowest p-5 rounded-lg ghost-border hover:shadow-md transition-all duration-300">
                     <div class="flex justify-between items-start mb-4">
@@ -251,13 +251,12 @@
                                 data-icon="notification_important">notification_important</span>
                         </div>
                         <span
-                            class="text-xs font-bold text-on-tertiary-fixed-variant bg-tertiary-fixed px-2 py-1 rounded-full">High
-                            Priority</span>
+                            class="text-xs font-bold text-on-tertiary-fixed-variant bg-tertiary-fixed px-2 py-1 rounded-full whitespace-nowrap">Due within 24h</span>
                     </div>
-                    <p class="text-display-md text-3xl font-black text-on-surface tracking-tight">42</p>
+                    <p class="text-display-md text-3xl font-black text-on-surface tracking-tight">{{ $stats['due_soon'] }}</p>
                     <p
                         class="text-label-sm text-[10px] font-bold uppercase text-on-surface-variant tracking-widest mt-1">
-                        Pending Reminders</p>
+                        Doses Due Soon</p>
                 </div>
                 <!-- Late Follow-ups -->
                 <div
@@ -268,228 +267,157 @@
                                 data-icon="priority_high">priority_high</span>
                         </div>
                         <span
-                            class="text-xs font-bold text-on-error-container bg-error-container px-2 py-1 rounded-full">Critical</span>
+                            class="text-xs font-bold text-on-error-container bg-error-container px-2 py-1 rounded-full whitespace-nowrap">{{ $stats['missed'] > 0 ? 'Needs follow-up' : 'All on track' }}</span>
                     </div>
-                    <p class="text-display-md text-3xl font-black text-on-surface tracking-tight">18</p>
+                    <p class="text-display-md text-3xl font-black text-on-surface tracking-tight">{{ $stats['missed'] }}</p>
                     <p
                         class="text-label-sm text-[10px] font-bold uppercase text-on-surface-variant tracking-widest mt-1">
-                        Late Follow-ups Sent</p>
+                        Missed Doses</p>
                 </div>
             </div>
             <!-- Main Content: Tracking & Logs -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-                <!-- Left Column: PEP Compliance Tracking Table -->
-                <div class="lg:col-span-2 bg-surface-container-lowest rounded-lg ghost-border p-6">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-lg font-extrabold tracking-tight text-on-surface">PEP Compliance Tracking</h2>
-                        <button class="text-primary text-sm font-semibold flex items-center gap-1">
-                            Filter
-                            <span class="material-symbols-outlined text-sm">filter_list</span>
-                        </button>
+            <div class="grid grid-cols-1 gap-8 mb-8">
+                <!-- PEP Compliance Tracking Table -->
+                <div class="bg-surface-container-lowest rounded-lg ghost-border p-6">
+                    <div class="flex flex-wrap justify-between items-center gap-3 mb-6">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <h2 class="text-lg font-extrabold tracking-tight text-on-surface">PEP Compliance Tracking</h2>
+                            <div class="flex bg-surface-container-high rounded-full p-0.5">
+                                @foreach(['mine' => 'My Cases', 'all' => 'All Cases'] as $key => $label)
+                                <a href="{{ route('healthworker.compliance', array_filter(['q' => $search, 'status' => $status === 'all' ? null : $status, 'scope' => $key === 'all' ? 'all' : null])) }}"
+                                    class="px-3 py-1 text-xs font-bold rounded-full transition-colors {{ $scope === $key ? 'bg-white text-primary shadow-sm' : 'text-on-surface-variant hover:text-on-surface' }}">{{ $label }}</a>
+                                @endforeach
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            @foreach(['all' => 'All', 'pending' => 'Pending', 'missed' => 'Missed', 'completed' => 'Completed'] as $key => $label)
+                            <a href="{{ route('healthworker.compliance', array_filter(['q' => $search, 'status' => $key === 'all' ? null : $key, 'scope' => $scope === 'all' ? 'all' : null])) }}"
+                                class="px-3 py-1.5 text-xs font-semibold rounded-full transition-colors {{ $status === $key ? 'bg-primary text-on-primary shadow-sm' : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-variant' }}">{{ $label }}</a>
+                            @endforeach
+                        </div>
                     </div>
+                    <form method="GET" action="{{ route('healthworker.compliance') }}" class="mb-5">
+                        @if($status !== 'all')
+                        <input type="hidden" name="status" value="{{ $status }}" />
+                        @endif
+                        @if($scope === 'all')
+                        <input type="hidden" name="scope" value="all" />
+                        @endif
+                        <div
+                            class="flex items-center bg-surface-container-low rounded-lg px-3 py-2 border border-outline-variant/20 focus-within:border-primary/40 transition-all">
+                            <span class="material-symbols-outlined text-outline text-[18px]">search</span>
+                            <input id="complianceSearchInput" name="q" type="text" value="{{ $search }}"
+                                class="bg-transparent border-none focus:ring-0 text-sm w-full py-0"
+                                placeholder="Search by patient, ID, dose, label or barangay..." />
+                            @if($search !== '')
+                            <a href="{{ route('healthworker.compliance', array_filter(['status' => $status === 'all' ? null : $status, 'scope' => $scope === 'all' ? 'all' : null])) }}"
+                                class="material-symbols-outlined text-outline text-[18px] hover:text-on-surface" title="Clear search">close</a>
+                            @endif
+                        </div>
+                    </form>
                     <div class="overflow-x-auto">
                         <table class="w-full">
                             <thead>
                                 <tr class="text-left">
                                     <th
-                                        class="pb-4 text-[11px] font-black uppercase text-on-surface-variant tracking-widest px-2">
+                                        class="pb-4 text-[11px] font-black uppercase text-on-surface-variant tracking-widest px-2 whitespace-nowrap">
                                         Patient Name</th>
                                     <th
-                                        class="pb-4 text-[11px] font-black uppercase text-on-surface-variant tracking-widest px-2">
+                                        class="pb-4 text-[11px] font-black uppercase text-on-surface-variant tracking-widest px-2 whitespace-nowrap">
                                         Scheduled Dose</th>
                                     <th
-                                        class="pb-4 text-[11px] font-black uppercase text-on-surface-variant tracking-widest px-2">
+                                        class="pb-4 text-[11px] font-black uppercase text-on-surface-variant tracking-widest px-2 whitespace-nowrap">
                                         Label</th>
                                     <th
-                                        class="pb-4 text-[11px] font-black uppercase text-on-surface-variant tracking-widest px-2">
+                                        class="pb-4 text-[11px] font-black uppercase text-on-surface-variant tracking-widest px-2 whitespace-nowrap">
                                         Status</th>
-                                    <th
-                                        class="pb-4 text-[11px] font-black uppercase text-on-surface-variant tracking-widest px-2">
-                                    </th>
+                                    <th class="pb-4 px-2"></th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-outline-variant/10">
+                                @forelse($tracking as $dose)
+                                @php
+                                    $labelStyle = [
+                                        'Standard' => 'bg-secondary-container text-on-secondary-container',
+                                        'High Risk' => 'bg-blue-100 text-blue-700',
+                                        'Booster' => 'bg-slate-100 text-slate-600',
+                                    ][$dose->label];
+                                    $statusStyle = [
+                                        'Pending' => ['text-on-tertiary-fixed-variant bg-tertiary-fixed', 'bg-tertiary'],
+                                        'Missed' => ['text-on-error-container bg-error-container', 'bg-error'],
+                                        'Completed On Time' => ['text-green-700 bg-green-100', 'bg-green-700'],
+                                        'Completed Late' => ['text-amber-800 bg-amber-100', 'bg-amber-600'],
+                                    ][$dose->status];
+                                @endphp
                                 <tr class="hover:bg-surface-container-low transition-colors">
                                     <td class="py-4 px-2">
-                                        <p class="font-bold text-on-surface text-sm">Juana Dela Cruz</p>
-                                        <p class="text-xs text-on-surface-variant">ID: ABTC-2024-089</p>
+                                        <p class="font-bold text-on-surface text-sm whitespace-nowrap">{{ $dose->patient_name }}</p>
+                                        <p class="text-xs text-on-surface-variant whitespace-nowrap">ID: {{ $dose->patient_id }}</p>
                                     </td>
                                     <td class="py-4 px-2">
-                                        <span class="text-sm font-medium text-on-surface">Dose 3 (D7)</span>
-                                    </td>
-                                    <td class="py-4 px-2">
-                                        <span
-                                            class="text-xs bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded font-semibold italic">Standard</span>
+                                        <span class="text-sm font-medium text-on-surface whitespace-nowrap">{{ $dose->dose_label }}</span>
+                                        <p class="text-[11px] text-on-surface-variant whitespace-nowrap">{{ $dose->scheduled->format('M d, Y') }}@if($dose->actual && !$dose->actual->eq($dose->scheduled)) · given {{ $dose->actual->format('M d') }}@endif</p>
                                     </td>
                                     <td class="py-4 px-2">
                                         <span
-                                            class="flex items-center gap-1.5 text-xs font-bold text-on-tertiary-fixed-variant bg-tertiary-fixed px-3 py-1 rounded-full w-max">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
-                                            Pending
+                                            class="text-xs {{ $labelStyle }} px-2 py-0.5 rounded font-semibold italic whitespace-nowrap">{{ $dose->label }}</span>
+                                    </td>
+                                    <td class="py-4 px-2">
+                                        <span
+                                            class="flex items-center gap-1.5 text-xs font-bold {{ $statusStyle[0] }} px-3 py-1 rounded-full w-max whitespace-nowrap">
+                                            <span class="w-1.5 h-1.5 rounded-full {{ $statusStyle[1] }}"></span>
+                                            {{ $dose->status }}
                                         </span>
                                     </td>
                                     <td class="py-4 px-2 text-right">
-                                        <button class="p-1 hover:bg-surface-container-high rounded-full"><span
-                                                class="material-symbols-outlined text-sm">more_vert</span></button>
+                                        @if($dose->mine)
+                                        <a href="{{ route('healthworker.ce-vii', ['bite_case_id' => $dose->bite_case_id]) }}"
+                                            title="Open case" class="inline-flex p-1 hover:bg-surface-container-high rounded-full"><span
+                                                class="material-symbols-outlined text-sm">open_in_new</span></a>
+                                        @else
+                                        <span title="Assigned to another health worker (view only)" class="inline-flex p-1 text-outline-variant"><span
+                                                class="material-symbols-outlined text-sm">visibility</span></span>
+                                        @endif
                                     </td>
                                 </tr>
-                                <tr class="hover:bg-surface-container-low transition-colors">
-                                    <td class="py-4 px-2">
-                                        <p class="font-bold text-on-surface text-sm">Ricardo Gomez</p>
-                                        <p class="text-xs text-on-surface-variant">ID: ABTC-2024-112</p>
-                                    </td>
-                                    <td class="py-4 px-2">
-                                        <span class="text-sm font-medium text-on-surface">Dose 2 (D3)</span>
-                                    </td>
-                                    <td class="py-4 px-2">
-                                        <span
-                                            class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-semibold italic">High
-                                            Risk</span>
-                                    </td>
-                                    <td class="py-4 px-2">
-                                        <span
-                                            class="flex items-center gap-1.5 text-xs font-bold text-green-700 bg-green-100 px-3 py-1 rounded-full w-max">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-green-700"></span>
-                                            Completed On Time
-                                        </span>
-                                    </td>
-                                    <td class="py-4 px-2 text-right">
-                                        <button class="p-1 hover:bg-surface-container-high rounded-full"><span
-                                                class="material-symbols-outlined text-sm">more_vert</span></button>
+                                @empty
+                                <tr>
+                                    <td colspan="5" class="py-12 text-center text-sm text-on-surface-variant">
+                                        @if($search !== '' || $status !== 'all')
+                                        No doses match your search or filter.
+                                        @elseif($scope === 'mine')
+                                        No cases assigned to you yet. Your doses appear here once Staff assigns you a case with a Day 0 date, or switch to "All Cases" to see the whole facility.
+                                        @else
+                                        No scheduled doses yet. Doses appear here once a case has a Day 0 date in Section VII.
+                                        @endif
                                     </td>
                                 </tr>
-                                <tr class="hover:bg-surface-container-low transition-colors">
-                                    <td class="py-4 px-2">
-                                        <p class="font-bold text-on-surface text-sm">Angelina Santos</p>
-                                        <p class="text-xs text-on-surface-variant">ID: ABTC-2024-045</p>
-                                    </td>
-                                    <td class="py-4 px-2">
-                                        <span class="text-sm font-medium text-on-surface">Dose 4 (D21)</span>
-                                    </td>
-                                    <td class="py-4 px-2">
-                                        <span
-                                            class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-semibold italic">Post-Exposure</span>
-                                    </td>
-                                    <td class="py-4 px-2">
-                                        <span
-                                            class="flex items-center gap-1.5 text-xs font-bold text-on-error-container bg-error-container px-3 py-1 rounded-full w-max">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-error"></span>
-                                            Missed
-                                        </span>
-                                    </td>
-                                    <td class="py-4 px-2 text-right">
-                                        <button class="p-1 hover:bg-surface-container-high rounded-full"><span
-                                                class="material-symbols-outlined text-sm">more_vert</span></button>
-                                    </td>
-                                </tr>
-                                <tr class="hover:bg-surface-container-low transition-colors">
-                                    <td class="py-4 px-2">
-                                        <p class="font-bold text-on-surface text-sm">Mateo Reyes</p>
-                                        <p class="text-xs text-on-surface-variant">ID: ABTC-2024-156</p>
-                                    </td>
-                                    <td class="py-4 px-2">
-                                        <span class="text-sm font-medium text-on-surface">Dose 1 (D0)</span>
-                                    </td>
-                                    <td class="py-4 px-2">
-                                        <span
-                                            class="text-xs bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded font-semibold italic">Standard</span>
-                                    </td>
-                                    <td class="py-4 px-2">
-                                        <span
-                                            class="flex items-center gap-1.5 text-xs font-bold text-green-700 bg-green-100 px-3 py-1 rounded-full w-max">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-green-700"></span>
-                                            Completed On Time
-                                        </span>
-                                    </td>
-                                    <td class="py-4 px-2 text-right">
-                                        <button class="p-1 hover:bg-surface-container-high rounded-full"><span
-                                                class="material-symbols-outlined text-sm">more_vert</span></button>
-                                    </td>
-                                </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
-                </div>
-                <!-- Right Column: SMS Outreach Logs -->
-                <div class="bg-surface-container-lowest rounded-lg ghost-border p-6 flex flex-col">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-lg font-extrabold tracking-tight text-on-surface">SMS Outreach Logs</h2>
-                        <span
-                            class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full uppercase tracking-tighter">Live</span>
+                    @if($tracking->total() > 0)
+                    <div class="flex flex-wrap items-center justify-between gap-3 mt-5 pt-4 border-t border-outline-variant/10">
+                        <p class="text-xs text-on-surface-variant">Showing <span class="font-bold text-on-surface">{{ $tracking->firstItem() }}</span>
+                            to <span class="font-bold text-on-surface">{{ $tracking->lastItem() }}</span> of <span
+                                class="font-bold text-on-surface">{{ $tracking->total() }}</span> doses</p>
+                        @if($tracking->hasPages())
+                        <div class="flex gap-2">
+                            @if($tracking->onFirstPage())
+                            <span class="p-1.5 rounded-lg bg-surface-container-low text-outline-variant cursor-not-allowed"><span class="material-symbols-outlined text-sm">chevron_left</span></span>
+                            @else
+                            <a href="{{ $tracking->previousPageUrl() }}" class="p-1.5 rounded-lg bg-surface-container-low text-outline hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined text-sm">chevron_left</span></a>
+                            @endif
+                            <span class="px-3 py-1.5 text-xs font-bold text-on-surface">{{ $tracking->currentPage() }} / {{ $tracking->lastPage() }}</span>
+                            @if($tracking->hasMorePages())
+                            <a href="{{ $tracking->nextPageUrl() }}" class="p-1.5 rounded-lg bg-surface-container-low text-outline hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined text-sm">chevron_right</span></a>
+                            @else
+                            <span class="p-1.5 rounded-lg bg-surface-container-low text-outline-variant cursor-not-allowed"><span class="material-symbols-outlined text-sm">chevron_right</span></span>
+                            @endif
+                        </div>
+                        @endif
                     </div>
-                    <div class="space-y-4 flex-1">
-                        <!-- Log Item -->
-                        <div class="flex items-start gap-3 p-3 rounded-lg bg-surface-container-low/50">
-                            <div class="mt-1 p-1.5 bg-green-100 rounded-full">
-                                <span class="material-symbols-outlined text-xs text-green-700" data-icon="check_circle"
-                                    style="font-variation-settings: 'FILL' 1;">check_circle</span>
-                            </div>
-                            <div class="flex-1">
-                                <div class="flex justify-between">
-                                    <p class="text-sm font-bold text-on-surface">+63 917 555 0123</p>
-                                    <span class="text-[10px] text-on-surface-variant">2m ago</span>
-                                </div>
-                                <p class="text-xs text-on-surface-variant font-medium">Next Dose Reminder (D7)</p>
-                                <span
-                                    class="text-[9px] font-black text-green-700 uppercase tracking-widest mt-1 block">Sent</span>
-                            </div>
-                        </div>
-                        <!-- Log Item -->
-                        <div
-                            class="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-container-low transition-colors">
-                            <div class="mt-1 p-1.5 bg-error-container rounded-full">
-                                <span class="material-symbols-outlined text-xs text-error" data-icon="error"
-                                    style="font-variation-settings: 'FILL' 1;">error</span>
-                            </div>
-                            <div class="flex-1">
-                                <div class="flex justify-between">
-                                    <p class="text-sm font-bold text-on-surface">+63 920 111 4489</p>
-                                    <span class="text-[10px] text-on-surface-variant">15m ago</span>
-                                </div>
-                                <p class="text-xs text-on-surface-variant font-medium">Late Follow-up Alert</p>
-                                <span
-                                    class="text-[9px] font-black text-error uppercase tracking-widest mt-1 block">Failed</span>
-                            </div>
-                        </div>
-                        <!-- Log Item -->
-                        <div
-                            class="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-container-low transition-colors">
-                            <div class="mt-1 p-1.5 bg-blue-100 rounded-full">
-                                <span class="material-symbols-outlined text-xs text-blue-700"
-                                    data-icon="pending">pending</span>
-                            </div>
-                            <div class="flex-1">
-                                <div class="flex justify-between">
-                                    <p class="text-sm font-bold text-on-surface">+63 998 222 7733</p>
-                                    <span class="text-[10px] text-on-surface-variant">42m ago</span>
-                                </div>
-                                <p class="text-xs text-on-surface-variant font-medium">Initial Dose Confirmation</p>
-                                <span
-                                    class="text-[9px] font-black text-blue-600 uppercase tracking-widest mt-1 block">Pending</span>
-                            </div>
-                        </div>
-                        <!-- Log Item -->
-                        <div
-                            class="flex items-start gap-3 p-3 rounded-lg hover:bg-surface-container-low transition-colors">
-                            <div class="mt-1 p-1.5 bg-green-100 rounded-full">
-                                <span class="material-symbols-outlined text-xs text-green-700" data-icon="check_circle"
-                                    style="font-variation-settings: 'FILL' 1;">check_circle</span>
-                            </div>
-                            <div class="flex-1">
-                                <div class="flex justify-between">
-                                    <p class="text-sm font-bold text-on-surface">+63 915 888 2211</p>
-                                    <span class="text-[10px] text-on-surface-variant">1h ago</span>
-                                </div>
-                                <p class="text-xs text-on-surface-variant font-medium">Next Dose Reminder (D3)</p>
-                                <span
-                                    class="text-[9px] font-black text-green-700 uppercase tracking-widest mt-1 block">Sent</span>
-                            </div>
-                        </div>
-                    </div>
-                    <button
-                        class="mt-6 w-full py-2.5 text-xs font-bold text-primary border border-primary/20 rounded-lg hover:bg-primary/5 transition-colors">
-                        View All SMS History
-                    </button>
+                    @endif
                 </div>
             </div>
             <!-- Bottom Section: Performance by Barangay -->
@@ -498,86 +426,52 @@
                     <div>
                         <h2 class="text-xl font-extrabold tracking-tighter text-on-surface">Compliance Performance by
                             Barangay</h2>
-                        <p class="text-sm text-on-surface-variant">Monthly percentage of patients completing their
-                            scheduled dose cycle</p>
+                        <p class="text-sm text-on-surface-variant">Share of due doses that were completed (on time or
+                            late), by barangay, across all health workers</p>
                     </div>
-                    <button
-                        class="px-6 py-3 bg-primary text-on-primary rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-primary/20 active:scale-95 transition-all">
-                        View Full Compliance Report
-                        <span class="material-symbols-outlined text-sm">analytics</span>
-                    </button>
+                    <a href="{{ route('healthworker.compliance.export', $scope === 'all' ? ['scope' => 'all'] : []) }}"
+                        class="px-6 py-3 bg-primary text-on-primary rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-primary/20 active:scale-95 transition-all whitespace-nowrap">
+                        Download {{ $scope === 'all' ? 'Facility' : 'My' }} Compliance Report
+                        <span class="material-symbols-outlined text-sm">download</span>
+                    </a>
                 </div>
+                @if($barangays->isEmpty())
+                <p class="text-sm text-on-surface-variant text-center py-6">No completed or missed doses yet to compare barangays.</p>
+                @else
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-8">
-                    <!-- Barangay Item -->
+                    @foreach($barangays as $b)
                     <div>
                         <div class="flex justify-between items-end mb-2">
-                            <span class="text-sm font-bold text-on-surface">Mabolo</span>
-                            <span class="text-xs font-black text-primary">98%</span>
+                            <span class="text-sm font-bold text-on-surface">{{ $b->name }}</span>
+                            <span class="text-xs font-black text-primary">{{ $b->pct }}%</span>
                         </div>
                         <div class="h-2 w-full bg-outline-variant/30 rounded-full overflow-hidden">
-                            <div class="h-full bg-gradient-to-r from-primary to-primary-container" style="width: 98%">
+                            <div class="h-full bg-gradient-to-r from-primary to-primary-container" style="width: {{ $b->pct }}%">
                             </div>
                         </div>
+                        <p class="text-[10px] text-on-surface-variant mt-1">{{ $b->doses }} {{ \Illuminate\Support\Str::plural('dose', $b->doses) }} counted</p>
                     </div>
-                    <!-- Barangay Item -->
-                    <div>
-                        <div class="flex justify-between items-end mb-2">
-                            <span class="text-sm font-bold text-on-surface">Lahug</span>
-                            <span class="text-xs font-black text-primary">92%</span>
-                        </div>
-                        <div class="h-2 w-full bg-outline-variant/30 rounded-full overflow-hidden">
-                            <div class="h-full bg-gradient-to-r from-primary to-primary-container" style="width: 92%">
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Barangay Item -->
-                    <div>
-                        <div class="flex justify-between items-end mb-2">
-                            <span class="text-sm font-bold text-on-surface">Guadalupe</span>
-                            <span class="text-xs font-black text-primary">87%</span>
-                        </div>
-                        <div class="h-2 w-full bg-outline-variant/30 rounded-full overflow-hidden">
-                            <div class="h-full bg-gradient-to-r from-primary to-primary-container" style="width: 87%">
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Barangay Item -->
-                    <div>
-                        <div class="flex justify-between items-end mb-2">
-                            <span class="text-sm font-bold text-on-surface">Banilad</span>
-                            <span class="text-xs font-black text-primary">95%</span>
-                        </div>
-                        <div class="h-2 w-full bg-outline-variant/30 rounded-full overflow-hidden">
-                            <div class="h-full bg-gradient-to-r from-primary to-primary-container" style="width: 95%">
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Barangay Item -->
-                    <div>
-                        <div class="flex justify-between items-end mb-2">
-                            <span class="text-sm font-bold text-on-surface">Pardo</span>
-                            <span class="text-xs font-black text-primary">82%</span>
-                        </div>
-                        <div class="h-2 w-full bg-outline-variant/30 rounded-full overflow-hidden">
-                            <div class="h-full bg-gradient-to-r from-primary to-primary-container" style="width: 82%">
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Barangay Item -->
-                    <div>
-                        <div class="flex justify-between items-end mb-2">
-                            <span class="text-sm font-bold text-on-surface">Tisa</span>
-                            <span class="text-xs font-black text-primary">89%</span>
-                        </div>
-                        <div class="h-2 w-full bg-outline-variant/30 rounded-full overflow-hidden">
-                            <div class="h-full bg-gradient-to-r from-primary to-primary-container" style="width: 89%">
-                            </div>
-                        </div>
-                    </div>
+                    @endforeach
                 </div>
+                @endif
             </div>
         </div>
     </main>
+    <script>
+        (function () {
+            // The header search box searches the compliance table too (Enter to search)
+            const headerSearch = document.querySelector('header input[type="text"]');
+            const pageSearch = document.getElementById('complianceSearchInput');
+            if (headerSearch && pageSearch) {
+                headerSearch.value = pageSearch.value;
+                headerSearch.addEventListener('keydown', (e) => {
+                    if (e.key !== 'Enter') return;
+                    pageSearch.value = headerSearch.value;
+                    pageSearch.form.requestSubmit();
+                });
+            }
+        })();
+    </script>
 </body>
 
 </html>

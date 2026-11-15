@@ -89,33 +89,49 @@
 </head>
 <body class="text-on-surface antialiased">
 <!-- SideNavBar -->
-<aside class="fixed left-0 top-0 h-full z-40 h-screen w-72 flex flex-col border-r border-outline-variant/10 bg-white dark:bg-slate-900 font-sans Inter antialiased">
-    <div class="p-8 flex items-center gap-3">
-        <div class="w-10 h-10 bg-primary-container rounded-xl flex items-center justify-center text-white shadow-md">
-            <span class="material-symbols-outlined" data-icon="shield">shield</span>
+<aside class="h-screen w-64 fixed left-0 top-0 bg-slate-100 dark:bg-slate-900 flex flex-col pt-6 pb-4 gap-2 z-50">
+        <!-- SideNavBar -->
+        <div class="px-6 mb-8">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg">
+                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">health_and_safety</span>
+                </div>
+                <div>
+                    <h1 class="text-blue-900 dark:text-blue-50 font-bold text-sm tracking-tight leading-none">ABTC-Insight</h1>
+                </div>
+            </div>
         </div>
-        <div>
-            <h1 class="text-xl font-bold tracking-tight text-primary dark:text-blue-200">ABTC-Insight</h1>
-        </div>
-    </div>
+    
     <nav class="flex-1 mt-4 space-y-1 px-4">
-        <a class="flex items-center gap-3 px-4 py-3.5 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors" href="{{ route('staff.dashboard') }}">
-            <span class="material-symbols-outlined" data-icon="queue">queue</span>
-            <span>Queue Management</span>
+        <!-- Queue Management -->
+        <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
+        href="{{ route('staff.dashboard') }}">
+            <span class="material-symbols-outlined">queue</span>
+            <span class="font-['Inter'] text-sm tracking-wide">Queue Management</span>
         </a>
-        <a class="flex items-center gap-3 px-4 py-3.5 text-primary dark:text-blue-400 font-semibold border-l-4 border-primary dark:border-blue-400 bg-primary/5 transition-all" href="#">
-            <span class="material-symbols-outlined" data-icon="verified_user">verified_user</span>
-            <span>Patient Verification</span>
+
+        <!-- Patient Verification (Active - Admin Style) -->
+        <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-blue-700 dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600 translate-x-1 duration-150" 
+        href="{{ route('staff.patient-verification') }}">
+            <span class="material-symbols-outlined">verified_user</span>
+            <span class="font-['Inter'] text-sm tracking-wide">Patient Verification</span>
         </a>
-        <a class="flex items-center gap-3 px-4 py-3.5 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors" href="{{ route('staff.case-encoding') }}">
-            <span class="material-symbols-outlined" data-icon="clinical_notes">clinical_notes</span>
-            <span>Case Encoding</span>
+
+        <!-- Case Encoding -->
+        <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
+        href="{{ route('staff.case-encoding') }}">
+            <span class="material-symbols-outlined">clinical_notes</span>
+            <span class="font-['Inter'] text-sm tracking-wide">Case Encoding</span>
         </a>
-        <a class="flex items-center gap-3 px-4 py-3.5 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors" href="{{ route('staff.patient-lookup') }}">
-            <span class="material-symbols-outlined" data-icon="person_search">person_search</span>
-            <span>Patient Lookup</span>
+
+        <!-- Patient Lookup -->
+        <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
+        href="{{ route('staff.patient-lookup') }}">
+            <span class="material-symbols-outlined">person_search</span>
+            <span class="font-['Inter'] text-sm tracking-wide">Patient Lookup</span>
         </a>
     </nav>
+
 </aside>
 <!-- Main Content Wrapper -->
 <div class="pl-72 min-h-screen flex flex-col">
@@ -137,7 +153,7 @@
 <span class="material-symbols-outlined" data-icon="help">help</span>
 </button>
 </div>
-<div class="relative group cursor-pointer pl-4 border-l border-slate-200">
+<div class="relative group cursor-pointer pl-2">
     <div class="flex items-center gap-3">
         <div class="text-right hidden sm:block">
             <p class="text-xs font-bold text-on-surface leading-tight">Staff</p>
@@ -184,15 +200,62 @@
 </section>
 <!-- Global Search Bar Section -->
 <section class="bg-surface-container-low p-6 rounded-lg ghost-border">
-<div class="flex gap-4">
+<form action="{{ route('staff.patient-verification') }}" method="GET" class="flex gap-4">
 <div class="relative flex-1">
 <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary">person_search</span>
-<input class="w-full h-14 pl-12 pr-4 bg-surface-container-lowest border-none rounded-lg text-lg placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 transition-all shadow-sm" placeholder="Search by name, tracking ID, or queue number..." type="text"/>
+<input name="search" value="{{ $search ?? '' }}" class="w-full h-14 pl-12 pr-4 bg-surface-container-lowest border-none rounded-lg text-lg placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 transition-all shadow-sm" placeholder="Search by name, tracking ID, or queue number..." type="text"/>
 </div>
-<button class="px-8 h-14 bg-primary text-white font-bold rounded-lg flex items-center gap-2 hover:bg-primary-container transition-colors shadow-lg shadow-blue-900/10 active:scale-95">
+<button type="submit" class="px-8 h-14 bg-primary text-white font-bold rounded-lg flex items-center gap-2 hover:bg-primary-container transition-colors shadow-lg shadow-blue-900/10 active:scale-95">
 <span class="material-symbols-outlined">search</span>
                         Search Records
                     </button>
+</form>
+</section>
+    <!-- BHW Referrals Section -->
+<section class="bg-surface-container-lowest rounded-lg ghost-border overflow-hidden shadow-sm">
+<div class="p-5 flex items-center justify-between border-b border-slate-50">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-amber-500"></div>
+<h2 class="text-lg font-bold text-on-surface tracking-tight">BHW Referrals (Pending)</h2>
+</div>
+<span class="text-xs font-medium text-on-surface-variant bg-surface-container px-3 py-1 rounded-full uppercase tracking-wider">{{ $bhwReferrals->count() }} Pending</span>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="bg-surface-container-low/50">
+<th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Reference No</th>
+<th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Patient Name</th>
+<th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Barangay</th>
+<th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Category</th>
+<th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider text-right">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-50">
+@forelse($bhwReferrals as $ref)
+<tr class="hover:bg-slate-50/50 transition-colors">
+<td class="px-6 py-4 font-mono text-xs font-bold text-primary">{{ $ref->reference_no }}</td>
+<td class="px-6 py-4 font-medium">{{ $ref->patient_name }}</td>
+<td class="px-6 py-4 text-sm text-on-surface-variant">Brgy. {{ $ref->patient_barangay }}</td>
+<td class="px-6 py-4">
+<span class="px-2 py-1 rounded text-[10px] font-bold bg-error-container text-on-error-container uppercase">Cat {{ ['', 'I', 'II', 'III'][$ref->exposure_category ?? 0] ?: 'N/A' }}</span>
+</td>
+<td class="px-6 py-4 text-right">
+<form action="{{ route('staff.verify-bhw-referral', $ref->referral_id) }}" method="POST">
+@csrf
+<button type="submit" class="bg-primary text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-primary-container transition-all active:scale-95">
+    Verify Attendance &amp; Transfer
+</button>
+</form>
+</td>
+</tr>
+@empty
+<tr>
+<td colspan="5" class="px-6 py-8 text-center text-slate-500">No BHW referrals pending verification.</td>
+</tr>
+@endforelse
+</tbody>
+</table>
 </div>
 </section>
 <!-- Priority Queue Section -->
@@ -244,7 +307,7 @@
 <section class="bg-surface-container-lowest rounded-lg ghost-border overflow-hidden shadow-sm">
 <div class="p-5 flex items-center justify-between border-b border-slate-50">
 <h2 class="text-lg font-bold text-on-surface tracking-tight">Normal Verification Queue (N-Series)</h2>
-<span class="text-xs font-medium text-on-surface-variant bg-surface-container px-3 py-1 rounded-full uppercase tracking-wider">{{ $normalQueue->count() }} Pending</span>
+<span class="text-xs font-medium text-on-surface-variant bg-surface-container px-3 py-1 rounded-full uppercase tracking-wider">{{ $normalQueue->total() }} Pending</span>
 </div>
 <div class="overflow-x-auto">
 <table class="w-full text-left">
@@ -284,10 +347,7 @@
 </table>
 </div>
 <div class="p-4 bg-slate-50/50 flex justify-center">
-<button class="text-sm font-bold text-primary hover:underline flex items-center gap-1">
-                        View Full Normal Queue
-                        <span class="material-symbols-outlined text-sm">keyboard_double_arrow_down</span>
-</button>
+ {{ $normalQueue->links() }}
 </div>
 </section>
 </main>

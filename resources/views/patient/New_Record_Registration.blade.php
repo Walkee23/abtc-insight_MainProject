@@ -5,10 +5,9 @@
 <head>
   <meta charset="utf-8" />
   <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-  <title>Patient Registration | ABTC-Insight</title>
+  <title>New Patient Registration | ABTC-Insight</title>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap"
-    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet" />
   <link
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
     rel="stylesheet" />
@@ -93,29 +92,21 @@
 
 <body class="bg-surface text-on-surface selection:bg-primary-fixed">
   <!-- TopNavBar (Updated to match Patient Portal style) -->
-  <nav
-    class="fixed top-0 w-full z-50 bg-slate-50/85 backdrop-blur-md shadow-sm shadow-blue-900/5 transition-all duration-300 ease-in-out font-sans antialiased tracking-tight">
+  <nav class="fixed top-0 w-full z-50 bg-slate-50/85 backdrop-blur-md shadow-sm shadow-blue-900/5 transition-all duration-300 ease-in-out font-sans antialiased tracking-tight">
     <div class="flex justify-between items-center px-8 py-4 max-w-full mx-auto">
       <!-- Brand -->
       <a href="{{ url('/') }}" class="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
-        <div class="w-8 h-8 clinical-gradient rounded-lg flex items-center justify-center text-white">
+        <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white">
           <span class="material-symbols-outlined text-sm"
-            style="font-variation-settings: 'FILL' 1;">health_metrics</span>
+            style="font-variation-settings: 'FILL' 1;">health_and_safety</span>
         </div>
         <span class="text-xl font-bold tracking-tighter text-blue-900">ABTC-Insight</span>
       </a>
       <!-- Links & Actions -->
       <div class="flex items-center gap-8">
         <div class="hidden md:flex items-center gap-8">
-          <a class="text-slate-600 hover:text-blue-600 transition-colors text-sm font-medium"
-            href="{{ route('patient.register') }}">Patient Registration</a>
-          <a class="text-slate-600 hover:text-blue-600 transition-colors text-sm font-medium"
-            href="{{ route('patient.tracking.portal') }}">Tracking Portal</a>
-          <button type="button"
-            class="bg-primary text-on-primary px-5 py-2 rounded-full font-semibold active:scale-95 transition-transform"
-            onclick="window.location.href=`{{ route('login') }}`;">
-            Login
-          </button>
+          <a class="text-slate-600 hover:text-blue-600 transition-colors text-sm font-medium" href="{{ route('patient.register') }}">Patient Registration</a>
+          <a class="text-slate-600 hover:text-blue-600 transition-colors text-sm font-medium" href="{{ route('patient.tracking.portal') }}">Tracking Portal</a>
         </div>
       </div>
     </div>
@@ -259,12 +250,25 @@
             <div class="col-span-2">
               <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5 ml-1">BHW Referral ID
                 <span class="text-error">*</span></label>
-              <input
-                class="w-full bg-surface-container-highest border-none rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
-                name="bhw_referral_id" id="bhwReferralInput" placeholder="e.g., BRY-001-20250501-0023" required=""
-                type="text" />
-              <p class="mt-1.5 ml-1 text-[10px] text-on-surface-variant/80 italic">Enter the referral ID provided by
-                your Barangay Health Worker.</p>
+
+              <div class="flex gap-2">
+                <input
+                  class="w-full bg-surface-container-highest border-none rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all @error('bhw_referral_id') ring-2 ring-error @enderror"
+                  name="bhw_referral_id" id="bhwReferralInput" value="{{ old('bhw_referral_id') }}"
+                  pattern="BRY-\d{3}-\d{8}-\d{4}"
+                  placeholder="e.g., BRY-001-20260501-0023" required=""
+                  type="text" />
+
+                <button type="button" id="autofillBtn" class="bg-primary-container text-white px-5 py-3 rounded-lg text-sm font-bold hover:opacity-90 transition-opacity whitespace-nowrap">
+                  Autofill
+                </button>
+              </div>
+
+              <p class="mt-1.5 ml-1 text-[10px] text-on-surface-variant/80 italic" id="bhwReferralHint">Enter the referral ID provided by
+                your Barangay Health Worker. Format: BRY-[BARANGAY CODE]-[YYYYMMDD]-[SEQ], e.g. BRY-001-20260501-0023.</p>
+              @error('bhw_referral_id')
+              <p class="mt-1.5 ml-1 text-[11px] text-error font-semibold">{{ $message }}</p>
+              @enderror
             </div>
             <div class="col-span-2 grid grid-cols-[1fr_1fr_70px] gap-3">
               <div>
@@ -337,7 +341,7 @@
                 Number</label>
               <input
                 class="w-full bg-surface-container-highest border-none rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
-                name="contact_number" placeholder="+63 000 000 0000" required type="tel" />
+                name="contact_number" id="contactNumberInput" placeholder="+63 000 000 0000" required type="tel" />
             </div>
             <div class="col-span-2">
               <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5 ml-1">BARANGAY OF
@@ -359,7 +363,7 @@
                 Number</label>
               <input
                 class="w-full bg-surface-container-highest border-none rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
-                name="valid_id_number" placeholder="Precinct no. / Senior Citizen ID / PWD card no." type="text" />
+                name="valid_id_number" id="validIdNumberInput" placeholder="Precinct no. / Senior Citizen ID / PWD card no." type="text" />
               <p class="mt-1.5 ml-1 text-[10px] text-on-surface-variant/80 italic">Required for Senior Citizens and PWDs
                 only. Pregnant patients do not need to provide an ID number.</p>
             </div>
@@ -421,7 +425,7 @@
                 Allergies</label>
               <textarea
                 class="w-full bg-surface-container-highest border-none rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
-                name="known_allergies" placeholder="e.g. Antibiotics, Food, Latex, etc." rows="3"></textarea>
+                name="known_allergies" id="knownAllergiesInput" placeholder="e.g. Antibiotics, Food, Latex, etc." rows="3"></textarea>
             </div>
           </div>
         </section>
@@ -487,7 +491,7 @@
     }
 
     // Update the age display live as the user types or picks a date
-    dobInput.addEventListener('input', function () {
+    dobInput.addEventListener('input', function() {
       if (!this.value) {
         ageInput.value = '';
         return;
@@ -497,7 +501,7 @@
     });
 
     // Only validate once the user has finished with the field (on blur), not while typing
-    dobInput.addEventListener('blur', function () {
+    dobInput.addEventListener('blur', function() {
       if (!this.value) return;
       const age = calculateAge(this.value);
       if (age > 125) {
@@ -507,23 +511,74 @@
       }
     });
 
+    // BHW Referral ID: must match BRY-[3-digit barangay code]-[YYYYMMDD]-[4-digit seq]
+    const bhwReferralInput = document.getElementById('bhwReferralInput');
+    const bhwReferralHint = document.getElementById('bhwReferralHint');
+    const BHW_REFERRAL_PATTERN = /^BRY-\d{3}-\d{8}-\d{4}$/;
+    const bhwReferralHintDefaultText = bhwReferralHint ? bhwReferralHint.textContent : '';
+
+    function isBhwReferralFormatValid(value) {
+      return BHW_REFERRAL_PATTERN.test(value.trim());
+    }
+
+    function showBhwReferralError(message) {
+      bhwReferralInput.classList.add('ring-2', 'ring-error');
+      bhwReferralHint.textContent = message;
+      bhwReferralHint.classList.remove('text-on-surface-variant/80', 'italic');
+      bhwReferralHint.classList.add('text-error', 'font-semibold');
+    }
+
+    function clearBhwReferralError() {
+      bhwReferralInput.classList.remove('ring-2', 'ring-error');
+      bhwReferralHint.textContent = bhwReferralHintDefaultText;
+      bhwReferralHint.classList.remove('text-error', 'font-semibold');
+      bhwReferralHint.classList.add('text-on-surface-variant/80', 'italic');
+    }
+
+    bhwReferralInput.addEventListener('blur', function() {
+      if (!this.value.trim()) return;
+      if (!isBhwReferralFormatValid(this.value)) {
+        showBhwReferralError('Invalid format. Use BRY-[BARANGAY CODE]-[YYYYMMDD]-[SEQ], e.g. BRY-001-20260501-0023.');
+      } else {
+        clearBhwReferralError();
+      }
+    });
+
+    bhwReferralInput.addEventListener('input', function() {
+      // Clear the error as soon as they start fixing it, rather than waiting for blur again
+      if (bhwReferralInput.classList.contains('ring-error') && isBhwReferralFormatValid(this.value)) {
+        clearBhwReferralError();
+      }
+    });
+
     // Also guard on submit in case a value slipped through
-    document.querySelector('form').addEventListener('submit', function (e) {
+    document.querySelector('form').addEventListener('submit', function(e) {
       if (dobInput.value) {
         const age = calculateAge(dobInput.value);
         if (age > 125) {
           e.preventDefault();
           alert('Age cannot be more than 125 years old. Please check the date of birth.');
           dobInput.focus();
+          return;
         }
+      }
+
+      if (!isBhwReferralFormatValid(bhwReferralInput.value)) {
+        e.preventDefault();
+        showBhwReferralError('Invalid format. Use BRY-[BARANGAY CODE]-[YYYYMMDD]-[SEQ], e.g. BRY-001-20260501-0023.');
+        bhwReferralInput.focus();
       }
     });
 
-    // Interactive progress indicator: a step gets checked off once its
-    // completing action happens (e.g. picking a priority option), or as soon
-    // as the user moves on to the next step's first field.
+    // Interactive progress indicator: a step is only checked off once every
+    // required field within that step is actually filled in.
     const totalSteps = 4;
-    const stepDone = { 1: false, 2: false, 3: false, 4: false };
+    const stepDone = {
+      1: false,
+      2: false,
+      3: false,
+      4: false
+    };
 
     const ACTIVE_CIRCLE = 'w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold shadow-lg shadow-primary/20 transition-all';
     const DONE_CIRCLE = 'w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold transition-all';
@@ -543,29 +598,61 @@
         circle.className = ACTIVE_CIRCLE;
         circle.textContent = stepNum;
         label.className = 'text-[10px] uppercase font-bold tracking-tighter text-primary transition-colors';
+        if (line) line.className = 'flex-1 h-[2px] bg-surface-container-high mx-1 -mt-6 transition-colors';
       } else {
         circle.className = UPCOMING_CIRCLE;
         circle.textContent = stepNum;
         label.className = 'text-[10px] uppercase font-bold tracking-tighter text-on-surface-variant transition-colors';
+        if (line) line.className = 'flex-1 h-[2px] bg-surface-container-high mx-1 -mt-6 transition-colors';
       }
     }
 
-    // Mark a step done, and make the next not-yet-done step the active one
-    function markStepDone(stepNum) {
-      if (stepDone[stepNum]) return;
-      stepDone[stepNum] = true;
-      setStepState(stepNum, 'done');
-
-      const nextStep = stepNum + 1;
-      if (nextStep <= totalSteps && !stepDone[nextStep]) {
-        setStepState(nextStep, 'active');
-      }
+    // Step 2 (Personal Info) is complete only when every required field has a value
+    function isStep2Complete() {
+      return isBhwReferralFormatValid(bhwReferralInput.value) &&
+        surnameInput.value.trim() !== '' &&
+        givenNameInput.value.trim() !== '' &&
+        dobInput.value !== '' &&
+        sexInput.value !== '' &&
+        civilStatusInput.value !== '' &&
+        contactNumberInput.value.trim() !== '' &&
+        barangayInput.value.trim() !== '';
     }
 
-    // Focusing into a step's field also marks it active (in case it isn't already)
-    function markStepActive(stepNum) {
-      if (!stepDone[stepNum]) {
-        setStepState(stepNum, 'active');
+    // Step 3 (PhilHealth) is complete once a Yes/No choice is made -
+    // and if Yes, the member name and DOB must be filled too
+    function isStep3Complete() {
+      const selected = document.querySelector('input[name="philhealth_member"]:checked');
+      if (!selected) return false;
+      if (selected.value === 'yes') {
+        return philhealthMemberNameInput.value.trim() !== '' && philhealthMemberDobInput.value !== '';
+      }
+      return true;
+    }
+
+    // Step 1 (Priority Status) is a single click, tracked directly
+    function isStep1Complete() {
+      return stepDone[1] === true;
+    }
+
+    // Recalculate all 4 steps from scratch every time something relevant changes,
+    // so a step can un-check itself if a required field gets cleared afterward
+    function recalcSteps() {
+      const completions = [isStep1Complete(), isStep2Complete(), isStep3Complete(), false];
+      let activeAssigned = false;
+
+      for (let i = 1; i <= totalSteps; i++) {
+        const done = completions[i - 1];
+        stepDone[i] = done;
+
+        if (done) {
+          setStepState(i, 'done');
+        } else if (!activeAssigned) {
+          setStepState(i, 'active');
+          activeAssigned = true;
+        } else {
+          setStepState(i, 'upcoming');
+        }
       }
     }
 
@@ -589,7 +676,7 @@
     }
 
     // Middle initial: only ever a single letter followed by a period, max 2 characters
-    middleInitialInput.addEventListener('input', function () {
+    middleInitialInput.addEventListener('input', function() {
       const letter = this.value.replace(/[^a-zA-Z]/g, '').charAt(0);
       this.value = letter ? letter.toUpperCase() + '.' : '';
       updateFullNameHidden();
@@ -615,7 +702,7 @@
         dropdown.classList.remove('hidden');
       }
 
-      display.addEventListener('click', function (e) {
+      display.addEventListener('click', function(e) {
         e.stopPropagation();
         if (dropdown.classList.contains('hidden')) {
           renderOptions();
@@ -624,7 +711,7 @@
         }
       });
 
-      dropdown.addEventListener('click', function (e) {
+      dropdown.addEventListener('click', function(e) {
         if (e.target.classList.contains('simple-option')) {
           hiddenInput.value = e.target.getAttribute('data-value');
           displayText.textContent = e.target.textContent;
@@ -634,7 +721,7 @@
         }
       });
 
-      document.addEventListener('click', function (e) {
+      document.addEventListener('click', function(e) {
         if (!display.contains(e.target) && !dropdown.contains(e.target)) {
           dropdown.classList.add('hidden');
         }
@@ -649,16 +736,32 @@
       };
     }
 
-    const validateSex = setupSimpleDropdown('sexDisplay', 'sexDisplayText', 'sexInput', 'sexDropdown', [
-      { value: 'male', label: 'Male' },
-      { value: 'female', label: 'Female' },
+    const validateSex = setupSimpleDropdown('sexDisplay', 'sexDisplayText', 'sexInput', 'sexDropdown', [{
+        value: 'male',
+        label: 'Male'
+      },
+      {
+        value: 'female',
+        label: 'Female'
+      },
     ], 'Sex');
 
-    const validateCivilStatus = setupSimpleDropdown('civilStatusDisplay', 'civilStatusDisplayText', 'civilStatusInput', 'civilStatusDropdown', [
-      { value: 'single', label: 'Single' },
-      { value: 'married', label: 'Married' },
-      { value: 'widowed', label: 'Widowed' },
-      { value: 'separated', label: 'Separated' },
+    const validateCivilStatus = setupSimpleDropdown('civilStatusDisplay', 'civilStatusDisplayText', 'civilStatusInput', 'civilStatusDropdown', [{
+        value: 'single',
+        label: 'Single'
+      },
+      {
+        value: 'married',
+        label: 'Married'
+      },
+      {
+        value: 'widowed',
+        label: 'Widowed'
+      },
+      {
+        value: 'separated',
+        label: 'Separated'
+      },
     ], 'Civil Status');
 
     function validatePhilhealthSelected() {
@@ -671,7 +774,7 @@
     }
 
     // Guard on submit: Sex, Civil Status, and PhilHealth selection must be picked
-    document.querySelector('form').addEventListener('submit', function (e) {
+    document.querySelector('form').addEventListener('submit', function(e) {
       if (!validateSex() || !validateCivilStatus() || !validatePhilhealthSelected()) {
         e.preventDefault();
       }
@@ -695,15 +798,15 @@
       barangayDropdown.classList.remove('hidden');
     }
 
-    barangayInput.addEventListener('focus', function () {
+    barangayInput.addEventListener('focus', function() {
       renderBarangayOptions(this.value);
     });
 
-    barangayInput.addEventListener('input', function () {
+    barangayInput.addEventListener('input', function() {
       renderBarangayOptions(this.value);
     });
 
-    barangayDropdown.addEventListener('click', function (e) {
+    barangayDropdown.addEventListener('click', function(e) {
       if (e.target.classList.contains('barangay-option')) {
         barangayInput.value = e.target.textContent;
         barangayDropdown.classList.add('hidden');
@@ -711,7 +814,7 @@
       }
     });
 
-    document.addEventListener('click', function (e) {
+    document.addEventListener('click', function(e) {
       if (!barangayInput.contains(e.target) && !barangayDropdown.contains(e.target)) {
         barangayDropdown.classList.add('hidden');
       }
@@ -722,7 +825,7 @@
     const priorityOptions = document.querySelectorAll('.priority-option');
 
     priorityOptions.forEach(option => {
-      option.addEventListener('click', function (e) {
+      option.addEventListener('click', function(e) {
         // Prevent the button from submitting the form immediately
         e.preventDefault();
 
@@ -740,18 +843,22 @@
         this.classList.add('border-primary', 'bg-primary/5', 'ring-2', 'ring-primary/20');
 
         // Step 1 is done once a priority option is picked
-        markStepDone(1);
+        stepDone[1] = true;
+        recalcSteps();
       });
     });
 
-    // Focusing the first field of the next step also completes the step before it
-    const bhwReferralInput = document.getElementById('bhwReferralInput');
-    if (bhwReferralInput) {
-      bhwReferralInput.addEventListener('focus', function () {
-        markStepDone(1);
-        markStepActive(2);
-      });
-    }
+    // Step 2 fields: recalculate completion every time any of them change
+    const contactNumberInput = document.getElementById('contactNumberInput');
+    [bhwReferralInput, surnameInput, givenNameInput, dobInput, contactNumberInput, barangayInput].forEach(field => {
+      if (field) {
+        field.addEventListener('input', recalcSteps);
+      }
+    });
+    // Sex and Civil Status are hidden inputs updated by the custom dropdowns above,
+    // so recalcSteps() also needs to run whenever their dropdown option is picked
+    document.getElementById('sexDropdown').addEventListener('click', recalcSteps);
+    document.getElementById('civilStatusDropdown').addEventListener('click', recalcSteps);
 
     const philhealthRadios = document.querySelectorAll('input[name="philhealth_member"]');
     const philhealthDetails = document.getElementById('philhealthDetails');
@@ -759,12 +866,7 @@
     const philhealthMemberDobInput = document.getElementById('philhealthMemberDobInput');
 
     philhealthRadios.forEach(radio => {
-      radio.addEventListener('focus', function () {
-        markStepDone(2);
-        markStepActive(3);
-      });
-
-      radio.addEventListener('change', function () {
+      radio.addEventListener('change', function() {
         if (this.value === 'yes') {
           philhealthDetails.classList.remove('hidden');
         } else {
@@ -772,17 +874,293 @@
           philhealthMemberNameInput.value = '';
           philhealthMemberDobInput.value = '';
         }
+        recalcSteps();
       });
     });
 
-    const currentIllnessesInput = document.getElementById('currentIllnessesInput');
-    if (currentIllnessesInput) {
-      currentIllnessesInput.addEventListener('focus', function () {
-        markStepDone(3);
-        markStepActive(4);
+    // Step 3 fields: recalculate whenever the member name/DOB change (only relevant when Yes is picked)
+    [philhealthMemberNameInput, philhealthMemberDobInput].forEach(field => {
+      if (field) {
+        field.addEventListener('input', recalcSteps);
+      }
+    });
+
+    // Clear Form: native reset only clears input/select values, so this cleans up
+    // everything else that JS controls (progress steps, dropdown display text,
+    // PhilHealth toggle, and highlighted priority cards)
+    document.querySelector('form').addEventListener('reset', function() {
+      setTimeout(function() {
+        // Reset progress indicator back to step 1
+        stepDone[1] = false;
+        stepDone[2] = false;
+        stepDone[3] = false;
+        stepDone[4] = false;
+        setStepState(1, 'active');
+        setStepState(2, 'upcoming');
+        setStepState(3, 'upcoming');
+        setStepState(4, 'upcoming');
+
+        // Reset Sex and Civil Status dropdown display text
+        const sexDisplayText = document.getElementById('sexDisplayText');
+        sexDisplayText.textContent = 'Select';
+        sexDisplayText.classList.remove('text-on-surface');
+        sexDisplayText.classList.add('text-on-surface-variant');
+
+        const civilStatusDisplayText = document.getElementById('civilStatusDisplayText');
+        civilStatusDisplayText.textContent = 'Select';
+        civilStatusDisplayText.classList.remove('text-on-surface');
+        civilStatusDisplayText.classList.add('text-on-surface-variant');
+
+        // Hide PhilHealth member details again
+        document.getElementById('philhealthDetails').classList.add('hidden');
+
+        // Un-highlight all priority option cards
+        priorityOptions.forEach(opt => {
+          opt.classList.remove('border-primary', 'bg-primary/5', 'ring-2', 'ring-primary/20');
+          opt.classList.add('border-surface-container-high');
+        });
+
+        // Clear any BHW referral format error
+        clearBhwReferralError();
+      }, 0);
+
+      // A manual Clear Form click should also wipe the saved draft
+      clearDraft();
+    });
+
+    // Autosave: keep a draft of the form in localStorage so a refresh or
+    // accidental navigation doesn't lose what the user already typed.
+    const DRAFT_KEY = 'abtc_new_patient_registration_draft';
+
+    const draftTextFieldIds = [
+      'bhwReferralInput', 'surnameInput', 'givenNameInput', 'middleInitialInput',
+      'dobInput', 'contactNumberInput', 'barangayInput', 'validIdNumberInput',
+      'philhealthMemberNameInput', 'philhealthMemberDobInput',
+      'currentIllnessesInput', 'knownAllergiesInput'
+    ];
+
+    function saveDraft() {
+      const draft = {};
+
+      draftTextFieldIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) draft[id] = el.value;
       });
+
+      draft.sex = sexInput.value;
+      draft.civilStatus = civilStatusInput.value;
+      draft.priority = priorityInput.value;
+
+      // priorityInput.value alone can't tell PWD/Senior/Pregnant apart (they
+      // all use data-priority="priority"), so save which card index was
+      // actually highlighted instead
+      let highlightedIndex = -1;
+      priorityOptions.forEach((opt, index) => {
+        if (opt.classList.contains('border-primary')) highlightedIndex = index;
+      });
+      draft.priorityIndex = highlightedIndex;
+
+      const philhealthChecked = document.querySelector('input[name="philhealth_member"]:checked');
+      draft.philhealthMember = philhealthChecked ? philhealthChecked.value : '';
+
+      try {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+      } catch (e) {
+        // Storage might be unavailable (private browsing, quota, etc.) - fail silently
+      }
     }
+
+    function clearDraft() {
+      try {
+        localStorage.removeItem(DRAFT_KEY);
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    function restoreDraft() {
+      let raw;
+      try {
+        raw = localStorage.getItem(DRAFT_KEY);
+      } catch (e) {
+        return;
+      }
+      if (!raw) return;
+
+      let draft;
+      try {
+        draft = JSON.parse(raw);
+      } catch (e) {
+        return;
+      }
+
+      draftTextFieldIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && draft[id]) el.value = draft[id];
+      });
+
+      // Recalculate age from the restored date of birth
+      if (dobInput.value) {
+        const age = calculateAge(dobInput.value);
+        ageInput.value = age >= 0 ? age : '';
+      }
+
+      // Restore Sex dropdown
+      if (draft.sex) {
+        sexInput.value = draft.sex;
+        const sexLabels = {
+          male: 'Male',
+          female: 'Female'
+        };
+        sexDisplayText.textContent = sexLabels[draft.sex] || draft.sex;
+        sexDisplayText.classList.remove('text-on-surface-variant');
+        sexDisplayText.classList.add('text-on-surface');
+      }
+
+      // Restore Civil Status dropdown
+      if (draft.civilStatus) {
+        civilStatusInput.value = draft.civilStatus;
+        const civilLabels = {
+          single: 'Single',
+          married: 'Married',
+          widowed: 'Widowed',
+          separated: 'Separated'
+        };
+        civilStatusDisplayText.textContent = civilLabels[draft.civilStatus] || draft.civilStatus;
+        civilStatusDisplayText.classList.remove('text-on-surface-variant');
+        civilStatusDisplayText.classList.add('text-on-surface');
+      }
+
+      // Restore the highlighted priority card
+      if (typeof draft.priorityIndex === 'number' && draft.priorityIndex >= 0 && priorityOptions[draft.priorityIndex]) {
+        priorityInput.value = draft.priority || 'none';
+        priorityOptions.forEach(opt => {
+          opt.classList.remove('border-primary', 'bg-primary/5', 'ring-2', 'ring-primary/20');
+          opt.classList.add('border-surface-container-high');
+        });
+        const chosen = priorityOptions[draft.priorityIndex];
+        chosen.classList.remove('border-surface-container-high');
+        chosen.classList.add('border-primary', 'bg-primary/5', 'ring-2', 'ring-primary/20');
+        stepDone[1] = true;
+      }
+
+      // Restore PhilHealth Yes/No selection, and show/hide details to match
+      if (draft.philhealthMember) {
+        const radio = document.querySelector(`input[name="philhealth_member"][value="${draft.philhealthMember}"]`);
+        if (radio) {
+          radio.checked = true;
+          if (draft.philhealthMember === 'yes') {
+            philhealthDetails.classList.remove('hidden');
+          } else {
+            philhealthDetails.classList.add('hidden');
+          }
+        }
+      }
+
+      // Re-sync everything that depends on the restored values
+      updateFullNameHidden();
+      recalcSteps();
+    }
+
+    // Restore whatever was saved, as soon as the page loads
+    restoreDraft();
+
+    // Save on any change anywhere in the form (bubbles up from every field)
+    const registrationForm = document.querySelector('form');
+    registrationForm.addEventListener('input', saveDraft);
+    registrationForm.addEventListener('change', saveDraft);
+
+    // A successful submission means the draft is no longer needed.
+    // Attached last, so by the time this runs, every earlier validation
+    // listener (age cap, BHW format, Sex/Civil Status/PhilHealth) has already
+    // had a chance to call preventDefault() - just check the outcome instead
+    // of re-running those checks (which would re-trigger their alert() calls).
+    registrationForm.addEventListener('submit', function(e) {
+      if (!e.defaultPrevented) {
+        clearDraft();
+      }
+    });
+    // --- BHW Referral Autofill Logic ---
+    document.getElementById('autofillBtn').addEventListener('click', function() {
+      const referralId = document.getElementById('bhwReferralInput').value.trim();
+
+      // Validate format using your existing function before sending request
+      if (referralId && isBhwReferralFormatValid(referralId)) {
+
+        // Update button state to show it's loading
+        const btn = this;
+        const originalText = btn.textContent;
+        btn.textContent = 'Loading...';
+        btn.disabled = true;
+
+        fetch(`/get-referral-data/${referralId}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              // Map the text inputs
+              document.getElementById('surnameInput').value = data.data.last_name || '';
+              document.getElementById('givenNameInput').value = data.data.first_name || '';
+              document.getElementById('middleInitialInput').value = data.data.middle_initial || '';
+              document.getElementById('contactNumberInput').value = data.data.contact_number || '';
+              document.getElementById('dobInput').value = data.data.date_of_birth || '';
+
+              // Map custom Sex dropdown
+              if (data.data.sex) {
+                document.getElementById('sexInput').value = data.data.sex;
+                const sexText = document.getElementById('sexDisplayText');
+                sexText.textContent = data.data.sex.charAt(0).toUpperCase() + data.data.sex.slice(1);
+                sexText.classList.remove('text-on-surface-variant');
+                sexText.classList.add('text-on-surface');
+              }
+
+              // Map custom Civil Status dropdown
+              if (data.data.civil_status) {
+                document.getElementById('civilStatusInput').value = data.data.civil_status;
+                const civilText = document.getElementById('civilStatusDisplayText');
+                civilText.textContent = data.data.civil_status.charAt(0).toUpperCase() + data.data.civil_status.slice(1);
+                civilText.classList.remove('text-on-surface-variant');
+                civilText.classList.add('text-on-surface');
+              }
+
+              // Programmatically dispatch 'input' events so your existing UI scripts 
+              // (progress bar, name merger, autosave) recognize the newly filled data
+              ['surnameInput', 'givenNameInput', 'middleInitialInput', 'contactNumberInput', 'dobInput'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el.value) el.dispatchEvent(new Event('input', {
+                  bubbles: true
+                }));
+              });
+
+              // Trigger blur on DOB to calculate the age
+              if (document.getElementById('dobInput').value) {
+                document.getElementById('dobInput').dispatchEvent(new Event('blur'));
+              }
+
+              // Recalculate progress steps to reflect new data
+              if (typeof recalcSteps === 'function') {
+                recalcSteps();
+              }
+
+              clearBhwReferralError();
+            } else {
+              // Use your existing error UI function for a clean display
+              showBhwReferralError(data.message || 'Referral ID not found in the database.');
+            }
+          })
+          .catch(error => {
+            console.error('Error fetching data:', error);
+            showBhwReferralError('Network error. Could not retrieve data.');
+          })
+          .finally(() => {
+            // Restore button state
+            btn.textContent = originalText;
+            btn.disabled = false;
+          });
+      } else {
+        showBhwReferralError('Please enter a valid Referral ID first.');
+      }
+    });
   </script>
 </body>
-
+    
 </html>

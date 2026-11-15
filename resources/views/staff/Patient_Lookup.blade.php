@@ -91,36 +91,49 @@
     </style>
 </head>
 <body class="bg-surface text-on-surface flex min-h-screen">
-<!-- SideNavBar -->
-<aside class="fixed left-0 top-0 h-full z-40 h-screen w-72 flex flex-col border-r border-outline-variant/10 bg-white dark:bg-slate-900 font-sans Inter antialiased">
-<div class="p-8 flex items-center gap-3">
-<div class="w-10 h-10 bg-primary-container rounded-xl flex items-center justify-center text-white shadow-md">
-<span class="material-symbols-outlined" data-icon="shield">shield</span>
-</div>
-<div><h1 class="text-xl font-bold tracking-tight text-primary dark:text-blue-200">ABTC-Insight</h1></div>
-</div>
-<nav class="flex-1 mt-4 space-y-1 px-4">
-<!-- Queue Management -->
-<a class="flex items-center gap-3 px-4 py-3.5 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors" href="{{ route('staff.dashboard') }}">
-<span class="material-symbols-outlined" data-icon="queue">queue</span>
-<span>Queue Management</span>
-</a>
-<!-- Patient Verification -->
-<a class="flex items-center gap-3 px-4 py-3.5 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors" href="{{ route('staff.patient-verification') }}">
-<span class="material-symbols-outlined" data-icon="verified_user">verified_user</span>
-<span>Patient Verification</span>
-</a>
-<!-- Case Encoding -->
-<a class="flex items-center gap-3 px-4 py-3.5 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-blue-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors" href="{{ route('staff.case-encoding') }}">
-<span class="material-symbols-outlined" data-icon="clinical_notes">clinical_notes</span>
-<span>Case Encoding</span>
-</a>
-<!-- Patient Lookup - Active -->
-<a class="flex items-center gap-3 px-4 py-3.5 text-primary dark:text-blue-400 font-semibold border-l-4 border-primary dark:border-blue-400 bg-primary/5 transition-all" href="#">
-<span class="material-symbols-outlined" data-icon="person_search">person_search</span>
-<span>Patient Lookup</span>
-</a>
-</nav>
+
+<aside class="h-screen w-64 fixed left-0 top-0 bg-slate-100 dark:bg-slate-900 flex flex-col pt-6 pb-4 gap-2 z-50">
+        <!-- SideNavBar -->
+        <div class="px-6 mb-8">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg">
+                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">health_and_safety</span>
+                </div>
+                <div>
+                    <h1 class="text-blue-900 dark:text-blue-50 font-bold text-sm tracking-tight leading-none">ABTC-Insight</h1>
+                </div>
+            </div>
+        </div>
+
+        <nav class="flex-1 mt-4 space-y-1 px-4">
+
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
+                href="{{ route('staff.newdashboard') }}">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span class="font-['Inter'] text-sm tracking-wide">Dashboard</span>
+            </a>
+            
+            <!-- Queue Management -->
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
+            href="{{ route('staff.dashboard') }}">
+                <span class="material-symbols-outlined">queue</span>
+                <span class="font-['Inter'] text-sm tracking-wide">Queue Management</span>
+            </a>
+
+            <!-- Case Encoding -->
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
+            href="{{ route('staff.case-encoding') }}">
+                <span class="material-symbols-outlined">clinical_notes</span>
+                <span class="font-['Inter'] text-sm tracking-wide">Case Encoding</span>
+            </a>
+
+            <!-- Patient Lookup (Active - Admin Style) -->
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-blue-700 dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600 translate-x-1 duration-150" 
+            href="{{ route('staff.patient-lookup') }}">
+                <span class="material-symbols-outlined">person_search</span>
+                <span class="font-['Inter'] text-sm tracking-wide">Patient Lookup</span>
+            </a>
+        </nav>
 </aside>
 <main class="flex-1 flex flex-col ml-72">
 <!-- TopNavBar -->
@@ -134,7 +147,7 @@
 <div class="flex items-center gap-4">
 <div class="hidden lg:flex items-center gap-2 px-3 py-1 bg-green-50 text-green-700 rounded-full text-[10px] font-bold uppercase tracking-wider">
 <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
-                    12 Active
+                     Registered
                 </div>
 <div class="flex items-center gap-1 border-r border-outline-variant/20 pr-4">
 <button class="p-2 text-slate-500 hover:bg-surface-container-high rounded-full transition-colors relative">
@@ -179,26 +192,34 @@ Log Out
 <div class="p-8 max-w-7xl mx-auto w-full space-y-8">
 <!-- Header Section -->
 <section>
-<h1 class="text-4xl font-bold text-on-surface tracking-tight mb-2">Patient Lookup &amp; Records</h1>
-<p class="text-on-surface-variant font-medium">Search and retrieve comprehensive patient medical history and vaccination records.</p>
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div>
+        <h1 class="text-4xl font-bold text-on-surface tracking-tight mb-2">Patient Lookup &amp; Records</h1>
+        <p class="text-on-surface-variant font-medium">Search and retrieve comprehensive patient medical history and vaccination records.</p>
+    </div>
+    <div class="bg-blue-50 border border-blue-200 text-primary px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider self-start md:self-auto">
+        {{ $totalDatabasePatients ?? 0 }} Total Master Records
+    </div>
+</div>
 </section>
 <!-- Search Area -->
 <section class="bg-surface-container-lowest p-8 rounded-xl tonal-elevation ghost-border">
-<div class="flex flex-col md:flex-row gap-4 items-center">
-<div class="relative flex-1 w-full">
-<div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-<span class="material-symbols-outlined text-outline" data-icon="search">search</span>
-</div>
-<input class="w-full pl-12 pr-4 py-4 bg-surface-container-highest border-none rounded-lg focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all text-on-surface placeholder:text-outline/70" placeholder="Search by full name or Unique Patient Identifier (e.g., CEB-20260402-20010101-001)" type="text"/>
-</div>
-<button class="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-primary to-primary-container text-white font-bold rounded-lg hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-95 duration-150">
-                        Search Patient
-                    </button>
-</div>
-<div class="mt-4 flex gap-4 text-xs font-medium text-on-surface-variant px-2">
-<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]" data-icon="history">history</span> Recent: Maria Clara</span>
-<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]" data-icon="history">history</span> Recent: Juan Dela Cruz</span>
-</div>
+    <form action="{{ route('staff.patient-lookup') }}" method="GET" class="flex flex-col md:flex-row gap-4 items-center">
+        <div class="relative flex-1 w-full">
+            <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                <span class="material-symbols-outlined text-outline" data-icon="search">search</span>
+            </div>
+            <input name="search" value="{{ $search ?? '' }}" class="w-full pl-12 pr-4 py-4 bg-surface-container-highest border-none rounded-lg focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all text-on-surface placeholder:text-outline/70" placeholder="Search by full name or Unique Patient Identifier (e.g., CEB-20260402-20010101-001)" type="text"/>
+        </div>
+        <button type="submit" class="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-primary to-primary-container text-white font-bold rounded-lg hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-95 duration-150">
+            Search Patient
+        </button>
+        @if(!empty($search))
+            <a href="{{ route('staff.patient-lookup') }}" class="px-4 py-4 text-xs font-semibold text-slate-500 hover:text-slate-800">
+                Clear
+            </a>
+        @endif
+    </form>
 </section>
 <!-- Results Table -->
 <section class="bg-surface-container-lowest rounded-xl tonal-elevation ghost-border overflow-hidden">
@@ -230,86 +251,239 @@ Log Out
 </tr>
 </thead>
 <tbody class="divide-y divide-outline-variant/10">
-<!-- Row 1 -->
-<tr class="hover:bg-surface-bright transition-colors group">
-<td class="px-8 py-5">
-<div class="flex items-center gap-3">
-<div class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold text-xs">JD</div>
-<span class="font-bold text-on-surface">Juan Dela Cruz</span>
-</div>
-</td>
-<td class="px-6 py-5">
-<code class="text-xs font-mono text-primary bg-primary/5 px-2 py-1 rounded">CEB-20250110-19980305-001</code>
-</td>
-<td class="px-6 py-5 text-on-surface-variant font-medium">26 / M</td>
-<td class="px-6 py-5 text-on-surface-variant">Brgy. Guadalupe</td>
-<td class="px-6 py-5 text-on-surface-variant">Apr 04, 2026</td>
-<td class="px-6 py-5 text-center">
-<span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold bg-[#ffdbc8] text-[#743500] uppercase tracking-tight">Yes (D3)</span>
-</td>
-<td class="px-8 py-5 text-right">
-<button class="px-4 py-2 text-primary font-bold hover:bg-primary/5 rounded-lg transition-all">View Record</button>
-</td>
-</tr>
-<!-- Row 2 -->
-<tr class="hover:bg-surface-bright transition-colors group">
-<td class="px-8 py-5">
-<div class="flex items-center gap-3">
-<div class="w-8 h-8 rounded-full bg-tertiary-fixed text-on-tertiary-fixed flex items-center justify-center font-bold text-xs">MC</div>
-<span class="font-bold text-on-surface">Maria Clara</span>
-</div>
-</td>
-<td class="px-6 py-5">
-<code class="text-xs font-mono text-primary bg-primary/5 px-2 py-1 rounded">CEB-20260404-20040512-002</code>
-</td>
-<td class="px-6 py-5 text-on-surface-variant font-medium">22 / F</td>
-<td class="px-6 py-5 text-on-surface-variant">Brgy. Mabolo</td>
-<td class="px-6 py-5 text-on-surface-variant">Apr 04, 2026</td>
-<td class="px-6 py-5 text-center">
-<span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold bg-[#ffdad6] text-[#93000a] uppercase tracking-tight">Yes (D0)</span>
-</td>
-<td class="px-8 py-5 text-right">
-<button class="px-4 py-2 text-primary font-bold hover:bg-primary/5 rounded-lg transition-all">View Record</button>
-</td>
-</tr>
-<!-- Row 3 (Visual Placeholder) -->
-<tr class="hover:bg-surface-bright transition-colors group opacity-75">
-<td class="px-8 py-5">
-<div class="flex items-center gap-3">
-<div class="w-8 h-8 rounded-full bg-outline-variant/30 text-on-surface-variant flex items-center justify-center font-bold text-xs">PR</div>
-<span class="font-bold text-on-surface">Pedro Rizal</span>
-</div>
-</td>
-<td class="px-6 py-5">
-<code class="text-xs font-mono text-primary bg-primary/5 px-2 py-1 rounded">CEB-20241215-19900222-045</code>
-</td>
-<td class="px-6 py-5 text-on-surface-variant font-medium">34 / M</td>
-<td class="px-6 py-5 text-on-surface-variant">Brgy. Lahug</td>
-<td class="px-6 py-5 text-on-surface-variant">Mar 22, 2026</td>
-<td class="px-6 py-5 text-center">
-<span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold bg-surface-container-highest text-outline uppercase tracking-tight">Completed</span>
-</td>
-<td class="px-8 py-5 text-right">
-<button class="px-4 py-2 text-primary font-bold hover:bg-primary/5 rounded-lg transition-all">View Record</button>
-</td>
-</tr>
+    @if(isset($patients) && $patients->count() > 0)
+        @foreach($patients as $patient)
+            <tr class="hover:bg-surface-bright transition-colors group">
+                <td class="px-8 py-5">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold text-xs">
+                            {{ strtoupper(substr($patient->patient_name ?? 'P', 0, 2)) }}
+                        </div>
+                        <div>
+                            <span class="font-bold text-on-surface block">{{ $patient->patient_name }}</span>
+                            <span class="text-[10px] text-on-surface-variant">{{ $patient->contact_num ?? 'No contact' }}</span>
+                        </div>
+                    </div>
+                </td>
+                <td class="px-6 py-5">
+                    <code class="text-xs font-mono text-primary bg-primary/5 px-2 py-1 rounded">{{ $patient->patient_id }}</code>
+                </td>
+                <td class="px-6 py-5 text-on-surface-variant font-medium">
+                    {{ $patient->age }} / {{ substr($patient->sex ?? 'U', 0, 1) }}
+                </td>
+                <td class="px-6 py-5 text-on-surface-variant">
+                    {{ $patient->barangay ?? 'N/A' }}
+                </td>
+                <td class="px-6 py-5 text-on-surface-variant">
+                    {{ $patient->date_registered ? \Carbon\Carbon::parse($patient->date_registered)->format('M d, Y') : 'N/A' }}
+                </td>
+                
+                <td class="px-6 py-5 text-center">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tight {{ $patient->pep_badge ?? 'bg-slate-100 text-slate-500' }}">
+                        {{ $patient->pep_status ?? 'No Case' }}
+                    </span>
+                </td>
+                <td class="px-8 py-5 text-right">
+                    @if($patient->inflow_record_id)
+                        <!-- Trigger Button ng CSS Modal -->
+                        <a href="#case-modal-{{ $patient->inflow_record_id }}" 
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-surface-container-lowest text-primary text-xs font-bold rounded-lg border border-primary/20 hover:bg-primary hover:text-white transition-all shadow-sm">
+                            <span class="material-symbols-outlined text-[15px]">clinical_notes</span>
+                            <span>View Case</span>
+                        </a>
+
+                        <!-- PURE CSS MODAL PARA SA CLINICAL SUMMARY CHART (WALANG JAVASCRIPT) -->
+                        <div id="case-modal-{{ $patient->inflow_record_id }}" 
+                            class="fixed inset-0 z-50 hidden [&:target]:flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                            
+                            <div class="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden text-left max-h-[90vh] flex flex-col">
+                                
+                                <!-- Modal Header -->
+                                <div class="bg-gradient-to-r from-primary to-primary-container p-6 text-white flex justify-between items-start shrink-0">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white font-extrabold text-base shadow-inner">
+                                            {{ strtoupper(substr($patient->patient_name ?? 'P', 0, 2)) }}
+                                        </div>
+                                        <div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-[10px] font-mono tracking-wider px-2 py-0.5 bg-white/20 rounded font-bold uppercase">{{ $patient->patient_id }}</span>
+                                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full {{ $patient->pep_badge ?? 'bg-white/30 text-white' }}">
+                                                    {{ $patient->pep_status }}
+                                                </span>
+                                            </div>
+                                            <h3 class="text-xl font-bold leading-tight mt-1">{{ $patient->patient_name }}</h3>
+                                        </div>
+                                    </div>
+                                    <!-- Close button papuntang '#' -->
+                                    <a href="#" class="text-white/70 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10">
+                                        <span class="material-symbols-outlined text-[22px]">close</span>
+                                    </a>
+                                </div>
+
+                                <!-- Modal Body (Scrollable kung mahaba ang notes) -->
+                                <div class="p-6 space-y-5 overflow-y-auto flex-1 text-xs">
+                                    
+                                    <!-- Patient Basics -->
+                                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                        <div class="p-3 bg-surface-container-low rounded-xl">
+                                            <span class="text-slate-500 block font-medium mb-0.5">Age / Sex</span>
+                                            <span class="font-bold text-slate-800 dark:text-slate-200 text-sm">{{ $patient->age }} / {{ $patient->sex }}</span>
+                                        </div>
+                                        <div class="p-3 bg-surface-container-low rounded-xl">
+                                            <span class="text-slate-500 block font-medium mb-0.5">Barangay</span>
+                                            <span class="font-bold text-slate-800 dark:text-slate-200 text-sm truncate block">{{ $patient->barangay ?? 'N/A' }}</span>
+                                        </div>
+                                        <div class="p-3 bg-surface-container-low rounded-xl">
+                                            <span class="text-slate-500 block font-medium mb-0.5">PhilHealth</span>
+                                            <span class="font-bold text-sm {{ $patient->philhealth_member ? 'text-emerald-600' : 'text-slate-500' }}">
+                                                {{ $patient->philhealth_member ? 'Member' : 'Non-member' }}
+                                            </span>
+                                        </div>
+                                        <div class="p-3 bg-surface-container-low rounded-xl">
+                                            <span class="text-slate-500 block font-medium mb-0.5">Contact</span>
+                                            <span class="font-bold text-slate-800 dark:text-slate-200 text-sm truncate block">{{ $patient->contact_num ?? 'None' }}</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Exposure & Incident Overview -->
+                                    <div class="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-3">
+                                        <h4 class="font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                                            <span class="material-symbols-outlined text-[16px] text-primary">pets</span>
+                                            Bite Exposure Record
+                                        </h4>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <div>
+                                                <span class="text-slate-400 block text-[10px]">Case Number</span>
+                                                <span class="font-semibold text-slate-700 dark:text-slate-300">#{{ $patient->case_number ?? 'Pending' }}</span>
+                                            </div>
+                                            <div>
+                                                <span class="text-slate-400 block text-[10px]">Exposure Category</span>
+                                                <span class="font-semibold text-primary font-bold">{{ $patient->exposure_category ?? 'Cat II' }}</span>
+                                            </div>
+                                            <div>
+                                                <span class="text-slate-400 block text-[10px]">Biting Animal</span>
+                                                <span class="font-semibold text-slate-700 dark:text-slate-300">{{ $patient->animal_type ?? 'Dog / Stray' }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Vaccination / PEP Progress Tracker -->
+                                    <div class="space-y-3">
+                                        <h4 class="font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                                            <span class="material-symbols-outlined text-[16px] text-emerald-600">vaccines</span>
+                                            PEP Regimen Schedule &amp; Clinical Notes
+                                        </h4>
+                                        
+                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                            <!-- Day 3 -->
+                                            <div class="p-3 rounded-xl border {{ !empty($patient->day3_notes) ? 'border-emerald-200 bg-emerald-50/40 text-emerald-950' : 'border-slate-200 bg-slate-50 text-slate-400' }}">
+                                                <div class="flex items-center justify-between mb-1">
+                                                    <span class="font-bold text-[11px]">Dose 2 (Day 3)</span>
+                                                    <span class="material-symbols-outlined text-[16px] {{ !empty($patient->day3_notes) ? 'text-emerald-600' : 'text-slate-300' }}">
+                                                        {{ !empty($patient->day3_notes) ? 'check_circle' : 'pending' }}
+                                                    </span>
+                                                </div>
+                                                <p class="text-[11px] leading-relaxed italic">{{ $patient->day3_notes ?? 'Not yet administered / no notes recorded.' }}</p>
+                                            </div>
+
+                                            <!-- Day 7 -->
+                                            <div class="p-3 rounded-xl border {{ !empty($patient->day7_notes) ? 'border-purple-200 bg-purple-50/40 text-purple-950' : 'border-slate-200 bg-slate-50 text-slate-400' }}">
+                                                <div class="flex items-center justify-between mb-1">
+                                                    <span class="font-bold text-[11px]">Dose 3 (Day 7)</span>
+                                                    <span class="material-symbols-outlined text-[16px] {{ !empty($patient->day7_notes) ? 'text-purple-600' : 'text-slate-300' }}">
+                                                        {{ !empty($patient->day7_notes) ? 'check_circle' : 'pending' }}
+                                                    </span>
+                                                </div>
+                                                <p class="text-[11px] leading-relaxed italic">{{ $patient->day7_notes ?? 'Awaiting Day 7 dose.' }}</p>
+                                            </div>
+
+                                            <!-- Day 28 -->
+                                            <div class="p-3 rounded-xl border {{ !empty($patient->day28_notes) ? 'border-blue-200 bg-blue-50/40 text-blue-950' : 'border-slate-200 bg-slate-50 text-slate-400' }}">
+                                                <div class="flex items-center justify-between mb-1">
+                                                    <span class="font-bold text-[11px]">Dose 4 (Day 28)</span>
+                                                    <span class="material-symbols-outlined text-[16px] {{ !empty($patient->day28_notes) ? 'text-blue-600' : 'text-slate-300' }}">
+                                                        {{ !empty($patient->day28_notes) ? 'check_circle' : 'pending' }}
+                                                    </span>
+                                                </div>
+                                                <p class="text-[11px] leading-relaxed italic">{{ $patient->day28_notes ?? 'Awaiting completion.' }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <!-- Modal Footer -->
+                                <div class="p-5 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center shrink-0">
+                                    <a href="#" class="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-colors">
+                                        Close Preview
+                                    </a>
+
+                                    <!-- Direct link to full Case Encoding editor -->
+                                    <a href="{{ route('staff.case-encoding', $patient->inflow_record_id) }}" 
+                                    class="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white text-xs font-bold rounded-xl shadow-md flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-[16px]">edit_note</span>
+                                        <span>Open Full Case Editor</span>
+                                    </a>
+                                </div>
+
+                            </div>
+                        </div>
+                    @else
+                        <span class="text-xs text-slate-400 font-semibold">No Active Inflow</span>
+                    @endif
+                </td>
+
+                
+            </tr>
+        @endforeach
+    @else
+        <tr>
+            <td colspan="7" class="px-8 py-12 text-center text-slate-400 text-sm">
+                No matching patient records found in the database.
+            </td>
+        </tr>
+    @endif
 </tbody>
 </table>
 </div>
+@if(isset($patients) && $patients->total() > 0)
 <div class="px-8 py-4 bg-surface-container-low flex justify-between items-center text-xs text-on-surface-variant font-medium">
-<p>Showing 3 of 1,248 registered patients</p>
-<div class="flex items-center gap-2">
-<button class="p-1 hover:bg-surface-variant rounded transition-colors disabled:opacity-30" disabled="">
-<span class="material-symbols-outlined text-[18px]" data-icon="chevron_left">chevron_left</span>
-</button>
-<span class="px-2 font-bold text-on-surface">1</span>
-<button class="p-1 hover:bg-surface-variant rounded transition-colors">
-<span class="material-symbols-outlined text-[18px]" data-icon="chevron_right">chevron_right</span>
-</button>
+    <!-- Real dynamic counts -->
+    <p>
+        Showing {{ $patients->firstItem() ?? 0 }} to {{ $patients->lastItem() ?? 0 }} of {{ $patients->total() }} registered patients
+    </p>
+
+    <div class="flex items-center gap-2">
+        <!-- Previous Page Button -->
+        @if($patients->onFirstPage())
+            <span class="p-1 text-slate-300 cursor-not-allowed">
+                <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+            </span>
+        @else
+            <a href="{{ $patients->previousPageUrl() }}" class="p-1 hover:bg-surface-variant rounded transition-colors text-on-surface">
+                <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+            </a>
+        @endif
+
+        <!-- Current Page / Total Pages Indicator -->
+        <span class="px-2 font-bold text-on-surface">
+            Page {{ $patients->currentPage() }} of {{ $patients->lastPage() }}
+        </span>
+
+        <!-- Next Page Button -->
+        @if($patients->hasMorePages())
+            <a href="{{ $patients->nextPageUrl() }}" class="p-1 hover:bg-surface-variant rounded transition-colors text-on-surface">
+                <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+            </a>
+        @else
+            <span class="p-1 text-slate-300 cursor-not-allowed">
+                <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+            </span>
+        @endif
+    </div>
 </div>
-</div>
+@endif
 </section>
-<!-- Quick Access Bento Grid -->
 </div>
 </main>
 </body></html>

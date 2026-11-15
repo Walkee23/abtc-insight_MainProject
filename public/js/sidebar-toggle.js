@@ -38,7 +38,7 @@
         /* labels keep the exact width they have when expanded (so they wrap exactly as before and never
            reflow while the sidebar moves); the link clips them and they fade out */
         'aside{--sb-p:1rem}',
-        'aside .px-6 nav{--sb-p:1.5rem}',
+        'aside .px-6 nav,aside > nav.px-6{--sb-p:1.5rem}',
         'aside nav a{overflow:hidden}',
         'aside nav ' + LABEL + '{flex:none;width:calc(11.75rem - 2 * var(--sb-p));opacity:1}',
         'aside .sb-logo{flex:none}',

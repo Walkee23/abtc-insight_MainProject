@@ -227,7 +227,7 @@ class ForecastingController extends Controller
             'window_start' => $trainStart->toDateString(),
             'future' => $future,
             'next_value' => $future[0]['value'],
-            'total_horizon' => round(array_sum(array_column($future, 'value')), 1),
+            'total_horizon' => (int) array_sum(array_column($future, 'value')),
         ]);
     }
 
@@ -236,9 +236,10 @@ class ForecastingController extends Controller
         return [
             'date' => $date->toDateString(),
             'label' => $this->label($date, $period),
-            'value' => round($value, 2),
-            'lower' => round(max(0, $value - $half), 2),
-            'upper' => round($value + $half, 2),
+            // whole patients: a forecast of 91.3 people reads as 91
+            'value' => (int) round($value),
+            'lower' => (int) round(max(0, $value - $half)),
+            'upper' => (int) round($value + $half),
         ];
     }
 

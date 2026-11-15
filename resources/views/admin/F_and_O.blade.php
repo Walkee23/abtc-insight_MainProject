@@ -344,11 +344,11 @@
                             @if($forecast['status'] === 'ok')
                             <div class="text-right">
                                 <p class="text-[10px] font-bold text-outline uppercase tracking-widest">Expected {{ $asOf->isSameDay($today) ? ($periods[$period]['unit'] === 'day' ? 'today' : 'this ' . $periods[$period]['unit']) : 'from ' . $asOf->format('M d') }}</p>
-                                <p class="text-xl font-black text-primary">{{ rtrim(rtrim(number_format($forecast['next_value'], 1), '0'), '.') }} <span class="text-xs font-semibold text-outline">patients</span></p>
+                                <p class="text-xl font-black text-primary">{{ number_format($forecast['next_value']) }} <span class="text-xs font-semibold text-outline">patients</span></p>
                             </div>
                             <div class="text-right">
                                 <p class="text-[10px] font-bold text-outline uppercase tracking-widest">Next {{ $periods[$period]['horizon'] }} {{ $periods[$period]['unit'] }}s</p>
-                                <p class="text-xl font-black text-on-surface">{{ rtrim(rtrim(number_format($forecast['total_horizon'], 1), '0'), '.') }} <span class="text-xs font-semibold text-outline">patients</span></p>
+                                <p class="text-xl font-black text-on-surface">{{ number_format($forecast['total_horizon']) }} <span class="text-xs font-semibold text-outline">patients</span></p>
                             </div>
                             <form method="POST" action="{{ route('admin.forecasting.save') }}">
                                 @csrf
@@ -534,7 +534,7 @@
 
                 const W = 1000, H = 340, left = 44, right = 16, top = 16, bottom = 34;
                 const NS = 'http://www.w3.org/2000/svg';
-                const fmt = (v) => String(Math.round(v * 10) / 10);
+                const fmt = (v) => String(Math.round(v));
                 const plural = (n, word) => n + ' ' + word + (n === 1 ? '' : 's');
 
                 // Date range: presets are measured back from the latest completed period

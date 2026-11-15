@@ -96,6 +96,26 @@
             background: #c1c7d3;
             border-radius: 10px;
         }
+        .donut-seg {
+        cursor: pointer;
+        transition: stroke-width 0.15s ease, opacity 0.15s ease;
+    }
+    .donut-seg:hover,
+    .donut-seg.is-active {
+        stroke-width: 5;
+    }
+    /* Dim the other segments while one is hovered */
+    #donut-wrap.has-hover .donut-seg:not(:hover):not(.is-active) {
+        opacity: 0.55;
+    }
+    #chart-tooltip {
+        transform: translate(-50%, -130%);
+        transition: opacity 0.12s ease;
+        opacity: 0;
+    }
+    #chart-tooltip.show {
+        opacity: 1;
+    }
     </style>
     <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
 </head>
@@ -198,232 +218,238 @@
                 <h2 class="text-3xl font-extrabold tracking-tight text-on-surface">Welcome back, Admin!</h2>
                 <p class="text-on-surface-variant mt-1">Here is what's happening with the city's health data today.</p>
             </div>
-            <!-- Stats Bento Grid -->
+  
+            <!-- Stats Bento Grid (Dynamic) -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                
+                <!-- Card 1: Total Patients -->
                 <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/15 transition-all hover:shadow-md">
                     <div class="flex items-center justify-between mb-4">
                         <div class="p-2 bg-blue-50 text-primary rounded-lg">
-                            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person_filled</span>
+                            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">group</span>
                         </div>
-                        <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">+12.5%</span>
+                        <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">Live</span>
                     </div>
-                    <p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">TOTAL PATIENTS (MAY 2026)</p>
-                    <h3 class="text-3xl font-bold mt-1">1,284</h3>
+                    <p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">TOTAL REGISTERED PATIENTS</p>
+                    <h3 class="text-3xl font-bold mt-1">{{ number_format($totalPatients) }}</h3>
                 </div>
+
+                <!-- Card 2: Active PEP Courses -->
                 <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/15 transition-all hover:shadow-md">
                     <div class="flex items-center justify-between mb-4">
                         <div class="p-2 bg-orange-50 text-tertiary rounded-lg">
                             <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">medical_services</span>
                         </div>
-                        <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">Stable</span>
+                        <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">Active</span>
                     </div>
                     <p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Active PEP Courses</p>
-                    <h3 class="text-3xl font-bold mt-1">412</h3>
+                    <h3 class="text-3xl font-bold mt-1">{{ number_format($activePepCount) }}</h3>
                 </div>
+
+                <!-- Card 3: Verified Cases Today -->
                 <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/15 transition-all hover:shadow-md">
                     <div class="flex items-center justify-between mb-4">
                         <div class="p-2 bg-red-50 text-error rounded-lg">
                             <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">verified_user</span>
                         </div>
-                        <span class="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded-full">New Alerts</span>
+                        <span class="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded-full">Today</span>
                     </div>
                     <p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Verified Cases Today</p>
-                    <h3 class="text-3xl font-bold mt-1">24</h3>
+                    <h3 class="text-3xl font-bold mt-1">{{ number_format($verifiedToday) }}</h3>
                 </div>
+
             </div>
-            <!-- Forecasting Engine Section -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-                <div class="lg:col-span-2 bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/15">
-                    <div class="flex items-center justify-between mb-8">
-                        <div>
-                            <h3 class="text-lg font-bold">Forecasting Engine</h3>
-                            <p class="text-xs text-on-surface-variant mt-1">Time-series prediction for incident trends</p>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <span class="flex items-center gap-1 text-[10px] font-bold py-1 px-3 bg-primary-container text-on-primary-container rounded-full">
-                                <span class="material-symbols-outlined text-[14px]">query_stats</span>
-                                MAPE 2.87%
-                            </span>
-                            <div class="flex items-center bg-surface-container-low p-1 rounded-lg mr-2">
-                                <button class="px-3 py-1 text-[10px] font-bold text-on-surface-variant hover:text-on-surface transition-colors rounded-md">Daily</button>
-                                <button class="px-3 py-1 text-[10px] font-bold text-on-surface-variant hover:text-on-surface transition-colors rounded-md">Weekly</button>
-                                <button class="px-3 py-1 text-[10px] font-bold bg-primary text-white shadow-sm rounded-md transition-all">Monthly</button>
-                            </div><button class="text-xs font-medium text-primary hover:underline">Full Analysis</button>
-                        </div>
-                    </div>
-                    <!-- Simplified Visual Representation of a Line Chart -->
-                    <div class="relative h-64 w-full bg-slate-50/50 rounded-lg flex items-end justify-between px-4 pb-8 border border-dashed border-outline-variant/30">
-                        <!-- Chart Lines (Simulated with SVG) -->
-                        <svg class="absolute inset-0 w-full h-full p-4 overflow-visible" preserveaspectratio="none">
-                            <!-- Actual Line -->
-                            <path d="M 0 180 Q 50 140 100 160 T 200 100 T 300 130 T 400 70 T 500 90 T 600 40" fill="none" stroke="#004a93" stroke-linecap="round" stroke-width="3"></path>
-                            <!-- Predicted Line -->
-                            <path d="M 400 70 Q 450 60 500 80 T 600 50 T 700 30" fill="none" stroke="#004a93" stroke-dasharray="4 4" stroke-opacity="0.5" stroke-width="2"></path>
-                            <!-- Data points -->
-                            <circle cx="400" cy="70" fill="#004a93" r="4"></circle>
-                        </svg>
-                        <!-- Grid lines simulated -->
-                        <div class="absolute inset-0 flex flex-col justify-between p-4 pointer-events-none opacity-20">
-                            <div class="w-full border-t border-slate-300"></div>
-                            <div class="w-full border-t border-slate-300"></div>
-                            <div class="w-full border-t border-slate-300"></div>
-                            <div class="w-full border-t border-slate-300"></div>
-                        </div>
-                        <!-- Labels -->
-                        <div class="text-[10px] font-bold text-slate-400">MAY</div>
-                        <div class="text-[10px] font-bold text-slate-400">JUN</div>
-                        <div class="text-[10px] font-bold text-slate-400">JUL</div>
-                        <div class="text-[10px] font-bold text-slate-400">AUG</div>
-                        <div class="text-[10px] font-bold text-slate-400">SEP</div>
-                        <div class="text-[10px] font-bold text-primary font-extrabold">OCT (PROJ)</div>
-                    </div>
-                    <div class="mt-8 pt-6 border-t border-outline-variant/10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                        <div class="flex-1 max-w-sm">
-                            <div class="flex items-center justify-between mb-2">
-                                <label class="text-xs font-bold text-on-surface uppercase tracking-tighter">Alpha Smoothing</label>
-                                <span class="text-xs font-mono text-primary font-bold">0.45</span>
-                            </div>
-                            <div class="relative w-full h-1.5 bg-outline-variant/30 rounded-full">
-                                <div class="absolute left-0 top-0 h-full w-[45%] bg-gradient-to-r from-primary to-primary-container rounded-full"></div>
-                                <div class="absolute left-[45%] top-1/2 -translate-y-1/2 w-4 h-4 bg-surface-container-lowest border-2 border-primary rounded-full shadow-sm"></div>
-                            </div>
-                            <div class="flex justify-between mt-1">
-                                <span class="text-[10px] text-slate-400">0.1</span>
-                                <span class="text-[10px] text-slate-400">0.9</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-4">
-                            <div class="flex items-center gap-2">
-                                <span class="w-3 h-3 rounded-full bg-primary"></span>
-                                <span class="text-[10px] font-semibold text-slate-500">ACTUAL</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span class="w-3 h-3 rounded-full border-2 border-primary border-dashed"></span>
-                                <span class="text-[10px] font-semibold text-slate-500">PREDICTED</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+           
+                        <style>
+                #actual-trend-path {
+                    cursor: pointer;
+                    transition: stroke-width 0.2s ease, filter 0.2s ease;
+                }
+                #actual-trend-path:hover, #actual-trend-path:active {
+                    stroke-width: 5.5px;
+                    filter: drop-shadow(0px 3px 6px rgba(0, 74, 147, 0.4));
+                }
+            </style>
+
+            @php
+                $hotspotRange = $hotspotRange ?? 30;
+                $maxHotspot   = max(1, (int) ($hotspots->max('total') ?? 0));
+            @endphp
+
+            <!-- BITE CATEGORIES + TOP HOTSPOTS (same row) -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+
                 <!-- Bite Categories Donut Chart -->
-                <div class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/15 flex flex-col">
+                <div class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/15 flex flex-col relative">
                     <div class="flex items-center justify-between mb-8">
                         <h3 class="text-lg font-bold">Bite Categories</h3>
-                        <select class="text-xs font-semibold bg-surface-container-low border-none rounded-lg py-1 px-3 focus:ring-0">
-                            <option>Monthly</option>
-                            <option>Quarterly</option>
+                        <select id="bite-filter" onchange="filterBiteCategories(this.value)" class="text-xs font-semibold bg-surface-container-low border-none rounded-lg py-1 px-3 focus:ring-0 cursor-pointer">
+                            <option value="monthly" {{ ($filter ?? 'monthly') == 'monthly' ? 'selected' : '' }}>Monthly</option>
+                            <option value="quarterly" {{ ($filter ?? 'monthly') == 'quarterly' ? 'selected' : '' }}>Quarterly</option>
                         </select>
                     </div>
+
                     <div class="flex-1 flex flex-col items-center justify-center">
-                        <!-- Simulated Donut Chart -->
-                        <div class="relative w-48 h-48 mb-8">
-                            <svg class="w-full h-full transform -rotate-90" viewbox="0 0 36 36">
-                                <circle cx="18" cy="18" fill="none" r="16" stroke="#f2f4f6" stroke-width="4"></circle>
-                                <circle cx="18" cy="18" fill="none" r="16" stroke="#004a93" stroke-dasharray="70, 100" stroke-width="4"></circle>
-                                <circle cx="18" cy="18" fill="none" r="16" stroke="#49607f" stroke-dasharray="25, 100" stroke-dashoffset="-70" stroke-width="4"></circle>
-                                <circle cx="18" cy="18" fill="none" r="16" stroke="#b1c8ec" stroke-dasharray="5, 100" stroke-dashoffset="-95" stroke-width="4"></circle>
+                        <div id="donut-wrap" class="relative w-48 h-48 mb-8 group">
+                            <svg class="w-full h-full transform -rotate-90 overflow-visible" viewBox="0 0 36 36">
+                                <circle cx="18" cy="18" fill="none" r="16" stroke="#f2f4f6" stroke-width="4" pathLength="100"></circle>
+
+                                <circle class="donut-seg" cx="18" cy="18" fill="none" r="16" stroke="#002d6b"
+                                        pathLength="100"
+                                        stroke-dasharray="{{ $cat3Pct ?? 0 }}, 100" stroke-width="4"
+                                        data-label="Category III" data-cases="{{ $cat3 ?? 0 }}" data-pct="{{ $cat3Pct ?? 0 }}">
+                                </circle>
+
+                                <circle class="donut-seg" cx="18" cy="18" fill="none" r="16" stroke="#0b61bb"
+                                        pathLength="100"
+                                        stroke-dasharray="{{ $cat2Pct ?? 0 }}, 100" stroke-dashoffset="-{{ $cat3Pct ?? 0 }}" stroke-width="4"
+                                        data-label="Category II" data-cases="{{ $cat2 ?? 0 }}" data-pct="{{ $cat2Pct ?? 0 }}">
+                                </circle>
+
+                                <circle class="donut-seg" cx="18" cy="18" fill="none" r="16" stroke="#49607f"
+                                        pathLength="100"
+                                        stroke-dasharray="{{ $cat1Pct ?? 0 }}, 100" stroke-dashoffset="-{{ ($cat3Pct ?? 0) + ($cat2Pct ?? 0) }}" stroke-width="4"
+                                        data-label="Category I" data-cases="{{ $cat1 ?? 0 }}" data-pct="{{ $cat1Pct ?? 0 }}">
+                                </circle>
                             </svg>
-                            <div class="absolute inset-0 flex flex-col items-center justify-center">
-                                <span class="text-2xl font-black text-primary">158</span>
+
+                            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                <span class="text-2xl font-black text-primary">{{ number_format($totalBites ?? 0) }}</span>
                                 <span class="text-[10px] font-bold text-slate-400 uppercase">Total Bites</span>
                             </div>
+
+                            <div id="chart-tooltip" class="absolute bg-slate-900 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-xl pointer-events-none z-50 whitespace-nowrap"></div>
                         </div>
+
                         <div class="w-full space-y-3">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-2">
-                                    <span class="w-2 h-2 rounded-full bg-primary"></span>
-                                    <span class="text-xs font-medium">Category II</span>
-                                </div>
-                                <span class="text-xs font-bold">70%</span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-2">
-                                    <span class="w-2 h-2 rounded-full bg-secondary"></span>
+                                    <span class="w-2 h-2 rounded-full" style="background-color: #002d6b;"></span>
                                     <span class="text-xs font-medium">Category III</span>
                                 </div>
-                                <span class="text-xs font-bold">25%</span>
+                                <span class="text-xs font-bold">{{ $cat3Pct ?? 0 }}%</span>
                             </div>
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-2">
-                                    <span class="w-2 h-2 rounded-full bg-secondary-fixed-dim"></span>
+                                    <span class="w-2 h-2 rounded-full" style="background-color: #0b61bb;"></span>
+                                    <span class="text-xs font-medium">Category II</span>
+                                </div>
+                                <span class="text-xs font-bold">{{ $cat2Pct ?? 0 }}%</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full" style="background-color: #49607f;"></span>
                                     <span class="text-xs font-medium">Category I</span>
                                 </div>
-                                <span class="text-xs font-bold">5%</span>
+                                <span class="text-xs font-bold">{{ $cat1Pct ?? 0 }}%</span>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <!-- Incident Hotspots Section -->
-            <div class="grid grid-cols-1 gap-8">
+
                 <!-- Hotspots Card -->
-                <div class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/15">
+                <div class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/15 flex flex-col">
                     <div class="flex items-center justify-between mb-8">
                         <div>
-                            <h3 class="text-lg font-bold">Top Incident Hotspots (Monthly)</h3>
-                            <p class="text-xs text-on-surface-variant mt-1">Leading Barangays by bite incident records</p>
+                            <h3 class="text-lg font-bold">Top Incident Hotspots (Last {{ $hotspotRange }} Days)</h3>
+                            <p class="text-xs text-on-surface-variant mt-1">Top 5 barangays with the most bite incident records</p>
                         </div>
-                        <select class="text-xs font-semibold bg-surface-container-low border-none rounded-lg py-1 px-3 focus:ring-0">
-                            <option>Last 30 Days</option>
-                            <option>Last 90 Days</option>
+                        <select id="hotspot-range" onchange="filterHotspots(this.value)" class="text-xs font-semibold bg-surface-container-low border-none rounded-lg py-1 px-3 focus:ring-0 cursor-pointer">
+                            <option value="30" {{ $hotspotRange == 30 ? 'selected' : '' }}>Last 30 Days</option>
+                            <option value="90" {{ $hotspotRange == 90 ? 'selected' : '' }}>Last 90 Days</option>
                         </select>
                     </div>
-                    <!-- Horizontal Bar Chart -->
-                    <div class="space-y-6">
-                        <div class="space-y-2">
-                            <div class="flex justify-between text-xs font-bold">
-                                <span>Barangay Guadalupe</span>
-                                <span class="text-primary">48 cases</span>
+
+                    <div class="space-y-6 flex-1">
+                        @forelse ($hotspots as $spot)
+                            @php
+                                $name  = trim($spot->barangay);
+                                $label = \Illuminate\Support\Str::startsWith(strtolower($name), 'barangay') ? $name : 'Barangay ' . $name;
+                                $width = round(($spot->total / $maxHotspot) * 100);
+                            @endphp
+                            <div class="space-y-2">
+                                <div class="flex justify-between text-xs font-bold">
+                                    <span>{{ $label }}</span>
+                                    <span class="text-primary">{{ number_format($spot->total) }} {{ $spot->total == 1 ? 'case' : 'cases' }}</span>
+                                </div>
+                                <div class="w-full h-3 bg-surface-container-low rounded-full overflow-hidden">
+                                    <div class="h-full bg-primary rounded-full transition-all duration-500" style="width: {{ $width }}%;"></div>
+                                </div>
                             </div>
-                            <div class="w-full h-3 bg-surface-container-low rounded-full overflow-hidden">
-                                <div class="h-full bg-primary w-[85%] rounded-full"></div>
-                            </div>
-                        </div>
-                        <div class="space-y-2">
-                            <div class="flex justify-between text-xs font-bold">
-                                <span>Barangay Lahug</span>
-                                <span class="text-primary">32 cases</span>
-                            </div>
-                            <div class="w-full h-3 bg-surface-container-low rounded-full overflow-hidden">
-                                <div class="h-full bg-primary w-[65%] rounded-full"></div>
-                            </div>
-                        </div>
-                        <div class="space-y-2">
-                            <div class="flex justify-between text-xs font-bold">
-                                <span>Barangay Labangon</span>
-                                <span class="text-primary">29 cases</span>
-                            </div>
-                            <div class="w-full h-3 bg-surface-container-low rounded-full overflow-hidden">
-                                <div class="h-full bg-primary w-[55%] rounded-full"></div>
-                            </div>
-                        </div>
-                        <div class="space-y-2">
-                            <div class="flex justify-between text-xs font-bold">
-                                <span>Barangay Tisa</span>
-                                <span class="text-primary">21 cases</span>
-                            </div>
-                            <div class="w-full h-3 bg-surface-container-low rounded-full overflow-hidden">
-                                <div class="h-full bg-primary w-[40%] rounded-full"></div>
-                            </div>
-                        </div>
-                        <div class="space-y-2">
-                            <div class="flex justify-between text-xs font-bold">
-                                <span>Barangay Mabolo</span>
-                                <span class="text-primary">18 cases</span>
-                            </div>
-                            <div class="w-full h-3 bg-surface-container-low rounded-full overflow-hidden">
-                                <div class="h-full bg-primary w-[35%] rounded-full"></div>
-                            </div>
-                        </div>
+                        @empty
+                            <p class="text-xs text-on-surface-variant text-center py-6">No bite incidents recorded in the last {{ $hotspotRange }} days.</p>
+                        @endforelse
                     </div>
                 </div>
-                <!-- Visual Diagrams Quick Filters -->
+
             </div>
         </div>
     </main>
-    <!-- Contextual FAB (Mobile/Utility) - Only on Dashboard -->
-    <button class="fixed bottom-8 right-8 w-14 h-14 bg-primary text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-105 transition-transform z-50">
-        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add</span>
-    </button>
+    
+   <script>
+  
+
+    (function () {
+        var wrap    = document.getElementById('donut-wrap');
+        var tooltip = document.getElementById('chart-tooltip');
+        if (!wrap || !tooltip) return;
+ 
+        var segments = wrap.querySelectorAll('.donut-seg');
+ 
+        function showTooltip(evt, text) {
+            var rect = wrap.getBoundingClientRect();
+            tooltip.textContent = text;
+            tooltip.style.left = (evt.clientX - rect.left) + 'px';
+            tooltip.style.top  = (evt.clientY - rect.top) + 'px';
+            tooltip.classList.add('show');
+            wrap.classList.add('has-hover');
+        }
+ 
+        function hideTooltip() {
+            tooltip.classList.remove('show');
+            wrap.classList.remove('has-hover');
+        }
+ 
+        window.showTooltip = showTooltip;
+        window.hideTooltip = hideTooltip;
+ 
+        segments.forEach(function (seg) {
+            var text = seg.dataset.label + ': ' +
+                       Number(seg.dataset.cases).toLocaleString() + ' cases (' +
+                       seg.dataset.pct + '%)';
+ 
+            seg.addEventListener('mouseenter', function (e) { showTooltip(e, text); });
+            seg.addEventListener('mousemove',  function (e) { showTooltip(e, text); });
+            seg.addEventListener('mouseleave', hideTooltip);
+ 
+            seg.addEventListener('touchstart', function (e) {
+                var t = e.touches[0];
+                segments.forEach(function (s) { s.classList.remove('is-active'); });
+                seg.classList.add('is-active');
+                showTooltip({ clientX: t.clientX, clientY: t.clientY }, text);
+            }, { passive: true });
+        });
+ 
+        document.addEventListener('touchstart', function (e) {
+            if (!wrap.contains(e.target)) {
+                segments.forEach(function (s) { s.classList.remove('is-active'); });
+                hideTooltip();
+            }
+        }, { passive: true });
+    })();
+ 
+    function filterBiteCategories(value) {
+        var url = new URL(window.location.href);
+        url.searchParams.set('filter', value);
+        window.location.href = url.toString();
+    }
+
+    function filterHotspots(value) {
+        var url = new URL(window.location.href);
+        url.searchParams.set('range', value);
+        window.location.href = url.toString();
+    }
+    </script>
 </body>
 
 </html>

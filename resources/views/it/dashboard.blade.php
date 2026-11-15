@@ -132,7 +132,14 @@
                             {{ $l->status }}
                         </span>
                     </td>
-                    <td class="max-w-xs text-xs text-slate-500">{{ \Illuminate\Support\Str::limit($l->error_detail, 70) }}</td>
+                    <td class="max-w-xs text-xs text-slate-500">
+                        @if($l->error_detail)
+                            <details>
+                                <summary class="cursor-pointer">{{ \Illuminate\Support\Str::limit($l->error_detail, 40) }}</summary>
+                                <p class="mt-1 break-words text-slate-700">{{ $l->error_detail }}</p>
+                            </details>
+                        @endif
+                    </td>
                     <td>
                         @if($l->status === 'Failed' && $l->sms_type !== 'Test')
                             <form method="POST" action="{{ route('it.sms.retry', $l->sms_id) }}">@csrf

@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
@@ -87,15 +86,6 @@
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
-
-        .glass-nav {
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-        }
-
-        .soft-shadow {
-            shadow: 0 24px 48px -12px rgba(25, 28, 30, 0.04);
-        }
     </style>
 </head>
 
@@ -118,11 +108,14 @@
         <!-- Separation Line -->
         <div class="bg-slate-200/50 h-[1px] w-full absolute bottom-0"></div>
     </nav>
+
     <main class="pt-20">
         <!-- Hero Section -->
-        <section class="relative overflow-hidden bg-surface py-20 lg:py-32">
-            <div class="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center">
-                <div class="z-10">
+        <section class="relative overflow-hidden bg-surface py-16 lg:py-24">
+            <div class="max-w-7xl mx-auto px-6 grid lg:grid-cols-12 gap-12 items-center">
+                
+                <!-- Left Text Column -->
+                <div class="z-10 lg:col-span-7">
                     <h1 class="text-4xl lg:text-6xl font-extrabold tracking-tight text-on-surface mb-6 leading-[1.1]">
                         Welcome to Cebu City Health Department's <br />
                         <span class="bg-gradient-to-r from-primary to-primary-container bg-clip-text text-transparent">Animal Bite Treatment Center Portal.</span>
@@ -131,67 +124,103 @@
                         Cebu City's dedicated portal for Animal Bite Treatment &amp; Control. Streamlining patient recovery through advanced tracking and real-time clinical insights.
                     </p>
                 </div>
-                <div class="relative lg:h-[600px] flex items-center justify-center">
-                    <!-- High-end decorative background -->
-                    <div class="absolute inset-0 bg-gradient-to-tr from-primary/5 to-transparent rounded-[3rem] -rotate-3"></div>
-                    <div class="relative w-full h-full rounded-[2rem] overflow-hidden shadow-2xl">
-                        <img alt="Medical professional using tablet" class="w-full h-full object-cover" data-alt="Professional clinical setting showing a vaccination procedure being administered safely" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAnhIybYKyKeuPQkT1Yhnw-ujuH-TLEDeshEQc4tFhwteZQFJOSKhzXLQn2gIOL9SfO_jpP_phhZTeNY6w1244a7zJAGCvpHDU1m0h1_SWnfB8LhA56VQi0pprxcwFkf9oBEbCiNgaUj1a-c9BMMDZgBz1cGOrVN5RJYvbqkU25PEg3qQtNKE_TMXgA5SEERJ92OnluVy3GSkDB8UYtP2VFRu6ts9R2BZlRWLgBGF2G1CDs18Oiq7BjrYjJJwXzjVlHf0JVXX70qijX" />
+
+                <!-- Right Carousel Column -->
+                <div class="relative w-full lg:col-span-5 flex flex-col items-center justify-center">
+                    <div class="relative w-full max-w-md bg-surface-container-lowest p-8 rounded-[2rem] shadow-xl border border-outline-variant/10 min-h-[320px] flex flex-col justify-between">
+                        
+                        <!-- Carousel Slides Wrapper -->
+                        <div id="carouselSlides" class="relative overflow-hidden flex-1 flex items-center min-h-[190px]">
+                            
+                            <!-- Slide 1: Fatal Nature -->
+                            <div class="carousel-slide w-full transition-all duration-500 opacity-100 absolute inset-0 flex flex-col justify-center" data-index="0">
+                                <div class="w-12 h-12 rounded-full bg-error-container flex items-center justify-center mb-4">
+                                    <span class="material-symbols-outlined text-on-error-container text-2xl" data-icon="warning">warning</span>
+                                </div>
+                                <h4 class="text-xl font-extrabold mb-2 text-on-surface">Virtually 100% Fatal</h4>
+                                <p class="text-on-surface-variant leading-relaxed text-sm">
+                                    Rabies is a vaccine-preventable viral disease, but once clinical symptoms appear, it is virtually 100% fatal for those infected.
+                                </p>
+                            </div>
+
+                            <!-- Slide 2: Immediate PEP -->
+                            <div class="carousel-slide w-full transition-all duration-500 opacity-0 absolute inset-0 flex flex-col justify-center pointer-events-none" data-index="1">
+                                <div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center mb-4">
+                                    <span class="material-symbols-outlined text-primary text-2xl" data-icon="medical_services">medical_services</span>
+                                </div>
+                                <h4 class="text-xl font-extrabold mb-2 text-on-surface">Immediate PEP</h4>
+                                <p class="text-on-surface-variant leading-relaxed text-sm">
+                                    Post-exposure prophylaxis (PEP) consists of immediate wound cleaning, a full course of rabies vaccine, and rabies immunoglobulin.
+                                </p>
+                            </div>
+
+                            <!-- Slide 3: Timely Intervention -->
+                            <div class="carousel-slide w-full transition-all duration-500 opacity-0 absolute inset-0 flex flex-col justify-center pointer-events-none" data-index="2">
+                                <div class="w-12 h-12 rounded-full bg-tertiary-fixed flex items-center justify-center mb-4">
+                                    <span class="material-symbols-outlined text-on-tertiary-fixed-variant text-2xl" data-icon="schedule">schedule</span>
+                                </div>
+                                <h4 class="text-xl font-extrabold mb-2 text-on-surface">Timely Intervention</h4>
+                                <p class="text-on-surface-variant leading-relaxed text-sm">
+                                    Timely PEP is crucial for preventing rabies deaths after a potential exposure. Every minute counts in clinical intervention.
+                                </p>
+                            </div>
+
+                            <!-- Slide 4: 15 Min Wound Washing -->
+                            <div class="carousel-slide w-full transition-all duration-500 opacity-0 absolute inset-0 flex flex-col justify-center pointer-events-none" data-index="3">
+                                <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-4">
+                                    <span class="material-symbols-outlined text-blue-700 text-2xl" data-icon="water_drop">water_drop</span>
+                                </div>
+                                <h4 class="text-xl font-extrabold mb-2 text-on-surface">15 Min Wound Washing</h4>
+                                <p class="text-on-surface-variant leading-relaxed text-sm">
+                                    Wash the wound thoroughly immediately with soap and water under running water for at least 15 minutes to effectively neutralize the virus.
+                                </p>
+                            </div>
+
+                        </div>
+
+                        <!-- Carousel Controls & Indicators -->
+                        <div class="flex items-center justify-between mt-6 pt-4 border-t border-outline-variant/10 z-20">
+                            <!-- Dot Indicators -->
+                            <div class="flex gap-1.5" id="carouselDots">
+                                <button onclick="currentSlide(0)" class="w-6 h-2 rounded-full bg-primary transition-all dot-indicator" aria-label="Slide 1"></button>
+                                <button onclick="currentSlide(1)" class="w-2 h-2 rounded-full bg-slate-300 transition-all dot-indicator" aria-label="Slide 2"></button>
+                                <button onclick="currentSlide(2)" class="w-2 h-2 rounded-full bg-slate-300 transition-all dot-indicator" aria-label="Slide 3"></button>
+                                <button onclick="currentSlide(3)" class="w-2 h-2 rounded-full bg-slate-300 transition-all dot-indicator" aria-label="Slide 4"></button>
+                            </div>
+
+                            <!-- Next/Prev Buttons -->
+                            <div class="flex gap-2">
+                                <button onclick="prevSlide()" class="w-8 h-8 rounded-full bg-surface-container hover:bg-surface-container-high flex items-center justify-center text-slate-700 transition-colors shadow-sm">
+                                    <span class="material-symbols-outlined text-sm">chevron_left</span>
+                                </button>
+                                <button onclick="nextSlide()" class="w-8 h-8 rounded-full bg-surface-container hover:bg-surface-container-high flex items-center justify-center text-slate-700 transition-colors shadow-sm">
+                                    <span class="material-symbols-outlined text-sm">chevron_right</span>
+                                </button>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
+
             </div>
         </section>
-        <!-- Educational Section: Understanding Rabies -->
-        <section class="py-32 bg-surface">
+
+        <!-- Call to Action Card Section -->
+        <section class="py-12 bg-surface">
             <div class="max-w-7xl mx-auto px-6">
-                <div class="text-center mb-20">
-                    <h2 class="text-4xl font-black tracking-tight mb-4">Understanding Rabies &amp; The Importance of PEP</h2>
-                    <p class="text-on-surface-variant max-w-2xl mx-auto">Essential clinical guidelines and critical safety information based on the World Health Organization (WHO) standards.</p>
-                </div>
-                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    <!-- Fatal Nature Card -->
-                    <div class="bg-surface-container-lowest p-10 rounded-xl hover:shadow-xl transition-all border border-outline-variant/10">
-                        <div class="w-12 h-12 rounded-full bg-error-container flex items-center justify-center mb-6">
-                            <span class="material-symbols-outlined text-on-error-container" data-icon="warning">warning</span>
-                        </div>
-                        <h4 class="text-xl font-bold mb-4">Virtually 100% Fatal</h4>
-                        <p class="text-on-surface-variant leading-relaxed text-sm">
-                            Rabies is a vaccine-preventable viral disease, but once clinical symptoms appear, it is virtually 100% fatal for those infected.
-                        </p>
-                    </div>
-                    <!-- PEP Card -->
-                    <div class="bg-surface-container-lowest p-10 rounded-xl hover:shadow-xl transition-all border border-outline-variant/10 md:scale-105 shadow-lg shadow-on-surface/5">
-                        <div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center mb-6">
-                            <span class="material-symbols-outlined text-primary" data-icon="medical_services">medical_services</span>
-                        </div>
-                        <h4 class="text-xl font-bold mb-4">Immediate PEP</h4>
-                        <p class="text-on-surface-variant leading-relaxed text-sm">
-                            Post-exposure prophylaxis (PEP) consists of immediate wound cleaning, a full course of rabies vaccine, and rabies immunoglobulin.
-                        </p>
-                    </div>
-                    <!-- Timing Card -->
-                    <div class="bg-surface-container-lowest p-10 rounded-xl hover:shadow-xl transition-all border border-outline-variant/10">
-                        <div class="w-12 h-12 rounded-full bg-tertiary-fixed flex items-center justify-center mb-6">
-                            <span class="material-symbols-outlined text-on-tertiary-fixed-variant" data-icon="schedule">schedule</span>
-                        </div>
-                        <h4 class="text-xl font-bold mb-4">Timely Intervention</h4>
-                        <p class="text-on-surface-variant leading-relaxed text-sm">
-                            Timely PEP is crucial for preventing rabies deaths after a potential exposure. Every minute counts in clinical intervention.
-                        </p>
-                    </div>
-                </div>
-                <!-- Call to Action Card -->
-                <div class="mt-20 p-12 bg-surface-container-low rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-8">
+                <div class="p-10 bg-surface-container-low rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-8 shadow-sm">
                     <div class="flex-1">
-                        <h3 class="text-3xl font-bold mb-2">Have you been exposed?</h3>
-                        <p class="text-on-surface-variant">Don't wait. Proceed to the <strong>Cebu City Health Department Animal Bite Treatment Center (CCHD ABTC)</strong> immediately for professional medical care.</p>
+                        <h3 class="text-2xl font-bold mb-2">Have you been exposed?</h3>
+                        <p class="text-on-surface-variant text-sm md:text-base">Don't wait. Proceed to the <strong>Cebu City Health Department Animal Bite Treatment Center (CCHD ABTC)</strong> immediately for professional medical care.</p>
                     </div>
-                    <p class="text-primary font-bold text-lg">Please visit the clinic immediately for urgent medical attention.</p>
+                    <p class="text-primary font-bold text-base text-right">Please visit the clinic immediately for urgent medical attention.</p>
                 </div>
             </div>
         </section>
     </main>
+
     <!-- Footer -->
-    <footer class="bg-slate-100 w-full py-12 px-8 mt-20">
+    <footer class="bg-slate-100 w-full py-12 px-8 mt-12">
         <div class="flex flex-col md:flex-row justify-between items-center gap-8 max-w-7xl mx-auto">
             <div class="text-lg font-black text-slate-900">
                 ABTC-Insight
@@ -203,10 +232,69 @@
                 <a class="text-slate-500 hover:text-blue-500 transition-colors" href="#">Department of Health</a>
             </div>
             <div class="text-slate-500 text-[10px] uppercase tracking-widest font-bold opacity-60">
-                © 2024 Cebu City Health Center. All rights reserved.
+                © 2026 Cebu City Health Center. All rights reserved.
             </div>
         </div>
     </footer>
+
+    <!-- Carousel Script -->
+    <script>
+        let slideIndex = 0;
+        const slides = document.querySelectorAll('.carousel-slide');
+        const dots = document.querySelectorAll('.dot-indicator');
+        let autoSlideTimer;
+
+        function showSlide(n) {
+            slideIndex = (n + slides.length) % slides.length;
+            
+            slides.forEach((slide, i) => {
+                if (i === slideIndex) {
+                    slide.classList.remove('opacity-0', 'pointer-events-none');
+                    slide.classList.add('opacity-100');
+                } else {
+                    slide.classList.remove('opacity-100');
+                    slide.classList.add('opacity-0', 'pointer-events-none');
+                }
+            });
+
+            dots.forEach((dot, i) => {
+                if (i === slideIndex) {
+                    dot.classList.remove('w-2', 'bg-slate-300');
+                    dot.classList.add('w-6', 'bg-primary');
+                } else {
+                    dot.classList.remove('w-6', 'bg-primary');
+                    dot.classList.add('w-2', 'bg-slate-300');
+                }
+            });
+        }
+
+        function nextSlide() {
+            showSlide(slideIndex + 1);
+            resetTimer();
+        }
+
+        function prevSlide() {
+            showSlide(slideIndex - 1);
+            resetTimer();
+        }
+
+        function currentSlide(n) {
+            showSlide(n);
+            resetTimer();
+        }
+
+        function resetTimer() {
+            clearInterval(autoSlideTimer);
+            autoSlideTimer = setInterval(() => {
+                showSlide(slideIndex + 1);
+            }, 6000); // Rotates every 6 seconds automatically
+        }
+
+        // Initialize auto rotation
+        autoSlideTimer = setInterval(() => {
+            showSlide(slideIndex + 1);
+        }, 6000);
+    </script>
 </body>
 
 </html>

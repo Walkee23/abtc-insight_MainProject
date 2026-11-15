@@ -18,4 +18,4 @@ Schedule::command('backup:database --auto')->everyMinute()->withoutOverlapping()
 // Change addDay() to today() if you want same-day reminders instead.
 Schedule::call(function () {
     app(SmsService::class)->queueDueReminders(today()->addDay());
-})->name('sms-reminders')->dailyAt('15:55')->timezone('Asia/Manila')->withoutOverlapping();
+})->name('sms-reminders')->dailyAt('13:55')->timezone('Asia/Manila')->withoutOverlapping();

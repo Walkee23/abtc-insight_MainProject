@@ -488,7 +488,7 @@ class StaffController extends Controller
 
     public function newDashboard()
     {
-        // 1. Stats para iti agdama nga aldaw (Today)
+        // 1. Stats para sa kasamtangang adlaw (Today)
         $totalRegistered = DB::table('inflow_general_particulars')
             ->whereDate('queue_date', today())
             ->count();
@@ -503,7 +503,7 @@ class StaffController extends Controller
             ->where('status', 'Pending')
             ->count();
 
-        // 2. Breakdown ti Priority ken Normal
+        // 2. Breakdown sa Priority ug Normal
         $priorityCount = DB::table('inflow_general_particulars')
             ->whereDate('queue_date', today())
             ->where('queue_id', 'LIKE', 'P%')
@@ -519,13 +519,41 @@ class StaffController extends Controller
             ->where('status', 'Encoded')
             ->count();
 
+        // 3. Follow-Up Inflow Queries (Para sa Day 3, Day 7, Day 28 ug Name Lists sa ubos)
+        $targetDay3  = now()->subDays(3)->toDateString();
+        $targetDay7  = now()->subDays(7)->toDateString();
+        $targetDay28 = now()->subDays(28)->toDateString();
+
+        $patientsDay3 = DB::table('inflow_general_particulars')
+            ->whereDate('reg_date', $targetDay3)
+            ->get();
+
+        $patientsDay7 = DB::table('inflow_general_particulars')
+            ->whereDate('reg_date', $targetDay7)
+            ->get();
+
+        $patientsDay28 = DB::table('inflow_general_particulars')
+            ->whereDate('reg_date', $targetDay28)
+            ->get();
+
+        $dueDay3Count  = $patientsDay3->count();
+        $dueDay7Count  = $patientsDay7->count();
+        $dueDay28Count = $patientsDay28->count();
+
+        // 4. I-compact ang tanang kinahanglanon sa view
         return view('staff.newdashboard', compact(
             'totalRegistered',
             'verifiedCount',
             'pendingCount',
             'priorityCount',
             'normalCount',
-            'encodedCount'
+            'encodedCount',
+            'dueDay3Count',
+            'dueDay7Count',
+            'dueDay28Count',
+            'patientsDay3',
+            'patientsDay7',
+            'patientsDay28'
         ));
     }
 }

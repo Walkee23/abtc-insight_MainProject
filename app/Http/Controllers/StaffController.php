@@ -25,9 +25,9 @@ class StaffController extends Controller
             $applySearch = function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('patient_name', 'LIKE', "%{$search}%")
-                      ->orWhere('queue_id', $search)
-                      ->orWhere('id_number', $search)
-                      ->orWhere('inflow_record_id', $search);
+                        ->orWhere('queue_id', $search)
+                        ->orWhere('id_number', $search)
+                        ->orWhere('inflow_record_id', $search);
                 });
             };
             $priorityQuery->where($applySearch);
@@ -126,8 +126,8 @@ class StaffController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('inflow_general_particulars.patient_name', 'LIKE', "%{$search}%")
-                  ->orWhere('patients.patient_id', 'LIKE', "%{$search}%")
-                  ->orWhere('inflow_general_particulars.inflow_record_id', $search);
+                    ->orWhere('patients.patient_id', 'LIKE', "%{$search}%")
+                    ->orWhere('inflow_general_particulars.inflow_record_id', $search);
             });
         }
 
@@ -139,16 +139,24 @@ class StaffController extends Controller
         } elseif ($verifiedQueue->isNotEmpty()) {
             $selectedPatient = $verifiedQueue->first();
         }
-            $bhwExposure = null;
+        $bhwExposure = null;
         if ($selectedPatient) {
             $bhwExposure = DB::table('bite_cases')
-        ->join('bhw_referral_exposure', 'bite_cases.bhw_referral_id', '=', 'bhw_referral_exposure.referral_id')
-        ->where('bite_cases.inflow_record_id', $selectedPatient->inflow_record_id)
-        ->select('bhw_referral_exposure.*')
-        ->first();
+                ->join('bhw_referral_exposure', 'bite_cases.bhw_referral_id', '=', 'bhw_referral_exposure.referral_id')
+                ->where('bite_cases.inflow_record_id', $selectedPatient->inflow_record_id)
+                ->select('bhw_referral_exposure.*')
+                ->first();
         }
 
-        return view('staff.Case_Encoding', compact('verifiedQueue', 'selectedPatient', 'search', 'bhwExposure'));
+        $healthworkers = DB::table('users')
+            ->where('role', 'Health Worker')
+            ->where('is_active', 1)
+            ->select('user_id', 'full_name')
+            ->orderBy('full_name')
+            ->get();
+
+
+        return view('staff.Case_Encoding', compact('verifiedQueue', 'selectedPatient', 'search', 'bhwExposure', 'healthworkers'));
     }
 
     public function storeCaseEncoding(Request $request, string $inflow_record_id)
@@ -160,6 +168,10 @@ class StaffController extends Controller
         }
 
         $isComplete = $request->input('action') === 'complete';
+
+        if ($isComplete && !$request->filled('assigned_health_worker_id')) {
+            return back()->withErrors(['error' => 'Please assign a healthworker before completing.'])->withInput();
+        }
 
         if ($isComplete && $request->input('prev_arv_given') === '1') {
             $hasDoseDate = $request->filled('dose1_date') || $request->filled('dose2_date') || $request->filled('dose3_date') || $request->filled('booster_date');
@@ -175,95 +187,100 @@ class StaffController extends Controller
         $exposureTypes = (array) $request->input('exposure_type', []);
         $category = in_array('Bite', $exposureTypes, true) ? 'III'
             : (in_array('Scratch', $exposureTypes, true) ? 'II'
-            : (in_array('Lick', $exposureTypes, true) ? 'I' : 'II'));
+                : (in_array('Lick', $exposureTypes, true) ? 'I' : 'II'));
 
         // Everything saves together; "Complete Encoding" is the hand-off to the Health Worker
         // (status 'Encoded' puts the case in their Clinical Encoding queue), drafts stay with Staff.
         return DB::transaction(function () use ($request, $inflow_record_id, $patient, $inflow, $isComplete, $category) {
 
-        // Get or create the bite_cases record for this patient
-        $biteCase = DB::table('bite_cases')->where('inflow_record_id', $inflow_record_id)->first();
+            // Get or create the bite_cases record for this patient
+            $biteCase = DB::table('bite_cases')->where('inflow_record_id', $inflow_record_id)->first();
 
-        if (!$biteCase) {
-            $caseNumber = DB::table('bite_cases')->where('patient_id', $patient->patient_id)->max('case_number') + 1;
+            if (!$biteCase) {
+                $caseNumber = DB::table('bite_cases')->where('patient_id', $patient->patient_id)->max('case_number') + 1;
 
-            $biteCaseId = DB::table('bite_cases')->insertGetId([
-                'patient_id'        => $patient->patient_id,
-                'inflow_record_id'  => $inflow_record_id,
-                'case_number'       => $caseNumber,
-                'date_verified'     => now(),
-                'barangay'          => $inflow->barangay ?? 'Unknown',
-                'category'          => $category,
-                'philhealth_status' => $patient->philhealth_member ? 'Member' : 'Non-member',
-            ], 'bite_case_id');
-        } else {
-            $biteCaseId = $biteCase->bite_case_id;
+                $biteCaseId = DB::table('bite_cases')->insertGetId([
+                    'patient_id'        => $patient->patient_id,
+                    'inflow_record_id'  => $inflow_record_id,
+                    'case_number'       => $caseNumber,
+                    'date_verified'     => now(),
+                    'barangay'          => $inflow->barangay ?? 'Unknown',
+                    'category'          => $category,
+                    'philhealth_status' => $patient->philhealth_member ? 'Member' : 'Non-member',
+                ], 'bite_case_id');
+            } else {
+                $biteCaseId = $biteCase->bite_case_id;
 
-            // Keep the provisional category current while Staff is still encoding, unless the
-            // Health Worker has already set it in Section VI
-            if (!DB::table('bite_section6_wound_description')->where('bite_case_id', $biteCaseId)->exists()) {
-                DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->update(['category' => $category]);
+                // Keep the provisional category current while Staff is still encoding, unless the
+                // Health Worker has already set it in Section VI
+                if (!DB::table('bite_section6_wound_description')->where('bite_case_id', $biteCaseId)->exists()) {
+                    DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->update(['category' => $category]);
+                }
             }
-        }
-        
-        // Section 3: Details of Exposure
-        DB::table('bite_section3_exposure')->updateOrInsert(
-            ['bite_case_id' => $biteCaseId],
-            [
-                'animal_type'       => $request->input('animal_type'),
-                'animal_type_other' => $request->input('animal_type_other'),
-                'bite_date_time'    => $request->input('bite_date') . ($request->input('bite_time') ? ' ' . $request->input('bite_time') : ' 00:00:00'),
-                'animal_vax_status' => $request->input('animal_vax_status'),
-                'animal_vax_date'   => $request->input('animal_vax_date') ?: null,
-                'animal_fate'       => $request->input('fate'),
-                'obs_14_days'       => $request->input('obs_14_days') ?: null,
-                'exposure_type'     => implode(', ', $request->input('exposure_type', [])),
-                'is_provoked'       => $request->input('provoked'),
-                'is_leashed'        => $request->input('leash'),
-                'has_gate'          => $request->input('gate'),
-                'circumstances'     => $request->input('circumstances'),
-            ]
-        );
 
-        // Section 4: Local Wound Treatment
-        DB::table('bite_section4_wound_treatment')->updateOrInsert(
-            ['bite_case_id' => $biteCaseId],
-            [
-                'wound_washed'           => $request->input('wound_washed'),
-                'wound_wash_other'       => $request->input('wound_wash_other'),
-                'local_irritant_applied' => $request->has('local_irritant_applied') ? 1 : 0,
-                'local_irritant_detail'  => $request->input('local_irritant_detail'),
-            ]
-        );
+            // Section 3: Details of Exposure
+            DB::table('bite_section3_exposure')->updateOrInsert(
+                ['bite_case_id' => $biteCaseId],
+                [
+                    'animal_type'       => $request->input('animal_type'),
+                    'animal_type_other' => $request->input('animal_type_other'),
+                    'bite_date_time'    => $request->input('bite_date') . ($request->input('bite_time') ? ' ' . $request->input('bite_time') : ' 00:00:00'),
+                    'animal_vax_status' => $request->input('animal_vax_status'),
+                    'animal_vax_date'   => $request->input('animal_vax_date') ?: null,
+                    'animal_fate'       => $request->input('fate'),
+                    'obs_14_days'       => $request->input('obs_14_days') ?: null,
+                    'exposure_type'     => implode(', ', $request->input('exposure_type', [])),
+                    'is_provoked'       => $request->input('provoked'),
+                    'is_leashed'        => $request->input('leash'),
+                    'has_gate'          => $request->input('gate'),
+                    'circumstances'     => $request->input('circumstances'),
+                ]
+            );
 
-        // Section 5: Previous Anti-Rabies Treatment
-        $doses = array_filter([
-            'dose1'   => $request->input('dose1_date'),
-            'dose2'   => $request->input('dose2_date'),
-            'dose3'   => $request->input('dose3_date'),
-            'booster' => $request->input('booster_date'),
-        ]);
+            // Section 4: Local Wound Treatment
+            DB::table('bite_section4_wound_treatment')->updateOrInsert(
+                ['bite_case_id' => $biteCaseId],
+                [
+                    'wound_washed'           => $request->input('wound_washed'),
+                    'wound_wash_other'       => $request->input('wound_wash_other'),
+                    'local_irritant_applied' => $request->has('local_irritant_applied') ? 1 : 0,
+                    'local_irritant_detail'  => $request->input('local_irritant_detail'),
+                ]
+            );
 
-        DB::table('bite_section5_prior_arv')->updateOrInsert(
-            ['bite_case_id' => $biteCaseId],
-            [
-                'prev_arv_given' => $request->input('prev_arv_given'),
-                'prev_arv_dates' => json_encode($doses),
-            ]
-        );
+            // Section 5: Previous Anti-Rabies Treatment
+            $doses = array_filter([
+                'dose1'   => $request->input('dose1_date'),
+                'dose2'   => $request->input('dose2_date'),
+                'dose3'   => $request->input('dose3_date'),
+                'booster' => $request->input('booster_date'),
+            ]);
 
-        if ($isComplete) {
-            DB::table('inflow_general_particulars')
-                ->where('inflow_record_id', $inflow_record_id)
-                ->update(['status' => 'Encoded']);
+            DB::table('bite_section5_prior_arv')->updateOrInsert(
+                ['bite_case_id' => $biteCaseId],
+                [
+                    'prev_arv_given' => $request->input('prev_arv_given'),
+                    'prev_arv_dates' => json_encode($doses),
+                ]
+            );
 
-            return redirect()->route('staff.case-encoding')
-                ->with('success', 'Case encoding completed and sent to the Health Worker for Clinical Encoding.');
-        }
+            if ($request->filled('assigned_health_worker_id')) {
+                DB::table('bite_cases')
+                    ->where('bite_case_id', $biteCaseId)
+                    ->update(['assigned_health_worker_id' => $request->input('assigned_health_worker_id')]);
+            }
 
-        return redirect()->route('staff.case-encoding', $inflow_record_id)
-            ->with('success', 'Progress saved. You can continue later.');
+            if ($isComplete) {
+                DB::table('inflow_general_particulars')
+                    ->where('inflow_record_id', $inflow_record_id)
+                    ->update(['status' => 'Encoded']);
 
+                return redirect()->route('staff.case-encoding')
+                    ->with('success', 'Case encoding completed and sent to the Health Worker for Clinical Encoding.');
+            }
+
+            return redirect()->route('staff.case-encoding', $inflow_record_id)
+                ->with('success', 'Progress saved. You can continue later.');
         });
     }
 
@@ -304,9 +321,9 @@ class StaffController extends Controller
             $applySearch = function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('patient_name', 'LIKE', "%{$search}%")
-                      ->orWhere('queue_id', 'LIKE', "%{$search}%")
-                      ->orWhere('id_number', 'LIKE', "%{$search}%")
-                      ->orWhere('barangay', 'LIKE', "%{$search}%");
+                        ->orWhere('queue_id', 'LIKE', "%{$search}%")
+                        ->orWhere('id_number', 'LIKE', "%{$search}%")
+                        ->orWhere('barangay', 'LIKE', "%{$search}%");
                 });
             };
             $priorityQuery->where($applySearch);
@@ -380,8 +397,6 @@ class StaffController extends Controller
 
         return redirect()->route('staff.dashboard')
             ->with('success', "Patient {$inflow->patient_name} verified! Ticket removed from queue and ready for Case Encoding.");
-            
-
     }
 
     // Patient Lookup & Records (Master Database View linked to Section 9 PEP Progress)
@@ -433,11 +448,11 @@ class StaffController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('patients.patient_name', 'LIKE', "%{$search}%")
-                  ->orWhere('patients.patient_id', 'LIKE', "%{$search}%")
-                  ->orWhere('patients.id_number', 'LIKE', "%{$search}%")
-                  ->orWhere('patients.contact_num', 'LIKE', "%{$search}%")
-                  ->orWhere('inflow_general_particulars.barangay', 'LIKE', "%{$search}%")
-                  ->orWhere('bite_cases.barangay', 'LIKE', "%{$search}%");
+                    ->orWhere('patients.patient_id', 'LIKE', "%{$search}%")
+                    ->orWhere('patients.id_number', 'LIKE', "%{$search}%")
+                    ->orWhere('patients.contact_num', 'LIKE', "%{$search}%")
+                    ->orWhere('inflow_general_particulars.barangay', 'LIKE', "%{$search}%")
+                    ->orWhere('bite_cases.barangay', 'LIKE', "%{$search}%");
             });
         }
 
@@ -499,6 +514,11 @@ class StaffController extends Controller
             ->where('queue_id', 'LIKE', 'N%')
             ->count();
 
+        $encodedCount = DB::table('inflow_general_particulars')
+            ->whereDate('queue_date', today())
+            ->where('status', 'Encoded')
+            ->count();
+
         // 3. Follow-Up Inflow Queries (Para sa Day 3, Day 7, Day 28 ug Name Lists sa ubos)
         $targetDay3  = now()->subDays(3)->toDateString();
         $targetDay7  = now()->subDays(7)->toDateString();
@@ -527,6 +547,7 @@ class StaffController extends Controller
             'pendingCount',
             'priorityCount',
             'normalCount',
+            'encodedCount',
             'dueDay3Count',
             'dueDay7Count',
             'dueDay28Count',

@@ -401,18 +401,31 @@
 
 
                         <div class="space-y-2">
-                            <label class="text-xs font-semibold text-on-surface-variant">Animal Condition / Remarks</label>
-                            <textarea name="animal_remarks" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20 resize-none" placeholder="e.g. died, lost," rows="2"></textarea>
+                            <label class="text-xs font-semibold text-on-surface-variant">Animal Condition <span class="text-error">*</span></label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <label class="text-sm flex items-center gap-2 cursor-pointer"><input class="text-primary focus:ring-primary" name="animal_remarks" value="Healthy" type="radio" required /> Healthy</label>
+                                <label class="text-sm flex items-center gap-2 cursor-pointer"><input class="text-primary focus:ring-primary" name="animal_remarks" value="Sick" type="radio" /> Sick</label>
+                                <label class="text-sm flex items-center gap-2 cursor-pointer"><input class="text-primary focus:ring-primary" name="animal_remarks" value="Dead" type="radio" /> Dead</label>
+                                <label class="text-sm flex items-center gap-2 cursor-pointer"><input class="text-primary focus:ring-primary" name="animal_remarks" value="Lost/Stray" type="radio" /> Lost/Stray</label>
+                            </div>
                         </div>
                         <div class="space-y-2">
-                            <label class="text-xs font-semibold text-on-surface-variant">Lab Exam (Optional)</label>
-                            <input type="text" name="lab_exam" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" placeholder="e.g. Rapid Rabies Test results" />
-                        </div>
-                        <div class="space-y-2">
-                            <label class="text-xs font-semibold text-on-surface-variant">Action Desired / Remarks</label>
-                            <textarea name="action_desired" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20 resize-none" placeholder="Specify emergency care needed or reason for transfer..." rows="3"></textarea>
+                            <label class="text-xs font-semibold text-on-surface-variant">14-Day Observation</label>
+                            <div class="flex flex-col gap-2">
+                                <label class="text-sm flex items-center gap-2 cursor-pointer"><input id="obsCheckbox" class="rounded text-primary focus:ring-primary" name="obs" value="1" type="checkbox" /> Under Observation</label>
+                                <input id="obsDate" class="w-full bg-surface-container-highest border-none rounded-lg text-sm px-3 py-2 focus:ring-2 focus:ring-primary/20 disabled:opacity-50 disabled:cursor-not-allowed" name="obs_14_days" type="date" disabled />
+                            </div>
                         </div>
                     </div>
+                    <div class="space-y-2">
+                        <label class="text-xs font-semibold text-on-surface-variant">Lab Exam (Optional)</label>
+                        <input type="text" name="lab_exam" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" placeholder="e.g. Rapid Rabies Test results" />
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-xs font-semibold text-on-surface-variant">Action Desired / Remarks</label>
+                        <textarea name="action_desired" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20 resize-none" placeholder="Specify emergency care needed or reason for transfer..." rows="3"></textarea>
+                    </div>
+                </div>
                 </div>
             </section>
 
@@ -613,6 +626,16 @@
             }
             exposureDate.addEventListener('change', limitExposureTime);
             exposureTime.addEventListener('change', limitExposureTime);
+
+            // 14-day observation toggle
+            const obsCheckbox = document.getElementById('obsCheckbox');
+            const obsDate = document.getElementById('obsDate');
+            obsDate.max = toYMD(new Date());
+            obsCheckbox.addEventListener('change', function() {
+                obsDate.disabled = !this.checked;
+                obsDate.required = this.checked;
+                if (!this.checked) obsDate.value = '';
+            });
 
             // At least one exposure type must be chosen
             const typeChecks = document.querySelectorAll('.exposure-type-check');

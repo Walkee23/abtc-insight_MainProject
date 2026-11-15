@@ -7,6 +7,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "chillerlan/php-qrcode": "^6.0",
         "laravel/framework": "^13.8",
         "laravel/tinker": "^3.0"
     },

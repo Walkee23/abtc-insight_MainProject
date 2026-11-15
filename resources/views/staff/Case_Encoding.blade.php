@@ -311,9 +311,9 @@
                                         </div>
                                         <input id="animal_type_other_input" class=" {{ $animal === 'Others' ? '' : 'hidden' }} w-full bg-surface-container-highest border-none rounded-lg text-xs px-3 py-2 focus:ring-2 focus:ring-primary/20 transition-all outline-none" name="animal_type_other" value="{{ $bhwExposure->biting_animal_other ?? '' }}" placeholder="Specify animal..." type="text" />
                                     </div>
- 
+
                                     <div class="space-y-4">
-                                        <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Pet or Stray  <span class="text-error">*</label>
+                                        <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Pet or Stray <span class="text-error">*</label>
                                         <div class="flex gap-4">
                                             <label class="flex items-center gap-2 text-sm cursor-pointer">
                                                 <input class="text-primary focus:ring-primary" name="pet_status" value="Pet" type="radio" /> Pet
@@ -333,7 +333,7 @@
                                     </div>
 
                                     <div class="space-y-4">
-                                        <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Exposure Type  <span class="text-error">*</label>
+                                        <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Exposure Type <span class="text-error">*</label>
                                         <div class="flex gap-4">
                                             <label class="flex items-center gap-2 text-sm cursor-pointer">
                                                 <input class="rounded text-primary focus:ring-primary" name="exposure_type[]" value="Lick" type="checkbox" /> Lick
@@ -494,6 +494,17 @@
 
                             </section>
 
+                            <section class="space-y-3">
+                                <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Assign to Healthworker <span class="text-error">*</span></label>
+                                <select name="assigned_health_worker_id" class="w-full md:w-1/2 bg-surface-container-highest border-none rounded-lg text-sm px-4 py-2.5 focus:ring-2 focus:ring-primary/20">
+                                    <option value="" selected disabled hidden>--</option>
+                                    @foreach($healthworkers as $hw)
+                                    <option value="{{ $hw->user_id }}">{{ $hw->full_name }}</option>
+                                    @endforeach
+                                </select>
+                                <p class="text-[10px] text-on-surface-variant italic">Required when you click Complete Encoding.</p>
+                            </section>
+
                             <!-- Form Submission -->
                             <div class="pt-8 border-t border-surface-container-high flex justify-end gap-4">
                                 <button type="button" class="px-8 py-3 text-sm font-bold text-secondary bg-surface-container-low rounded-full hover:bg-surface-container-high transition-all">Cancel Entry</button>
@@ -623,11 +634,11 @@
             });
         });
         // Apply the time limit to a pre-filled bite date
-            limitBiteTime();
+        limitBiteTime();
 
-            // Required when "Others" is pre-selected
-            const othersChecked = document.querySelector('.animal-type-radio[value="Others"]:checked');
-            if (othersChecked) animalOtherInput.required = true;
+        // Required when "Others" is pre-selected
+        const othersChecked = document.querySelector('.animal-type-radio[value="Others"]:checked');
+        if (othersChecked) animalOtherInput.required = true;
     </script>
 </body>
 

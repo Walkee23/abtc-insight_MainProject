@@ -228,17 +228,29 @@
                     <div>
                         <h2 class="text-2xl font-bold text-on-surface tracking-tight">Patient Volume Forecasting</h2>
                         <p class="text-on-surface-variant text-sm mt-1">
-                            {{ $forecast['status'] === 'ok' ? $forecast['method'] : 'Exponential Smoothing' }} · patients per {{ $periods[$period]['unit'] }}
+                            {{ $forecast['status'] === 'ok' ? $forecast['method'] : 'Exponential Smoothing' }} · trained on the {{ $trainWeeks }} weeks before {{ $asOf->format('M d, Y') }}, recent days weighted most · patients per {{ $periods[$period]['unit'] }}
                         </p>
                     </div>
+                    <div class="flex items-end gap-6">
+                    <form method="GET" action="{{ route('admin.forecasting') }}" class="flex flex-col items-end gap-2">
+                        <input type="hidden" name="period" value="{{ $period }}" />
+                        @foreach(array_filter($params, fn ($v, $k) => $v !== $defaults[$k], ARRAY_FILTER_USE_BOTH) as $paramKey => $paramValue)
+                        <input type="hidden" name="{{ $paramKey }}" value="{{ $paramValue }}" />
+                        @endforeach
+                        <p class="text-[10px] font-bold text-outline uppercase tracking-wider">Forecast As Of</p>
+                        <input type="date" name="asof" value="{{ $asOf->toDateString() }}" max="{{ $today->toDateString() }}"
+                            onchange="this.form.submit()" title="The model learns from the {{ $trainWeeks }} weeks before this date"
+                            class="bg-surface-container-low border-none rounded-lg px-3 py-1.5 text-xs font-semibold focus:ring-2 focus:ring-primary/20" />
+                    </form>
                     <div class="flex flex-col items-end gap-2">
                         <p class="text-[10px] font-bold text-outline uppercase tracking-wider">View &amp; Forecast Interval</p>
                         <div class="bg-surface-container-low p-1 rounded-lg flex gap-1">
                             @foreach($periods as $key => $cfg)
-                            <a href="{{ route('admin.forecasting', ['period' => $key] + array_filter($params, fn ($v, $k) => $v !== $defaults[$k], ARRAY_FILTER_USE_BOTH)) }}"
+                            <a href="{{ route('admin.forecasting', ['period' => $key] + array_filter($params, fn ($v, $k) => $v !== $defaults[$k], ARRAY_FILTER_USE_BOTH) + ($asOf->isSameDay($today) ? [] : ['asof' => $asOf->toDateString()])) }}"
                                 class="px-4 py-1.5 text-xs font-semibold rounded-md transition-all {{ $period === $key ? 'bg-surface-container-lowest text-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-high' }}">{{ $cfg['label'] }}</a>
                             @endforeach
                         </div>
+                    </div>
                     </div>
                 </div>
                 <div class="grid grid-cols-12 gap-6">
@@ -247,11 +259,11 @@
                             <p class="text-[10px] uppercase font-bold text-outline tracking-wider mb-1">Method</p>
                             <p class="text-sm font-bold text-primary leading-snug">{{ $forecast['status'] === 'ok' ? $forecast['method'] : '—' }}</p>
                             @if($forecast['status'] === 'ok' && !$forecast['seasonal'])
-                            <span class="text-[10px] text-outline font-medium mt-1">Seasonality needs {{ 2 * $periods[$period]['season'] }}+ {{ $periods[$period]['unit'] }}s</span>
+                            <span class="text-[10px] text-outline font-medium mt-1">Weekly pattern needs 14+ days</span>
                             @endif
                         </div>
                         <div class="bg-surface-container-lowest p-5 rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] flex flex-col justify-between">
-                            <p class="text-[10px] uppercase font-bold text-outline tracking-wider mb-1">MAPE</p>
+                            <p class="text-[10px] uppercase font-bold text-outline tracking-wider mb-1" title="Weighted absolute percentage error of the model's one-day-ahead guesses over the training window">WAPE</p>
                             <div class="flex flex-col">
                                 <p class="text-lg font-bold text-primary">{{ $forecast['status'] === 'ok' && $forecast['mape'] !== null ? $forecast['mape'] . '%' : '—' }}</p>
                                 <span class="text-[10px] text-primary/60 font-medium">{{ $forecast['status'] === 'ok' ? $forecast['mape_label'] : 'No data' }}</span>
@@ -273,13 +285,14 @@
                     <form id="paramsForm" method="GET" action="{{ route('admin.forecasting') }}"
                         class="col-span-12 lg:col-span-7 bg-surface-container-low/30 p-6 rounded-2xl border border-outline-variant/10 space-y-5">
                         <input type="hidden" name="period" value="{{ $period }}" />
+                        @if(!$asOf->isSameDay($today))<input type="hidden" name="asof" value="{{ $asOf->toDateString() }}" />@endif
                         <div class="flex justify-between items-center mb-1">
                             <h3 class="text-xs font-bold text-on-surface uppercase tracking-widest flex items-center gap-2">
                                 <span class="material-symbols-outlined text-sm" data-icon="tune">tune</span>
                                 Model Parameters Tuning
                             </h3>
                             <div class="flex gap-2">
-                                <a href="{{ route('admin.forecasting', ['period' => $period]) }}" class="text-[10px] font-bold text-primary hover:underline transition-all">Reset Defaults</a>
+                                <a href="{{ route('admin.forecasting', ['period' => $period] + ($asOf->isSameDay($today) ? [] : ['asof' => $asOf->toDateString()])) }}" class="text-[10px] font-bold text-primary hover:underline transition-all">Reset Defaults</a>
                             </div>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -302,7 +315,7 @@
                             @endforeach
                         </div>
                         @if($forecast['status'] === 'ok' && !$forecast['seasonal'])
-                        <p class="text-[10px] text-outline italic">Gamma applies once there are {{ 2 * $periods[$period]['season'] }}+ completed {{ $periods[$period]['unit'] }}s.</p>
+                        <p class="text-[10px] text-outline italic">Gamma applies once there are 14+ days of data.</p>
                         @endif
                     </form>
                 </div>
@@ -330,7 +343,7 @@
                         <div class="flex items-center gap-6">
                             @if($forecast['status'] === 'ok')
                             <div class="text-right">
-                                <p class="text-[10px] font-bold text-outline uppercase tracking-widest">Expected {{ $periods[$period]['unit'] === 'day' ? 'today' : 'this ' . $periods[$period]['unit'] }}</p>
+                                <p class="text-[10px] font-bold text-outline uppercase tracking-widest">Expected {{ $asOf->isSameDay($today) ? ($periods[$period]['unit'] === 'day' ? 'today' : 'this ' . $periods[$period]['unit']) : 'from ' . $asOf->format('M d') }}</p>
                                 <p class="text-xl font-black text-primary">{{ rtrim(rtrim(number_format($forecast['next_value'], 1), '0'), '.') }} <span class="text-xs font-semibold text-outline">patients</span></p>
                             </div>
                             <div class="text-right">
@@ -340,6 +353,7 @@
                             <form method="POST" action="{{ route('admin.forecasting.save') }}">
                                 @csrf
                                 <input type="hidden" name="period" value="{{ $period }}" />
+                                @if(!$asOf->isSameDay($today))<input type="hidden" name="asof" value="{{ $asOf->toDateString() }}" />@endif
                                 @foreach($params as $key => $value)
                                 <input type="hidden" name="{{ $key }}" value="{{ $value }}" />
                                 @endforeach
@@ -370,16 +384,19 @@
                         <svg id="forecastChart" data-period="{{ $period }}" class="w-full h-full block touch-none" viewBox="0 0 1000 340" preserveAspectRatio="xMidYMid meet"></svg>
                         <div id="chartTip" class="hidden pointer-events-none absolute z-10 bg-slate-900/95 text-white rounded-lg px-3 py-2 shadow-xl text-xs leading-snug whitespace-nowrap"></div>
                     </div>
-                    <script type="application/json" id="forecastData">@json(['history' => $forecast['history'], 'future' => $forecast['future'], 'window' => $forecast['window']])</script>
+                    @php
+                        $chartData = ['history' => $forecast['history'], 'future' => $forecast['future'], 'window' => $forecast['window'], 'window_start' => $forecast['window_start']];
+                    @endphp
+                    <script type="application/json" id="forecastData">{!! json_encode($chartData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
                     <p class="text-[11px] text-outline mt-3">
                         {{ $saved > 0 ? $saved . ' forecast rows saved' . ($lastSaved ? ', last on ' . \Carbon\Carbon::parse($lastSaved)->format('M d, Y g:i A') : '') . '.' : 'No forecast saved yet.' }}
-                        The current {{ $periods[$period]['unit'] }} is still in progress, so it starts the forecast.
+                        The forecast starts on {{ $asOf->format('M d, Y') }} and learns from the {{ $forecast['points'] }} days before it, with the latest days weighted most.
                     </p>
                     @elseif($forecast['status'] === 'short')
                     <div class="h-[240px] flex flex-col items-center justify-center text-center gap-2">
                         <span class="material-symbols-outlined text-4xl text-outline-variant">query_stats</span>
-                        <p class="text-sm font-bold text-on-surface-variant">Not enough {{ strtolower($periods[$period]['label']) }} data yet.</p>
-                        <p class="text-xs text-outline max-w-sm">At least 3 completed {{ $periods[$period]['unit'] }}s of registrations are needed ({{ $forecast['points'] }} so far). Try another interval.</p>
+                        <p class="text-sm font-bold text-on-surface-variant">Not enough data before {{ $asOf->format('M d, Y') }}.</p>
+                        <p class="text-xs text-outline max-w-sm">At least 3 days of registrations before the date are needed ({{ $forecast['points'] }} so far). Try a later date.</p>
                     </div>
                     @else
                     <div class="h-[240px] flex flex-col items-center justify-center text-center gap-2">
@@ -503,7 +520,7 @@
             const dataEl = document.getElementById('forecastData');
             const svg = document.getElementById('forecastChart');
             if (dataEl && svg) {
-                const { history, future, window: fitWindow } = JSON.parse(dataEl.textContent);
+                const { history, future, window: fitWindow, window_start: windowStart } = JSON.parse(dataEl.textContent);
                 const period = svg.dataset.period;
                 const unit = { daily: 'day', weekly: 'week', monthly: 'month' }[period];
                 const wrap = document.getElementById('chartWrap');
@@ -535,7 +552,8 @@
                 }[period];
                 // the model window is a preset too, unless it already covers everything
                 const suffix = { daily: 'D', weekly: 'W', monthly: 'M' }[period];
-                if (fitWindow < history.length && !presetList.some(([, c]) => c === fitWindow)) presetList.push([fitWindow + suffix, fitWindow]);
+                if (fitWindow > 0 && fitWindow < history.length && !presetList.some(([, c]) => c === fitWindow)) presetList.push([fitWindow + suffix, fitWindow]);
+                presetList.sort((x, y) => x[1] - y[1]);
                 const presets = presetList.concat([['All', null]]);
                 const presetFrom = (count) => (count === null ? firstDate : history[Math.max(0, history.length - count)].date);
                 presets.forEach(([label, days]) => {
@@ -615,6 +633,14 @@
                     }
 
                     const h = hist.length;
+                    // light band over the periods the model learned from (the 6 weeks before the as-of date)
+                    if (fitWindow > 0) {
+                        const i0 = hist.findIndex((p) => p.date >= windowStart);
+                        if (i0 >= 0) {
+                            add('rect', { x: x(i0), y: top, width: Math.max(3, x(h - 1) - x(i0)), height: H - top - bottom, fill: '#004a93', 'fill-opacity': 0.05 });
+                            add('text', { x: x(i0) + 6, y: top + 24, 'font-size': 10, 'font-weight': 700, fill: '#717782' }, 'TRAINING WINDOW');
+                        }
+                    }
                     if (fut.length) {
                         const dx = (x(h - 1) + x(h)) / 2;
                         add('line', { x1: dx, x2: dx, y1: top, y2: H - bottom, stroke: '#c1c7d3', 'stroke-dasharray': '4,4' });

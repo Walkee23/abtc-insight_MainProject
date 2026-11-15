@@ -31,7 +31,8 @@ Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Role Dashboards
-Route::prefix('admin')->group(function () {
+// Everything under /admin needs a logged-in Admin (see App\Http\Middleware\EnsureAdmin)
+Route::prefix('admin')->middleware('admin')->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\AdminController::class, 'dashboard'])->name('admin.dashboard');
 
     Route::get('/spatial-map', [GisMapController::class, 'index'])->name('admin.gis_map');

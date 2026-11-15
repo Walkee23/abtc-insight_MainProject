@@ -600,6 +600,10 @@
                 let data = {};
                 try { data = await res.json(); } catch (e) { /* not JSON */ }
                 if (!res.ok) {
+                    // 401 = not logged in any more, 419 = the page's security token expired with the session
+                    if (res.status === 401 || res.status === 419) {
+                        throw new Error('Your session has expired. Reload this page and log in again.');
+                    }
                     const errors = data.errors ? Object.values(data.errors).flat().join(' ') : '';
                     throw new Error(errors || data.message || ('Request failed (' + res.status + ')'));
                 }

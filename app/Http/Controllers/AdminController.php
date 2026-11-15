@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -13,132 +14,116 @@ use PhpOffice\PhpWord\IOWriter;
 class AdminController extends Controller
 {
     public function systemManagement()
-    {
-        // 1. Role-based User Counts
-        $healthWorkersCount = DB::table('users')->where('role', 'Healthworker')->count();
-        $internsCount = DB::table('users')->where('role', 'OJT')->orWhere('role', 'Intern')->count();
-        $staffCount = DB::table('users')->where('role', 'Staff')->count();
+{
+    // 1. Role-based User Counts
+    $healthWorkersCount = DB::table('users')->where('role', 'Health Worker')->count();
+    $internsCount       = DB::table('users')->whereIn('role', ['OJT', 'Intern'])->count();
+    $staffCount         = DB::table('users')->where('role', 'Staff')->count();
 
-        // 2. Active Sessions / Users List
-        $activeUsers = DB::table('users')
-            ->select('name', 'role', 'updated_at')
-            ->orderByDesc('updated_at')
-            ->limit(5)
-            ->get();
+    // 2. Users list
+    $users = DB::table('users')->orderByDesc('created_at')->get();
 
-        // 3. System Activity Logs (Gikan sa audit/logs table o fallback)
-        $systemLogs = DB::table('system_logs') 
-            ->latest()
-            ->limit(4)
-            ->get();
+    // Recently active (base sa last_login)
+    $activeUsers = DB::table('users')
+        ->select('full_name', 'role', 'last_login')
+        ->whereNotNull('last_login')
+        ->orderByDesc('last_login')
+        ->limit(5)
+        ->get();
 
-        return view('admin.USM', compact(
-            'healthWorkersCount', 
-            'internsCount', 
-            'staffCount', 
-            'activeUsers',
-            'systemLogs'
-        ));
+    // 3. System logs (safe kung wala ang table o ang created_at)
+    $systemLogs = collect();
+    if (Schema::hasTable('system_logs')) {
+        $logQuery = DB::table('system_logs');
+        if (Schema::hasColumn('system_logs', 'created_at')) {
+            $logQuery->orderByDesc('created_at');
+        }
+        $systemLogs = $logQuery->limit(4)->get();
     }
-        public function dashboard(\Illuminate\Http\Request $request)
-    {
-        // 1. Total Patients (Gidugang kini para dili ma-undefined sa compact)
-        $totalPatients = DB::table('patients')->count();
 
-        // 2. Active PEP Courses
-        $activePepCount = DB::table('inflow_general_particulars')
-            ->where('status', '!=', 'Completed')
-            ->count();
+    return view('admin.USM', compact(
+        'healthWorkersCount',
+        'internsCount',
+        'staffCount',
+        'users',
+        'activeUsers',
+        'systemLogs'
+    ));
+}
 
-        // 3. Verified Cases Today
-        $verifiedToday = DB::table('inflow_general_particulars')
-            ->whereDate('queue_date', today())
-            ->where('status', 'Verified')
-            ->count();
+       public function dashboard(\Illuminate\Http\Request $request)
+{
+    // 1. Total Registered Patients
+    $totalPatients = DB::table('patients')->count();
 
+    // 2. Active PEP Courses
+    $activePepCount = DB::table('inflow_general_particulars')
+        ->where('status', '!=', 'Completed')
+        ->count();
 
-       // 4. Top Incident Hotspots (Direkta sa inflow_general_particulars)
-        $hotspots = DB::table('inflow_general_particulars')
-            ->where('queue_date', '>=', now()->subDays(30))
-            ->select('barangay', DB::raw('count(*) as total'))
-            ->groupBy('barangay')
-            ->orderByDesc('total')
-            ->limit(5)
-            ->get();
+    // 3. Verified Cases Today
+    $verifiedToday = DB::table('inflow_general_particulars')
+        ->whereDate('queue_date', today())
+        ->where('status', 'Verified')
+        ->count();
 
-        $maxBarangayTotal = $hotspots->max('total') ?: 1;
+    // 4. Top Incident Hotspots (30 o 90 ka adlaw)
+    $hotspotRange = in_array((int) $request->query('range'), [30, 90]) ? (int) $request->query('range') : 30;
 
-        // 5. Bite Categories & Filter (Monthly / Quarterly)
-        $filter = $request->query('filter', 'monthly');
-        $query = DB::table('bite_cases');
+    $hotspots = DB::table('inflow_general_particulars')
+        ->whereDate('queue_date', '>=', now()->subDays($hotspotRange)->toDateString())
+        ->whereNotNull('barangay')
+        ->where('barangay', '!=', '')
+        ->select('barangay', DB::raw('count(*) as total'))
+        ->groupBy('barangay')
+        ->orderByDesc('total')
+        ->limit(5)
+        ->get();
 
-        if ($filter === 'monthly') {
-            // I-filter karong bulana
-            $query->whereMonth('date_verified', date('m'))
-                ->whereYear('date_verified', date('Y'));
-        } elseif ($filter === 'quarterly') {
-            // I-filter karong quarter (Pananglitan: katapusang 3 ka bulan)
-            $query->where('date_verified', '>=', now()->subMonths(3));
-        }
+    // 5. Bite Categories (monthly / quarterly) gamit ang queue_date
+    $filter = $request->query('filter', 'monthly');
+    if (!in_array($filter, ['monthly', 'quarterly'])) {
+        $filter = 'monthly';
+    }
 
-        $totalBites = (clone $query)->count();
-        $cat1 = (clone $query)->whereIn(DB::raw('UPPER(TRIM(category))'), ['I', '1', 'CAT I', 'CAT 1', 'CATEGORY I', 'CATEGORY 1'])->count();
-        $cat2 = (clone $query)->whereIn(DB::raw('UPPER(TRIM(category))'), ['II', '2', 'CAT II', 'CAT 2', 'CATEGORY II', 'CATEGORY 2'])->count();
-        $cat3 = (clone $query)->whereIn(DB::raw('UPPER(TRIM(category))'), ['III', '3', 'CAT III', 'CAT 3', 'CATEGORY III', 'CATEGORY 3'])->count();
+    $query = DB::table('bite_cases')
+        ->join('inflow_general_particulars', 'bite_cases.inflow_record_id', '=', 'inflow_general_particulars.inflow_record_id');
 
-        $cat1Pct = $totalBites > 0 ? round(($cat1 / $totalBites) * 100) : 0;
-        $cat2Pct = $totalBites > 0 ? round(($cat2 / $totalBites) * 100) : 0;
-        $cat3Pct = $totalBites > 0 ? round(($cat3 / $totalBites) * 100) : 0;
+    if ($filter === 'monthly') {
+        $query->whereBetween('inflow_general_particulars.queue_date', [
+            now()->startOfMonth()->toDateString(),
+            now()->endOfMonth()->toDateString(),
+        ]);
+    } else {
+        $query->whereBetween('inflow_general_particulars.queue_date', [
+            now()->startOfQuarter()->toDateString(),
+            now()->endOfQuarter()->toDateString(),
+        ]);
+    }
 
-        // 6. Monthly Data para sa Forecasting Engine
-        $monthlyData = [];
-        for ($m = 1; $m <= 12; $m++) {
-            $count = DB::table('inflow_general_particulars')
-                ->whereYear('queue_date', date('Y'))
-                ->whereMonth('queue_date', $m)
-                ->count();
-            $monthlyData[] = $count;
-        }
-        
-        // Query the last 21 days of actual records grouped by date
+    $catExpr = 'UPPER(TRIM(bite_cases.category))';
 
-        $dailyData = [];
-        for ($i = 20; $i >= 0; $i--) {
-            $date = now()->subDays($i)->toDateString();
-            $count = DB::table('inflow_general_particulars')
-                ->whereDate('queue_date', $date)
-                ->count();
-            $dailyData[] = $count;
-        }
+    $totalBites = (clone $query)->count();
+    $cat1 = (clone $query)->whereIn(DB::raw($catExpr), ['I', '1', 'CAT I', 'CAT 1', 'CATEGORY I', 'CATEGORY 1'])->count();
+    $cat2 = (clone $query)->whereIn(DB::raw($catExpr), ['II', '2', 'CAT II', 'CAT 2', 'CATEGORY II', 'CATEGORY 2'])->count();
+    $cat3 = (clone $query)->whereIn(DB::raw($catExpr), ['III', '3', 'CAT III', 'CAT 3', 'CATEGORY III', 'CATEGORY 3'])->count();
 
-        // 2. Query the last 12 weeks for the Weekly view forecasting engine
-        $weeklyData = [];
-        for ($w = 11; $w >= 0; $w--) {
-            $startDate = now()->subWeeks($w)->startOfWeek()->toDateString();
-            $endDate = now()->subWeeks($w)->endOfWeek()->toDateString();
-            $count = DB::table('inflow_general_particulars')
-                ->whereBetween('queue_date', [$startDate, $endDate])
-                ->count();
-            $weeklyData[] = $count;
-        }
+    $cat1Pct = $totalBites > 0 ? round(($cat1 / $totalBites) * 100) : 0;
+    $cat2Pct = $totalBites > 0 ? round(($cat2 / $totalBites) * 100) : 0;
+    $cat3Pct = $totalBites > 0 ? round(($cat3 / $totalBites) * 100) : 0;
 
-        return view('admin.dashboard', compact(
-            'totalPatients',
-            'activePepCount',
-            'verifiedToday',
-            'hotspots',
-            'totalBites',
-            'cat1', 'cat2', 'cat3',
-            'cat1Pct',
-            'cat2Pct',
-            'cat3Pct',
-            'monthlyData',
-            'dailyData',    // <--- Added here
-            'weeklyData',
-            'filter'
-        ));
-    } 
-
+    return view('admin.dashboard', compact(
+        'totalPatients',
+        'activePepCount',
+        'verifiedToday',
+        'hotspots',
+        'hotspotRange',
+        'totalBites',
+        'cat1', 'cat2', 'cat3',
+        'cat1Pct', 'cat2Pct', 'cat3Pct',
+        'filter'
+    ));
+}
 
    public function compliance()
     {

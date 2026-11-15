@@ -44,6 +44,9 @@ Route::prefix('admin')->group(function () {
     Route::get('/export/monthly-csv', [visualAnalyticsController::class, 'exportMonthlyCsv'])
     ->name('admin.export.monthly');
 
+    Route::get('/export/annual-report', [visualAnalyticsController::class, 'exportAnnualReport'])
+    ->name('admin.export.annual');
+
     Route::get('/admin/generate-report', [visualAnalyticsController::class, 'generateReport'])->name('admin.generate.report');
     // Para sa pag-export sa CSV file
     Route::get('/report/export-csv', [visualAnalyticsController::class, 'exportCsv'])->name('report.export.csv');
@@ -53,15 +56,8 @@ Route::prefix('admin')->group(function () {
     Route::get('/forecasting', [ForecastingController::class, 'index'])->name('admin.forecasting');
     Route::post('/forecasting/save', [ForecastingController::class, 'save'])->name('admin.forecasting.save');
 
-    Route::get('/system-management', function () {
-        $healthWorkersCount = DB::table('users')->where('role', 'Healthworker')->count();
-        $internsCount = DB::table('users')->where('role', 'OJT')->orWhere('role', 'Intern')->count();
-        $staffCount = DB::table('users')->where('role', 'Staff')->count();
-        $users = DB::table('users')->latest()->get();
-
-        return view('admin.USM', compact('healthWorkersCount', 'internsCount', 'staffCount', 'users'));
-    })->name('admin.usm');
-
+    Route::get('/system-management', [AdminController::class, 'systemManagement'])->name('admin.usm');
+    
     Route::post('/system-management/store-user', function (Illuminate\Http\Request $request) {
         $request->validate([
             'username'            => 'required|string|max:50|unique:users,username',

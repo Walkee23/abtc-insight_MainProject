@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Carbon\Carbon;
 
 class visualAnalyticsController extends Controller
@@ -486,54 +487,205 @@ public function generateReport(Request $request)
         ]);
     }
 
-    public function exportMonthlyCsv(Request $request)
+public function exportMonthlyCsv(Request $request)
 {
-    $month = (int) $request->get('month', date('m'));
-    $year  = (int) $request->get('year', date('Y'));
+    $year = (int) $request->get('year', date('Y'));
 
-    $start = Carbon::create($year, $month, 1)->startOfMonth();
-    $end   = $start->copy()->endOfMonth();
+    // Master list gikan sa config/barangays.php (wala usba)
+    $masterList = array_keys(config('barangays'));
 
-    $appliedFilters = [];
+    // Grouping sa health areas (diri na lang)
+    $areaDefs = [
+        'CENTRAL HEALTH AREA' => ['color' => '#b4c7e7', 'barangays' => [
+            'Babag','Bo.Luz','Busay','Capitol','Carreta','Hipodromo','Kalunasan',
+            'Kamputhaw','Lahug','Malubog','Pung-ol','Sapangdaku']],
+        'EAST HEALTH AREA' => ['color' => '#f4b6b6', 'barangays' => [
+            'Cogon Ramos','Day-as','Ermita','Kalubihan','Kamagayan','Lorega','Pahina Central',
+            'Pari-an','Pasil','Sambag I','Sambag II','San Antonio','San Roque','Sta. Cruz',
+            'Sto. Niño','Suba','T.Padilla','Tejero','Tinago','Zapatera']],
+        'NORTH HEALTH AREA' => ['color' => '#c6e0b4', 'barangays' => [
+            'Adlaon','Agsungot','Apas','Bacayan','Banilad','Binaliw','Budlaan','Cambinocot',
+            'Guba','Kasambagan','Lusaran','Mabini','Mabolo','Paril','Pit-os','Pulangbato',
+            'San Jose','Sirao','Tabunan','Tagbao','Talamban','TapTap']],
+        'SOUTH HEALTH AREA' => ['color' => '#ffe699', 'barangays' => [
+            'Basak Pardo','Basak San Nicolas','Bonbon','Buhisan','Bulacao','Bout-Taup',
+            'Cogon Pardo','Inayawan','Kinasang-an','Mambaling','Pamutan','Pardo','Quiot',
+            'Sinsin','Sudlon I','Sudlon II','Toong']],
+        'WEST HEALTH AREA' => ['color' => '#d9c3e6', 'barangays' => [
+            'Calamba','Duljo','Guadalupe','Banawa','Labangon','Punta Princesa',
+            'San Nicolas Proper','San Nicolas Pahina','Sawang Calero','Tisa']],
+    ];
 
-    $query = DB::table('inflow_general_particulars')
-        ->leftJoin('bite_cases', 'inflow_general_particulars.inflow_record_id', '=', 'bite_cases.inflow_record_id')
-        ->select(
-            'inflow_general_particulars.inflow_record_id',
-            'inflow_general_particulars.queue_id',
-            'inflow_general_particulars.queue_date',
-            'inflow_general_particulars.patient_name',
-            'inflow_general_particulars.age',
-            'inflow_general_particulars.sex',
-            'inflow_general_particulars.barangay',
-            'inflow_general_particulars.contact_num',
-            'bite_cases.bite_case_id',
-            'bite_cases.case_number',
-            'bite_cases.category',
-            'bite_cases.outcome'
-        )
-        ->whereBetween('inflow_general_particulars.queue_date', [$start->toDateString(), $end->toDateString()]);
+    // Population kada barangay (cases / population x 1000). Pananglitan: 'Babag' => 6260,
+    $population = [
+        // 'Babag' => 6260,
+    ];
 
-    if ($request->filled('barangay')) {
-        $query->where('inflow_general_particulars.barangay', 'LIKE', '%' . $request->barangay . '%');
-        $appliedFilters['Barangay'] = $request->barangay;
+    $norm = fn($s) => preg_replace('/[^a-z0-9]/', '', strtolower(Str::ascii((string) $s)));
+
+    $rows = DB::table('inflow_general_particulars')
+        ->selectRaw('barangay, MONTH(queue_date) as m, COUNT(*) as total')
+        ->whereYear('queue_date', $year)
+        ->groupByRaw('barangay, MONTH(queue_date)')
+        ->get();
+
+    $counts = [];
+    foreach ($rows as $r) {
+        $k = $norm($r->barangay);
+        $counts[$k][(int) $r->m] = ($counts[$k][(int) $r->m] ?? 0) + (int) $r->total;
     }
-    if ($request->filled('sex') && $request->sex != 'All') {
-        $query->where('inflow_general_particulars.sex', $request->sex);
-        $appliedFilters['Sex'] = $request->sex;
+
+    $popNorm = [];
+    foreach ($population as $name => $p) {
+        $popNorm[$norm($name)] = $p;
     }
 
-    $records = $query->orderBy('inflow_general_particulars.queue_date')
-                     ->orderBy('inflow_general_particulars.inflow_record_id')
-                     ->get();
+    $makeRow = function (string $name) use ($counts, $popNorm, $norm) {
+        $k = $norm($name);
+        $months = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $months[$m] = $counts[$k][$m] ?? 0;
+        }
+        return ['name' => $name, 'months' => $months, 'pop' => $popNorm[$k] ?? null];
+    };
 
-    $monthLabel = $start->format('F Y');
+    $assigned = [];
+    $areas = [];
+    foreach ($areaDefs as $areaName => $def) {
+        $list = [];
+        foreach ($def['barangays'] as $b) {
+            $assigned[$norm($b)] = true;
+            $list[] = $makeRow($b);
+        }
+        $areas[$areaName] = ['color' => $def['color'], 'rows' => $list];
+    }
 
-    $html = view('admin.monthly_export_excel', compact('records', 'monthLabel', 'appliedFilters'))->render();
+    // Barangay sa barangays.php nga wala pa na-assign sa health area
+    $unassigned = [];
+    foreach ($masterList as $b) {
+        if (!isset($assigned[$norm($b)])) {
+            $unassigned[] = $makeRow($b);
+        }
+    }
+    if ($unassigned) {
+        $areas['UNASSIGNED HEALTH AREA'] = ['color' => '#e7e6e6', 'rows' => $unassigned];
+    }
+
+    // Wala sa master list -> NON-CEBU CITY VOTERS
+    $known = [];
+    foreach ($masterList as $b) {
+        $known[$norm($b)] = true;
+    }
+    $nonCebu = array_fill(1, 12, 0);
+    foreach ($counts as $k => $byMonth) {
+        if (!isset($known[$k])) {
+            foreach ($byMonth as $m => $c) {
+                $nonCebu[$m] += $c;
+            }
+        }
+    }
+
+    $html = view('admin.monthly_export_excel', compact('areas', 'nonCebu', 'year'))->render();
 
     return response($html, 200, [
         'Content-Type'        => 'application/vnd.ms-excel; charset=UTF-8',
-        'Content-Disposition' => 'attachment; filename="ABTC_Monthly_Export_' . $start->format('Y-m') . '.xls"',
+        'Content-Disposition' => 'attachment; filename="ABTC_Animal_Bite_Cases_Per_Barangay_' . $year . '.xls"',
+        'Cache-Control'       => 'max-age=0',
+    ]);
+}
+
+    public function exportAnnualReport(Request $request)
+{
+    $year = (int) $request->get('year', date('Y'));
+
+    $blank = fn() => [
+        'male' => 0, 'female' => 0, 'u15' => 0, 'o15' => 0,
+        'dog' => 0, 'cat' => 0, 'others' => 0,
+        'c1' => 0, 'c2' => 0, 'c3' => 0, 'total' => 0, 'hr' => 0,
+        'tcv' => 0, 'hrig' => 0, 'erig' => 0,
+    ];
+
+    $data = [];
+    for ($m = 1; $m <= 12; $m++) {
+        $data[$m] = $blank();
+    }
+
+    // 1) SEX, AGE, TOTAL: usa ka record kada pasyente-visit (parehas sa dashboard)
+    $patients = DB::table('inflow_general_particulars')
+        ->selectRaw('inflow_record_id, MONTH(queue_date) as m, sex, age')
+        ->whereYear('queue_date', $year)
+        ->get();
+
+    foreach ($patients as $p) {
+        $m = (int) $p->m;
+        $data[$m]['total']++;
+        $sex = strtolower(trim((string) $p->sex));
+        if ($sex === 'male')   $data[$m]['male']++;
+        if ($sex === 'female') $data[$m]['female']++;
+        if ((int) $p->age < 15) $data[$m]['u15']++; else $data[$m]['o15']++;
+    }
+
+    // 2) CATEGORY I / II / III gikan sa bite_cases
+    $cats = DB::table('bite_cases')
+        ->join('inflow_general_particulars', 'bite_cases.inflow_record_id', '=', 'inflow_general_particulars.inflow_record_id')
+        ->selectRaw('MONTH(inflow_general_particulars.queue_date) as m, bite_cases.category')
+        ->whereYear('inflow_general_particulars.queue_date', $year)
+        ->get();
+
+    foreach ($cats as $c) {
+        $m = (int) $c->m;
+        $cat = strtoupper(trim((string) $c->category));
+        if (in_array($cat, ['I', '1', 'CAT I', 'CAT 1', 'CATEGORY I', 'CATEGORY 1']))        $data[$m]['c1']++;
+        elseif (in_array($cat, ['II', '2', 'CAT II', 'CAT 2', 'CATEGORY II', 'CATEGORY 2'])) $data[$m]['c2']++;
+        elseif (in_array($cat, ['III', '3', 'CAT III', 'CAT 3', 'CATEGORY III', 'CATEGORY 3'])) $data[$m]['c3']++;
+    }
+
+    // 3) BITING ANIMAL (Dog / Cat / Others)
+    $animals = DB::table('bite_section3_exposure')
+        ->join('bite_cases', 'bite_section3_exposure.bite_case_id', '=', 'bite_cases.bite_case_id')
+        ->join('inflow_general_particulars', 'bite_cases.inflow_record_id', '=', 'inflow_general_particulars.inflow_record_id')
+        ->selectRaw('MONTH(inflow_general_particulars.queue_date) as m, bite_section3_exposure.animal_type')
+        ->whereYear('inflow_general_particulars.queue_date', $year)
+        ->get();
+
+    foreach ($animals as $a) {
+        $m = (int) $a->m;
+        $type = strtolower(trim((string) $a->animal_type));
+        if (str_contains($type, 'dog'))      $data[$m]['dog']++;
+        elseif (str_contains($type, 'cat'))  $data[$m]['cat']++;
+        else                                 $data[$m]['others']++;
+    }
+
+    // 4) HR, TCV, HRIG, ERIG: 0 pa kay wala pa nako makita ang table (tan-awa ang timan-an sa ubos)
+
+    // ---- Build rows: bulan, TOTAL Q, TOTAL ----
+    $monthNames = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
+    $sum = function (array $a, array $b) {
+        foreach ($b as $k => $v) {
+            $a[$k] = ($a[$k] ?? 0) + $v;
+        }
+        return $a;
+    };
+
+    $rows = [];
+    $yearTotal = $blank();
+    for ($q = 0; $q < 4; $q++) {
+        $qTotal = $blank();
+        for ($i = 1; $i <= 3; $i++) {
+            $m = $q * 3 + $i;
+            $rows[] = ['label' => $monthNames[$m - 1], 'type' => 'month', 'd' => $data[$m]];
+            $qTotal = $sum($qTotal, $data[$m]);
+        }
+        $rows[] = ['label' => 'TOTAL Q' . ($q + 1), 'type' => 'quarter', 'd' => $qTotal];
+        $yearTotal = $sum($yearTotal, $qTotal);
+    }
+    $rows[] = ['label' => 'TOTAL', 'type' => 'year', 'd' => $yearTotal];
+
+    $html = view('admin.annual_report_excel', compact('rows', 'year'))->render();
+
+    return response($html, 200, [
+        'Content-Type'        => 'application/vnd.ms-excel; charset=UTF-8',
+        'Content-Disposition' => 'attachment; filename="ABTC_Annual_Report_' . $year . '.xls"',
         'Cache-Control'       => 'max-age=0',
     ]);
 }

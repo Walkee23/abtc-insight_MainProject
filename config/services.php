@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'iprogsms' => [
+    'url'   => env('IPROGSMS_URL'),
+    'token' => env('IPROGSMS_API_TOKEN'),
+    ],
+
 ];

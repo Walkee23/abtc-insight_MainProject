@@ -16,8 +16,6 @@ use App\Http\Controllers\ForecastingController;
 use App\Http\Controllers\SystemToolsController;
 use App\Http\Controllers\ItDashboardController;
 use App\Http\Controllers\GisMapController;
-use App\Http\Controllers\AdminController;
-use App\Http\Controllers\visualAnalyticsController;
 use Illuminate\Http\Request;
 
 

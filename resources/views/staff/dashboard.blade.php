@@ -367,7 +367,7 @@
                 </div>
             </div>
 
-            <!-- Section 3: Normal Queue -->
+           <!-- Section 3: Normal Queue -->
             <div class="col-span-12 xl:col-span-7 bg-surface-container-low rounded-lg p-6">
                 <div class="flex justify-between items-center mb-6">
                     <div class="flex items-center gap-3">
@@ -375,134 +375,136 @@
                         <h3 class="text-lg font-bold text-on-surface">Normal Queue N-Series</h3>
                     </div>
                 </div>
+                
+                <!-- Scrollable Wrapper Container -->
                 <div class="overflow-hidden rounded-xl border border-outline-variant/20 bg-white shadow-sm">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-surface-container-high/50 border-b border-outline-variant/10">
-                                <th class="px-4 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Queue No</th>
-                                <th class="px-4 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Patient</th>
-                                <th class="px-4 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Barangay</th>
-                                <th class="px-4 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Status</th>
-                                <th class="px-4 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest text-right">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-outline-variant/10">
-                            @forelse($normalQueue as $patient)
-                                <tr class="hover:bg-primary/5 transition-colors group">
-                                    <!-- 1. Queue No -->
-                                    <td class="px-4 py-4 font-black text-primary">{{ $patient->queue_id }}</td>
+                    <!-- Gitangtang ang overflow sa gawas ug gibutangan og max-height ug overflow-y-auto sa ubos -->
+                    <div class="max-h-[400px] overflow-y-auto relative">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="sticky top-0 z-10 bg-surface-container-high shadow-sm">
+                                <tr class="border-b border-outline-variant/10">
+                                    <th class="px-4 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest bg-surface-container-high">Queue No</th>
+                                    <th class="px-4 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest bg-surface-container-high">Patient</th>
+                                    <th class="px-4 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest bg-surface-container-high">Barangay</th>
+                                    <th class="px-4 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest bg-surface-container-high">Status</th>
+                                    <th class="px-4 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest text-right bg-surface-container-high">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-outline-variant/10">
+                                @forelse($normalQueue as $patient)
+                                    <tr class="hover:bg-primary/5 transition-colors group">
+                                        <!-- 1. Queue No -->
+                                        <td class="px-4 py-4 font-black text-primary">{{ $patient->queue_id }}</td>
 
-                                    <!-- 2. Patient -->
-                                    <td class="px-4 py-4">
-                                        <p class="text-sm font-bold">{{ $patient->patient_name }}</p>
-                                        <p class="text-[10px] text-on-surface-variant">
-                                            ID: {{ $patient->id_number ?? 'No ID' }} • 
-                                            <span class="text-primary font-bold">Age: {{ $patient->age }}</span>
-                                        </p>
-                                    </td>
+                                        <!-- 2. Patient -->
+                                        <td class="px-4 py-4">
+                                            <p class="text-sm font-bold">{{ $patient->patient_name }}</p>
+                                            <p class="text-[10px] text-on-surface-variant">
+                                                ID: {{ $patient->id_number ?? 'No ID' }} • 
+                                                <span class="text-primary font-bold">Age: {{ $patient->age }}</span>
+                                            </p>
+                                        </td>
 
-                                    <!-- 3. Barangay -->
-                                    <td class="px-4 py-4 text-xs font-semibold text-on-surface-variant">
-                                        {{ $patient->barangay ?? 'N/A' }}
-                                    </td>
+                                        <!-- 3. Barangay -->
+                                        <td class="px-4 py-4 text-xs font-semibold text-on-surface-variant">
+                                            {{ $patient->barangay ?? 'N/A' }}
+                                        </td>
 
-                                    <!-- 4. Status -->
-                                    <td class="px-4 py-4">
-                                        <span class="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded-full uppercase">
-                                            {{ $patient->status }}
-                                        </span>
-                                    </td>
-                                    
-                                    <!-- 5. Action Cell (NA-MISS NGA TD KANINA) -->
-                                    <td class="px-4 py-4 text-right">
-                                        <!-- Button nga mo-trigger sa CSS Modal -->
-                                        <a href="#call-modal-{{ $patient->inflow_record_id }}" 
-                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 hover:bg-primary text-primary hover:text-white text-xs font-bold rounded-lg border border-primary/20 transition-all shadow-sm">
-                                            <span class="material-symbols-outlined text-[15px]">campaign</span>
-                                            <span>Call &amp; Verify</span>
-                                        </a>
+                                        <!-- 4. Status -->
+                                        <td class="px-4 py-4">
+                                            <span class="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded-full uppercase">
+                                                {{ $patient->status }}
+                                            </span>
+                                        </td>
+                                        
+                                        <!-- 5. Action Cell -->
+                                        <td class="px-4 py-4 text-right">
+                                            <!-- Button nga mo-trigger sa CSS Modal -->
+                                            <a href="#call-modal-{{ $patient->inflow_record_id }}" 
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 hover:bg-primary text-primary hover:text-white text-xs font-bold rounded-lg border border-primary/20 transition-all shadow-sm">
+                                                <span class="material-symbols-outlined text-[15px]">campaign</span>
+                                                <span>Call &amp; Verify</span>
+                                            </a>
 
-                                        <!-- Pure CSS Modal (Walay JavaScript) -->
-                                        <div id="call-modal-{{ $patient->inflow_record_id }}" 
-                                            class="fixed inset-0 z-50 hidden [&:target]:flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-                                            
-                                            <div class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden text-left">
+                                            <!-- Pure CSS Modal -->
+                                            <div id="call-modal-{{ $patient->inflow_record_id }}" 
+                                                class="fixed inset-0 z-50 hidden [&:target]:flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
                                                 
-                                                <!-- Header -->
-                                                <div class="bg-gradient-to-r from-primary to-primary-container p-6 text-white flex justify-between items-start">
-                                                    <div class="flex items-center gap-3">
-                                                        <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white font-bold text-lg">
-                                                            {{ $patient->queue_id }}
+                                                <div class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden text-left">
+                                                    
+                                                    <!-- Header -->
+                                                    <div class="bg-gradient-to-r from-primary to-primary-container p-6 text-white flex justify-between items-start">
+                                                        <div class="flex items-center gap-3">
+                                                            <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white font-bold text-lg">
+                                                                {{ $patient->queue_id }}
+                                                            </div>
+                                                            <div>
+                                                                <span class="text-[11px] font-bold tracking-wider uppercase opacity-80">Call to Counter</span>
+                                                                <h3 class="text-xl font-bold leading-tight">{{ $patient->patient_name }}</h3>
+                                                            </div>
                                                         </div>
-                                                        <div>
-                                                            <span class="text-[11px] font-bold tracking-wider uppercase opacity-80">Call to Counter</span>
-                                                            <h3 class="text-xl font-bold leading-tight">{{ $patient->patient_name }}</h3>
-                                                        </div>
-                                                    </div>
-                                                    <!-- Close button gamit ang anchor '#' -->
-                                                    <a href="#" class="text-white/70 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10">
-                                                        <span class="material-symbols-outlined text-[20px]">close</span>
-                                                    </a>
-                                                </div>
-
-                                                <!-- Body: Patient Overview -->
-                                                <div class="p-6 space-y-4">
-                                                    <div class="grid grid-cols-2 gap-3 text-xs">
-                                                        <div class="p-3 bg-surface-container-low rounded-xl">
-                                                            <span class="text-on-surface-variant block font-medium mb-0.5">Age / Sex</span>
-                                                            <span class="font-bold text-on-surface text-sm">{{ $patient->age }} / {{ $patient->sex }}</span>
-                                                        </div>
-                                                        <div class="p-3 bg-surface-container-low rounded-xl">
-                                                            <span class="text-on-surface-variant block font-medium mb-0.5">Valid ID / Number</span>
-                                                            <span class="font-bold text-on-surface text-sm truncate block">{{ $patient->id_number ?? 'None' }}</span>
-                                                        </div>
-                                                        <div class="p-3 bg-surface-container-low rounded-xl">
-                                                            <span class="text-on-surface-variant block font-medium mb-0.5">Barangay</span>
-                                                            <span class="font-bold text-on-surface text-sm">{{ $patient->barangay ?? 'N/A' }}</span>
-                                                        </div>
-                                                        <div class="p-3 bg-surface-container-low rounded-xl">
-                                                            <span class="text-on-surface-variant block font-medium mb-0.5">Contact Number</span>
-                                                            <span class="font-bold text-on-surface text-sm">{{ $patient->contact_num ?? 'N/A' }}</span>
-                                                        </div>
+                                                        <a href="#" class="text-white/70 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10">
+                                                            <span class="material-symbols-outlined text-[20px]">close</span>
+                                                        </a>
                                                     </div>
 
-                                                    <div class="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/50 flex items-start gap-2.5 text-xs text-blue-900 dark:text-blue-200">
-                                                        <span class="material-symbols-outlined text-blue-600 text-[18px] shrink-0">info</span>
-                                                        <p>Calling this ticket will mark the patient as <strong>Serving</strong> and redirect to document inspection.</p>
+                                                    <!-- Body: Patient Overview -->
+                                                    <div class="p-6 space-y-4">
+                                                        <div class="grid grid-cols-2 gap-3 text-xs">
+                                                            <div class="p-3 bg-surface-container-low rounded-xl">
+                                                                <span class="text-on-surface-variant block font-medium mb-0.5">Age / Sex</span>
+                                                                <span class="font-bold text-on-surface text-sm">{{ $patient->age }} / {{ $patient->sex }}</span>
+                                                            </div>
+                                                            <div class="p-3 bg-surface-container-low rounded-xl">
+                                                                <span class="text-on-surface-variant block font-medium mb-0.5">Valid ID / Number</span>
+                                                                <span class="font-bold text-on-surface text-sm truncate block">{{ $patient->id_number ?? 'None' }}</span>
+                                                            </div>
+                                                            <div class="p-3 bg-surface-container-low rounded-xl">
+                                                                <span class="text-on-surface-variant block font-medium mb-0.5">Barangay</span>
+                                                                <span class="font-bold text-on-surface text-sm">{{ $patient->barangay ?? 'N/A' }}</span>
+                                                            </div>
+                                                            <div class="p-3 bg-surface-container-low rounded-xl">
+                                                                <span class="text-on-surface-variant block font-medium mb-0.5">Contact Number</span>
+                                                                <span class="font-bold text-on-surface text-sm">{{ $patient->contact_num ?? 'N/A' }}</span>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/50 flex items-start gap-2.5 text-xs text-blue-900 dark:text-blue-200">
+                                                            <span class="material-symbols-outlined text-blue-600 text-[18px] shrink-0">info</span>
+                                                            <p>Calling this ticket will mark the patient as <strong>Serving</strong> and redirect to document inspection.</p>
+                                                        </div>
                                                     </div>
+
+                                                    <!-- Footer Actions -->
+                                                    <div class="p-6 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
+                                                        <a href="#" class="px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-colors inline-flex items-center">
+                                                            Cancel
+                                                        </a>
+
+                                                        <form method="POST" action="{{ route('staff.call-patient', $patient->inflow_record_id) }}">
+                                                            @csrf
+                                                            <button type="submit" 
+                                                                    class="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white text-xs font-bold rounded-xl shadow-md shadow-primary/20 flex items-center gap-2">
+                                                                <span>Proceed to Verification</span>
+                                                                <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                                                            </button>
+                                                        </form>
+                                                    </div>
+
                                                 </div>
-
-                                                <!-- Footer Actions -->
-                                                <div class="p-6 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
-                                                    <!-- Cancel / Close button -->
-                                                    <a href="#" class="px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-colors inline-flex items-center">
-                                                        Cancel
-                                                    </a>
-
-                                                    <!-- Standard Laravel Form Submission -->
-                                                    <form method="POST" action="{{ route('staff.call-patient', $patient->inflow_record_id) }}">
-                                                        @csrf
-                                                        <button type="submit" 
-                                                                class="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white text-xs font-bold rounded-xl shadow-md shadow-primary/20 flex items-center gap-2">
-                                                            <span>Proceed to Verification</span>
-                                                            <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
-                                                        </button>
-                                                    </form>
-                                                </div>
-
                                             </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="5" class="px-4 py-8 text-center text-xs text-slate-400 font-medium">
-                                        No patients in the normal queue.
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="px-4 py-8 text-center text-xs text-slate-400 font-medium">
+                                            No patients in the normal queue.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 

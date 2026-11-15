@@ -285,35 +285,126 @@
                 </div>
             </div>
 
-            <!-- Expected Follow-up Visits -->
-            <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/20 shadow-sm">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-sm text-on-surface flex items-center gap-2">
-                        <span class="material-symbols-outlined text-emerald-600 text-[18px]">event_repeat</span>
-                        Scheduled Follow-Up Inflow (Due Today)
-                    </h3>
-                    <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">DOH Schedule</span>
-                </div>
-                <div class="grid grid-cols-3 gap-3 text-center">
-                    <div class="p-3 bg-surface-container-low rounded-xl border border-outline-variant/10">
-                        <span class="text-[10px] font-bold text-on-surface-variant block uppercase">Day 3 (Dose 2)</span>
-                        <span class="text-xl font-black text-on-surface mt-1 block">{{ $dueDay3Count ?? 0 }}</span>
-                        <span class="text-[10px] text-primary font-semibold">Patients</span>
-                    </div>
-                    <div class="p-3 bg-surface-container-low rounded-xl border border-outline-variant/10">
-                        <span class="text-[10px] font-bold text-on-surface-variant block uppercase">Day 7 (Dose 3)</span>
-                        <span class="text-xl font-black text-on-surface mt-1 block">{{ $dueDay7Count ?? 0 }}</span>
-                        <span class="text-[10px] text-purple-700 font-semibold">Patients</span>
-                    </div>
-                    <div class="p-3 bg-surface-container-low rounded-xl border border-outline-variant/10">
-                        <span class="text-[10px] font-bold text-on-surface-variant block uppercase">Day 28 (Booster)</span>
-                        <span class="text-xl font-black text-on-surface mt-1 block">{{ $dueDay28Count ?? 0 }}</span>
-                        <span class="text-[10px] text-emerald-700 font-semibold">Patients</span>
-                    </div>
-                </div>
-            </div>
-            
+            <!-- Expected Follow-up Visits Card & Scrollable Name List -->
+<div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/20 shadow-sm">
+    <div class="flex justify-between items-center mb-4">
+        <h3 class="font-bold text-sm text-on-surface flex items-center gap-2">
+            <span class="material-symbols-outlined text-emerald-600 text-[18px]">event_repeat</span>
+            Scheduled Follow-Up Inflow (Due Today) — <span class="text-xs text-slate-500 font-normal">Click a card to view names</span>
+        </h3>
+        <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">DOH Schedule</span>
+    </div>
+
+    <!-- Clickable Cards -->
+    <div class="grid grid-cols-3 gap-3 text-center mb-4">
+        <div id="cardDay3" onclick="switchPatientTab('day3')" class="p-3 bg-surface-container-low rounded-xl border-2 border-outline-variant/10 cursor-pointer hover:bg-blue-50 transition-all shadow-sm group">
+            <span class="text-[10px] font-bold text-on-surface-variant block uppercase group-hover:text-blue-700">Day 3 (Dose 2)</span>
+            <span class="text-xl font-black text-on-surface mt-1 block group-hover:text-blue-800">{{ $dueDay3Count ?? 0 }}</span>
+            <span class="text-[10px] text-primary font-semibold underline">View Names</span>
         </div>
+        <div id="cardDay7" onclick="switchPatientTab('day7')" class="p-3 bg-surface-container-low rounded-xl border-2 border-outline-variant/10 cursor-pointer hover:bg-purple-50 transition-all shadow-sm group">
+            <span class="text-[10px] font-bold text-on-surface-variant block uppercase group-hover:text-purple-700">Day 7 (Dose 3)</span>
+            <span class="text-xl font-black text-on-surface mt-1 block group-hover:text-purple-800">{{ $dueDay7Count ?? 0 }}</span>
+            <span class="text-[10px] text-purple-700 font-semibold underline">View Names</span>
+        </div>
+        <div id="cardDay28" onclick="switchPatientTab('day28')" class="p-3 bg-surface-container-low rounded-xl border-2 border-outline-variant/10 cursor-pointer hover:bg-emerald-50 transition-all shadow-sm group">
+            <span class="text-[10px] font-bold text-on-surface-variant block uppercase group-hover:text-emerald-700">Day 28 (Dose 4)</span>
+            <span class="text-xl font-black text-on-surface mt-1 block group-hover:text-emerald-800">{{ $dueDay28Count ?? 0 }}</span>
+            <span class="text-[10px] text-emerald-700 font-semibold underline">View Names</span>
+        </div>
+    </div>
+
+    <!-- Scrollable Name List Area at the Bottom -->
+    <div id="patientListContainer" class="border-t border-outline-variant/10 pt-4 mt-4 hidden">
+        <div class="flex justify-between items-center mb-3">
+            <h4 id="listTitle" class="text-xs font-bold uppercase tracking-wider text-slate-700">Returning Patient Names</h4>
+            <button onclick="closePatientList()" class="text-xs text-red-600 font-bold hover:underline">Close List</button>
+        </div>
+
+        <div class="max-h-56 overflow-y-auto pr-2 border border-slate-200 rounded-xl bg-white shadow-inner p-3">
+            
+            <!-- Day 3 List -->
+            <div id="content_day3" class="patient-tab-content hidden space-y-2">
+                <p class="text-[11px] font-bold text-blue-800 uppercase tracking-wide mb-2">Day 3 (Dose 2) Patients:</p>
+                @if(count($patientsDay3 ?? []) > 0)
+                    <ul class="divide-y divide-slate-100">
+                        @foreach($patientsDay3 as $p)
+                            <li class="py-2 px-3 hover:bg-slate-50 rounded-lg flex justify-between items-center text-xs">
+                                <span class="font-bold text-slate-950">• {{ $p->patient_name }}</span>
+                                <span class="text-[10px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">{{ $p->queue_id ?? 'N/A' }}</span>
+                            </li>
+                        @endforeach
+                    </ul>
+                @else
+                    <p class="py-4 text-center text-slate-400 text-xs">No patients found for Day 3.</p>
+                @endif
+            </div>
+
+            <!-- Day 7 List -->
+            <div id="content_day7" class="patient-tab-content hidden space-y-2">
+                <p class="text-[11px] font-bold text-purple-800 uppercase tracking-wide mb-2">Day 7 (Dose 3) Patients:</p>
+                @if(count($patientsDay7 ?? []) > 0)
+                    <ul class="divide-y divide-slate-100">
+                        @foreach($patientsDay7 as $p)
+                            <li class="py-2 px-3 hover:bg-slate-50 rounded-lg flex justify-between items-center text-xs">
+                                <span class="font-bold text-slate-950">• {{ $p->patient_name }}</span>
+                                <span class="text-[10px] font-semibold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">{{ $p->queue_id ?? 'N/A' }}</span>
+                            </li>
+                        @endforeach
+                    </ul>
+                @else
+                    <p class="py-4 text-center text-slate-400 text-xs">No patients found for Day 7.</p>
+                @endif
+            </div>
+
+            <!-- Day 28 List -->
+            <div id="content_day28" class="patient-tab-content hidden space-y-2">
+                <p class="text-[11px] font-bold text-emerald-800 uppercase tracking-wide mb-2">Day 28 (Dose 4) Patients:</p>
+                @if(count($patientsDay28 ?? []) > 0)
+                    <ul class="divide-y divide-slate-100">
+                        @foreach($patientsDay28 as $p)
+                            <li class="py-2 px-3 hover:bg-slate-50 rounded-lg flex justify-between items-center text-xs">
+                                <span class="font-bold text-slate-950">• {{ $p->patient_name }}</span>
+                                <span class="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">{{ $p->queue_id ?? 'N/A' }}</span>
+                            </li>
+                        @endforeach
+                    </ul>
+                @else
+                    <p class="py-4 text-center text-slate-400 text-xs">No patients found for Day 28.</p>
+                @endif
+            </div>
+
+        </div>
+       <!-- JavaScript Toggle Handler -->
+<script>
+function switchPatientTab(dayKey) {
+    const container = document.getElementById('patientListContainer');
+    container.classList.remove('hidden');
+
+    document.querySelectorAll('.patient-tab-content').forEach(el => el.classList.add('hidden'));
+    document.getElementById('content_' + dayKey).classList.remove('hidden');
+
+    ['day3', 'day7', 'day28'].forEach(k => {
+        const card = document.getElementById('card' + k.charAt(0).toUpperCase() + k.slice(1));
+        card.classList.remove('border-blue-500', 'border-purple-500', 'border-emerald-500', 'bg-slate-100');
+    });
+
+    const activeCard = document.getElementById('card' + dayKey.charAt(0).toUpperCase() + dayKey.slice(1));
+    if(dayKey === 'day3') activeCard.classList.add('border-blue-500', 'bg-blue-50/50');
+    if(dayKey === 'day7') activeCard.classList.add('border-purple-500', 'bg-purple-50/50');
+    if(dayKey === 'day28') activeCard.classList.add('border-emerald-500', 'bg-emerald-50/50');
+
+    container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function closePatientList() {
+    document.getElementById('patientListContainer').classList.add('hidden');
+    ['day3', 'day7', 'day28'].forEach(k => {
+        const card = document.getElementById('card' + k.charAt(0).toUpperCase() + k.slice(1));
+        card.classList.remove('border-blue-500', 'border-purple-500', 'border-emerald-500', 'bg-blue-50/50', 'bg-purple-50/50', 'bg-emerald-50/50');
+    });
+}
+</script>
 
     </main>
 </body>

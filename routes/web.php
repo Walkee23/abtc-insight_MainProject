@@ -9,6 +9,7 @@ use App\Http\Controllers\StaffController;
 use App\Http\Controllers\ClinicalEncodingController;
 use App\Http\Controllers\PatientDatabaseController;
 use App\Http\Controllers\PepComplianceController;
+
 use App\Http\Controllers\TreatmentTrackerController;
 use App\Http\Controllers\ForecastingController;
 use App\Http\Controllers\ItDashboardController;
@@ -29,33 +30,30 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Role Dashboards
 Route::prefix('admin')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('admin.dashboard');
-    })->name('admin.dashboard');
+    Route::get('/dashboard', [App\Http\Controllers\AdminController::class, 'dashboard'])->name('admin.dashboard');
 
     Route::get('/spatial-map', [GisMapController::class, 'index'])->name('admin.gis_map');
     Route::get('/spatial-map/data', [GisMapController::class, 'data'])->name('admin.gis_map.data');
 
-    Route::get('/analytics', function () {
-        return view('admin.V_and_A');
-    })->name('admin.analytics');
+    Route::get('/analytics', [visualAnalyticsController::class, 'visualAnalytics'])->name('admin.analytics');
 
-    Route::get('/compliance', function () {
-        return view('admin.pep_comp');
-    })->name('admin.compliance');
+    Route::get('/export/monthly-csv', [visualAnalyticsController::class, 'exportMonthlyCsv'])
+    ->name('admin.export.monthly');
+
+    Route::get('/export/annual-report', [visualAnalyticsController::class, 'exportAnnualReport'])
+    ->name('admin.export.annual');
+
+    Route::get('/admin/generate-report', [visualAnalyticsController::class, 'generateReport'])->name('admin.generate.report');
+    // Para sa pag-export sa CSV file
+    Route::get('/report/export-csv', [visualAnalyticsController::class, 'exportCsv'])->name('report.export.csv');
+
+    Route::get('/compliance', [App\Http\Controllers\AdminController::class, 'compliance'])->name('admin.compliance');
 
     Route::get('/forecasting', [ForecastingController::class, 'index'])->name('admin.forecasting');
     Route::post('/forecasting/save', [ForecastingController::class, 'save'])->name('admin.forecasting.save');
 
-    Route::get('/system-management', function () {
-        $healthWorkersCount = DB::table('users')->where('role', 'Healthworker')->count();
-        $internsCount = DB::table('users')->where('role', 'OJT')->orWhere('role', 'Intern')->count();
-        $staffCount = DB::table('users')->where('role', 'Staff')->count();
-        $users = DB::table('users')->latest()->get();
-
-        return view('admin.USM', compact('healthWorkersCount', 'internsCount', 'staffCount', 'users'));
-    })->name('admin.usm');
-
+    Route::get('/system-management', [AdminController::class, 'systemManagement'])->name('admin.usm');
+    
     Route::post('/system-management/store-user', function (Illuminate\Http\Request $request) {
         $request->validate([
             'username'            => 'required|string|max:50|unique:users,username',

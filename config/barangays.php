@@ -22,3 +22,41 @@ return [
     'Tabunan' => '073', 'Tagbao' => '074', 'Talamban' => '075', 'TapTap' => '076',
     'Tejero' => '077', 'Tinago' => '078', 'Tisa' => '079', 'Toong' => '080', 'Zapatera' => '081'
 ];
+return [
+    // Health area => color ug lista sa barangay (kinahanglan parehas ang spelling sa config/barangays.php)
+    'areas' => [
+        'CENTRAL HEALTH AREA' => [
+            'color' => '#b4c7e7',
+            'barangays' => ['Babag','Bo.Luz','Busay','Capitol','Carreta','Hipodromo','Kalunasan',
+                            'Kamputhaw','Lahug','Malubog','Pung-ol','Sapangdaku'],
+        ],
+        'EAST HEALTH AREA' => [
+            'color' => '#f4b6b6',
+            'barangays' => ['Cogon Ramos','Day-as','Ermita','Kalubihan','Kamagayan','Lorega','Pahina Central',
+                            'Pari-an','Pasil','Sambag I','Sambag II','San Antonio','San Roque','Sta. Cruz',
+                            'Sto. Niño','Suba','T.Padilla','Tejero','Tinago','Zapatera'],
+        ],
+        'NORTH HEALTH AREA' => [
+            'color' => '#c6e0b4',
+            'barangays' => ['Adlaon','Agsungot','Apas','Bacayan','Banilad','Binaliw','Budlaan','Cambinocot',
+                            'Guba','Kasambagan','Lusaran','Mabini','Mabolo','Paril','Pit-os','Pulangbato',
+                            'San Jose','Sirao','Tabunan','Tagbao','Talamban','TapTap'],
+        ],
+        'SOUTH HEALTH AREA' => [
+            'color' => '#ffe699',
+            'barangays' => ['Basak Pardo','Basak San Nicolas','Bonbon','Buhisan','Bulacao','Bout-Taup',
+                            'Cogon Pardo','Inayawan','Kinasang-an','Mambaling','Pamutan','Pardo','Quiot',
+                            'Sinsin','Sudlon I','Sudlon II','Toong'],
+        ],
+        'WEST HEALTH AREA' => [
+            'color' => '#d9c3e6',
+            'barangays' => ['Calamba','Duljo','Guadalupe','Banawa','Labangon','Punta Princesa',
+                            'San Nicolas Proper','San Nicolas Pahina','Sawang Calero','Tisa'],
+        ],
+    ],
+
+    // Population kada barangay para sa Biting Incidence Rate. Pananglitan: 'Babag' => 6260
+    'population' => [
+        // 'Babag' => 0,
+    ],
+];

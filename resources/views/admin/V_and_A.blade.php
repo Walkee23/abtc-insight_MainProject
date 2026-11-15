@@ -106,6 +106,7 @@
         }
     </style>
     <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
+    <script src="{{ asset('js/custom-select.js') }}" defer></script>
 </head>
 
 <body class="text-on-surface flex min-h-screen bg-surface">

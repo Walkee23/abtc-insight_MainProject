@@ -12,11 +12,9 @@ use App\Http\Controllers\PepComplianceController;
 
 use App\Http\Controllers\TreatmentTrackerController;
 use App\Http\Controllers\ForecastingController;
-
-use App\Http\Controllers\AdminController;
-use App\Http\Controllers\visualAnalyticsController;
-
+use App\Http\Controllers\ItDashboardController;
 use Illuminate\Http\Request;
+
 
 Route::get('/', function () {
     return view('welcome_portal');
@@ -236,3 +234,10 @@ Route::post('/patient/submit-registration-returning', [PatientController::class,
 
 // New Patient (via BHW referral) — handle the form submission using the controller
 Route::post('/patient/submit-registration', [PatientController::class, 'registerPatient'])->name('patient.submit');
+
+Route::prefix('it')->group(function () {
+    Route::get('/dashboard', [ItDashboardController::class, 'index'])->name('it.dashboard');
+    Route::post('/sms/test', [ItDashboardController::class, 'sendTest'])->name('it.sms.test');
+    Route::post('/sms/run', [ItDashboardController::class, 'runNow'])->name('it.sms.run');
+    Route::post('/sms/{smsId}/retry', [ItDashboardController::class, 'retry'])->name('it.sms.retry');
+});

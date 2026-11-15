@@ -35,8 +35,15 @@
     var css = [
         /* --- always: layout that must not change between states ------------------- */
         'aside.sb-aside{overflow-x:hidden}',
-        'aside nav ' + LABEL + ',aside .sb-brand-name{white-space:nowrap;overflow:hidden;max-width:14rem;opacity:1}',
-        '.sb-toggle{flex:none;width:2.25rem;height:2.25rem;margin-left:auto;display:inline-flex;align-items:center;justify-content:center;',
+        /* labels keep the exact width they have when expanded (so they wrap exactly as before and never
+           reflow while the sidebar moves); the link clips them and they fade out */
+        'aside{--sb-p:1rem}',
+        'aside .px-6 nav{--sb-p:1.5rem}',
+        'aside nav a{overflow:hidden}',
+        'aside nav ' + LABEL + '{flex:none;width:calc(11.75rem - 2 * var(--sb-p));opacity:1}',
+        'aside .sb-logo{flex:none}',
+        'aside .sb-brand-name{flex:none;white-space:nowrap;opacity:1}',
+        '.sb-toggle{flex:none;width:2rem;height:2rem;margin-left:-.25rem;display:inline-flex;align-items:center;justify-content:center;',
         '  border:0;border-radius:.5rem;background:transparent;color:#64748b;cursor:pointer}',
         '.sb-toggle:hover{background:rgba(148,163,184,.25);color:#004a93}',
         '.sb-toggle:focus-visible{outline:2px solid #004a93;outline-offset:2px}',
@@ -50,26 +57,30 @@
 
         /* brand: only the logo stays (centred in the rail), name + hamburger fade out */
         'html.sb-collapsed aside .px-6{padding-left:.75rem !important;padding-right:.75rem !important}',
-        'html.sb-collapsed aside .sb-brand{gap:0 !important;padding-left:.5rem}',
-        'html.sb-collapsed aside .sb-brand-name{max-width:0;opacity:0}',
-        'html.sb-collapsed aside .sb-toggle{width:0;margin:0;opacity:0;overflow:hidden;pointer-events:none}',
+        'html.sb-collapsed aside .sb-brand{padding-left:.5rem}',
+        'html.sb-collapsed aside .sb-brand-name{opacity:0}',
+        'html.sb-collapsed aside .sb-toggle{width:0;margin-left:0;opacity:0;overflow:hidden;pointer-events:none}',
         'html.sb-collapsed aside .sb-logo{cursor:pointer}',
         'html.sb-collapsed aside .sb-logo:hover{box-shadow:0 0 0 3px rgba(0,74,147,.25)}',
         'html.sb-collapsed aside .sb-logo:focus-visible{outline:2px solid #004a93;outline-offset:3px}',
 
-        /* links keep their px-4 so the icon never moves; the labels just fade and clip away */
-        'html.sb-collapsed aside nav{padding-left:.75rem !important;padding-right:.75rem !important}',
-        'html.sb-collapsed aside nav a{gap:0 !important;transform:none !important}',
-        'html.sb-collapsed aside nav ' + LABEL + '{max-width:0;opacity:0}',
+        /* the rail is 5rem wide: 0.75rem on each side leaves a 3.5rem link whose icon (after its px-4)
+           sits exactly at the centre, the same centre as the logo. Admin's nav sits inside .px-6 (handled
+           above); the other roles' nav is a direct child of the aside and needs the padding itself. */
+        'html.sb-collapsed aside > nav{padding-left:.75rem !important;padding-right:.75rem !important}',
+        'html.sb-collapsed aside nav a{transform:none !important}',
+        /* the active link has a 4px accent bar; take it out of the padding so its icon is centred too */
+        'html.sb-collapsed aside nav a.border-l-4{padding-left:.75rem !important}',
+        'html.sb-collapsed aside nav ' + LABEL + '{opacity:0}',
         'html.sb-collapsed aside button:not(.sb-toggle){opacity:0;visibility:hidden;pointer-events:none}',
 
         /* --- motion: only after the first paint, and never for people who opt out ---- */
         'html.sb-ready aside.sb-aside{transition:width ' + T + '}',
         'html.sb-ready .ml-64,html.sb-ready .ml-72,html.sb-ready .pl-72,html.sb-ready .w-\\[calc\\(100\\%-16rem\\)\\]{',
         '  transition:margin-left ' + T + ',padding-left ' + T + ',width ' + T + '}',
-        'html.sb-ready aside .px-6,html.sb-ready aside nav,html.sb-ready aside .sb-brand,html.sb-ready aside nav a{',
-        '  transition:padding ' + T + ',gap ' + T + ',background-color .15s,color .15s}',
-        'html.sb-ready aside nav ' + LABEL + ',html.sb-ready aside .sb-brand-name{transition:max-width ' + T + ',opacity .18s ease}',
+        'html.sb-ready aside .px-6,html.sb-ready aside > nav,html.sb-ready aside .sb-brand{transition:padding ' + T + '}',
+        'html.sb-ready aside nav a{transition:padding-left ' + T + ',background-color .15s,color .15s}',
+        'html.sb-ready aside nav ' + LABEL + ',html.sb-ready aside .sb-brand-name{transition:opacity .18s ease}',
         'html.sb-ready aside .sb-toggle{transition:width ' + T + ',margin ' + T + ',opacity .18s ease,background-color .15s,color .15s}',
         'html.sb-ready aside .sb-logo{transition:box-shadow .15s}',
         'html.sb-ready aside button:not(.sb-toggle){transition:opacity .18s ease,visibility 0s linear .18s}',

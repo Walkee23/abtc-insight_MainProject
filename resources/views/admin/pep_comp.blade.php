@@ -218,48 +218,53 @@
             </div>
             <!-- Compliance Overview Stat Cards (Bento Style) -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <!-- Stat Card 1 -->
+   
+    
+                <!-- Stat Card 1: PEP Completion Rate -->
                 <div class="bg-surface-container-lowest p-6 rounded-xl border-l-4 border-primary shadow-sm hover:shadow-md transition-shadow">
                     <div class="flex justify-between items-start mb-4">
                         <div class="p-2 bg-primary-fixed rounded-lg">
                             <span class="material-symbols-outlined text-primary" data-icon="clinical_notes">clinical_notes</span>
                         </div>
-                        <span class="text-xs font-bold text-primary bg-primary-fixed px-2 py-1 rounded-full">+2.4%</span>
+                        <span class="text-xs font-bold text-primary bg-primary-fixed px-2 py-1 rounded-full">Live</span>
                     </div>
-                    <h3 class="text-3xl font-extrabold text-on-surface mb-1">94.2%</h3>
+                    <h3 class="text-3xl font-extrabold text-on-surface mb-1">{{ $pepCompletionRate }}%</h3>
                     <p class="text-xs uppercase font-bold text-on-surface-variant tracking-widest">PEP Completion Rate</p>
                 </div>
-                <!-- Stat Card 2 -->
+
+                <!-- Stat Card 2: SMS Success Rate -->
                 <div class="bg-surface-container-lowest p-6 rounded-xl border-l-4 border-secondary shadow-sm hover:shadow-md transition-shadow">
                     <div class="flex justify-between items-start mb-4">
                         <div class="p-2 bg-secondary-fixed rounded-lg">
                             <span class="material-symbols-outlined text-secondary" data-icon="send">send</span>
                         </div>
-                        <span class="text-xs font-bold text-secondary bg-secondary-fixed px-2 py-1 rounded-full">Stable</span>
+                        <span class="text-xs font-bold text-secondary bg-secondary-fixed px-2 py-1 rounded-full">Gateway</span>
                     </div>
-                    <h3 class="text-3xl font-extrabold text-on-surface mb-1">98.8%</h3>
+                    <h3 class="text-3xl font-extrabold text-on-surface mb-1">{{ $smsSuccessRate }}%</h3>
                     <p class="text-xs uppercase font-bold text-on-surface-variant tracking-widest">SMS Success Rate</p>
                 </div>
-                <!-- Stat Card 3 -->
+
+                <!-- Stat Card 3: Pending Reminders -->
                 <div class="bg-surface-container-lowest p-6 rounded-xl border-l-4 border-tertiary shadow-sm hover:shadow-md transition-shadow">
                     <div class="flex justify-between items-start mb-4">
                         <div class="p-2 bg-tertiary-fixed rounded-lg">
                             <span class="material-symbols-outlined text-tertiary" data-icon="schedule_send">schedule_send</span>
                         </div>
-                        <span class="text-xs font-bold text-tertiary bg-tertiary-fixed px-2 py-1 rounded-full">12 High Priority</span>
+                        <span class="text-xs font-bold text-tertiary bg-tertiary-fixed px-2 py-1 rounded-full">Upcoming</span>
                     </div>
-                    <h3 class="text-3xl font-extrabold text-on-surface mb-1">42</h3>
+                    <h3 class="text-3xl font-extrabold text-on-surface mb-1">{{ number_format($pendingReminders) }}</h3>
                     <p class="text-xs uppercase font-bold text-on-surface-variant tracking-widest">Pending Reminders</p>
                 </div>
-                <!-- Stat Card 4 -->
+
+                <!-- Stat Card 4: Late Follow-ups -->
                 <div class="bg-surface-container-lowest p-6 rounded-xl border-l-4 border-error shadow-sm hover:shadow-md transition-shadow">
                     <div class="flex justify-between items-start mb-4">
                         <div class="p-2 bg-error-container rounded-lg">
                             <span class="material-symbols-outlined text-error" data-icon="warning">warning</span>
                         </div>
-                        <span class="text-xs font-bold text-error bg-error-container px-2 py-1 rounded-full">Critical</span>
+                        <span class="text-xs font-bold text-error bg-error-container px-2 py-1 rounded-full">Overdue</span>
                     </div>
-                    <h3 class="text-3xl font-extrabold text-on-surface mb-1">18</h3>
+                    <h3 class="text-3xl font-extrabold text-on-surface mb-1">{{ number_format($lateFollowUps) }}</h3>
                     <p class="text-xs uppercase font-bold text-on-surface-variant tracking-widest">Late Follow-ups Sent</p>
                 </div>
             </div>

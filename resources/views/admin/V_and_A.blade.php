@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html class="light" lang="en">
 
 <head>
@@ -76,7 +75,7 @@
                         "label": ["Inter"]
                     }
                 },
-            }
+            },
         }
     </script>
     <style>
@@ -84,29 +83,23 @@
             font-family: 'Inter', sans-serif;
             background-color: #f7f9fb;
         }
-
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
             vertical-align: middle;
         }
-
         .clinical-shadow {
             box-shadow: 0 4px 24px -4px rgba(25, 28, 30, 0.04);
         }
-
         .glass-nav {
             backdrop-filter: blur(12px);
             background: rgba(255, 255, 255, 0.85);
         }
-
         ::-webkit-scrollbar {
             width: 6px;
         }
-
         ::-webkit-scrollbar-track {
             background: transparent;
         }
-
         ::-webkit-scrollbar-thumb {
             background: #c1c7d3;
             border-radius: 10px;
@@ -115,7 +108,7 @@
 </head>
 
 <body class="text-on-surface flex min-h-screen bg-surface">
-    <!-- Updated SideNavBar to match ABTC-Insight style -->
+    <!-- SideNavBar -->
     <aside class="h-screen w-64 fixed left-0 top-0 bg-slate-50 dark:bg-slate-900 flex flex-col border-r border-slate-200/50 dark:border-slate-800/50 z-50">
         <div class="px-6 py-8">
             <div class="flex items-center gap-3 mb-10">
@@ -153,14 +146,11 @@
                 </a>
             </nav>
         </div>
-        <div class="px-6 mt-auto pb-8">
-            <button class="w-full py-3 bg-primary text-white rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
-                Generate Monthly Report
-            </button>
-        </div>
+        
     </aside>
+
     <main class="ml-64 flex-1 flex flex-col min-w-0">
-        <!-- Updated TopAppBar with user profile -->
+        <!-- TopAppBar -->
         <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-md px-8 py-3 flex justify-between items-center border-b border-slate-100">
             <div class="flex items-center gap-6 flex-1">
                 <div class="relative w-full max-w-md group">
@@ -175,7 +165,6 @@
                 <button class="p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors active:scale-95 duration-200 mr-2">
                     <span class="material-symbols-outlined text-xl">help</span>
                 </button>
-                <!-- User Profile Section with Dropdown -->
                 <div class="relative group cursor-pointer pl-4 border-l border-slate-200">
                     <div class="flex items-center gap-3">
                         <div class="text-right">
@@ -186,8 +175,6 @@
                             <img alt="Admin Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAWLozmctqDvlYpuogkSKhuQXYqgyRVKTkvnu27_vfksbBi0fRp_28CpvFMkWokTvJIwFCvycusJ03sd70MxGv-IN-9EoSewtoGCMoJCboWhZiyXr9Zka7bBUMXl7Htj8b_rELNobmm3tu5deKHeXDYC1OZQpXtFhCTDycSm3-mjAqV-0zADcM6iNlwgsTmbuHbbvihLUWj2DhK1AdlgzJR_geD3xRe39h4TMEC10LJqKK5azvYdpi-szDRrOG0jL1N9x6qJeeLjIj9" />
                         </div>
                     </div>
-
-                    <!-- Hover Dropdown Menu -->
                     <div class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                         <div class="p-2">
                             <a href="#" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary rounded-lg transition-colors">
@@ -195,8 +182,6 @@
                                 My Profile
                             </a>
                             <div class="h-px bg-slate-100 my-1"></div>
-
-                            <!-- Secure Logout Form -->
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <button type="submit" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors text-left">
@@ -209,6 +194,7 @@
                 </div>
             </div>
         </header>
+
         <div class="flex-1 overflow-y-auto p-8 space-y-8">
             <!-- SECTION 1 — PAGE HEADER -->
             <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -216,142 +202,110 @@
                     <h2 class="text-3xl font-extrabold text-on-surface tracking-tight leading-none mb-2">Visual Analytics</h2>
                     <p class="text-on-surface-variant text-lg font-medium opacity-70">Query and visualize bite case data across all dimensions.</p>
                 </div>
+                @if(request()->hasAny(['group', 'health_area', 'barangay', 'sex', 'age_min', 'age_max']))
                 <div class="flex gap-3">
-                    <button class="flex items-center px-6 py-3 bg-primary text-white rounded-xl font-semibold shadow-xl shadow-primary/20 hover:opacity-90 transition-all">
-                        Generate Official Report
-                    </button>
-                    <button class="flex items-center px-6 py-3 bg-[#D4AF37] text-white rounded-xl font-semibold shadow-xl shadow-yellow-700/10 hover:opacity-90 transition-all">
+                    <form action="{{ route('admin.generate.report') }}" method="GET" target="_blank">
+                        <!-- I-pasa ang tanang kasamtangang request parameters (apil ang barangay, sex, etc.) ngadto sa report -->
+                        @foreach(request()->all() as $key => $value)
+                            @if(!is_array($value))
+                                <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                            @endif
+                        @endforeach
+
+                        <button type="submit" class="flex items-center px-6 py-3 bg-primary text-white rounded-xl font-semibold shadow-xl shadow-primary/20 hover:opacity-90 transition-all cursor-pointer">
+                            Generate Official Report
+                        </button>
+                    </form>
+
+                    <a href="{{ route('report.export.csv', request()->all()) }}" class="flex items-center px-6 py-3 bg-[#D4AF37] text-white rounded-xl font-semibold shadow-xl shadow-yellow-700/10 hover:opacity-90 transition-all cursor-pointer">
                         Export All Results <span class="material-symbols-outlined ml-2">arrow_forward</span> CSV
-                    </button>
+                    </a>
                 </div>
+                @endif
             </div>
-            <!-- SECTION 2 — FILTER BAR -->
+    
+            <!-- SECTION 2 — REAL LIVE FILTER BAR -->
             <section class="bg-surface-container-lowest rounded-xl p-6 shadow-sm space-y-6 border border-outline-variant/10">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <div class="md:col-span-2">
-                        <label class="block text-xs font-bold uppercase text-on-surface-variant/60 tracking-widest mb-2">Date Range</label>
-                        <div class="flex items-center gap-2">
-                            <input class="flex-1 bg-surface-container-highest border-none rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/20" type="date" />
-                            <span class="text-on-surface-variant">to</span>
-                            <input class="flex-1 bg-surface-container-highest border-none rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/20" type="date" />
+                <form method="GET" action="{{ route('admin.analytics') }}">
+                    <div class="grid grid-cols-1 md:grid-cols-6 gap-6">
+                        
+    
+                        <!-- Period Grouping (takes 3 columns) -->
+                        <div class="md:col-span-3">
+                            <label class="block text-xs font-bold uppercase text-on-surface-variant/60 tracking-widest mb-2">Period Grouping</label>
+                            <div class="flex bg-surface-container-highest p-1 rounded-lg">
+                                @php $currentGroup = request('group'); @endphp
+                                <button type="submit" name="group" value="daily" class="flex-1 py-1.5 text-xs font-semibold rounded-md transition-all {{ $currentGroup == 'daily' ? 'bg-white shadow-sm text-primary font-bold' : 'text-on-surface-variant' }}">Daily</button>
+                                <button type="submit" name="group" value="weekly" class="flex-1 py-1.5 text-xs font-semibold rounded-md transition-all {{ $currentGroup == 'weekly' ? 'bg-white shadow-sm text-primary font-bold' : 'text-on-surface-variant' }}">Weekly</button>
+                                <button type="submit" name="group" value="monthly" class="flex-1 py-1.5 text-xs font-semibold rounded-md transition-all {{ $currentGroup == 'monthly' ? 'bg-white shadow-sm text-primary font-bold' : 'text-on-surface-variant' }}">Monthly</button>
+                                <button type="submit" name="group" value="quarterly" class="flex-1 py-1.5 text-xs font-semibold rounded-md transition-all {{ $currentGroup == 'quarterly' ? 'bg-white shadow-sm text-primary font-bold' : 'text-on-surface-variant' }}">Quarterly</button>
+                                <button type="submit" name="group" value="yearly" class="flex-1 py-1.5 text-xs font-semibold rounded-md transition-all {{ $currentGroup == 'yearly' ? 'bg-white shadow-sm text-primary font-bold' : 'text-on-surface-variant' }}">Yearly</button>
+                            </div>
                         </div>
                     </div>
-                    <div class="md:col-span-2">
-                        <label class="block text-xs font-bold uppercase text-on-surface-variant/60 tracking-widest mb-2">Period Grouping</label>
-                        <div class="flex bg-surface-container-highest p-1 rounded-lg">
-                            <button class="flex-1 py-1.5 text-sm font-semibold rounded-md transition-all text-on-surface-variant">Daily</button>
-                            <button class="flex-1 py-1.5 text-sm font-semibold rounded-md transition-all text-on-surface-variant">Weekly</button>
-                            <button class="flex-1 py-1.5 text-sm font-semibold rounded-md transition-all bg-white shadow-sm text-primary">Monthly</button>
+
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-6 border-t border-outline-variant/10 pt-6">
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-on-surface-variant/60 tracking-widest mb-2">Health Area</label>
+                            <select name="health_area" class="w-full bg-surface-container-highest border-none rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/20">
+                                <option value="">All Areas</option>
+                                <option value="North" {{ request('health_area') == 'North' ? 'selected' : '' }}>North</option>
+                                <option value="South" {{ request('health_area') == 'South' ? 'selected' : '' }}>South</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-on-surface-variant/60 tracking-widest mb-2">Barangay</label>
+                            <input name="barangay" value="{{ request('barangay') }}" class="w-full bg-surface-container-highest border-none rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/20" placeholder="Search Barangay..." type="text" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-on-surface-variant/60 tracking-widest mb-2">Sex</label>
+                            <select name="sex" class="w-full bg-surface-container-highest border-none rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/20">
+                                <option value="All">All</option>
+                                <option value="Male" {{ request('sex') == 'Male' ? 'selected' : '' }}>Male</option>
+                                <option value="Female" {{ request('sex') == 'Female' ? 'selected' : '' }}>Female</option>
+                            </select>
+                        </div>
+                        <div class="col-span-1 md:col-span-2">
+                            <label class="block text-xs font-bold uppercase text-on-surface-variant/60 tracking-widest mb-2">Age Range</label>
+                            <div class="flex items-center gap-2">
+                                <input name="age_min" value="{{ request('age_min') }}" class="w-full bg-surface-container-highest border-none rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/20" placeholder="Min" type="number" />
+                                <input name="age_max" value="{{ request('age_max') }}" class="w-full bg-surface-container-highest border-none rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/20" placeholder="Max" type="number" />
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-5 gap-6 border-t border-outline-variant/10 pt-6">
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-on-surface-variant/60 tracking-widest mb-2">Health Area</label>
-                        <select class="w-full bg-surface-container-highest border-none rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/20">
-                            <option>All Areas</option>
-                            <option>North</option>
-                            <option>South</option>
-                            <option>East</option>
-                            <option>West</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-on-surface-variant/60 tracking-widest mb-2">Barangay</label>
-                        <input class="w-full bg-surface-container-highest border-none rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/20" placeholder="Search Barangay..." type="text" />
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-on-surface-variant/60 tracking-widest mb-2">Sex</label>
-                        <select class="w-full bg-surface-container-highest border-none rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/20">
-                            <option>All</option>
-                            <option>Male</option>
-                            <option>Female</option>
-                        </select>
-                    </div>
-                    <div class="col-span-1">
-                        <label class="block text-xs font-bold uppercase text-on-surface-variant/60 tracking-widest mb-2">Age Range</label>
-                        <div class="flex items-center gap-2">
-                            <input class="w-full bg-surface-container-highest border-none rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/20" placeholder="Min" type="number" />
-                            <input class="w-full bg-surface-container-highest border-none rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/20" placeholder="Max" type="number" />
+
+                    <div class="flex items-center justify-between pt-6 border-t border-outline-variant/10">
+                        <div class="flex items-center gap-2 text-sm text-on-surface-variant">
+                            <span class="material-symbols-outlined text-primary text-lg">info</span>
+                            Showing <strong class="text-on-surface">{{ number_format($totalBites ?? 0) }} bite cases</strong> matching current filters 
+                            <span class="mx-1 text-outline">•</span> {{ number_format($uniquePatients ?? 0) }} unique patients
+                        </div>
+                        <div class="flex gap-3">
+                            <a href="{{ route('admin.analytics') }}" class="px-6 py-2 border border-outline-variant text-on-surface-variant font-semibold rounded-lg hover:bg-surface-container-low transition-colors text-center">Reset All</a>
+                            <button type="submit" class="px-8 py-2 bg-primary text-white font-semibold rounded-lg shadow-lg shadow-primary/10 hover:shadow-primary/20 transition-all">Apply Filters</button>
                         </div>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-on-surface-variant/60 tracking-widest mb-2">Civil Status</label>
-                        <select class="w-full bg-surface-container-highest border-none rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/20">
-                            <option>All</option>
-                            <option>Single</option>
-                            <option>Married</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-5 gap-6 border-t border-outline-variant/10 pt-6">
-                    <div class="col-span-1">
-                        <label class="block text-xs font-bold uppercase text-on-surface-variant/60 tracking-widest mb-2">Exposure Category</label>
-                        <div class="flex gap-4 items-center h-9">
-                            <label class="flex items-center gap-2 text-xs font-medium"><input checked="" class="rounded text-primary focus:ring-primary/20" type="checkbox" /> Cat I</label>
-                            <label class="flex items-center gap-2 text-xs font-medium"><input checked="" class="rounded text-primary focus:ring-primary/20" type="checkbox" /> Cat II</label>
-                            <label class="flex items-center gap-2 text-xs font-medium"><input checked="" class="rounded text-primary focus:ring-primary/20" type="checkbox" /> Cat III</label>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-on-surface-variant/60 tracking-widest mb-2">Animal Type</label>
-                        <select class="w-full bg-surface-container-highest border-none rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/20">
-                            <option>All</option>
-                            <option>Dog</option>
-                            <option>Cat</option>
-                            <option>Others</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-on-surface-variant/60 tracking-widest mb-2">Exposure Type</label>
-                        <select class="w-full bg-surface-container-highest border-none rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/20">
-                            <option>All</option>
-                            <option>Bite</option>
-                            <option>Scratch</option>
-                            <option>Lick</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-on-surface-variant/60 tracking-widest mb-2">Animal Status</label>
-                        <select class="w-full bg-surface-container-highest border-none rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/20">
-                            <option>All</option>
-                            <option>Stray</option>
-                            <option>Pet</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-on-surface-variant/60 tracking-widest mb-2">Animal Vax Status</label>
-                        <select class="w-full bg-surface-container-highest border-none rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/20">
-                            <option>All</option>
-                            <option>Vaccinated</option>
-                            <option>Unvaccinated</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="flex items-center justify-between pt-6 border-t border-outline-variant/10">
-                    <div class="flex items-center gap-2 text-sm text-on-surface-variant">
-                        <span class="material-symbols-outlined text-primary text-lg">info</span>
-                        Showing <strong class="text-on-surface">1,248 bite cases</strong> matching current filters <span class="mx-1 text-outline">•</span> 1,102 unique patients <span class="mx-1 text-outline">•</span> 850 new patients <span class="mx-1 text-outline">•</span> 252 returning patients
-                    </div>
-                    <div class="flex gap-3">
-                        <button class="px-6 py-2 border border-outline-variant text-on-surface-variant font-semibold rounded-lg hover:bg-surface-container-low transition-colors">Reset All</button>
-                        <button class="px-8 py-2 bg-primary text-white font-semibold rounded-lg shadow-lg shadow-primary/10 hover:shadow-primary/20 transition-all">Apply Filters</button>
-                    </div>
-                </div>
+                </form>
             </section>
-            <!-- SECTION 3 — KPI CARDS -->
+
+            @if(request()->hasAny(['group', 'health_area', 'barangay', 'sex', 'age_min', 'age_max']))
+
+            <!-- SECTION 3 — REAL LIVE KPI CARDS -->
             <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
+                <!-- Card 1: Total Bite Cases -->
                 <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 shadow-sm">
                     <p class="text-xs font-bold uppercase text-on-surface-variant/60 tracking-widest mb-4">Total Bite Cases</p>
                     <div class="flex items-end justify-between">
-                        <h3 class="text-4xl font-black text-on-surface tracking-tighter">1,248</h3>
-                        <span class="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full font-bold mb-1">+12%</span>
+                        <h3 class="text-4xl font-black text-on-surface tracking-tighter">{{ number_format($analyticsTotalBites ?? 0) }}</h3>
+                        <span class="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full font-bold mb-1">Live</span>
                     </div>
                 </div>
+
+                <!-- Card 2: Unique Patients -->
                 <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 shadow-sm">
                     <p class="text-xs font-bold uppercase text-on-surface-variant/60 tracking-widest mb-4">Unique Patients</p>
                     <div class="flex items-end justify-between">
-                        <h3 class="text-4xl font-black text-on-surface tracking-tighter">1,102</h3>
+                        <h3 class="text-4xl font-black text-on-surface tracking-tighter">{{ number_format($analyticsUniquePatients ?? 0) }}</h3>
                         <div class="w-12 h-6 flex items-end gap-1 mb-1">
                             <div class="w-2 h-2 bg-primary/20 rounded-t-sm"></div>
                             <div class="w-2 h-4 bg-primary/40 rounded-t-sm"></div>
@@ -359,40 +313,38 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-error-container p-6 rounded-xl border border-error/5 shadow-sm">
-                    <p class="text-xs font-bold uppercase text-on-error-container/60 tracking-widest mb-4">Category III Cases</p>
-                    <div class="flex items-end justify-between">
-                        <h3 class="text-4xl font-black text-on-error-container tracking-tighter">64.2%</h3>
-                        <p class="text-[10px] font-bold text-on-error-container/70 mb-1">801 cases</p>
-                    </div>
-                </div>
+
+                <!-- Card 4: Average Age -->
                 <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 shadow-sm">
                     <p class="text-xs font-bold uppercase text-on-surface-variant/60 tracking-widest mb-4">Avg Age</p>
                     <div class="flex items-end justify-between">
-                        <h3 class="text-4xl font-black text-on-surface tracking-tighter">24.5</h3>
+                        <h3 class="text-4xl font-black text-on-surface tracking-tighter">{{ $analyticsAvgAge ?? 0 }}</h3>
                         <p class="text-[10px] font-bold text-on-surface-variant/70 mb-1">years</p>
                     </div>
                 </div>
+
+                <!-- Card 5: PEP Completion -->
                 <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 shadow-sm overflow-hidden relative">
                     <p class="text-xs font-bold uppercase text-on-surface-variant/60 tracking-widest mb-4">PEP Completion</p>
                     <div class="flex items-end justify-between">
-                        <h3 class="text-4xl font-black text-on-surface tracking-tighter">88.4%</h3>
+                        <h3 class="text-4xl font-black text-on-surface tracking-tighter">{{ $analyticsPepCompletion ?? 0 }}%</h3>
                         <div class="flex-1 h-8 ml-4 mb-1 overflow-hidden">
-                            <svg class="w-full h-full stroke-primary fill-none stroke-2" viewbox="0 0 100 30">
+                            <svg class="w-full h-full stroke-primary fill-none stroke-2" viewBox="0 0 100 30">
                                 <path d="M0,25 Q10,20 20,22 T40,15 T60,18 T80,5 T100,10"></path>
                             </svg>
                         </div>
                     </div>
                 </div>
             </div>
-            <!-- SECTION 4 — CHARTS GRID -->
+
+            <!-- SECTION 4 — CHARTS & RANKINGS GRID -->
             <div class="grid grid-cols-12 gap-8">
-                <!-- Cases Over Time (Updated with Chart.js) -->
+                <!-- Cases Over Time (Real Database-Driven Chart) -->
                 <div class="col-span-12 bg-surface-container-lowest p-8 rounded-xl border border-outline-variant/10 shadow-sm">
                     <div class="flex items-center justify-between mb-8">
                         <div>
                             <h4 class="text-xl font-bold text-on-surface tracking-tight">Cases Over Time</h4>
-                            <p class="text-sm text-on-surface-variant">Historical volume of new vs returning patient visits</p>
+                            <p class="text-sm text-on-surface-variant">Historical volume of new vs returning patient visits matching current filters</p>
                         </div>
                         <div class="flex gap-4">
                             <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-[#004a93]"></span> <span class="text-xs font-medium text-on-surface-variant">Total</span></div>
@@ -406,13 +358,19 @@
                     <script>
                         document.addEventListener('DOMContentLoaded', function() {
                             const ctx = document.getElementById('casesOverTimeChart').getContext('2d');
+                            const chartLabels = {!! json_encode($chartLabels ?? ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']) !!};
+                            const totalData = {!! json_encode($totalCasesData ?? []) !!};
+                            const newData = {!! json_encode($newCasesData ?? []) !!};
+                            const returningData = {!! json_encode($returningCasesData ?? []) !!};
+
                             new Chart(ctx, {
                                 type: 'line',
                                 data: {
-                                    labels: ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG'],
-                                    datasets: [{
+                                    labels: chartLabels,
+                                    datasets: [
+                                        {
                                             label: 'Total Cases',
-                                            data: [150, 165, 140, 180, 155, 175, 190, 210],
+                                            data: totalData,
                                             borderColor: '#004a93',
                                             backgroundColor: '#004a93',
                                             borderWidth: 3,
@@ -422,336 +380,244 @@
                                         },
                                         {
                                             label: 'New Patients',
-                                            data: [110, 120, 105, 130, 115, 125, 135, 150],
+                                            data: newData,
                                             borderColor: '#49607f',
                                             backgroundColor: '#49607f',
                                             borderWidth: 2,
                                             borderDash: [5, 5],
                                             tension: 0.4,
-                                            pointRadius: 0
+                                            pointRadius: 2
                                         },
                                         {
                                             label: 'Returning',
-                                            data: [40, 45, 35, 50, 40, 50, 55, 60],
+                                            data: returningData,
                                             borderColor: '#c1c7d3',
                                             backgroundColor: '#c1c7d3',
                                             borderWidth: 2,
                                             tension: 0.4,
-                                            pointRadius: 0
+                                            pointRadius: 2
                                         }
                                     ]
                                 },
                                 options: {
                                     responsive: true,
                                     maintainAspectRatio: false,
-                                    plugins: {
-                                        legend: {
-                                            display: false
-                                        }
-                                    },
+                                    plugins: { legend: { display: false } },
                                     scales: {
-                                        y: {
-                                            beginAtZero: true,
-                                            grid: {
-                                                color: 'rgba(0,0,0,0.05)'
-                                            },
-                                            ticks: {
-                                                font: {
-                                                    size: 10,
-                                                    family: 'Inter'
-                                                }
-                                            }
-                                        },
-                                        x: {
-                                            grid: {
-                                                display: false
-                                            },
-                                            ticks: {
-                                                font: {
-                                                    size: 10,
-                                                    weight: 'bold',
-                                                    family: 'Inter'
-                                                }
-                                            }
-                                        }
+                                        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+                                        x: { grid: { display: false } }
                                     }
                                 }
                             });
                         });
                     </script>
                 </div>
-                <!-- Existing Charts preserved exactly as they are -->
-                <div class="col-span-12 md:col-span-7 bg-surface-container-lowest p-8 rounded-xl border border-outline-variant/10 shadow-sm">
-                    <h4 class="text-lg font-bold text-on-surface mb-6">Top 15 Barangays by Incidence</h4>
-                    <div class="space-y-3">
-                        <div class="flex items-center gap-3">
-                            <span class="w-24 text-xs font-bold text-on-surface-variant text-right">Guadalupe</span>
-                            <div class="flex-1 h-3 bg-surface-container-highest rounded-full overflow-hidden">
-                                <div class="h-full bg-primary" style="width: 95%;"></div>
-                            </div>
-                            <span class="w-8 text-[10px] font-bold text-on-surface-variant">142</span>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <span class="w-24 text-xs font-bold text-on-surface-variant text-right">Lahug</span>
-                            <div class="flex-1 h-3 bg-surface-container-highest rounded-full overflow-hidden">
-                                <div class="h-full bg-primary" style="width: 82%;"></div>
-                            </div>
-                            <span class="w-8 text-[10px] font-bold text-on-surface-variant">118</span>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <span class="w-24 text-xs font-bold text-on-surface-variant text-right">Talamban</span>
-                            <div class="flex-1 h-3 bg-surface-container-highest rounded-full overflow-hidden">
-                                <div class="h-full bg-primary" style="width: 78%;"></div>
-                            </div>
-                            <span class="w-8 text-[10px] font-bold text-on-surface-variant">105</span>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <span class="w-24 text-xs font-bold text-on-surface-variant text-right">Mambaling</span>
-                            <div class="flex-1 h-3 bg-surface-container-highest rounded-full overflow-hidden">
-                                <div class="h-full bg-primary" style="width: 65%;"></div>
-                            </div>
-                            <span class="w-8 text-[10px] font-bold text-on-surface-variant">88</span>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <span class="w-24 text-xs font-bold text-on-surface-variant text-right">Tisa</span>
-                            <div class="flex-1 h-3 bg-surface-container-highest rounded-full overflow-hidden">
-                                <div class="h-full bg-primary" style="width: 60%;"></div>
-                            </div>
-                            <span class="w-8 text-[10px] font-bold text-on-surface-variant">82</span>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <span class="w-24 text-xs font-bold text-on-surface-variant text-right">Pardo</span>
-                            <div class="flex-1 h-3 bg-surface-container-highest rounded-full overflow-hidden">
-                                <div class="h-full bg-primary" style="width: 55%;"></div>
-                            </div>
-                            <span class="w-8 text-[10px] font-bold text-on-surface-variant">74</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-span-12 md:col-span-5 grid grid-rows-2 gap-8">
-                    <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 shadow-sm flex items-center justify-between">
-                        <div>
-                            <h4 class="text-base font-bold text-on-surface mb-1">Exposure Category</h4>
-                            <div class="space-y-1">
-                                <div class="flex items-center gap-2 text-[10px] font-bold"><span class="w-2 h-2 rounded-full bg-primary"></span> Category III (64%)</div>
-                                <div class="flex items-center gap-2 text-[10px] font-bold"><span class="w-2 h-2 rounded-full bg-secondary"></span> Category II (31%)</div>
-                                <div class="flex items-center gap-2 text-[10px] font-bold"><span class="w-2 h-2 rounded-full bg-outline"></span> Category I (5%)</div>
-                            </div>
-                        </div>
-                        <div class="relative w-24 h-24">
-                            <svg class="w-full h-full transform -rotate-90" viewbox="0 0 36 36">
-                                <circle class="stroke-outline/20" cx="18" cy="18" fill="none" r="16" stroke-width="4"></circle>
-                                <circle class="stroke-primary" cx="18" cy="18" fill="none" r="16" stroke-dasharray="64, 100" stroke-width="4"></circle>
-                                <circle class="stroke-secondary" cx="18" cy="18" fill="none" r="16" stroke-dasharray="31, 100" stroke-dashoffset="-64" stroke-width="4"></circle>
-                            </svg>
-                            <div class="absolute inset-0 flex items-center justify-center font-black text-primary text-sm tracking-tighter">64%</div>
-                        </div>
-                    </div>
-                    <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 shadow-sm flex items-center justify-between">
-                        <div>
-                            <h4 class="text-base font-bold text-on-surface mb-1">Sex Distribution</h4>
-                            <div class="space-y-1">
-                                <div class="flex items-center gap-2 text-[10px] font-bold"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Male (52%)</div>
-                                <div class="flex items-center gap-2 text-[10px] font-bold"><span class="w-2 h-2 rounded-full bg-pink-400"></span> Female (48%)</div>
-                            </div>
-                        </div>
-                        <div class="relative w-24 h-24">
-                            <svg class="w-full h-full transform -rotate-90" viewbox="0 0 36 36">
-                                <circle class="stroke-pink-400" cx="18" cy="18" fill="none" r="16" stroke-width="4"></circle>
-                                <circle class="stroke-blue-500" cx="18" cy="18" fill="none" r="16" stroke-dasharray="52, 100" stroke-width="4"></circle>
-                            </svg>
-                            <div class="absolute inset-0 flex items-center justify-center font-black text-on-surface text-sm tracking-tighter">52:48</div>
-                        </div>
-                    </div>
-                </div>
+                    
+                <!-- Top Barangays Ranking -->
                 <div class="col-span-12 md:col-span-6 bg-surface-container-lowest p-8 rounded-xl border border-outline-variant/10 shadow-sm">
-                    <h4 class="text-lg font-bold text-on-surface mb-6">Age Group Distribution</h4>
-                    <div class="flex items-end h-48 gap-4 px-4">
-                        <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-                            <div class="w-full bg-primary/20 rounded-t-lg" style="height: 45%;"></div>
-                            <span class="text-[10px] font-bold text-on-surface-variant">0-12</span>
-                        </div>
-                        <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-                            <div class="w-full bg-primary/40 rounded-t-lg" style="height: 65%;"></div>
-                            <span class="text-[10px] font-bold text-on-surface-variant">13-19</span>
-                        </div>
-                        <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-                            <div class="w-full bg-primary rounded-t-lg" style="height: 100%;"></div>
-                            <span class="text-[10px] font-bold text-on-surface-variant">20-39</span>
-                        </div>
-                        <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-                            <div class="w-full bg-primary/60 rounded-t-lg" style="height: 55%;"></div>
-                            <span class="text-[10px] font-bold text-on-surface-variant">40-59</span>
-                        </div>
-                        <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-                            <div class="w-full bg-primary/30 rounded-t-lg" style="height: 25%;"></div>
-                            <span class="text-[10px] font-bold text-on-surface-variant">60+</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-span-12 md:col-span-6 bg-surface-container-lowest p-8 rounded-xl border border-outline-variant/10 shadow-sm flex flex-col">
-                    <h4 class="text-lg font-bold text-on-surface mb-6">Animal Type Distribution</h4>
-                    <div class="flex items-center justify-around flex-1">
-                        <div class="relative w-40 h-40">
-                            <svg class="w-full h-full transform -rotate-90" viewbox="0 0 36 36">
-                                <circle class="stroke-outline/10" cx="18" cy="18" fill="none" r="16" stroke-width="4"></circle>
-                                <circle class="stroke-primary" cx="18" cy="18" fill="none" r="16" stroke-dasharray="82, 100" stroke-width="4"></circle>
-                                <circle class="stroke-[#D4AF37]" cx="18" cy="18" fill="none" r="16" stroke-dasharray="14, 100" stroke-dashoffset="-82" stroke-width="4"></circle>
-                                <circle class="stroke-secondary" cx="18" cy="18" fill="none" r="16" stroke-dasharray="4, 100" stroke-dashoffset="-96" stroke-width="4"></circle>
-                            </svg>
-                            <div class="absolute inset-0 flex flex-col items-center justify-center">
-                                <span class="text-2xl font-black text-on-surface tracking-tighter">1.2k</span>
-                                <span class="text-[9px] uppercase tracking-widest font-bold opacity-50">Total</span>
-                            </div>
-                        </div>
+                    <h4 class="text-lg font-bold text-on-surface mb-6">Top 15 Barangays by Incidence</h4>
+                    @if(isset($topBarangays) && $topBarangays->count() > 0)
                         <div class="space-y-3">
-                            <div class="flex items-center gap-3">
-                                <div class="w-4 h-4 rounded bg-primary"></div>
-                                <div class="text-xs">
-                                    <p class="font-bold">Dogs</p>
-                                    <p class="text-[10px] text-on-surface-variant/60">1,023 cases (82%)</p>
+                            @foreach($topBarangays as $b)
+                                @php
+                                    $percentage = $maxBarangayTotal > 0 ? round(($b->total / $maxBarangayTotal) * 100) : 0;
+                                @endphp
+                                <div class="flex items-center gap-3">
+                                    <span class="w-28 text-xs font-bold text-on-surface-variant text-right truncate" title="{{ $b->barangay }}">{{ $b->barangay }}</span>
+                                    <div class="flex-1 h-3 bg-surface-container-highest rounded-full overflow-hidden">
+                                        <div class="h-full bg-primary transition-all duration-500" style="width: {{ $percentage }}%;"></div>
+                                    </div>
+                                    <span class="w-8 text-[10px] font-bold text-on-surface-variant">{{ number_format($b->total) }}</span>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <p class="text-sm text-on-surface-variant text-center py-6">No data available for the selected filters.</p>
+                    @endif
+                </div>
+
+                <div class="col-span-12 md:col-span-6 flex flex-col gap-8">
+                    
+                    <!-- 1. Tabbed Demographics Card (Exposure, Sex, Animal - 3 Colors na) -->
+                    <div class="bg-surface-container-lowest p-8 rounded-xl border border-outline-variant/10 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-6">
+                                <h4 class="text-lg font-bold text-on-surface">Demographic & Exposure Breakdown</h4>
+                                <div class="flex bg-surface-container-high p-1 rounded-lg">
+                                    <button onclick="switchDemographicTab('exposure')" id="tab-exposure" class="px-3 py-1 text-xs font-bold rounded-md bg-primary text-white shadow-sm transition-all">Exposure</button>
+                                    <button onclick="switchDemographicTab('sex')" id="tab-sex" class="px-3 py-1 text-xs font-bold rounded-md text-on-surface-variant transition-all">Sex</button>
+                                    <button onclick="switchDemographicTab('animal')" id="tab-animal" class="px-3 py-1 text-xs font-bold rounded-md text-on-surface-variant transition-all">Animal</button>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-3">
-                                <div class="w-4 h-4 rounded bg-[#D4AF37]"></div>
-                                <div class="text-xs">
-                                    <p class="font-bold">Cats</p>
-                                    <p class="text-[10px] text-on-surface-variant/60">175 cases (14%)</p>
+
+                            <!-- TAB 1: Exposure Category Content -->
+                            <div id="content-exposure" class="demographic-tab-content flex items-center justify-between">
+                                <div class="space-y-1">
+                                    <div class="flex items-center gap-2 text-xs font-bold"><span class="w-2 h-2 rounded-full bg-primary"></span> Category III ({{ $cat3Pct ?? 0 }}%)</div>
+                                    <div class="flex items-center gap-2 text-xs font-bold"><span class="w-2 h-2 rounded-full bg-secondary"></span> Category II ({{ $cat2Pct ?? 0 }}%)</div>
+                                    <div class="flex items-center gap-2 text-xs font-bold"><span class="w-2 h-2 rounded-full bg-outline"></span> Category I ({{ $cat1Pct ?? 0 }}%)</div>
+                                </div>
+                                <div class="relative w-28 h-28">
+                                    <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                                        <circle class="stroke-outline/20" cx="18" cy="18" fill="none" r="16" stroke-width="4"></circle>
+                                        <circle class="stroke-primary" cx="18" cy="18" fill="none" r="16" stroke-dasharray="{{ $cat3Pct ?? 0 }}, 100" stroke-width="4"></circle>
+                                        <circle class="stroke-secondary" cx="18" cy="18" fill="none" r="16" stroke-dasharray="{{ $cat2Pct ?? 0 }}, 100" stroke-dashoffset="-{{ $cat3Pct ?? 0 }}" stroke-width="4"></circle>
+                                    </svg>
+                                    <div class="absolute inset-0 flex items-center justify-center font-black text-primary text-base tracking-tighter">{{ $cat3Pct ?? 0 }}%</div>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-3">
-                                <div class="w-4 h-4 rounded bg-secondary"></div>
-                                <div class="text-xs">
-                                    <p class="font-bold">Others</p>
-                                    <p class="text-[10px] text-on-surface-variant/60">50 cases (4%)</p>
+
+                            <!-- TAB 2: Sex Distribution Content -->
+                            <div id="content-sex" class="demographic-tab-content hidden flex items-center justify-between">
+                                <div class="space-y-1">
+                                    <div class="flex items-center gap-2 text-xs font-bold"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Male ({{ $malePct ?? 0 }}%)</div>
+                                    <div class="flex items-center gap-2 text-xs font-bold"><span class="w-2 h-2 rounded-full bg-pink-400"></span> Female ({{ $femalePct ?? 0 }}%)</div>
+                                </div>
+                                <div class="relative w-28 h-28">
+                                    <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                                        <circle class="stroke-pink-400" cx="18" cy="18" fill="none" r="16" stroke-width="4"></circle>
+                                        <circle class="stroke-blue-500" cx="18" cy="18" fill="none" r="16" stroke-dasharray="{{ $malePct ?? 0 }}, 100" stroke-width="4"></circle>
+                                    </svg>
+                                    <div class="absolute inset-0 flex items-center justify-center font-black text-on-surface text-base tracking-tighter">{{ $malePct ?? 0 }}:{{ $femalePct ?? 0 }}</div>
+                                </div>
+                            </div>
+
+                            <!-- TAB 3: Animal Type Content (3 Kolor na: Dogs, Cats, Others) -->
+                            <div id="content-animal" class="demographic-tab-content hidden flex items-center justify-between">
+                                <div class="space-y-2">
+                                    <div class="flex items-center gap-2 text-xs font-bold"><span class="w-2 h-2 rounded-full bg-primary"></span> Dogs ({{ $dogPct ?? 0 }}%)</div>
+                                    <div class="flex items-center gap-2 text-xs font-bold"><span class="w-2 h-2 rounded-full bg-[#D4AF37]"></span> Cats ({{ $catAnimalPct ?? 0 }}%)</div>
+                                    <div class="flex items-center gap-2 text-xs font-bold"><span class="w-2 h-2 rounded-full bg-secondary"></span> Others ({{ $otherAnimalPct ?? 0 }}%)</div>
+                                </div>
+                                <div class="relative w-28 h-28">
+                                    <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                                        <circle class="stroke-outline/10" cx="18" cy="18" fill="none" r="16" stroke-width="4"></circle>
+                                        <circle class="stroke-primary" cx="18" cy="18" fill="none" r="16" stroke-dasharray="{{ $dogPct ?? 0 }}, 100" stroke-width="4"></circle>
+                                        <circle class="stroke-[#D4AF37]" cx="18" cy="18" fill="none" r="16" stroke-dasharray="{{ $catAnimalPct ?? 0 }}, 100" stroke-dashoffset="-{{ $dogPct ?? 0 }}" stroke-width="4"></circle>
+                                        <circle class="stroke-secondary" cx="18" cy="18" fill="none" r="16" stroke-dasharray="{{ $otherAnimalPct ?? 0 }}, 100" stroke-dashoffset="-{{ ($dogPct ?? 0) + ($catAnimalPct ?? 0) }}" stroke-width="4"></circle>
+                                    </svg>
+                                    <div class="absolute inset-0 flex items-center justify-center font-black text-on-surface text-base tracking-tighter">{{ number_format($analyticsTotalBites ?? 0) }}</div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    <script>
+                        function switchDemographicTab(tab) {
+                            document.querySelectorAll('.demographic-tab-content').forEach(el => el.classList.add('hidden'));
+                            ['exposure', 'sex', 'animal'].forEach(t => {
+                                const btn = document.getElementById('tab-' + t);
+                                btn.className = "px-3 py-1 text-xs font-bold rounded-md text-on-surface-variant transition-all";
+                            });
+                            document.getElementById('content-' + tab).classList.remove('hidden');
+                            document.getElementById('tab-' + tab).className = "px-3 py-1 text-xs font-bold rounded-md bg-primary text-white shadow-sm transition-all";
+                        }
+                    </script>
+
+                    <!-- 2. Age Group Distribution (DIREKTA NA NGA NAKAPAHIMUTANG SA ILAWOM SA DEMOGRAPHICS) -->
+                    <div class="bg-surface-container-lowest p-8 rounded-xl border border-outline-variant/10 shadow-sm">
+                        <h4 class="text-lg font-bold text-on-surface mb-6">Age Group Distribution</h4>
+                        <div class="flex items-end h-48 gap-4 px-4">
+                            <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end">
+                                <div class="w-full bg-primary/20 rounded-t-lg transition-all duration-500" style="height: {{ $age0_12_pct ?? 0 }}%;"></div>
+                                <span class="text-[10px] font-bold text-on-surface-variant">0-12 ({{ $age0_12 ?? 0 }})</span>
+                            </div>
+                            <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end">
+                                <div class="w-full bg-primary/40 rounded-t-lg transition-all duration-500" style="height: {{ $age13_19_pct ?? 0 }}%;"></div>
+                                <span class="text-[10px] font-bold text-on-surface-variant">13-19 ({{ $age13_19 ?? 0 }})</span>
+                            </div>
+                            <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end">
+                                <div class="w-full bg-primary rounded-t-lg transition-all duration-500" style="height: {{ $age20_39_pct ?? 0 }}%;"></div>
+                                <span class="text-[10px] font-bold text-on-surface-variant">20-39 ({{ $age20_39 ?? 0 }})</span>
+                            </div>
+                            <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end">
+                                <div class="w-full bg-primary/60 rounded-t-lg transition-all duration-500" style="height: {{ $age40_59_pct ?? 0 }}%;"></div>
+                                <span class="text-[10px] font-bold text-on-surface-variant">40-59 ({{ $age40_59 ?? 0 }})</span>
+                            </div>
+                            <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end">
+                                <div class="w-full bg-primary/30 rounded-t-lg transition-all duration-500" style="height: {{ $age60_up_pct ?? 0 }}%;"></div>
+                                <span class="text-[10px] font-bold text-on-surface-variant">60+ ({{ $age60_up ?? 0 }})</span>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
-            <!-- SECTION 5 — EXPORT HUB -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-primary/5 p-8 rounded-xl border border-primary/10 flex items-center justify-between group hover:bg-primary/10 transition-all cursor-pointer">
-                    <div class="flex items-center gap-4">
-                        <div class="w-14 h-14 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
-                            <span class="material-symbols-outlined text-3xl">table_view</span>
-                        </div>
-                        <div>
-                            <h5 class="text-xl font-bold text-primary">Detailed Monthly Export</h5>
-                            <p class="text-sm text-on-surface-variant">Download full line-listing for internal auditing.</p>
-                        </div>
-                    </div>
-                    <div class="flex flex-col items-end">
-                        <span class="text-[10px] font-black uppercase text-primary/60 mb-2">Format: CSV</span>
-                        <span class="material-symbols-outlined text-primary group-hover:translate-x-1 transition-transform">download</span>
-                    </div>
-                </div>
-                <div class="bg-[#D4AF37]/5 p-8 rounded-xl border border-[#D4AF37]/10 flex items-center justify-between group hover:bg-[#D4AF37]/10 transition-all cursor-pointer">
-                    <div class="flex items-center gap-4">
-                        <div class="w-14 h-14 rounded-xl bg-[#D4AF37] flex items-center justify-center text-white shadow-lg shadow-yellow-700/20">
-                            <span class="material-symbols-outlined text-3xl">picture_as_pdf</span>
-                        </div>
-                        <div>
-                            <h5 class="text-xl font-bold text-[#D4AF37]">Download Summary PDF</h5>
-                            <p class="text-sm text-on-surface-variant">Formatted executive summary for stakeholder review.</p>
-                        </div>
-                    </div>
-                    <div class="flex flex-col items-end">
-                        <span class="text-[10px] font-black uppercase text-[#D4AF37]/60 mb-2">Format: PDF</span>
-                        <span class="material-symbols-outlined text-[#D4AF37] group-hover:translate-x-1 transition-transform">download</span>
-                    </div>
-                </div>
-            </div>
-            <!-- SECTION 6 — ANNUAL SUMMARY TABLE -->
+
+            <!-- COLLAPSIBLE ACCORDION FOR EXPORTS & ANNUAL MATRIX TABLE -->
             <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/10 shadow-sm overflow-hidden mb-8">
-                <div class="p-6 border-b border-outline-variant/10 flex justify-between items-center">
-                    <h4 class="text-lg font-bold text-on-surface tracking-tight">Annual Matrix Summary</h4>
-                    <div class="flex gap-2">
-                        <span class="px-3 py-1 bg-surface-container rounded-full text-[10px] font-bold text-on-surface-variant">FY 2023</span>
+                <button onclick="toggleAccordion()" class="w-full p-6 bg-surface-container-low flex justify-between items-center text-left hover:bg-surface-container transition-colors">
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-primary">table_chart</span>
+                        <div>
+                            <h4 class="text-base font-bold text-on-surface tracking-tight">Annual Matrix Summary & Data Exports</h4>
+                            <p class="text-xs text-on-surface-variant">Click to expand detailed reports, exports, and historical matrix data.</p>
+                        </div>
+                    </div>
+                    <span id="accordion-icon" class="material-symbols-outlined transition-transform duration-300">expand_more</span>
+                </button>
+
+               <div id="accordion-content" class="hidden p-6 space-y-8 border-t border-outline-variant/10">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                        <a href="{{ route('admin.export.monthly', [
+                                'month' => request('month', date('m')),
+                                'year'  => request('year', date('Y')),
+                            ]) }}"
+                        class="bg-primary/5 p-6 rounded-xl border border-primary/10 flex items-center justify-between group hover:bg-primary/15 transition-all cursor-pointer">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
+                                    <span class="material-symbols-outlined text-2xl">table_view</span>
+                                </div>
+                                <div>
+                                    <h5 class="text-lg font-bold text-primary">Detailed Monthly Export</h5>
+                                    <p class="text-xs text-on-surface-variant">Download full line-listing for internal auditing.</p>
+                                </div>
+                            </div>
+                            <div class="flex flex-col items-end">
+                                <span class="text-[10px] font-black uppercase text-primary/60 mb-1">Format: CSV</span>
+                                <span class="material-symbols-outlined text-primary group-hover:translate-x-1 transition-transform">download</span>
+                            </div>
+                        </a>
+
                     </div>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm border-collapse">
-                        <thead>
-                            <tr class="bg-surface-container-low text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/70">
-                                <th class="p-4 sticky left-0 bg-surface-container-low z-10">Dimension</th>
-                                <th class="p-4">Jan</th>
-                                <th class="p-4">Feb</th>
-                                <th class="p-4">Mar</th>
-                                <th class="p-4">Apr</th>
-                                <th class="p-4">May</th>
-                                <th class="p-4">Jun</th>
-                                <th class="p-4">Jul</th>
-                                <th class="p-4">Aug</th>
-                                <th class="p-4 bg-primary/5 text-primary">YTD</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-outline-variant/5">
-                            <tr>
-                                <td class="p-4 font-bold text-primary sticky left-0 bg-white z-10">Sex: Male</td>
-                                <td class="p-4">88</td>
-                                <td class="p-4">92</td>
-                                <td class="p-4">76</td>
-                                <td class="p-4">102</td>
-                                <td class="p-4">84</td>
-                                <td class="p-4">91</td>
-                                <td class="p-4">105</td>
-                                <td class="p-4">98</td>
-                                <td class="p-4 font-black bg-primary/5">736</td>
-                            </tr>
-                            <tr>
-                                <td class="p-4 font-bold text-primary sticky left-0 bg-white z-10">Sex: Female</td>
-                                <td class="p-4">82</td>
-                                <td class="p-4">88</td>
-                                <td class="p-4">70</td>
-                                <td class="p-4">95</td>
-                                <td class="p-4">78</td>
-                                <td class="p-4">86</td>
-                                <td class="p-4">99</td>
-                                <td class="p-4">92</td>
-                                <td class="p-4 font-black bg-primary/5">690</td>
-                            </tr>
-                            <tr class="bg-surface-container-lowest/50">
-                                <td class="p-4 font-bold text-secondary sticky left-0 bg-slate-50/50 z-10">Age Group: 0-12</td>
-                                <td class="p-4">42</td>
-                                <td class="p-4">38</td>
-                                <td class="p-4">45</td>
-                                <td class="p-4">50</td>
-                                <td class="p-4">39</td>
-                                <td class="p-4">41</td>
-                                <td class="p-4">44</td>
-                                <td class="p-4">46</td>
-                                <td class="p-4 font-black bg-primary/5">345</td>
-                            </tr>
-                            <tr>
-                                <td class="p-4 font-bold text-on-surface-variant sticky left-0 bg-white z-10">Animal: Stray</td>
-                                <td class="p-4">110</td>
-                                <td class="p-4">115</td>
-                                <td class="p-4">98</td>
-                                <td class="p-4">124</td>
-                                <td class="p-4">108</td>
-                                <td class="p-4">112</td>
-                                <td class="p-4">130</td>
-                                <td class="p-4">122</td>
-                                <td class="p-4 font-black bg-primary/5">919</td>
-                            </tr>
-                            <tr>
-                                <td class="p-4 font-bold text-error sticky left-0 bg-white z-10">Cat III Exposure</td>
-                                <td class="p-4">98</td>
-                                <td class="p-4">104</td>
-                                <td class="p-4">89</td>
-                                <td class="p-4">112</td>
-                                <td class="p-4">96</td>
-                                <td class="p-4">102</td>
-                                <td class="p-4">118</td>
-                                <td class="p-4">110</td>
-                                <td class="p-4 font-black bg-primary/5">829</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
             </div>
+
+            @else
+                <!-- 👉 KINI ANG MOGAWAS KUNG WALA PA NAKA-APPLY SA FILTERS (BLANK / PLACEHOLDER STATE) -->
+                <div class="bg-surface-container-lowest rounded-xl p-12 text-center border border-outline-variant/10 shadow-sm space-y-4">
+                    <div class="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto">
+                        <span class="material-symbols-outlined text-3xl">filter_alt</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-on-surface">No Filters Applied Yet</h3>
+                    <p class="text-sm text-on-surface-variant max-w-md mx-auto">
+                        Palihug pagpili og period grouping o ubang filters sa taas unya i-klik ang <strong>"Apply Filters"</strong> aron makita ang analytics ug mga charts.
+                    </p>
+                </div>
+            @endif
+
+            <script>
+                function toggleAccordion() {
+                    const content = document.getElementById('accordion-content');
+                    const icon = document.getElementById('accordion-icon');
+                    content.classList.toggle('hidden');
+                    icon.classList.toggle('rotate-180');
+                }
+                document.addEventListener('DOMContentLoaded', function () {
+        // Kunin ang kasalukuyang group mula sa URL query parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentGroup = urlParams.get('group') || 'monthly';
+
+        // Hanapin ang download button at i-update ang href nito gamit ang saktong route
+        const downloadBtn = document.getElementById('download-report-btn');
+        if (downloadBtn) {
+            // Gigamit nato ang Laravel route helper nga walay error
+            let baseUrl = "{{ route('admin.generate.report') }}";
+            downloadBtn.href = baseUrl + '?group=' + currentGroup;
+        }
+    });
+            </script>
         </div>
     </main>
 </body>

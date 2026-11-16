@@ -81,94 +81,74 @@ class visualAnalyticsController extends Controller
     $age40_59_pct = round(($age40_59 / $maxAgeCount) * 100);
     $age60_up_pct = round(($age60_up / $maxAgeCount) * 100);
 
-    // --- CHART PERIOD GROUPING LOGIC (Total, New, Returning) ---
+    // --- CHART (Total, New, Returning) ---
+    // Every bucket is counted from the filters WITHOUT the period window, so each day / week / month /
+    // quarter / year shows its own data (the window only decides what the KPI cards add up).
     $group = $request->get('group');
+    $ctx = $this->analyticsContext($request);
+    $chartBase = $this->analyticsQuery($request, false);
+    $col = 'inflow_general_particulars.queue_date';
+    $year = $ctx['year'];
+    $anchor = $ctx['anchor'];
+
     $totalCasesData = [];
     $newCasesData = [];
     $returningCasesData = [];
     $chartLabels = [];
+    $addBucket = function ($bucketQuery) use (&$totalCasesData, &$newCasesData, &$returningCasesData) {
+        $totalCasesData[] = (clone $bucketQuery)->count();
+        $newCasesData[] = (clone $bucketQuery)->where('bite_cases.case_number', 1)->count();
+        $returningCasesData[] = (clone $bucketQuery)->where('bite_cases.case_number', '>', 1)->count();
+    };
 
     if ($group == 'daily') {
+        // the 7 days ending on the "as of" day
         for ($i = 6; $i >= 0; $i--) {
-            $date = now()->subDays($i)->toDateString();
-            $chartLabels[] = date('M d', strtotime($date));
-            
-            $dayQuery = (clone $query)->whereDate('inflow_general_particulars.queue_date', $date);
-            $totalCasesData[] = (clone $dayQuery)->count();
-            $newCasesData[] = (clone $dayQuery)->where('bite_cases.case_number', 1)->count();
-            $returningCasesData[] = (clone $dayQuery)->where('bite_cases.case_number', '>', 1)->count();
+            $day = $anchor->copy()->subDays($i);
+            $chartLabels[] = $day->format('M d');
+            $addBucket((clone $chartBase)->whereDate($col, $day->toDateString()));
         }
+        $chartSubtitle = $anchor->copy()->subDays(6)->format('M d') . ' – ' . $anchor->format('M d, Y');
     } elseif ($group == 'weekly') {
-    $currentMonth = (int) date('m');
-    $currentYear  = (int) date('Y');
-
-    // Mosugod sa 1st sa bulan, mo-reset sa Wk 1 kada bag-ong bulan
-    $startOfMonth = \Carbon\Carbon::create($currentYear, $currentMonth, 1)->startOfMonth();
-    $endOfMonth   = $startOfMonth->copy()->endOfMonth();
-
-    $weekCount = 1;
-    $iter = $startOfMonth->copy();
-
-    while ($iter->lte($endOfMonth)) {
-        $weekStart = $iter->copy();
-        // 7 ka adlaw, apan dili molapas sa katapusan sa bulan
-        $weekEnd = $iter->copy()->addDays(6)->min($endOfMonth);
-
-        $chartLabels[] = 'Wk ' . $weekCount;
-
-        $wkQuery = (clone $query)->whereBetween(
-            'inflow_general_particulars.queue_date',
-            [$weekStart->toDateString(), $weekEnd->toDateString()]
-        );
-
-        $totalCasesData[]     = (clone $wkQuery)->count();
-        $newCasesData[]       = (clone $wkQuery)->where('bite_cases.case_number', 1)->count();
-        $returningCasesData[] = (clone $wkQuery)->where('bite_cases.case_number', '>', 1)->count();
-
-        $weekCount++;
-        $iter->addDays(7);
-    }
-
-    
+        // 7-day blocks of the "as of" month (Wk 1 starts on the 1st)
+        $startOfMonth = $anchor->copy()->startOfMonth();
+        $endOfMonth = $anchor->copy()->endOfMonth();
+        $iter = $startOfMonth->copy();
+        $weekCount = 1;
+        while ($iter->lte($endOfMonth)) {
+            $weekEnd = $iter->copy()->addDays(6)->min($endOfMonth);
+            $chartLabels[] = 'Wk ' . $weekCount;
+            $addBucket((clone $chartBase)->whereBetween($col, [$iter->toDateString(), $weekEnd->toDateString()]));
+            $weekCount++;
+            $iter->addDays(7);
+        }
+        $chartSubtitle = $anchor->format('F Y');
     } elseif ($group == 'quarterly') {
         $chartLabels = ['Q1 (Jan-Mar)', 'Q2 (Apr-Jun)', 'Q3 (Jul-Sep)', 'Q4 (Oct-Dec)'];
-        $currentYear = date('Y');
         for ($q = 1; $q <= 4; $q++) {
-            $startMonth = ($q - 1) * 3 + 1;
-            $endMonth = $q * 3;
-            $qQuery = (clone $query)
-                ->whereYear('inflow_general_particulars.queue_date', $currentYear)
-                ->whereMonth('inflow_general_particulars.queue_date', '>=', $startMonth)
-                ->whereMonth('inflow_general_particulars.queue_date', '<=', $endMonth);
-
-            $totalCasesData[] = (clone $qQuery)->count();
-            $newCasesData[] = (clone $qQuery)->where('bite_cases.case_number', 1)->count();
-            $returningCasesData[] = (clone $qQuery)->where('bite_cases.case_number', '>', 1)->count();
+            $from = Carbon::create($year, ($q - 1) * 3 + 1, 1)->startOfMonth();
+            $to = $from->copy()->addMonths(2)->endOfMonth();
+            $addBucket((clone $chartBase)->whereBetween($col, [$from->toDateString(), $to->toDateString()]));
         }
+        $chartSubtitle = (string) $year;
     } elseif ($group == 'yearly') {
-        $currentYear = date('Y');
-        for ($y = 4; $y >= 0; $y--) {
-            $targetYear = $currentYear - $y;
+        // every year that has data
+        $chartYears = $ctx['chart_years'];
+        foreach ($chartYears as $targetYear) {
             $chartLabels[] = (string) $targetYear;
-            
-            $yrQuery = (clone $query)->whereYear('inflow_general_particulars.queue_date', $targetYear);
-            $totalCasesData[] = (clone $yrQuery)->count();
-            $newCasesData[] = (clone $yrQuery)->where('bite_cases.case_number', 1)->count();
-            $returningCasesData[] = (clone $yrQuery)->where('bite_cases.case_number', '>', 1)->count();
+            $addBucket((clone $chartBase)->whereYear($col, $targetYear));
         }
+        $chartSubtitle = count($chartYears) > 1 ? $chartYears[0] . ' – ' . end($chartYears) : (string) $chartYears[0];
     } else {
-        // Default: Monthly breakdown
+        // Default / Monthly: the 12 months of the selected year
         $chartLabels = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
         for ($m = 1; $m <= 12; $m++) {
-            $mQuery = (clone $query)
-                ->whereYear('inflow_general_particulars.queue_date', date('Y'))
-                ->whereMonth('inflow_general_particulars.queue_date', $m);
-
-            $totalCasesData[] = (clone $mQuery)->count();
-            $newCasesData[] = (clone $mQuery)->where('bite_cases.case_number', 1)->count();
-            $returningCasesData[] = (clone $mQuery)->where('bite_cases.case_number', '>', 1)->count();
+            $addBucket((clone $chartBase)->whereYear($col, $year)->whereMonth($col, $m));
         }
+        $chartSubtitle = (string) $year;
     }
+    $analyticsYears = $ctx['years'];
+    $yearUi = $ctx['year_ui'];
 
     // --- TOP BARANGAYS RANKING (Limit to Top 15) ---
     $topBarangays = (clone $query)
@@ -193,6 +173,9 @@ class visualAnalyticsController extends Controller
         'newCasesData',
         'returningCasesData',
         'chartLabels',
+        'chartSubtitle',
+        'analyticsYears',
+        'yearUi',
         'topBarangays',
         'maxBarangayTotal',
         'cat1Pct',
@@ -306,7 +289,7 @@ public function generateReport(Request $request)
 
     // --- 2. INDIVIDUAL FILTERS ---
     if ($request->filled('health_area')) {
-        $query->where('inflow_general_particulars.barangay', 'LIKE', '%' . $request->health_area . '%');
+        $this->applyHealthArea($query, $request->health_area);
         $appliedFilters['Health Area'] = $request->health_area;
     }
     if ($request->filled('barangay')) {
@@ -451,73 +434,149 @@ public function generateReport(Request $request)
     /**
      * The rows behind the Visual Analytics page with the page's filters applied.
      * Used by the page and by the CSV export, so both always show the same results.
+     *
+     * $withWindow = false leaves out the period window (see analyticsContext) - the chart uses that
+     * and cuts its own buckets.
      */
-    private function analyticsQuery(Request $request)
+    private function analyticsQuery(Request $request, bool $withWindow = true)
     {
-    $query = DB::table('inflow_general_particulars')
-        ->leftJoin('bite_cases', 'inflow_general_particulars.inflow_record_id', '=', 'bite_cases.inflow_record_id');
+        $query = DB::table('inflow_general_particulars')
+            ->leftJoin('bite_cases', 'inflow_general_particulars.inflow_record_id', '=', 'bite_cases.inflow_record_id');
+        $col = 'inflow_general_particulars.queue_date';
 
-    // --- APPLY FILTERS ---
-    if ($request->filled('date_from')) {
-        $query->whereDate('inflow_general_particulars.queue_date', '>=', $request->date_from);
-    }
-    if ($request->filled('date_to')) {
-        $query->whereDate('inflow_general_particulars.queue_date', '<=', $request->date_to);
-    }
-    if ($request->filled('health_area')) {
-        // Assuming health area is mapped or checked via barangay/location if applicable
-        $query->where('inflow_general_particulars.barangay', 'LIKE', '%' . $request->health_area . '%');
-    }
-    if ($request->filled('barangay')) {
-        $query->where('inflow_general_particulars.barangay', 'LIKE', '%' . $request->barangay . '%');
-    }
-    if ($request->filled('sex') && $request->sex != 'All') {
-        $query->where('inflow_general_particulars.sex', $request->sex);
-    }
-    if ($request->filled('age_min')) {
-        $query->where('inflow_general_particulars.age', '>=', $request->age_min);
-    }
-    if ($request->filled('age_max')) {
-        $query->where('inflow_general_particulars.age', '<=', $request->age_max);
-    }
-
-        $group = $request->get('group');
-        if (!$request->filled('date_from') && !$request->filled('date_to')) {
-            if ($group == 'daily') {
-                // Direkta na nga karong adlawa ra gyud ang i-filter. Kung walay record, mo-zero dayon.
-                $query->whereDate('inflow_general_particulars.queue_date', today());
-         } elseif ($group == 'weekly') {
-            // Current week lang: 7-adlaw nga block gikan sa 1st sa bulan (parehas sa chart)
-            $today        = now();
-            $startOfMonth = $today->copy()->startOfMonth();
-            $endOfMonth   = $today->copy()->endOfMonth();
-
-            $currentWeek = (int) ceil($today->day / 7);   // Nov 14 = Wk 2
-            $weekStart   = $startOfMonth->copy()->addDays(7 * ($currentWeek - 1));
-            $weekEnd     = $weekStart->copy()->addDays(6)->min($endOfMonth);
-
-            $query->whereBetween('inflow_general_particulars.queue_date', [
-                $weekStart->toDateString(),
-                $weekEnd->toDateString(),
-            ]);
-
-        } elseif ($group == 'monthly') {
-            $query->whereYear('inflow_general_particulars.queue_date', date('Y'))
-                  ->whereMonth('inflow_general_particulars.queue_date', date('m'));
-        } elseif ($group == 'quarterly') {
-            $query->where('inflow_general_particulars.queue_date', '>=', now()->subMonths(3));
-        } elseif ($group == 'yearly') {
-            $query->whereYear('inflow_general_particulars.queue_date', date('Y'));
+        // --- APPLY FILTERS ---
+        if ($request->filled('date_from')) {
+            $query->whereDate($col, '>=', $request->date_from);
         }
+        if ($request->filled('date_to')) {
+            $query->whereDate($col, '<=', $request->date_to);
+        }
+        if ($request->filled('health_area')) {
+            $this->applyHealthArea($query, $request->health_area);
+        }
+        if ($request->filled('barangay')) {
+            $query->where('inflow_general_particulars.barangay', 'LIKE', '%' . $request->barangay . '%');
+        }
+        if ($request->filled('sex') && $request->sex != 'All') {
+            $query->where('inflow_general_particulars.sex', $request->sex);
+        }
+        if ($request->filled('age_min')) {
+            $query->where('inflow_general_particulars.age', '>=', $request->age_min);
+        }
+        if ($request->filled('age_max')) {
+            $query->where('inflow_general_particulars.age', '<=', $request->age_max);
+        }
+
+        // --- PERIOD WINDOW: the span the chart shows, so the KPI cards add up what the chart plots ---
+        if ($withWindow && !$request->filled('date_from') && !$request->filled('date_to')) {
+            $ctx = $this->analyticsContext($request);
+            $anchor = $ctx['anchor'];
+            $group = $request->get('group');
+
+            if ($group == 'daily') {
+                $query->whereBetween($col, [$anchor->copy()->subDays(6)->toDateString(), $anchor->toDateString()]);
+            } elseif ($group == 'weekly') {
+                $query->whereBetween($col, [$anchor->copy()->startOfMonth()->toDateString(), $anchor->copy()->endOfMonth()->toDateString()]);
+            } elseif ($ctx['filter_year']) {
+                // monthly / quarterly / yearly / no period: the selected year (nothing when "All years")
+                $query->whereYear($col, $ctx['year']);
+            }
+        }
+
+        return $query;
     }
 
-    if ($request->filled('health_area')) {
-        $query->where('inflow_general_particulars.barangay', 'LIKE', '%' . $request->health_area . '%');
+    /**
+     * Which year the Analytics page is looking at, and the "as of" day for the daily / weekly views.
+     *
+     *  - year: the year chosen in the filter bar; without a choice it is the current year when that
+     *    has data, otherwise the latest year that has data (so the page never opens on an empty year)
+     *  - anchor: today when the year is the current one, otherwise the last day of that year
+     *  - filter_year: whether the KPI cards are limited to that year ("All years" turns it off)
+     *  - years: the years offered in the filter bar; chart_years: every year with data, oldest first
+     */
+    private function analyticsContext(Request $request): array
+    {
+        // worked out once per request (kept on the request, so nothing is shared between requests)
+        if ($request->attributes->has("analytics_ctx")) {
+            return $request->attributes->get("analytics_ctx");
+        }
+        $today = today();
+
+        // years with data (a typo year far from the real range is not worth a chart bar)
+        $dataYears = DB::table('inflow_general_particulars')
+            ->whereNotNull('queue_date')
+            ->selectRaw('DISTINCT YEAR(queue_date) as y')
+            ->orderBy('y')
+            ->pluck('y')
+            ->map(fn ($y) => (int) $y)
+            ->filter(fn ($y) => $y >= 2000 && $y <= $today->year)
+            ->values()
+            ->all();
+
+        $latest = $dataYears ? max($dataYears) : $today->year;
+        $default = in_array($today->year, $dataYears, true) ? $today->year : $latest;
+
+        $param = $request->query('year');
+        $all = $param === 'all' || ($param === null && !$request->filled('group'));
+        $chosen = is_numeric($param) && in_array((int) $param, $dataYears, true) ? (int) $param : null;
+        $year = $chosen ?? $default;
+
+        $offered = $dataYears ?: [$today->year];
+        rsort($offered);
+
+        $ctx = [
+            'year' => $year,
+            'anchor' => $year === $today->year ? $today->copy() : Carbon::create($year, 12, 31),
+            'filter_year' => !$all,
+            'year_ui' => $all ? 'all' : (string) $year,
+            'years' => $offered,
+            'chart_years' => $dataYears ?: [$today->year],
+        ];
+        $request->attributes->set("analytics_ctx", $ctx);
+
+        return $ctx;
     }
 
-    return $query;
+    /**
+     * Health areas and their barangays (spelled as in config/barangays.php). Same grouping the annual
+     * barangay export uses.
+     */
+    private function healthAreaDefs(): array
+    {
+        return [
+            'CENTRAL HEALTH AREA' => ['color' => '#b4c7e7', 'barangays' => [
+                'Babag','Bo.Luz','Busay','Capitol','Carreta','Hipodromo','Kalunasan',
+                'Kamputhaw','Lahug','Malubog','Pung-ol','Sapangdaku']],
+            'EAST HEALTH AREA' => ['color' => '#f4b6b6', 'barangays' => [
+                'Cogon Ramos','Day-as','Ermita','Kalubihan','Kamagayan','Lorega','Pahina Central',
+                'Pari-an','Pasil','Sambag I','Sambag II','San Antonio','San Roque','Sta. Cruz',
+                'Sto. Niño','Suba','T.Padilla','Tejero','Tinago','Zapatera']],
+            'NORTH HEALTH AREA' => ['color' => '#c6e0b4', 'barangays' => [
+                'Adlaon','Agsungot','Apas','Bacayan','Banilad','Binaliw','Budlaan','Cambinocot',
+                'Guba','Kasambagan','Lusaran','Mabini','Mabolo','Paril','Pit-os','Pulangbato',
+                'San Jose','Sirao','Tabunan','Tagbao','Talamban','TapTap']],
+            'SOUTH HEALTH AREA' => ['color' => '#ffe699', 'barangays' => [
+                'Basak Pardo','Basak San Nicolas','Bonbon','Buhisan','Bulacao','Bout-Taup',
+                'Cogon Pardo','Inayawan','Kinasang-an','Mambaling','Pamutan','Pardo','Quiot',
+                'Sinsin','Sudlon I','Sudlon II','Toong']],
+            'WEST HEALTH AREA' => ['color' => '#d9c3e6', 'barangays' => [
+                'Calamba','Duljo','Guadalupe','Banawa','Labangon','Punta Princesa',
+                'San Nicolas Proper','San Nicolas Pahina','Sawang Calero','Tisa']],
+        ];
     }
 
+    /** Limits a query to the barangays of one health area ("North", "West", ...); an unknown area matches nothing. */
+    private function applyHealthArea($query, ?string $area): void
+    {
+        $defs = $this->healthAreaDefs();
+        $key = strtoupper(trim((string) $area)) . ' HEALTH AREA';
+        if (!isset($defs[$key])) {
+            $query->whereRaw('1 = 0');
+            return;
+        }
+        $query->whereIn('inflow_general_particulars.barangay', $defs[$key]['barangays']);
+    }
 public function exportMonthlyCsv(Request $request)
 {
     $year = (int) $request->get('year', date('Y'));
@@ -525,27 +584,8 @@ public function exportMonthlyCsv(Request $request)
     // Master list gikan sa config/barangays.php (wala usba)
     $masterList = array_keys(config('barangays'));
 
-    // Grouping sa health areas (diri na lang)
-    $areaDefs = [
-        'CENTRAL HEALTH AREA' => ['color' => '#b4c7e7', 'barangays' => [
-            'Babag','Bo.Luz','Busay','Capitol','Carreta','Hipodromo','Kalunasan',
-            'Kamputhaw','Lahug','Malubog','Pung-ol','Sapangdaku']],
-        'EAST HEALTH AREA' => ['color' => '#f4b6b6', 'barangays' => [
-            'Cogon Ramos','Day-as','Ermita','Kalubihan','Kamagayan','Lorega','Pahina Central',
-            'Pari-an','Pasil','Sambag I','Sambag II','San Antonio','San Roque','Sta. Cruz',
-            'Sto. Niño','Suba','T.Padilla','Tejero','Tinago','Zapatera']],
-        'NORTH HEALTH AREA' => ['color' => '#c6e0b4', 'barangays' => [
-            'Adlaon','Agsungot','Apas','Bacayan','Banilad','Binaliw','Budlaan','Cambinocot',
-            'Guba','Kasambagan','Lusaran','Mabini','Mabolo','Paril','Pit-os','Pulangbato',
-            'San Jose','Sirao','Tabunan','Tagbao','Talamban','TapTap']],
-        'SOUTH HEALTH AREA' => ['color' => '#ffe699', 'barangays' => [
-            'Basak Pardo','Basak San Nicolas','Bonbon','Buhisan','Bulacao','Bout-Taup',
-            'Cogon Pardo','Inayawan','Kinasang-an','Mambaling','Pamutan','Pardo','Quiot',
-            'Sinsin','Sudlon I','Sudlon II','Toong']],
-        'WEST HEALTH AREA' => ['color' => '#d9c3e6', 'barangays' => [
-            'Calamba','Duljo','Guadalupe','Banawa','Labangon','Punta Princesa',
-            'San Nicolas Proper','San Nicolas Pahina','Sawang Calero','Tisa']],
-    ];
+    // Health areas and their barangays (shared with the Analytics health-area filter)
+    $areaDefs = $this->healthAreaDefs();
 
     // Population kada barangay (cases / population x 1000). Pananglitan: 'Babag' => 6260,
     $population = [

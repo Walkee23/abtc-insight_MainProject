@@ -739,45 +739,49 @@
                     </div>
                     <span id="accordion-icon" class="material-symbols-outlined transition-transform duration-300">expand_more</span>
                 </button>
-<div id="accordion-content" class="hidden p-6 space-y-8 border-t border-outline-variant/10">
+@php
+    // the two annual files cover one whole year; offer every year that has data, newest first
+    $exportYears = !empty($analyticsYears) ? $analyticsYears : [(int) date('Y')];
+    $exportYear = in_array((int) ($rangeValues['year'] ?? 0), $exportYears, true) ? (int) $rangeValues['year'] : (int) $exportYears[0];
+    $exportCards = [
+        ['route' => 'admin.export.monthly', 'icon' => 'table_view', 'title' => 'Annual Barangay Export', 'text' => 'Animal bite cases per barangay, per month and quarter.'],
+        ['route' => 'admin.export.annual', 'icon' => 'summarize', 'title' => 'Annual Report', 'text' => 'Monthly and quarterly summary by sex, age, animal, category and PEP.'],
+    ];
+@endphp
+<div id="accordion-content" class="hidden p-6 space-y-6 border-t border-outline-variant/10">
+
+    {{-- Year to export --}}
+    <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+            <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant/60">Export Year</p>
+            <p class="text-xs text-on-surface-variant mt-1">Both annual files cover the whole selected year, January to December.</p>
+        </div>
+        <select id="exportYear" aria-label="Export year" class="w-36 h-9 bg-surface-container-highest border-none rounded-lg px-3 text-sm font-semibold focus:ring-2 focus:ring-primary/20">
+            @foreach ($exportYears as $yearOption)
+                <option value="{{ $yearOption }}" {{ (int) $yearOption === $exportYear ? 'selected' : '' }}>{{ $yearOption }}</option>
+            @endforeach
+        </select>
+    </div>
+
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-        {{-- CARD 1: Barangay Export --}}
-        <a href="{{ route('admin.export.monthly', ['year' => request('year', date('Y'))]) }}"
-           class="bg-primary/5 p-6 rounded-xl border border-primary/10 flex items-center justify-between group hover:bg-primary/15 transition-all cursor-pointer">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
-                    <span class="material-symbols-outlined text-2xl">table_view</span>
+        @foreach ($exportCards as $card)
+            <a href="{{ route($card['route'], ['year' => $exportYear]) }}" data-export-link data-base="{{ route($card['route']) }}"
+               class="group flex items-center gap-4 p-5 rounded-xl border border-primary/10 bg-primary/5 hover:bg-primary/10 hover:border-primary/20 transition-all cursor-pointer">
+                <div class="w-12 h-12 shrink-0 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
+                    <span class="material-symbols-outlined text-2xl">{{ $card['icon'] }}</span>
                 </div>
-                <div>
-                    <h5 class="text-lg font-bold text-primary">Annual Barangay Export</h5>
-                    <p class="text-xs text-on-surface-variant">Animal bite cases per barangay, per month and quarter.</p>
+                <div class="min-w-0 flex-1">
+                    <h5 class="text-lg font-bold text-primary leading-tight">{{ $card['title'] }}</h5>
+                    <p class="text-xs text-on-surface-variant leading-snug mt-1">{{ $card['text'] }}</p>
                 </div>
-            </div>
-            <div class="flex flex-col items-end">
-                <span class="text-[10px] font-black uppercase text-primary/60 mb-1">Format: EXCEL</span>
-                <span class="material-symbols-outlined text-primary group-hover:translate-x-1 transition-transform">download</span>
-            </div>
-        </a>
-
-        {{-- CARD 2: Annual Report --}}
-        <a href="{{ route('admin.export.annual', ['year' => request('year', date('Y'))]) }}"
-           class="bg-primary/5 p-6 rounded-xl border border-primary/10 flex items-center justify-between group hover:bg-primary/15 transition-all cursor-pointer">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
-                    <span class="material-symbols-outlined text-2xl">summarize</span>
+                <div class="shrink-0 flex flex-col items-end gap-2">
+                    <span class="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-primary whitespace-nowrap"><span data-export-year>{{ $exportYear }}</span>&nbsp;·&nbsp;Excel</span>
+                    <span class="w-9 h-9 rounded-full bg-white/80 text-primary flex items-center justify-center shadow-sm transition-colors group-hover:bg-primary group-hover:text-white">
+                        <span class="material-symbols-outlined text-[20px]">download</span>
+                    </span>
                 </div>
-                <div>
-                    <h5 class="text-lg font-bold text-primary">Annual Report</h5>
-                    <p class="text-xs text-on-surface-variant">Monthly and quarterly summary by sex, age, animal, category and PEP.</p>
-                </div>
-            </div>
-            <div class="flex flex-col items-end">
-                <span class="text-[10px] font-black uppercase text-primary/60 mb-1">Format: EXCEL</span>
-                <span class="material-symbols-outlined text-primary group-hover:translate-x-1 transition-transform">download</span>
-            </div>
-        </a>
-
+            </a>
+        @endforeach
     </div>
 </div>
             </div>
@@ -795,6 +799,21 @@
                 </div>
             @endif
 
+            <script>
+                // the year chosen for the annual exports goes into both download links (and the chip on each card)
+                document.addEventListener('DOMContentLoaded', function () {
+                    const select = document.getElementById('exportYear');
+                    if (!select) return;
+                    const sync = () => {
+                        document.querySelectorAll('[data-export-link]').forEach((a) => {
+                            a.href = a.dataset.base + '?year=' + encodeURIComponent(select.value);
+                        });
+                        document.querySelectorAll('[data-export-year]').forEach((s) => { s.textContent = select.value; });
+                    };
+                    select.addEventListener('change', sync);
+                    sync();
+                });
+            </script>
             <script>
                 function toggleAccordion() {
                     const content = document.getElementById('accordion-content');

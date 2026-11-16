@@ -652,7 +652,7 @@
                                         @endif
                                     </div>
                                     <div class="relative w-28 h-28 shrink-0">
-                                        <svg class="w-full h-full transform -rotate-90 overflow-visible" viewBox="0 0 36 36">
+                                        <svg class="w-full h-full transform -rotate-90 overflow-visible" viewBox="0 0 36 36" @if ($tabKey === 'sex') style="transform: scaleX(-1) rotate(-90deg);" @endif>
                                             <circle cx="18" cy="18" r="16" fill="none" stroke="#eceef0" stroke-width="4"></circle>
                                             @foreach ($d['segments'] as $i => $seg)
                                                 @if ($seg['frac'] > 0)
@@ -667,9 +667,12 @@
                                         </svg>
                                         <div class="absolute inset-0 flex flex-col items-center justify-center leading-none pointer-events-none">
                                             @if ($tabKey === 'sex')
-                                                {{-- the ratio of the two shares (they add up to 100), e.g. 47:53 --}}
-                                                <span class="font-black text-on-surface text-lg tracking-tighter tabular-nums">{{ $d['segments'][0]['pct'] ?? 0 }}:{{ $d['segments'][1]['pct'] ?? 0 }}</span>
-                                                <span class="text-[9px] font-bold uppercase tracking-wider text-on-surface-variant/60 mt-1">Male : Female</span>
+                                                {{-- the ratio of the two shares (they add up to 100), e.g. 47:53; Male is first, like the slice on the left --}}
+                                                @php $maleSeg = $d['segments'][0] ?? ['pct' => 0, 'color' => '#3b82f6']; $femaleSeg = $d['segments'][1] ?? ['pct' => 0, 'color' => '#f472b6']; @endphp
+                                                <span class="font-black text-lg tracking-tighter tabular-nums">
+                                                    <span style="color: {{ $maleSeg['color'] }};">{{ $maleSeg['pct'] }}</span><span class="text-on-surface-variant/50">:</span><span style="color: {{ $femaleSeg['color'] }};">{{ $femaleSeg['pct'] }}</span>
+                                                </span>
+                                                <span class="text-[8px] font-bold uppercase tracking-wide text-on-surface-variant/70 mt-1.5 whitespace-nowrap">Male : Female</span>
                                             @else
                                                 <span class="font-black text-on-surface text-base tracking-tighter">{{ number_format($d['total']) }}</span>
                                                 <span class="text-[9px] font-bold uppercase tracking-wider text-on-surface-variant/60 mt-1">Cases</span>

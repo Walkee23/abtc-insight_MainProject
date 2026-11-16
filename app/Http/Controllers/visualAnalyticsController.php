@@ -58,20 +58,27 @@ class visualAnalyticsController extends Controller
         'sex' => $this->donut([['Male', $maleCount, '#3b82f6'], ['Female', $femaleCount, '#f472b6']]),
         'animal' => $this->donut([['Dogs', $dogCount, '#004a93'], ['Cats', $catAnimalCount, '#D4AF37'], ['Others', $otherAnimalCount, '#8b95a5']]),
     ];
-    // --- AGE GROUP DISTRIBUTION COUNTS ---
-    $age0_12  = (clone $query)->whereBetween('inflow_general_particulars.age', [0, 12])->count();
-    $age13_19 = (clone $query)->whereBetween('inflow_general_particulars.age', [13, 19])->count();
-    $age20_39 = (clone $query)->whereBetween('inflow_general_particulars.age', [20, 39])->count();
-    $age40_59 = (clone $query)->whereBetween('inflow_general_particulars.age', [40, 59])->count();
-    $age60_up = (clone $query)->where('inflow_general_particulars.age', '>=', 60)->count();
-
-    $maxAgeCount = max([$age0_12, $age13_19, $age20_39, $age40_59, $age60_up]) ?: 1;
-    $age0_12_pct  = round(($age0_12 / $maxAgeCount) * 100);
-    $age13_19_pct = round(($age13_19 / $maxAgeCount) * 100);
-    $age20_39_pct = round(($age20_39 / $maxAgeCount) * 100);
-    $age40_59_pct = round(($age40_59 / $maxAgeCount) * 100);
-    $age60_up_pct = round(($age60_up / $maxAgeCount) * 100);
-
+    // --- AGE GROUP DISTRIBUTION ---
+    // One count per group; shares are of the cases that HAVE an age, and add up to exactly 100.
+    $ageGroups = [['0-12', 0, 12], ['13-19', 13, 19], ['20-39', 20, 39], ['40-59', 40, 59], ['60+', 60, 200]];
+    $ageSelect = [];
+    foreach ($ageGroups as $i => [$label, $from, $to]) {
+        $ageSelect[] = "COALESCE(SUM(inflow_general_particulars.age BETWEEN {$from} AND {$to}), 0) as g{$i}";
+    }
+    $ageRow = (clone $query)->selectRaw(implode(', ', $ageSelect))->first();
+    $ageCounts = [];
+    foreach ($ageGroups as $i => $g) {
+        $ageCounts[$i] = (int) ($ageRow->{'g' . $i} ?? 0);
+    }
+    $ageKnown = array_sum($ageCounts);
+    $ageShares = $this->shares($ageCounts, 1);
+    $ageMax = max($ageCounts) ?: 1;
+    $ageColors = ['#9fc0ee', '#6c9be0', '#2f78cf', '#0b4fa3', '#002d6b'];   // young -> old, lightest to darkest
+    $ageBars = [];
+    foreach ($ageGroups as $i => [$label]) {
+        $ageBars[] = ['label' => $label, 'count' => $ageCounts[$i], 'pct' => $ageShares[$i], 'height' => round($ageCounts[$i] / $ageMax * 100, 2), 'color' => $ageColors[$i]];
+    }
+    $ageChart = ['bars' => $ageBars, 'known' => $ageKnown, 'unknown' => max(0, $analyticsTotalBites - $ageKnown)];
     // --- CHART (Total, New, Returning) ---
     // One grouped query over the chosen range (filters applied, no other window); every bucket of the
     // range - day, week, month, quarter or year - is then filled from it, empty ones with zero.
@@ -106,15 +113,35 @@ class visualAnalyticsController extends Controller
     $rangeFrom = $ctx['from']->toDateString();
     $rangeTo = $ctx['to']->toDateString();
     // --- TOP BARANGAYS RANKING (Limit to Top 15) ---
+    // Exact counts per barangay; ties are ordered by name so the list never reshuffles. Every share is of ALL the
+    // cases matching the filters, and the cases of the remaining barangays (and places outside Cebu City) are
+    // added as "All others", so the shares add up to exactly 100%.
     $topBarangays = (clone $query)
         ->select('inflow_general_particulars.barangay', DB::raw('count(*) as total'))
         ->groupBy('inflow_general_particulars.barangay')
         ->orderByDesc('total')
+        ->orderBy('inflow_general_particulars.barangay')
         ->limit(15)
         ->get();
-    
-    $maxBarangayTotal = $topBarangays->max('total') ?: 1;
 
+    $topCounts = $topBarangays->pluck('total')->map(fn ($n) => (int) $n)->all();
+    $otherCases = max(0, $analyticsTotalBites - array_sum($topCounts));
+    $brgyShares = $this->shares(array_merge($topCounts, [$otherCases]), 1);
+    $brgyMax = max($topCounts ?: [1]) ?: 1;
+    $brgyRows = [];
+    foreach ($topBarangays as $i => $b) {
+        $name = trim((string) $b->barangay);
+        $brgyRows[] = ['name' => $name !== '' ? $name : 'Not recorded', 'count' => $topCounts[$i], 'pct' => $brgyShares[$i], 'width' => round($topCounts[$i] / $brgyMax * 100, 2)];
+    }
+    $barangayChart = [
+        'rows' => $brgyRows,
+        'total' => $analyticsTotalBites,
+        'other' => [
+            'count' => $otherCases,
+            'pct' => $brgyShares[count($topCounts)] ?? 0,
+            'places' => max(0, (clone $query)->distinct()->count('inflow_general_particulars.barangay') - count($topCounts)),
+        ],
+    ];
     return view('admin.V_and_A', compact(
         'analyticsTotalBites',
         'totalBites',
@@ -136,14 +163,9 @@ class visualAnalyticsController extends Controller
         'rangeNotice',
         'rangeFrom',
         'rangeTo',
-        'topBarangays',
-        'maxBarangayTotal',
-        'breakdowns',
-        'age0_12', 'age0_12_pct',
-        'age13_19', 'age13_19_pct',
-        'age20_39', 'age20_39_pct',
-        'age40_59', 'age40_59_pct',
-        'age60_up', 'age60_up_pct'
+        'barangayChart',
+        'ageChart',
+        'breakdowns'
     ));
 }
 
@@ -455,6 +477,37 @@ public function generateReport(Request $request)
         ]);
     }
     /**
+     * Shares of a set of counts, as percentages that add up to EXACTLY 100 (largest-remainder method):
+     * every share is rounded down to the wanted number of decimals, then the leftover hundredths go to the
+     * entries with the biggest remainders. Keys are kept. $decimals = 0 gives whole numbers.
+     */
+    private function shares(array $counts, int $decimals = 0): array
+    {
+        $total = array_sum($counts);
+        if ($total <= 0) {
+            return array_fill_keys(array_keys($counts), $decimals ? 0.0 : 0);
+        }
+        $scale = 10 ** $decimals;
+        $whole = 100 * $scale;
+        $floors = [];
+        $remainders = [];
+        foreach ($counts as $k => $c) {
+            $exact = $c / $total * $whole;
+            $floors[$k] = (int) floor($exact + 1e-9);
+            $remainders[$k] = $exact - $floors[$k];
+        }
+        $left = $whole - array_sum($floors);
+        arsort($remainders);
+        foreach (array_keys($remainders) as $k) {
+            if ($left <= 0) {
+                break;
+            }
+            $floors[$k]++;
+            $left--;
+        }
+        return array_map(fn ($v) => $decimals ? $v / $scale : (int) $v, $floors);
+    }
+    /**
      * Data for one donut chart. $parts = [[label, count, colour], ...].
      * Each slice gets its exact share (for drawing the arc) and a whole-number percentage for the legend;
      * the whole numbers use the largest-remainder method, so they always add up to exactly 100.
@@ -462,25 +515,15 @@ public function generateReport(Request $request)
     private function donut(array $parts): array
     {
         $total = array_sum(array_column($parts, 1));
+        $pcts = $this->shares(array_column($parts, 1), 0);
         $shares = [];
-        $floors = [];
         foreach ($parts as $i => [$label, $count, $color]) {
-            $exact = $total > 0 ? $count / $total * 100 : 0;
-            $shares[$i] = $exact;
-            $floors[$i] = (int) floor($exact);
-        }
-        if ($total > 0) {
-            $left = 100 - array_sum($floors);
-            $order = array_keys($shares);
-            usort($order, fn ($a, $b) => ($shares[$b] - $floors[$b]) <=> ($shares[$a] - $floors[$a]));
-            foreach (array_slice($order, 0, max(0, $left)) as $i) {
-                $floors[$i]++;
-            }
+            $shares[$i] = $total > 0 ? $count / $total * 100 : 0;
         }
 
         $segments = [];
         foreach ($parts as $i => [$label, $count, $color]) {
-            $segments[] = ['label' => $label, 'count' => (int) $count, 'color' => $color, 'pct' => $floors[$i], 'frac' => round($shares[$i], 3)];
+            $segments[] = ['label' => $label, 'count' => (int) $count, 'color' => $color, 'pct' => $pcts[$i], 'frac' => round($shares[$i], 3)];
         }
         return ['segments' => $segments, 'total' => (int) $total];
     }

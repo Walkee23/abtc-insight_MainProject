@@ -599,21 +599,27 @@
                 <!-- Top Barangays Ranking -->
                 <div class="col-span-12 md:col-span-6 bg-surface-container-lowest p-8 rounded-xl border border-outline-variant/10 shadow-sm">
                     <h4 class="text-lg font-bold text-on-surface mb-6">Top 15 Barangays by Incidence</h4>
-                    @if(isset($topBarangays) && $topBarangays->count() > 0)
+                    @php $bc = $barangayChart ?? ['rows' => [], 'total' => 0, 'other' => ['count' => 0, 'pct' => 0, 'places' => 0]]; @endphp
+                    @if(count($bc['rows']) > 0)
                         <div class="space-y-3">
-                            @foreach($topBarangays as $b)
-                                @php
-                                    $percentage = $maxBarangayTotal > 0 ? round(($b->total / $maxBarangayTotal) * 100) : 0;
-                                @endphp
-                                <div class="flex items-center gap-3">
-                                    <span class="w-28 text-xs font-bold text-on-surface-variant text-right truncate" title="{{ $b->barangay }}">{{ $b->barangay }}</span>
+                            @foreach($bc['rows'] as $row)
+                                <div class="flex items-center gap-3" title="{{ $row['name'] }}: {{ number_format($row['count']) }} cases ({{ number_format($row['pct'], 1) }}%)">
+                                    <span class="w-28 text-xs font-bold text-on-surface-variant text-right truncate">{{ $row['name'] }}</span>
                                     <div class="flex-1 h-3 bg-surface-container-highest rounded-full overflow-hidden">
-                                        <div class="h-full bg-primary transition-all duration-500" style="width: {{ $percentage }}%;"></div>
+                                        <div class="h-full bg-primary rounded-full transition-all duration-500" style="width: {{ $row['width'] }}%;"></div>
                                     </div>
-                                    <span class="w-8 text-[10px] font-bold text-on-surface-variant">{{ number_format($b->total) }}</span>
+                                    <span class="w-24 shrink-0 text-right text-[11px] font-bold text-on-surface-variant tabular-nums">{{ number_format($row['count']) }} <span class="font-semibold text-on-surface-variant/70">· {{ number_format($row['pct'], 1) }}%</span></span>
                                 </div>
                             @endforeach
                         </div>
+                        @if($bc['other']['count'] > 0)
+                            <div class="mt-4 pt-4 border-t border-outline-variant/15 flex items-center gap-3">
+                                <span class="w-28 text-xs font-bold text-on-surface-variant/70 text-right">All others</span>
+                                <p class="flex-1 text-[11px] text-on-surface-variant">{{ number_format($bc['other']['places']) }} other barangays and places outside Cebu City</p>
+                                <span class="w-24 shrink-0 text-right text-[11px] font-bold text-on-surface-variant tabular-nums">{{ number_format($bc['other']['count']) }} <span class="font-semibold text-on-surface-variant/70">· {{ number_format($bc['other']['pct'], 1) }}%</span></span>
+                            </div>
+                        @endif
+                        <p class="text-[11px] text-on-surface-variant/80 mt-4">Shares are of all {{ number_format($bc['total']) }} cases matching the filters and add up to 100%. Bar length is relative to the top barangay.</p>
                     @else
                         <p class="text-sm text-on-surface-variant text-center py-6">No data available for the selected filters.</p>
                     @endif
@@ -684,28 +690,27 @@
                     <!-- 2. Age Group Distribution (DIREKTA NA NGA NAKAPAHIMUTANG SA ILAWOM SA DEMOGRAPHICS) -->
                     <div class="bg-surface-container-lowest p-8 rounded-xl border border-outline-variant/10 shadow-sm">
                         <h4 class="text-lg font-bold text-on-surface mb-6">Age Group Distribution</h4>
-                        <div class="flex items-end h-48 gap-4 px-4">
-                            <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-                                <div class="w-full bg-primary/20 rounded-t-lg transition-all duration-500" style="height: {{ $age0_12_pct ?? 0 }}%;"></div>
-                                <span class="text-[10px] font-bold text-on-surface-variant">0-12 ({{ $age0_12 ?? 0 }})</span>
-                            </div>
-                            <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-                                <div class="w-full bg-primary/40 rounded-t-lg transition-all duration-500" style="height: {{ $age13_19_pct ?? 0 }}%;"></div>
-                                <span class="text-[10px] font-bold text-on-surface-variant">13-19 ({{ $age13_19 ?? 0 }})</span>
-                            </div>
-                            <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-                                <div class="w-full bg-primary rounded-t-lg transition-all duration-500" style="height: {{ $age20_39_pct ?? 0 }}%;"></div>
-                                <span class="text-[10px] font-bold text-on-surface-variant">20-39 ({{ $age20_39 ?? 0 }})</span>
-                            </div>
-                            <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-                                <div class="w-full bg-primary/60 rounded-t-lg transition-all duration-500" style="height: {{ $age40_59_pct ?? 0 }}%;"></div>
-                                <span class="text-[10px] font-bold text-on-surface-variant">40-59 ({{ $age40_59 ?? 0 }})</span>
-                            </div>
-                            <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-                                <div class="w-full bg-primary/30 rounded-t-lg transition-all duration-500" style="height: {{ $age60_up_pct ?? 0 }}%;"></div>
-                                <span class="text-[10px] font-bold text-on-surface-variant">60+ ({{ $age60_up ?? 0 }})</span>
-                            </div>
+                        @php $ages = $ageChart ?? ['bars' => [], 'known' => 0, 'unknown' => 0]; @endphp
+                        <div class="flex gap-4 px-2">
+                            @foreach($ages['bars'] as $bar)
+                                <div class="flex-1 min-w-0 flex flex-col items-center" title="Age {{ $bar['label'] }}: {{ number_format($bar['count']) }} cases ({{ number_format($bar['pct'], 1) }}%)">
+                                    {{-- fixed plot area: every bar is a share of the tallest one, and the labels sit outside it --}}
+                                    <div class="h-40 w-full flex items-end">
+                                        <div class="w-full rounded-t-lg transition-all duration-500" style="height: {{ $bar['height'] }}%; background-color: {{ $bar['color'] }};"></div>
+                                    </div>
+                                    <div class="mt-3 text-center leading-tight">
+                                        <p class="flex items-center justify-center gap-1.5 text-[11px] font-bold text-on-surface">
+                                            <span class="w-2 h-2 rounded-full shrink-0" style="background-color: {{ $bar['color'] }};"></span>{{ $bar['label'] }}
+                                        </p>
+                                        <p class="text-[11px] font-semibold text-on-surface-variant mt-1 tabular-nums">{{ number_format($bar['count']) }}</p>
+                                        <p class="text-[10px] font-bold text-on-surface-variant/70 tabular-nums">{{ number_format($bar['pct'], 1) }}%</p>
+                                    </div>
+                                </div>
+                            @endforeach
                         </div>
+                        <p class="text-[11px] text-on-surface-variant/80 mt-4">
+                            Shares are of the {{ number_format($ages['known']) }} cases with an age and add up to 100%.@if($ages['unknown'] > 0) {{ number_format($ages['unknown']) }} {{ $ages['unknown'] === 1 ? 'case has' : 'cases have' }} no age recorded.@endif
+                        </p>
                     </div>
 
                 </div>

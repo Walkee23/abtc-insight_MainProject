@@ -599,27 +599,21 @@
                 <!-- Top Barangays Ranking -->
                 <div class="col-span-12 md:col-span-6 bg-surface-container-lowest p-8 rounded-xl border border-outline-variant/10 shadow-sm">
                     <h4 class="text-lg font-bold text-on-surface mb-6">Top 15 Barangays by Incidence</h4>
-                    @php $bc = $barangayChart ?? ['rows' => [], 'total' => 0, 'other' => ['count' => 0, 'pct' => 0, 'places' => 0]]; @endphp
+                    @php $bc = $barangayChart ?? ['rows' => [], 'total' => 0]; @endphp
                     @if(count($bc['rows']) > 0)
-                        <div class="space-y-3">
+                        <div class="viz-rows space-y-1">
                             @foreach($bc['rows'] as $row)
-                                <div class="flex items-center gap-3" title="{{ $row['name'] }}: {{ number_format($row['count']) }} cases ({{ number_format($row['pct'], 1) }}%)">
-                                    <span class="w-28 text-xs font-bold text-on-surface-variant text-right truncate">{{ $row['name'] }}</span>
+                                <div class="viz-row group flex items-center gap-3 -mx-2 px-2 py-1.5 rounded-lg"
+                                     data-tip-title="{{ $row['name'] }}"
+                                     data-tip-lines="{{ number_format($row['count']) }} {{ $row['count'] === 1 ? 'case' : 'cases' }}|{{ number_format($row['pct'], 1) }}% of all cases">
+                                    <span class="viz-name w-28 text-xs font-bold text-on-surface-variant text-right truncate transition-colors">{{ $row['name'] }}</span>
                                     <div class="flex-1 h-3 bg-surface-container-highest rounded-full overflow-hidden">
-                                        <div class="h-full bg-primary rounded-full transition-all duration-500" style="width: {{ $row['width'] }}%;"></div>
+                                        <div class="viz-fill h-full bg-primary rounded-full" style="width: {{ $row['width'] }}%;"></div>
                                     </div>
-                                    <span class="w-24 shrink-0 text-right text-[11px] font-bold text-on-surface-variant tabular-nums">{{ number_format($row['count']) }} <span class="font-semibold text-on-surface-variant/70">· {{ number_format($row['pct'], 1) }}%</span></span>
+                                    <span class="viz-count w-10 shrink-0 text-right text-[11px] font-bold text-on-surface-variant tabular-nums transition-colors">{{ number_format($row['count']) }}</span>
                                 </div>
                             @endforeach
                         </div>
-                        @if($bc['other']['count'] > 0)
-                            <div class="mt-4 pt-4 border-t border-outline-variant/15 flex items-center gap-3">
-                                <span class="w-28 text-xs font-bold text-on-surface-variant/70 text-right">All others</span>
-                                <p class="flex-1 text-[11px] text-on-surface-variant">{{ number_format($bc['other']['places']) }} other barangays and places outside Cebu City</p>
-                                <span class="w-24 shrink-0 text-right text-[11px] font-bold text-on-surface-variant tabular-nums">{{ number_format($bc['other']['count']) }} <span class="font-semibold text-on-surface-variant/70">· {{ number_format($bc['other']['pct'], 1) }}%</span></span>
-                            </div>
-                        @endif
-                        <p class="text-[11px] text-on-surface-variant/80 mt-4">Shares are of all {{ number_format($bc['total']) }} cases matching the filters and add up to 100%. Bar length is relative to the top barangay.</p>
                     @else
                         <p class="text-sm text-on-surface-variant text-center py-6">No data available for the selected filters.</p>
                     @endif
@@ -641,13 +635,16 @@
 
                             @foreach (['exposure', 'sex', 'animal'] as $tabKey)
                                 @php $d = $breakdowns[$tabKey] ?? ['segments' => [], 'total' => 0]; $offset = 0; @endphp
-                                <div id="content-{{ $tabKey }}" class="demographic-tab-content {{ $tabKey === 'exposure' ? '' : 'hidden' }} flex items-center justify-between">
-                                    <div class="space-y-2">
-                                        @foreach ($d['segments'] as $seg)
-                                            <div class="flex items-center gap-2 text-xs font-bold">
+                                <div id="content-{{ $tabKey }}" class="viz-donut demographic-tab-content {{ $tabKey === 'exposure' ? '' : 'hidden' }} flex items-center justify-between">
+                                    <div class="space-y-1">
+                                        @foreach ($d['segments'] as $i => $seg)
+                                            <div class="viz-legend flex items-center gap-2 text-xs font-bold -ml-2 px-2 py-1 rounded-lg"
+                                                 data-donut="{{ $tabKey }}" data-idx="{{ $i }}"
+                                                 data-tip-title="{{ $seg['label'] }}"
+                                                 data-tip-lines="{{ number_format($seg['count']) }} {{ $seg['count'] === 1 ? 'case' : 'cases' }}|{{ $seg['pct'] === 0 && $seg['count'] > 0 ? '<1' : $seg['pct'] }}% of {{ number_format($d['total']) }}">
                                                 <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: {{ $seg['color'] }};"></span>
                                                 <span>{{ $seg['label'] }}</span>
-                                                <span class="font-semibold text-on-surface-variant">{{ $seg['pct'] === 0 && $seg['count'] > 0 ? '<1' : $seg['pct'] }}% · {{ number_format($seg['count']) }}</span>
+                                                <span class="font-semibold text-on-surface-variant">{{ $seg['pct'] === 0 && $seg['count'] > 0 ? '<1' : $seg['pct'] }}%</span>
                                             </div>
                                         @endforeach
                                         @if ($d['total'] === 0)
@@ -657,17 +654,26 @@
                                     <div class="relative w-28 h-28 shrink-0">
                                         <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                                             <circle cx="18" cy="18" r="16" fill="none" stroke="#eceef0" stroke-width="4"></circle>
-                                            @foreach ($d['segments'] as $seg)
+                                            @foreach ($d['segments'] as $i => $seg)
                                                 @if ($seg['frac'] > 0)
-                                                    <circle cx="18" cy="18" r="16" fill="none" stroke="{{ $seg['color'] }}" stroke-width="4" pathLength="100"
-                                                            stroke-dasharray="{{ $seg['frac'] }} {{ round(100 - $seg['frac'], 3) }}" stroke-dashoffset="{{ -round($offset, 3) }}"></circle>
+                                                    <circle class="viz-seg" cx="18" cy="18" r="16" fill="none" stroke="{{ $seg['color'] }}" stroke-width="4" pathLength="100"
+                                                            stroke-dasharray="{{ $seg['frac'] }} {{ round(100 - $seg['frac'], 3) }}" stroke-dashoffset="{{ -round($offset, 3) }}"
+                                                            data-donut="{{ $tabKey }}" data-idx="{{ $i }}"
+                                                            data-tip-title="{{ $seg['label'] }}"
+                                                            data-tip-lines="{{ number_format($seg['count']) }} {{ $seg['count'] === 1 ? 'case' : 'cases' }}|{{ $seg['pct'] === 0 && $seg['count'] > 0 ? '<1' : $seg['pct'] }}% of {{ number_format($d['total']) }}"></circle>
                                                     @php $offset += $seg['frac']; @endphp
                                                 @endif
                                             @endforeach
                                         </svg>
-                                        <div class="absolute inset-0 flex flex-col items-center justify-center leading-none">
-                                            <span class="font-black text-on-surface text-base tracking-tighter">{{ number_format($d['total']) }}</span>
-                                            <span class="text-[9px] font-bold uppercase tracking-wider text-on-surface-variant/60 mt-1">Cases</span>
+                                        <div class="absolute inset-0 flex flex-col items-center justify-center leading-none pointer-events-none">
+                                            @if ($tabKey === 'sex')
+                                                {{-- the ratio of the two shares (they add up to 100), e.g. 47:53 --}}
+                                                <span class="font-black text-on-surface text-lg tracking-tighter tabular-nums">{{ $d['segments'][0]['pct'] ?? 0 }}:{{ $d['segments'][1]['pct'] ?? 0 }}</span>
+                                                <span class="text-[9px] font-bold uppercase tracking-wider text-on-surface-variant/60 mt-1">Male : Female</span>
+                                            @else
+                                                <span class="font-black text-on-surface text-base tracking-tighter">{{ number_format($d['total']) }}</span>
+                                                <span class="text-[9px] font-bold uppercase tracking-wider text-on-surface-variant/60 mt-1">Cases</span>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
@@ -691,30 +697,114 @@
                     <div class="bg-surface-container-lowest p-8 rounded-xl border border-outline-variant/10 shadow-sm">
                         <h4 class="text-lg font-bold text-on-surface mb-6">Age Group Distribution</h4>
                         @php $ages = $ageChart ?? ['bars' => [], 'known' => 0, 'unknown' => 0]; @endphp
-                        <div class="flex gap-4 px-2">
+                        <div class="viz-cols flex gap-4 px-2">
                             @foreach($ages['bars'] as $bar)
-                                <div class="flex-1 min-w-0 flex flex-col items-center" title="Age {{ $bar['label'] }}: {{ number_format($bar['count']) }} cases ({{ number_format($bar['pct'], 1) }}%)">
+                                <div class="viz-col group flex-1 min-w-0 flex flex-col items-center"
+                                     data-tip-title="Age {{ $bar['label'] }}"
+                                     data-tip-lines="{{ number_format($bar['count']) }} {{ $bar['count'] === 1 ? 'case' : 'cases' }}|{{ number_format($bar['pct'], 1) }}% of cases with an age">
                                     {{-- fixed plot area: every bar is a share of the tallest one, and the labels sit outside it --}}
                                     <div class="h-40 w-full flex items-end">
-                                        <div class="w-full rounded-t-lg transition-all duration-500" style="height: {{ $bar['height'] }}%; background-color: {{ $bar['color'] }};"></div>
+                                        <div class="viz-bar w-full rounded-t-lg" style="height: {{ $bar['height'] }}%; background-color: {{ $bar['color'] }};"></div>
                                     </div>
                                     <div class="mt-3 text-center leading-tight">
                                         <p class="flex items-center justify-center gap-1.5 text-[11px] font-bold text-on-surface">
                                             <span class="w-2 h-2 rounded-full shrink-0" style="background-color: {{ $bar['color'] }};"></span>{{ $bar['label'] }}
                                         </p>
                                         <p class="text-[11px] font-semibold text-on-surface-variant mt-1 tabular-nums">{{ number_format($bar['count']) }}</p>
-                                        <p class="text-[10px] font-bold text-on-surface-variant/70 tabular-nums">{{ number_format($bar['pct'], 1) }}%</p>
                                     </div>
                                 </div>
                             @endforeach
                         </div>
-                        <p class="text-[11px] text-on-surface-variant/80 mt-4">
-                            Shares are of the {{ number_format($ages['known']) }} cases with an age and add up to 100%.@if($ages['unknown'] > 0) {{ number_format($ages['unknown']) }} {{ $ages['unknown'] === 1 ? 'case has' : 'cases have' }} no age recorded.@endif
-                        </p>
                     </div>
 
                 </div>
             </div>
+
+                    <style>
+                        /* ---- hover effects of the Top Barangays, Demographic & Exposure and Age Group charts ---- */
+                        .viz-tip { position: fixed; z-index: 70; pointer-events: none; opacity: 0; transform: translateY(4px) scale(.97);
+                                   transition: opacity .15s ease, transform .15s ease; }
+                        .viz-tip.show { opacity: 1; transform: none; }
+
+                        /* Top barangays: the hovered row lights up, the others fade back */
+                        .viz-row { transition: opacity .25s ease, background-color .25s ease; cursor: default; }
+                        .viz-rows:hover .viz-row:not(:hover) { opacity: .45; }
+                        .viz-row:hover { background-color: rgb(0 74 147 / .07); }
+                        .viz-row .viz-fill { transform-origin: left center; transition: transform .25s cubic-bezier(.4, 0, .2, 1), filter .25s ease; }
+                        .viz-row:hover .viz-fill { transform: scaleY(1.4); filter: brightness(1.18); }
+                        .viz-row:hover .viz-name, .viz-row:hover .viz-count { color: #004a93; }
+
+                        /* Age groups: the hovered bar grows a little and brightens */
+                        .viz-col { transition: opacity .25s ease; cursor: default; }
+                        .viz-cols:hover .viz-col:not(:hover) { opacity: .45; }
+                        .viz-col .viz-bar { transform-origin: bottom center; transition: transform .3s cubic-bezier(.4, 0, .2, 1), filter .25s ease; }
+                        .viz-col:hover .viz-bar { transform: scaleY(1.05); filter: brightness(1.12) saturate(1.1); }
+
+                        /* Donuts: slice and legend row light up together, the rest fade back */
+                        .viz-seg { cursor: pointer; transition: stroke-width .25s cubic-bezier(.4, 0, .2, 1), opacity .25s ease; }
+                        .viz-seg.is-active { stroke-width: 5.4; }
+                        .viz-legend { cursor: default; transition: opacity .25s ease, background-color .25s ease; }
+                        .viz-legend.is-active { background-color: rgb(0 74 147 / .07); }
+                        .viz-donut.has-active .viz-seg:not(.is-active), .viz-donut.has-active .viz-legend:not(.is-active) { opacity: .4; }
+                        @media (prefers-reduced-motion: reduce) {
+                            .viz-tip, .viz-row, .viz-col, .viz-seg, .viz-legend, .viz-fill, .viz-bar { transition: none !important; }
+                        }
+                    </style>
+                    <script>
+                        (function () {
+                            // One dark tooltip for all three charts: any element with data-tip-title / data-tip-lines ("a|b|c").
+                            const tip = document.createElement('div');
+                            tip.className = 'viz-tip bg-slate-900/95 text-white rounded-lg px-3 py-2 shadow-xl text-xs leading-snug whitespace-nowrap';
+                            document.body.appendChild(tip);
+                            let current = null;
+
+                            function fill(el) {
+                                tip.replaceChildren();
+                                const title = document.createElement('div');
+                                title.className = 'font-bold';
+                                title.textContent = el.dataset.tipTitle;
+                                tip.appendChild(title);
+                                (el.dataset.tipLines || '').split('|').filter(Boolean).forEach((line, i) => {
+                                    const row = document.createElement('div');
+                                    row.className = i === 0 ? 'text-white' : 'text-slate-300';
+                                    row.textContent = line;
+                                    tip.appendChild(row);
+                                });
+                            }
+                            function place(e) {
+                                const w = tip.offsetWidth, h = tip.offsetHeight;
+                                let x = e.clientX + 14, y = e.clientY - h - 14;
+                                if (x + w > window.innerWidth - 8) x = e.clientX - w - 14;
+                                if (y < 8) y = e.clientY + 18;
+                                tip.style.left = Math.max(8, x) + 'px';
+                                tip.style.top = y + 'px';
+                            }
+                            function hide() { tip.classList.remove('show'); current = null; setActive(null, null); }
+
+                            // a donut slice and its legend row are highlighted together
+                            function setActive(group, idx) {
+                                document.querySelectorAll('.viz-donut').forEach((box) => {
+                                    const on = group !== null && box.id === 'content-' + group;
+                                    box.classList.toggle('has-active', on);
+                                    box.querySelectorAll('[data-donut]').forEach((el) => el.classList.toggle('is-active', on && el.dataset.idx === String(idx)));
+                                });
+                            }
+
+                            document.addEventListener('pointerover', (e) => {
+                                const el = e.target.closest ? e.target.closest('[data-tip-title]') : null;
+                                if (el === current) return;
+                                current = el;
+                                if (!el) { hide(); return; }
+                                fill(el);
+                                tip.classList.add('show');
+                                place(e);
+                                setActive(el.dataset.donut || null, el.dataset.idx);
+                            });
+                            document.addEventListener('pointermove', (e) => { if (current) place(e); });
+                            window.addEventListener('scroll', hide, true);
+                            document.addEventListener('pointerout', (e) => { if (!e.relatedTarget) hide(); });
+                        })();
+                    </script>
 
             <!-- COLLAPSIBLE ACCORDION FOR EXPORTS & ANNUAL MATRIX TABLE -->
             <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/10 shadow-sm overflow-hidden mb-8">

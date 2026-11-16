@@ -5,9 +5,9 @@
      class carries all of its styling (n/nz = centred, t/tz = text on the left, d/dz = date, b/bz = bold centred;
      the "z" versions are the grey banded rows). $widths are the column widths in px, worked out from the data. --}}
 @php
-    $cols = 11;
+    $cols = 9;
     $headerRow = 6 + count($filters);
-    $headings = ['NO.', 'DATE', 'QUEUE ID', 'PATIENT NAME', 'AGE', 'SEX', 'BARANGAY', 'HEALTH AREA', 'CATEGORY', 'CASE NO.', 'OUTCOME'];
+    $headings = ['NO.', 'DATE', 'PATIENT NAME', 'AGE', 'SEX', 'BARANGAY', 'HEALTH AREA', 'CATEGORY', 'OUTCOME'];
 @endphp
 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
 <head>

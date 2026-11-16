@@ -388,8 +388,7 @@ public function generateReport(Request $request)
         // Column widths (px), sized to the longest value in this export so nothing wraps or shows as ####
         // (Excel cannot auto-fit an HTML sheet, so the longest text is measured here instead).
         $longest = (clone $query)->selectRaw(
-            'MAX(CHAR_LENGTH(inflow_general_particulars.queue_id)) as queue_id, '
-            . 'MAX(CHAR_LENGTH(inflow_general_particulars.patient_name)) as patient_name, '
+            'MAX(CHAR_LENGTH(inflow_general_particulars.patient_name)) as patient_name, '
             . 'MAX(CHAR_LENGTH(inflow_general_particulars.barangay)) as barangay, '
             . 'MAX(CHAR_LENGTH(bite_cases.outcome)) as outcome'
         )->first();
@@ -398,14 +397,12 @@ public function generateReport(Request $request)
         $widths = [
             max($caps('NO.'), $data(strlen((string) $total))),
             max($caps('DATE'), 118),
-            max($caps('QUEUE ID'), $data((int) ($longest->queue_id ?? 0))),
             max($caps('PATIENT NAME'), $data((int) ($longest->patient_name ?? 0))),
             max($caps('AGE'), 60),
             max($caps('SEX'), $data(6)),
             max($caps('BARANGAY'), $data((int) ($longest->barangay ?? 0))),
             max($caps('HEALTH AREA'), $data(17)),                      // "Outside Cebu City" is the longest area
             max($caps('CATEGORY'), 60),
-            max($caps('CASE NO.'), 60),
             max($caps('OUTCOME'), $data((int) ($longest->outcome ?? 0))),
         ];
 
@@ -437,14 +434,12 @@ public function generateReport(Request $request)
 
         $rows = $query
             ->select(
-                'inflow_general_particulars.queue_id',
                 'inflow_general_particulars.queue_date',
                 'inflow_general_particulars.patient_name',
                 'inflow_general_particulars.age',
                 'inflow_general_particulars.sex',
                 'inflow_general_particulars.barangay',
                 'bite_cases.category',
-                'bite_cases.case_number',
                 'bite_cases.outcome'
             )
             ->orderBy('inflow_general_particulars.queue_date')
@@ -469,19 +464,17 @@ public function generateReport(Request $request)
                 echo '<tr>'
                     . '<td class="n' . $z . '">' . $n . '</td>'
                     . '<td class="d' . $z . '">' . $h($r->queue_date) . '</td>'
-                    . '<td class="n' . $z . '">' . $h($r->queue_id) . '</td>'
                     . '<td class="t' . $z . '">' . $h($r->patient_name) . '</td>'
                     . '<td class="n' . $z . '">' . $dash($r->age) . '</td>'
                     . '<td class="n' . $z . '">' . $dash($r->sex) . '</td>'
                     . '<td class="t' . $z . '">' . $dash($barangay) . '</td>'
                     . '<td class="n' . $z . '">' . $h($area) . '</td>'
                     . '<td class="' . $cat . '">' . $dash($r->category) . '</td>'
-                    . '<td class="n' . $z . '">' . $dash($r->case_number) . '</td>'
                     . '<td class="n' . $z . '">' . $dash($r->outcome) . '</td>'
                     . "</tr>\n";
             }
 
-            echo '<tr><td colspan="10" class="grandl">TOTAL NUMBER OF CASES</td><td class="grand">' . number_format($total) . '</td></tr>';
+            echo '<tr><td colspan="8" class="grandl">TOTAL NUMBER OF CASES</td><td class="grand">' . number_format($total) . '</td></tr>';
             echo "\n</table>\n</body>\n</html>";
         }, $filename, [
             'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',

@@ -82,74 +82,38 @@ class visualAnalyticsController extends Controller
     $age60_up_pct = round(($age60_up / $maxAgeCount) * 100);
 
     // --- CHART (Total, New, Returning) ---
-    // Every bucket is counted from the filters WITHOUT the period window, so each day / week / month /
-    // quarter / year shows its own data (the window only decides what the KPI cards add up).
-    $group = $request->get('group');
+    // One grouped query over the chosen range (filters applied, no other window); every bucket of the
+    // range - day, week, month, quarter or year - is then filled from it, empty ones with zero.
     $ctx = $this->analyticsContext($request);
     $chartBase = $this->analyticsQuery($request, false);
     $col = 'inflow_general_particulars.queue_date';
-    $year = $ctx['year'];
-    $anchor = $ctx['anchor'];
 
+    $grouped = (clone $chartBase)
+        ->whereBetween($col, [$ctx['from']->toDateString(), $ctx['to']->toDateString()])
+        ->selectRaw($ctx['key_sql'] . ' as bucket_key, COUNT(*) as total, SUM(bite_cases.case_number = 1) as new_cases, SUM(bite_cases.case_number > 1) as returning_cases')
+        ->groupBy('bucket_key')
+        ->get()
+        ->keyBy(fn ($row) => (string) $row->bucket_key);
+
+    $chartLabels = [];
     $totalCasesData = [];
     $newCasesData = [];
     $returningCasesData = [];
-    $chartLabels = [];
-    $addBucket = function ($bucketQuery) use (&$totalCasesData, &$newCasesData, &$returningCasesData) {
-        $totalCasesData[] = (clone $bucketQuery)->count();
-        $newCasesData[] = (clone $bucketQuery)->where('bite_cases.case_number', 1)->count();
-        $returningCasesData[] = (clone $bucketQuery)->where('bite_cases.case_number', '>', 1)->count();
-    };
-
-    if ($group == 'daily') {
-        // the 7 days ending on the "as of" day
-        for ($i = 6; $i >= 0; $i--) {
-            $day = $anchor->copy()->subDays($i);
-            $chartLabels[] = $day->format('M d');
-            $addBucket((clone $chartBase)->whereDate($col, $day->toDateString()));
-        }
-        $chartSubtitle = $anchor->copy()->subDays(6)->format('M d') . ' – ' . $anchor->format('M d, Y');
-    } elseif ($group == 'weekly') {
-        // 7-day blocks of the "as of" month (Wk 1 starts on the 1st)
-        $startOfMonth = $anchor->copy()->startOfMonth();
-        $endOfMonth = $anchor->copy()->endOfMonth();
-        $iter = $startOfMonth->copy();
-        $weekCount = 1;
-        while ($iter->lte($endOfMonth)) {
-            $weekEnd = $iter->copy()->addDays(6)->min($endOfMonth);
-            $chartLabels[] = 'Wk ' . $weekCount;
-            $addBucket((clone $chartBase)->whereBetween($col, [$iter->toDateString(), $weekEnd->toDateString()]));
-            $weekCount++;
-            $iter->addDays(7);
-        }
-        $chartSubtitle = $anchor->format('F Y');
-    } elseif ($group == 'quarterly') {
-        $chartLabels = ['Q1 (Jan-Mar)', 'Q2 (Apr-Jun)', 'Q3 (Jul-Sep)', 'Q4 (Oct-Dec)'];
-        for ($q = 1; $q <= 4; $q++) {
-            $from = Carbon::create($year, ($q - 1) * 3 + 1, 1)->startOfMonth();
-            $to = $from->copy()->addMonths(2)->endOfMonth();
-            $addBucket((clone $chartBase)->whereBetween($col, [$from->toDateString(), $to->toDateString()]));
-        }
-        $chartSubtitle = (string) $year;
-    } elseif ($group == 'yearly') {
-        // every year that has data
-        $chartYears = $ctx['chart_years'];
-        foreach ($chartYears as $targetYear) {
-            $chartLabels[] = (string) $targetYear;
-            $addBucket((clone $chartBase)->whereYear($col, $targetYear));
-        }
-        $chartSubtitle = count($chartYears) > 1 ? $chartYears[0] . ' – ' . end($chartYears) : (string) $chartYears[0];
-    } else {
-        // Default / Monthly: the 12 months of the selected year
-        $chartLabels = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-        for ($m = 1; $m <= 12; $m++) {
-            $addBucket((clone $chartBase)->whereYear($col, $year)->whereMonth($col, $m));
-        }
-        $chartSubtitle = (string) $year;
+    foreach ($ctx['buckets'] as $bucket) {
+        $row = $grouped->get((string) $bucket['key']);
+        $chartLabels[] = $bucket['label'];
+        $totalCasesData[] = (int) ($row->total ?? 0);
+        $newCasesData[] = (int) ($row->new_cases ?? 0);
+        $returningCasesData[] = (int) ($row->returning_cases ?? 0);
     }
+    $chartSubtitle = $ctx['subtitle'];
+    $rangeValues = $ctx['values'];
     $analyticsYears = $ctx['years'];
-    $yearUi = $ctx['year_ui'];
-
+    $quarterOptions = $ctx['quarters'];
+    $rangeBounds = $ctx['bounds'];
+    $rangeNotice = $ctx['notice'];
+    $rangeFrom = $ctx['from']->toDateString();
+    $rangeTo = $ctx['to']->toDateString();
     // --- TOP BARANGAYS RANKING (Limit to Top 15) ---
     $topBarangays = (clone $query)
         ->select('inflow_general_particulars.barangay', DB::raw('count(*) as total'))
@@ -175,7 +139,12 @@ class visualAnalyticsController extends Controller
         'chartLabels',
         'chartSubtitle',
         'analyticsYears',
-        'yearUi',
+        'quarterOptions',
+        'rangeValues',
+        'rangeBounds',
+        'rangeNotice',
+        'rangeFrom',
+        'rangeTo',
         'topBarangays',
         'maxBarangayTotal',
         'cat1Pct',
@@ -467,45 +436,43 @@ public function generateReport(Request $request)
             $query->where('inflow_general_particulars.age', '<=', $request->age_max);
         }
 
-        // --- PERIOD WINDOW: the span the chart shows, so the KPI cards add up what the chart plots ---
-        if ($withWindow && !$request->filled('date_from') && !$request->filled('date_to')) {
+        // --- PERIOD WINDOW: exactly the range the chart shows, so the KPI cards add up what the chart plots ---
+        if ($withWindow) {
             $ctx = $this->analyticsContext($request);
-            $anchor = $ctx['anchor'];
-            $group = $request->get('group');
-
-            if ($group == 'daily') {
-                $query->whereBetween($col, [$anchor->copy()->subDays(6)->toDateString(), $anchor->toDateString()]);
-            } elseif ($group == 'weekly') {
-                $query->whereBetween($col, [$anchor->copy()->startOfMonth()->toDateString(), $anchor->copy()->endOfMonth()->toDateString()]);
-            } elseif ($ctx['filter_year']) {
-                // monthly / quarterly / yearly / no period: the selected year (nothing when "All years")
-                $query->whereYear($col, $ctx['year']);
-            }
+            $query->whereBetween($col, [$ctx['from']->toDateString(), $ctx['to']->toDateString()]);
         }
 
         return $query;
     }
 
     /**
-     * Which year the Analytics page is looking at, and the "as of" day for the daily / weekly views.
+     * The range the Analytics page is looking at, worked out from the period grouping and its range fields:
      *
-     *  - year: the year chosen in the filter bar; without a choice it is the current year when that
-     *    has data, otherwise the latest year that has data (so the page never opens on an empty year)
-     *  - anchor: today when the year is the current one, otherwise the last day of that year
-     *  - filter_year: whether the KPI cards are limited to that year ("All years" turns it off)
-     *  - years: the years offered in the filter bar; chart_years: every year with data, oldest first
+     *   daily      date_from .. date_to           (dates)
+     *   weekly     week_from .. week_to           (ISO weeks, Monday-Sunday)
+     *   monthly    month_from .. month_to         (months)
+     *   quarterly  quarter_from .. quarter_to     (quarters, "2025-2" = Q2 2025)
+     *   yearly     year [.. year_to]              (year_to is optional; without it just that one year)
+     *   none       year                           (that one year, month by month)
+     *
+     * A missing or invalid field falls back to a default: the current year when it has data, otherwise the
+     * latest year that has data (so the page never opens on an empty year). From and to are swapped if
+     * they come in the wrong order, and very long ranges are cut short with a notice.
+     *
+     * Returns the buckets to plot (label, key), the first and last day covered (the KPI cards use the same
+     * span), the SQL that gives a row's bucket key, and the values to put back into the range fields.
      */
     private function analyticsContext(Request $request): array
     {
         // worked out once per request (kept on the request, so nothing is shared between requests)
-        if ($request->attributes->has("analytics_ctx")) {
-            return $request->attributes->get("analytics_ctx");
+        if ($request->attributes->has('analytics_ctx')) {
+            return $request->attributes->get('analytics_ctx');
         }
         $today = today();
+        $col = 'queue_date';
 
-        // years with data (a typo year far from the real range is not worth a chart bar)
         $dataYears = DB::table('inflow_general_particulars')
-            ->whereNotNull('queue_date')
+            ->whereNotNull($col)
             ->selectRaw('DISTINCT YEAR(queue_date) as y')
             ->orderBy('y')
             ->pluck('y')
@@ -513,31 +480,213 @@ public function generateReport(Request $request)
             ->filter(fn ($y) => $y >= 2000 && $y <= $today->year)
             ->values()
             ->all();
+        $years = $dataYears ?: [$today->year];
+        $firstYear = min($years);
+        $lastYear = max($years);
+        $defaultYear = in_array($today->year, $years, true) ? $today->year : $lastYear;
+        // "as of" day for the daily / weekly defaults: today for the current year, else the last day of that year
+        $anchor = $defaultYear === $today->year ? $today->copy()->startOfDay() : Carbon::create($defaultYear, 12, 31)->startOfDay();
 
-        $latest = $dataYears ? max($dataYears) : $today->year;
-        $default = in_array($today->year, $dataYears, true) ? $today->year : $latest;
+        $text = fn (string $key) => is_string($request->query($key)) ? trim($request->query($key)) : '';
+        $parseDate = function (string $v) use ($today) {
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $v)) {
+                return null;
+            }
+            try {
+                $d = Carbon::createFromFormat('!Y-m-d', $v);
+            } catch (\Throwable $e) {
+                return null;
+            }
+            return $d && $d->format('Y-m-d') === $v && $d->year >= 2000 && $d->year <= $today->year ? $d : null;
+        };
+        $parseWeek = function (string $v) use ($today) {
+            if (!preg_match('/^(\d{4})-W(\d{2})$/', $v, $m) || (int) $m[1] < 2000 || (int) $m[1] > $today->year || (int) $m[2] < 1 || (int) $m[2] > 53) {
+                return null;
+            }
+            return Carbon::create((int) $m[1], 1, 4)->setISODate((int) $m[1], (int) $m[2])->startOfWeek(Carbon::MONDAY)->startOfDay();
+        };
+        $parseMonth = function (string $v) use ($today) {
+            if (!preg_match('/^(\d{4})-(\d{2})$/', $v, $m) || (int) $m[1] < 2000 || (int) $m[1] > $today->year || (int) $m[2] < 1 || (int) $m[2] > 12) {
+                return null;
+            }
+            return Carbon::create((int) $m[1], (int) $m[2], 1)->startOfDay();
+        };
+        $parseQuarter = function (string $v) use ($today) {
+            if (!preg_match('/^(\d{4})-([1-4])$/', $v, $m) || (int) $m[1] < 2000 || (int) $m[1] > $today->year) {
+                return null;
+            }
+            return Carbon::create((int) $m[1], ((int) $m[2] - 1) * 3 + 1, 1)->startOfDay();
+        };
+        $parseYear = fn (string $v) => ctype_digit($v) && (int) $v >= 2000 && (int) $v <= $today->year ? (int) $v : null;
 
-        $param = $request->query('year');
-        $all = $param === 'all' || ($param === null && !$request->filled('group'));
-        $chosen = is_numeric($param) && in_array((int) $param, $dataYears, true) ? (int) $param : null;
-        $year = $chosen ?? $default;
+        // from / to: both given -> as they are; only one given -> that one for both; none -> the defaults
+        $pair = function ($from, $to, $defaultFrom, $defaultTo) {
+            if ($from === null && $to === null) {
+                [$from, $to] = [$defaultFrom, $defaultTo];
+            } elseif ($from === null) {
+                $from = $to;
+            } elseif ($to === null) {
+                $to = $from;
+            }
+            return $from->gt($to) ? [$to, $from] : [$from, $to];
+        };
 
-        $offered = $dataYears ?: [$today->year];
-        rsort($offered);
+        $group = in_array($request->query('group'), ['daily', 'weekly', 'monthly', 'quarterly', 'yearly'], true) ? $request->query('group') : null;
+        $notice = null;
+
+        // the defaults of every period (also used to fill the range fields of the periods not chosen)
+        $default = [
+            'date' => [$anchor->copy()->subDays(6), $anchor->copy()],
+            'week' => [$anchor->copy()->startOfWeek(Carbon::MONDAY)->subWeeks(7), $anchor->copy()->startOfWeek(Carbon::MONDAY)],
+            'month' => [Carbon::create($defaultYear, 1, 1), Carbon::create($defaultYear, 12, 1)],
+            'quarter' => [Carbon::create($defaultYear, 1, 1), Carbon::create($defaultYear, 10, 1)],
+        ];
+
+        $dateRange = $pair($parseDate($text('date_from')), $parseDate($text('date_to')), ...$default['date']);
+        $weekRange = $pair($parseWeek($text('week_from')), $parseWeek($text('week_to')), ...$default['week']);
+        $monthRange = $pair($parseMonth($text('month_from')), $parseMonth($text('month_to')), ...$default['month']);
+        $quarterRange = $pair($parseQuarter($text('quarter_from')), $parseQuarter($text('quarter_to')), ...$default['quarter']);
+
+        $yearStart = $parseYear($text('year'));
+        $yearEnd = $parseYear($text('year_to'));
+        $singleYear = in_array($yearStart, $years, true) ? $yearStart : $defaultYear;   // none: the one year shown
+
+        $buckets = [];
+        $keySql = "DATE_FORMAT(queue_date, '%Y-%m')";
+        $toBlank = false;   // yearly only: "to year" was left empty
+
+        if ($group === 'daily') {
+            [$from, $to] = $dateRange;
+            if ($from->diffInDays($to) > 365) {
+                $to = $from->copy()->addDays(365);
+                $notice = 'Daily view is limited to 366 days, so the range was shortened to ' . $from->format('M d, Y') . ' – ' . $to->format('M d, Y') . '.';
+            }
+            for ($d = $from->copy(); $d->lte($to); $d->addDay()) {
+                $buckets[] = ['label' => $d->format('M d'), 'key' => $d->toDateString()];
+            }
+            $keySql = 'DATE(queue_date)';
+            $subtitle = $from->isSameDay($to) ? $from->format('M d, Y') : $from->format('M d, Y') . ' – ' . $to->format('M d, Y');
+            $spanFrom = $from->copy();
+            $spanTo = $to->copy();
+        } elseif ($group === 'weekly') {
+            [$from, $to] = $weekRange;
+            if ($from->diffInWeeks($to) > 155) {
+                $to = $from->copy()->addWeeks(155);
+                $notice = 'Weekly view is limited to 156 weeks, so the range was shortened.';
+            }
+            for ($d = $from->copy(); $d->lte($to); $d->addWeek()) {
+                $buckets[] = ['label' => 'W' . $d->isoWeek . ' · ' . $d->format('M d'), 'key' => $d->isoWeekYear * 100 + $d->isoWeek];
+            }
+            $keySql = 'YEARWEEK(queue_date, 3)';
+            $subtitle = 'Week of ' . $from->format('M d, Y') . ($from->isSameDay($to) ? '' : ' – week of ' . $to->format('M d, Y'));
+            $spanFrom = $from->copy();
+            $spanTo = $to->copy()->addDays(6);
+        } elseif ($group === 'monthly') {
+            [$from, $to] = $monthRange;
+            if ($from->diffInMonths($to) > 119) {
+                $to = $from->copy()->addMonths(119);
+                $notice = 'Monthly view is limited to 120 months, so the range was shortened.';
+            }
+            $multiYear = $from->year !== $to->year;
+            for ($d = $from->copy(); $d->lte($to); $d->addMonthNoOverflow()) {
+                $buckets[] = ['label' => $multiYear ? $d->format('M Y') : strtoupper($d->format('M')), 'key' => $d->format('Y-m')];
+            }
+            $subtitle = $from->format('M Y') . ($from->isSameMonth($to) && $from->isSameYear($to) ? '' : ' – ' . $to->format('M Y'));
+            $spanFrom = $from->copy();
+            $spanTo = $to->copy()->endOfMonth()->startOfDay();
+        } elseif ($group === 'quarterly') {
+            [$from, $to] = $quarterRange;
+            if ($from->diffInMonths($to) > 119) {
+                $to = $from->copy()->addMonths(117);
+                $notice = 'Quarterly view is limited to 40 quarters, so the range was shortened.';
+            }
+            for ($d = $from->copy(); $d->lte($to); $d->addMonthsNoOverflow(3)) {
+                $buckets[] = ['label' => 'Q' . $d->quarter . ' ' . $d->year, 'key' => $d->year . '-' . $d->quarter];
+            }
+            $keySql = "CONCAT(YEAR(queue_date), '-', QUARTER(queue_date))";
+            $subtitle = 'Q' . $from->quarter . ' ' . $from->year . ($from->isSameQuarter($to) && $from->isSameYear($to) ? '' : ' – Q' . $to->quarter . ' ' . $to->year);
+            $spanFrom = $from->copy();
+            $spanTo = $to->copy()->addMonthsNoOverflow(2)->endOfMonth()->startOfDay();
+        } elseif ($group === 'yearly') {
+            // "year" alone is just that year; "year" with "to year" is the range;
+            // no year fields at all (e.g. a plain ?group=yearly link): every year with data
+            if ($yearStart === null && $yearEnd === null && !$request->has('year')) {
+                [$a, $b] = [$firstYear, $lastYear];
+            } else {
+                $a = $yearStart ?? $yearEnd ?? $defaultYear;
+                $b = $yearEnd ?? $a;
+                $toBlank = $yearEnd === null;
+                if ($a > $b) {
+                    [$a, $b] = [$b, $a];
+                }
+            }
+            for ($y = $a; $y <= $b; $y++) {
+                $buckets[] = ['label' => (string) $y, 'key' => $y];
+            }
+            $keySql = 'YEAR(queue_date)';
+            $subtitle = $a === $b ? (string) $a : $a . ' – ' . $b;
+            $spanFrom = Carbon::create($a, 1, 1)->startOfDay();
+            $spanTo = Carbon::create($b, 12, 31)->startOfDay();
+        } else {
+            // no period grouping: one year, month by month
+            foreach (range(1, 12) as $m) {
+                $buckets[] = ['label' => strtoupper(Carbon::create($singleYear, $m, 1)->format('M')), 'key' => sprintf('%d-%02d', $singleYear, $m)];
+            }
+            $subtitle = (string) $singleYear;
+            $spanFrom = Carbon::create($singleYear, 1, 1)->startOfDay();
+            $spanTo = Carbon::create($singleYear, 12, 31)->startOfDay();
+        }
+
+        // quarters offered in the quarter fields: every quarter of every year with data
+        $quarters = [];
+        foreach ($years as $y) {
+            foreach ([1, 2, 3, 4] as $q) {
+                $quarters[] = [
+                    'value' => $y . '-' . $q,
+                    'label' => 'Q' . $q . ' ' . $y . ' (' . date('M', mktime(0, 0, 0, ($q - 1) * 3 + 1, 1)) . '–' . date('M', mktime(0, 0, 0, $q * 3, 1)) . ')',
+                ];
+            }
+        }
+
+        $minDate = DB::table('inflow_general_particulars')->where($col, '>=', '2000-01-01')->min($col);
+        $minDate = Carbon::parse($minDate ?: Carbon::create($firstYear, 1, 1));
+
+        // what the range fields show: the chosen range when it applies, the defaults otherwise
+        $isDaily = $group === 'daily';
+        $isWeekly = $group === 'weekly';
+        $isMonthly = $group === 'monthly';
+        $isQuarterly = $group === 'quarterly';
+        $values = [
+            'date_from' => ($isDaily ? $from : $dateRange[0])->toDateString(),
+            'date_to' => ($isDaily ? $to : $dateRange[1])->toDateString(),
+            'week_from' => ($isWeekly ? $from : $weekRange[0])->format('o-\WW'),
+            'week_to' => ($isWeekly ? $to : $weekRange[1])->format('o-\WW'),
+            'month_from' => ($isMonthly ? $from : $monthRange[0])->format('Y-m'),
+            'month_to' => ($isMonthly ? $to : $monthRange[1])->format('Y-m'),
+            'quarter_from' => ($isQuarterly ? $from : $quarterRange[0])->year . '-' . ($isQuarterly ? $from : $quarterRange[0])->quarter,
+            'quarter_to' => ($isQuarterly ? $to : $quarterRange[1])->year . '-' . ($isQuarterly ? $to : $quarterRange[1])->quarter,
+            'year' => $singleYear,
+            'year_start' => $group === 'yearly' ? $a : $firstYear,
+            'year_end' => $group === 'yearly' ? ($toBlank ? '' : $b) : $lastYear,
+        ];
 
         $ctx = [
-            'year' => $year,
-            'anchor' => $year === $today->year ? $today->copy() : Carbon::create($year, 12, 31),
-            'filter_year' => !$all,
-            'year_ui' => $all ? 'all' : (string) $year,
-            'years' => $offered,
-            'chart_years' => $dataYears ?: [$today->year],
+            'group' => $group,
+            'buckets' => $buckets,
+            'key_sql' => $keySql,
+            'from' => $spanFrom,
+            'to' => $spanTo,
+            'subtitle' => $subtitle,
+            'notice' => $notice,
+            'values' => $values,
+            'years' => array_reverse($years),
+            'quarters' => $quarters,
+            'bounds' => ['min' => $minDate->toDateString(), 'max' => $today->toDateString(), 'min_month' => $minDate->format('Y-m'), 'max_month' => $today->format('Y-m'), 'min_week' => $minDate->format('o-\WW'), 'max_week' => $today->format('o-\WW')],
         ];
-        $request->attributes->set("analytics_ctx", $ctx);
+        $request->attributes->set('analytics_ctx', $ctx);
 
         return $ctx;
     }
-
     /**
      * Health areas and their barangays (spelled as in config/barangays.php). Same grouping the annual
      * barangay export uses.

@@ -207,7 +207,7 @@
                     <h2 class="text-3xl font-extrabold text-on-surface tracking-tight leading-none mb-2">Visual Analytics</h2>
                     <p class="text-on-surface-variant text-lg font-medium opacity-70">Query and visualize bite case data across all dimensions.</p>
                 </div>
-                @if(request()->hasAny(['group', 'year', 'health_area', 'barangay', 'sex', 'age_min', 'age_max']))
+                @if(request()->hasAny(['group', 'year', 'date_from', 'date_to', 'week_from', 'week_to', 'month_from', 'month_to', 'quarter_from', 'quarter_to', 'health_area', 'barangay', 'sex', 'age_min', 'age_max']))
                 <div class="flex gap-3">
                     <form action="{{ route('admin.generate.report') }}" method="GET" target="_blank">
                         <!-- I-pasa ang tanang kasamtangang request parameters (apil ang barangay, sex, etc.) ngadto sa report -->
@@ -216,6 +216,9 @@
                                 <input type="hidden" name="{{ $key }}" value="{{ $value }}">
                             @endif
                         @endforeach
+                        {{-- the report covers exactly the range shown on this page --}}
+                        <input type="hidden" name="date_from" value="{{ $rangeFrom ?? '' }}">
+                        <input type="hidden" name="date_to" value="{{ $rangeTo ?? '' }}">
 
                         <button type="submit" class="flex items-center px-6 py-3 bg-primary text-white rounded-xl font-semibold shadow-xl shadow-primary/20 hover:opacity-90 transition-all cursor-pointer">
                             Generate Official Report
@@ -248,30 +251,131 @@
                             <input type="hidden" name="group" id="groupInput" value="{{ $currentGroup }}" @if(!$currentGroup) disabled @endif />
                         </div>
 
-                        <!-- Year the Monthly / Quarterly / Yearly views and the chart look at -->
-                        <div>
-                            <label class="block text-xs font-bold uppercase text-on-surface-variant/60 tracking-widest mb-2">Year</label>
-                            <select name="year" class="w-full bg-surface-container-highest border-none rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/20">
-                                <option value="all" {{ ($yearUi ?? 'all') === 'all' ? 'selected' : '' }}>All years</option>
-                                @foreach (($analyticsYears ?? []) as $yearOption)
-                                    <option value="{{ $yearOption }}" {{ ($yearUi ?? 'all') === (string) $yearOption ? 'selected' : '' }}>{{ $yearOption }}</option>
-                                @endforeach
-                            </select>
+                        <!-- Range of the chosen period grouping. Only the fields of the chosen period are sent. -->
+                        @php
+                            $rv = $rangeValues ?? [];
+                            $rb = $rangeBounds ?? ['min' => '2000-01-01', 'max' => date('Y-m-d'), 'min_month' => '2000-01', 'max_month' => date('Y-m'), 'min_week' => '2000-W01', 'max_week' => date('o-\WW')];
+                            $fieldCls = 'w-full bg-surface-container-highest border-none rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/20';
+                            $lblCls = 'block text-[10px] font-bold uppercase text-on-surface-variant/60 tracking-widest mb-1';
+                            $activePanel = in_array($currentGroup, ['daily', 'weekly', 'monthly', 'quarterly', 'yearly'], true) ? $currentGroup : 'none';
+                            $yearsList = $analyticsYears ?? [date('Y')];
+                            $yearsAsc = array_reverse($yearsList);
+                            $panelAttr = fn ($name) => 'data-range="' . $name . '" class="grid grid-cols-2 gap-3' . ($activePanel === $name ? '' : ' hidden') . '"';
+                            $off = fn ($name) => $activePanel === $name ? '' : 'disabled';
+                        @endphp
+                        <div class="md:col-span-3">
+                            <label class="block text-xs font-bold uppercase text-on-surface-variant/60 tracking-widest mb-2">Range</label>
+
+                            <div {!! $panelAttr('none') !!}>
+                                <div>
+                                    <span class="{{ $lblCls }}">Year</span>
+                                    <select name="year" {{ $off('none') }} class="{{ $fieldCls }}">
+                                        @foreach ($yearsList as $yearOption)
+                                            <option value="{{ $yearOption }}" {{ (string) ($rv['year'] ?? '') === (string) $yearOption ? 'selected' : '' }}>{{ $yearOption }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <p class="text-[11px] text-on-surface-variant self-end pb-2">Pick a period grouping to choose a range.</p>
+                            </div>
+
+                            <div {!! $panelAttr('daily') !!}>
+                                <div>
+                                    <span class="{{ $lblCls }}">From date</span>
+                                    <input type="date" name="date_from" value="{{ $rv['date_from'] ?? '' }}" min="{{ $rb['min'] }}" max="{{ $rb['max'] }}" {{ $off('daily') }} class="{{ $fieldCls }}" />
+                                </div>
+                                <div>
+                                    <span class="{{ $lblCls }}">To date</span>
+                                    <input type="date" name="date_to" value="{{ $rv['date_to'] ?? '' }}" min="{{ $rb['min'] }}" max="{{ $rb['max'] }}" {{ $off('daily') }} class="{{ $fieldCls }}" />
+                                </div>
+                            </div>
+
+                            <div {!! $panelAttr('weekly') !!}>
+                                <div>
+                                    <span class="{{ $lblCls }}">From week</span>
+                                    <input type="week" name="week_from" value="{{ $rv['week_from'] ?? '' }}" min="{{ $rb['min_week'] }}" max="{{ $rb['max_week'] }}" placeholder="2025-W01" pattern="\d{4}-W\d{2}" {{ $off('weekly') }} class="{{ $fieldCls }}" />
+                                </div>
+                                <div>
+                                    <span class="{{ $lblCls }}">To week</span>
+                                    <input type="week" name="week_to" value="{{ $rv['week_to'] ?? '' }}" min="{{ $rb['min_week'] }}" max="{{ $rb['max_week'] }}" placeholder="2025-W52" pattern="\d{4}-W\d{2}" {{ $off('weekly') }} class="{{ $fieldCls }}" />
+                                </div>
+                            </div>
+
+                            <div {!! $panelAttr('monthly') !!}>
+                                <div>
+                                    <span class="{{ $lblCls }}">From month</span>
+                                    <input type="month" name="month_from" value="{{ $rv['month_from'] ?? '' }}" min="{{ $rb['min_month'] }}" max="{{ $rb['max_month'] }}" placeholder="2025-01" pattern="\d{4}-\d{2}" {{ $off('monthly') }} class="{{ $fieldCls }}" />
+                                </div>
+                                <div>
+                                    <span class="{{ $lblCls }}">To month</span>
+                                    <input type="month" name="month_to" value="{{ $rv['month_to'] ?? '' }}" min="{{ $rb['min_month'] }}" max="{{ $rb['max_month'] }}" placeholder="2025-12" pattern="\d{4}-\d{2}" {{ $off('monthly') }} class="{{ $fieldCls }}" />
+                                </div>
+                            </div>
+
+                            <div {!! $panelAttr('quarterly') !!}>
+                                <div>
+                                    <span class="{{ $lblCls }}">From quarter</span>
+                                    <select name="quarter_from" {{ $off('quarterly') }} class="{{ $fieldCls }}">
+                                        @foreach (($quarterOptions ?? []) as $q)
+                                            <option value="{{ $q['value'] }}" {{ ($rv['quarter_from'] ?? '') === $q['value'] ? 'selected' : '' }}>{{ $q['label'] }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <span class="{{ $lblCls }}">To quarter</span>
+                                    <select name="quarter_to" {{ $off('quarterly') }} class="{{ $fieldCls }}">
+                                        @foreach (($quarterOptions ?? []) as $q)
+                                            <option value="{{ $q['value'] }}" {{ ($rv['quarter_to'] ?? '') === $q['value'] ? 'selected' : '' }}>{{ $q['label'] }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div {!! $panelAttr('yearly') !!}>
+                                <div>
+                                    <span class="{{ $lblCls }}">Year</span>
+                                    <select name="year" {{ $off('yearly') }} class="{{ $fieldCls }}">
+                                        @foreach ($yearsAsc as $yearOption)
+                                            <option value="{{ $yearOption }}" {{ (string) ($rv['year_start'] ?? '') === (string) $yearOption ? 'selected' : '' }}>{{ $yearOption }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <span class="{{ $lblCls }}">To year (optional)</span>
+                                    <select name="year_to" {{ $off('yearly') }} class="{{ $fieldCls }}">
+                                        <option value="">—</option>
+                                        @foreach ($yearsAsc as $yearOption)
+                                            <option value="{{ $yearOption }}" {{ (string) ($rv['year_end'] ?? '') === (string) $yearOption ? 'selected' : '' }}>{{ $yearOption }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            @if (!empty($rangeNotice))
+                                <p class="text-[11px] font-semibold text-amber-700 mt-2">{{ $rangeNotice }}</p>
+                            @endif
                         </div>
                     </div>
                     <script>
                         (function () {
-                            // clicking a period highlights it straight away; clicking it again clears the choice
+                            // Clicking a period highlights it straight away (clicking it again clears the choice) and shows the
+                            // range fields of that period. Only the visible fields are sent when "Apply Filters" is pressed.
                             const box = document.getElementById('periodGroup');
                             const input = document.getElementById('groupInput');
+                            const panels = document.querySelectorAll('[data-range]');
                             const ON = ['bg-white', 'shadow-sm', 'text-primary', 'font-bold'];
                             const OFF = ['text-on-surface-variant', 'hover:text-primary'];
                             function paint() {
+                                const current = input.disabled ? 'none' : input.value;
                                 box.querySelectorAll('button[data-group]').forEach((btn) => {
-                                    const on = !input.disabled && btn.dataset.group === input.value;
+                                    const on = btn.dataset.group === current;
                                     ON.forEach((c) => btn.classList.toggle(c, on));
                                     OFF.forEach((c) => btn.classList.toggle(c, !on));
                                     btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+                                });
+                                panels.forEach((panel) => {
+                                    const on = panel.dataset.range === current;
+                                    panel.classList.toggle('hidden', !on);
+                                    panel.querySelectorAll('input, select').forEach((el) => { el.disabled = !on; });
                                 });
                             }
                             box.addEventListener('click', (e) => {
@@ -335,7 +439,7 @@
                 </form>
             </section>
 
-            @if(request()->hasAny(['group', 'year', 'health_area', 'barangay', 'sex', 'age_min', 'age_max']))
+            @if(request()->hasAny(['group', 'year', 'date_from', 'date_to', 'week_from', 'week_to', 'month_from', 'month_to', 'quarter_from', 'quarter_to', 'health_area', 'barangay', 'sex', 'age_min', 'age_max']))
 
             <!-- SECTION 3 — REAL LIVE KPI CARDS -->
             <div class="grid grid-cols-1 md:grid-cols-5 gap-6">

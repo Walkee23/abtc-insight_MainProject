@@ -231,10 +231,11 @@
                         <p class="text-on-surface-variant text-sm mt-1">
                             {{ $forecast['status'] === 'ok' ? $forecast['method'] : 'Exponential Smoothing' }} · trained on the {{ $trainWeeks }} weeks before {{ $asOf->format('M d, Y') }}, recent days weighted most · patients per {{ $periods[$period]['unit'] }}
                         </p>
-                        @if($forecast['status'] === 'ok')
-                        <p class="text-xs font-semibold mt-1.5 flex items-center gap-1.5 {{ $forecast['python'] ? 'text-emerald-700' : 'text-amber-700' }}">
-                            <span class="material-symbols-outlined text-[15px]">{{ $forecast['python'] ? 'terminal' : 'warning' }}</span>
-                            {{ $forecast['python'] ? 'Calculated with ' . $forecast['engine'] : $forecast['engine'] }}
+                        {{-- only shown if Python could not be used and the built-in calculation took over --}}
+                        @if($forecast['status'] === 'ok' && !$forecast['python'])
+                        <p class="text-xs font-semibold mt-1.5 flex items-center gap-1.5 text-amber-700">
+                            <span class="material-symbols-outlined text-[15px]">warning</span>
+                            {{ $forecast['engine'] }}
                         </p>
                         @endif
                     </div>

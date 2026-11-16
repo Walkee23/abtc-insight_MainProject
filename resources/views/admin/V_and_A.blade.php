@@ -633,55 +633,39 @@
                                 </div>
                             </div>
 
-                            <!-- TAB 1: Exposure Category Content -->
-                            <div id="content-exposure" class="demographic-tab-content flex items-center justify-between">
-                                <div class="space-y-1">
-                                    <div class="flex items-center gap-2 text-xs font-bold"><span class="w-2 h-2 rounded-full bg-primary"></span> Category III ({{ $cat3Pct ?? 0 }}%)</div>
-                                    <div class="flex items-center gap-2 text-xs font-bold"><span class="w-2 h-2 rounded-full bg-secondary"></span> Category II ({{ $cat2Pct ?? 0 }}%)</div>
-                                    <div class="flex items-center gap-2 text-xs font-bold"><span class="w-2 h-2 rounded-full bg-outline"></span> Category I ({{ $cat1Pct ?? 0 }}%)</div>
+                            @foreach (['exposure', 'sex', 'animal'] as $tabKey)
+                                @php $d = $breakdowns[$tabKey] ?? ['segments' => [], 'total' => 0]; $offset = 0; @endphp
+                                <div id="content-{{ $tabKey }}" class="demographic-tab-content {{ $tabKey === 'exposure' ? '' : 'hidden' }} flex items-center justify-between">
+                                    <div class="space-y-2">
+                                        @foreach ($d['segments'] as $seg)
+                                            <div class="flex items-center gap-2 text-xs font-bold">
+                                                <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: {{ $seg['color'] }};"></span>
+                                                <span>{{ $seg['label'] }}</span>
+                                                <span class="font-semibold text-on-surface-variant">{{ $seg['pct'] === 0 && $seg['count'] > 0 ? '<1' : $seg['pct'] }}% · {{ number_format($seg['count']) }}</span>
+                                            </div>
+                                        @endforeach
+                                        @if ($d['total'] === 0)
+                                            <p class="text-xs text-on-surface-variant">No data for these filters.</p>
+                                        @endif
+                                    </div>
+                                    <div class="relative w-28 h-28 shrink-0">
+                                        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                                            <circle cx="18" cy="18" r="16" fill="none" stroke="#eceef0" stroke-width="4"></circle>
+                                            @foreach ($d['segments'] as $seg)
+                                                @if ($seg['frac'] > 0)
+                                                    <circle cx="18" cy="18" r="16" fill="none" stroke="{{ $seg['color'] }}" stroke-width="4" pathLength="100"
+                                                            stroke-dasharray="{{ $seg['frac'] }} {{ round(100 - $seg['frac'], 3) }}" stroke-dashoffset="{{ -round($offset, 3) }}"></circle>
+                                                    @php $offset += $seg['frac']; @endphp
+                                                @endif
+                                            @endforeach
+                                        </svg>
+                                        <div class="absolute inset-0 flex flex-col items-center justify-center leading-none">
+                                            <span class="font-black text-on-surface text-base tracking-tighter">{{ number_format($d['total']) }}</span>
+                                            <span class="text-[9px] font-bold uppercase tracking-wider text-on-surface-variant/60 mt-1">Cases</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="relative w-28 h-28">
-                                    <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                                        <circle class="stroke-outline/20" cx="18" cy="18" fill="none" r="16" stroke-width="4"></circle>
-                                        <circle class="stroke-primary" cx="18" cy="18" fill="none" r="16" stroke-dasharray="{{ $cat3Pct ?? 0 }}, 100" stroke-width="4"></circle>
-                                        <circle class="stroke-secondary" cx="18" cy="18" fill="none" r="16" stroke-dasharray="{{ $cat2Pct ?? 0 }}, 100" stroke-dashoffset="-{{ $cat3Pct ?? 0 }}" stroke-width="4"></circle>
-                                    </svg>
-                                    <div class="absolute inset-0 flex items-center justify-center font-black text-primary text-base tracking-tighter">{{ $cat3Pct ?? 0 }}%</div>
-                                </div>
-                            </div>
-
-                            <!-- TAB 2: Sex Distribution Content -->
-                            <div id="content-sex" class="demographic-tab-content hidden flex items-center justify-between">
-                                <div class="space-y-1">
-                                    <div class="flex items-center gap-2 text-xs font-bold"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Male ({{ $malePct ?? 0 }}%)</div>
-                                    <div class="flex items-center gap-2 text-xs font-bold"><span class="w-2 h-2 rounded-full bg-pink-400"></span> Female ({{ $femalePct ?? 0 }}%)</div>
-                                </div>
-                                <div class="relative w-28 h-28">
-                                    <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                                        <circle class="stroke-pink-400" cx="18" cy="18" fill="none" r="16" stroke-width="4"></circle>
-                                        <circle class="stroke-blue-500" cx="18" cy="18" fill="none" r="16" stroke-dasharray="{{ $malePct ?? 0 }}, 100" stroke-width="4"></circle>
-                                    </svg>
-                                    <div class="absolute inset-0 flex items-center justify-center font-black text-on-surface text-base tracking-tighter">{{ $malePct ?? 0 }}:{{ $femalePct ?? 0 }}</div>
-                                </div>
-                            </div>
-
-                            <!-- TAB 3: Animal Type Content (3 Kolor na: Dogs, Cats, Others) -->
-                            <div id="content-animal" class="demographic-tab-content hidden flex items-center justify-between">
-                                <div class="space-y-2">
-                                    <div class="flex items-center gap-2 text-xs font-bold"><span class="w-2 h-2 rounded-full bg-primary"></span> Dogs ({{ $dogPct ?? 0 }}%)</div>
-                                    <div class="flex items-center gap-2 text-xs font-bold"><span class="w-2 h-2 rounded-full bg-[#D4AF37]"></span> Cats ({{ $catAnimalPct ?? 0 }}%)</div>
-                                    <div class="flex items-center gap-2 text-xs font-bold"><span class="w-2 h-2 rounded-full bg-secondary"></span> Others ({{ $otherAnimalPct ?? 0 }}%)</div>
-                                </div>
-                                <div class="relative w-28 h-28">
-                                    <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                                        <circle class="stroke-outline/10" cx="18" cy="18" fill="none" r="16" stroke-width="4"></circle>
-                                        <circle class="stroke-primary" cx="18" cy="18" fill="none" r="16" stroke-dasharray="{{ $dogPct ?? 0 }}, 100" stroke-width="4"></circle>
-                                        <circle class="stroke-[#D4AF37]" cx="18" cy="18" fill="none" r="16" stroke-dasharray="{{ $catAnimalPct ?? 0 }}, 100" stroke-dashoffset="-{{ $dogPct ?? 0 }}" stroke-width="4"></circle>
-                                        <circle class="stroke-secondary" cx="18" cy="18" fill="none" r="16" stroke-dasharray="{{ $otherAnimalPct ?? 0 }}, 100" stroke-dashoffset="-{{ ($dogPct ?? 0) + ($catAnimalPct ?? 0) }}" stroke-width="4"></circle>
-                                    </svg>
-                                    <div class="absolute inset-0 flex items-center justify-center font-black text-on-surface text-base tracking-tighter">{{ number_format($analyticsTotalBites ?? 0) }}</div>
-                                </div>
-                            </div>
+                            @endforeach
                         </div>
                     </div>
 

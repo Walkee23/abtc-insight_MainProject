@@ -25,48 +25,39 @@ class visualAnalyticsController extends Controller
     $uniquePatients = $analyticsUniquePatients;
     $analyticsAvgAge = round((clone $query)->avg('inflow_general_particulars.age'), 1);
 
-    // Categories
-    /// Categories (Gihimo natong luag aron bisan unsa nga column o value maapil)
-    $cat1 = (clone $query)->where(function($q) {
-        $q->where('bite_cases.category', 'LIKE', '%1%')
-          ->orWhere('bite_cases.category', 'LIKE', '%I%');
-    })->count();
-
-    $cat2 = (clone $query)->where(function($q) {
-        $q->where('bite_cases.category', 'LIKE', '%2%')
-          ->orWhere('bite_cases.category', 'LIKE', '%II%');
-    })->count();
-
-    $cat3 = (clone $query)->where(function($q) {
-        $q->where('bite_cases.category', 'LIKE', '%3%')
-          ->orWhere('bite_cases.category', 'LIKE', '%03%')
-          ->orWhere('bite_cases.category', 'LIKE', '%III%');
-    })->count();
-    
+    // Exposure categories: exact values only. (LIKE '%I%' also matches "II" and "III", which used to
+    // push every case into Category I.) Same spellings the Admin dashboard accepts.
+    $catExpr = 'UPPER(TRIM(bite_cases.category))';
+    $cat1 = (clone $query)->whereIn(DB::raw($catExpr), ['I', '1', 'CAT I', 'CAT 1', 'CATEGORY I', 'CATEGORY 1'])->count();
+    $cat2 = (clone $query)->whereIn(DB::raw($catExpr), ['II', '2', 'CAT II', 'CAT 2', 'CATEGORY II', 'CATEGORY 2'])->count();
+    $cat3 = (clone $query)->whereIn(DB::raw($catExpr), ['III', '3', '03', 'CAT III', 'CAT 3', 'CATEGORY III', 'CATEGORY 3'])->count();
     $analyticsCat3Count = $cat3;
     $analyticsCat3Pct = $analyticsTotalBites > 0 ? round(($cat3 / $analyticsTotalBites) * 100, 1) : 0;
 
     $completedCount = (clone $query)->where('bite_cases.outcome', 'Completed')->count();
     $analyticsPepCompletion = $analyticsTotalBites > 0 ? round(($completedCount / $analyticsTotalBites) * 100, 1) : 0;
 
-    // --- DEMOGRAPHIC & EXPOSURE BREAKDOWN PERCENTAGES ---
-    $catTotal = ($cat1 + $cat2 + $cat3) ?: 1;
-    $cat1Pct = round(($cat1 / $catTotal) * 100);
-    $cat2Pct = round(($cat2 / $catTotal) * 100);
-    $cat3Pct = round(($cat3 / $catTotal) * 100);
-
+    // --- DEMOGRAPHIC & EXPOSURE BREAKDOWN (the three donut charts) ---
     $maleCount = (clone $query)->where('inflow_general_particulars.sex', 'Male')->count();
     $femaleCount = (clone $query)->where('inflow_general_particulars.sex', 'Female')->count();
-    $sexTotal = ($maleCount + $femaleCount) ?: 1;
-    $malePct = round(($maleCount / $sexTotal) * 100);
-    $femalePct = round(($femaleCount / $sexTotal) * 100);
 
-    // Animal type metrics
-    $dogCount = (clone $query)->where(DB::raw('UPPER(TRIM(bite_cases.category))'), 'LIKE', '%DOG%')->count(); // Fallback query mapping
-    $dogPct = $analyticsTotalBites > 0 ? round(($dogCount / $analyticsTotalBites) * 100) : 82;
-    $catAnimalPct = 14;
-    $otherAnimalPct = 4;
+    // animal type: from the exposure record of each case (cases without one are left out, not guessed)
+    $animals = (clone $query)
+        ->join('bite_section3_exposure as ex', 'ex.bite_case_id', '=', 'bite_cases.bite_case_id')
+        ->whereNotNull('ex.animal_type')
+        ->where('ex.animal_type', '!=', '')
+        ->selectRaw("COUNT(*) as known, COALESCE(SUM(UPPER(TRIM(ex.animal_type)) = 'DOG'), 0) as dogs, COALESCE(SUM(UPPER(TRIM(ex.animal_type)) = 'CAT'), 0) as cats")
+        ->first();
+    $dogCount = (int) ($animals->dogs ?? 0);
+    $catAnimalCount = (int) ($animals->cats ?? 0);
+    $otherAnimalCount = max(0, (int) ($animals->known ?? 0) - $dogCount - $catAnimalCount);
 
+    // colours are used for the legend dot AND the slice, so they always match
+    $breakdowns = [
+        'exposure' => $this->donut([['Category III', $cat3, '#002d6b'], ['Category II', $cat2, '#0b61bb'], ['Category I', $cat1, '#49607f']]),
+        'sex' => $this->donut([['Male', $maleCount, '#3b82f6'], ['Female', $femaleCount, '#f472b6']]),
+        'animal' => $this->donut([['Dogs', $dogCount, '#004a93'], ['Cats', $catAnimalCount, '#D4AF37'], ['Others', $otherAnimalCount, '#8b95a5']]),
+    ];
     // --- AGE GROUP DISTRIBUTION COUNTS ---
     $age0_12  = (clone $query)->whereBetween('inflow_general_particulars.age', [0, 12])->count();
     $age13_19 = (clone $query)->whereBetween('inflow_general_particulars.age', [13, 19])->count();
@@ -147,14 +138,7 @@ class visualAnalyticsController extends Controller
         'rangeTo',
         'topBarangays',
         'maxBarangayTotal',
-        'cat1Pct',
-        'cat2Pct',
-        'cat3Pct',
-        'malePct',
-        'femalePct',
-        'dogPct',
-        'catAnimalPct',
-        'otherAnimalPct',
+        'breakdowns',
         'age0_12', 'age0_12_pct',
         'age13_19', 'age13_19_pct',
         'age20_39', 'age20_39_pct',
@@ -469,6 +453,36 @@ public function generateReport(Request $request)
             'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
             'Cache-Control' => 'max-age=0',
         ]);
+    }
+    /**
+     * Data for one donut chart. $parts = [[label, count, colour], ...].
+     * Each slice gets its exact share (for drawing the arc) and a whole-number percentage for the legend;
+     * the whole numbers use the largest-remainder method, so they always add up to exactly 100.
+     */
+    private function donut(array $parts): array
+    {
+        $total = array_sum(array_column($parts, 1));
+        $shares = [];
+        $floors = [];
+        foreach ($parts as $i => [$label, $count, $color]) {
+            $exact = $total > 0 ? $count / $total * 100 : 0;
+            $shares[$i] = $exact;
+            $floors[$i] = (int) floor($exact);
+        }
+        if ($total > 0) {
+            $left = 100 - array_sum($floors);
+            $order = array_keys($shares);
+            usort($order, fn ($a, $b) => ($shares[$b] - $floors[$b]) <=> ($shares[$a] - $floors[$a]));
+            foreach (array_slice($order, 0, max(0, $left)) as $i) {
+                $floors[$i]++;
+            }
+        }
+
+        $segments = [];
+        foreach ($parts as $i => [$label, $count, $color]) {
+            $segments[] = ['label' => $label, 'count' => (int) $count, 'color' => $color, 'pct' => $floors[$i], 'frac' => round($shares[$i], 3)];
+        }
+        return ['segments' => $segments, 'total' => (int) $total];
     }
     /**
      * The rows behind the Visual Analytics page with the page's filters applied.

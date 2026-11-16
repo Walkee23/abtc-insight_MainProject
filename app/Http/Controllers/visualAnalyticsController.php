@@ -21,7 +21,15 @@ class visualAnalyticsController extends Controller
     // --- KPI METRICS ---
     $analyticsTotalBites = (clone $query)->count();
     $totalBites = $analyticsTotalBites; // Alias for filter description text
-    $analyticsUniquePatients = (clone $query)->distinct('inflow_general_particulars.id_number')->count('inflow_general_particulars.id_number');
+    // Unique patients: how many DIFFERENT people the matching records belong to. A person with two (or more)
+    // records is one registered patient, so they count once. A person is the same name + birthdate; the
+    // comparison ignores capitals and accents (Nino = Niño), like the database's own text comparison. A record
+    // with no name at all cannot be matched to anyone, so it counts as its own person.
+    $analyticsUniquePatients = (int) (clone $query)
+        ->selectRaw("COUNT(DISTINCT IF(inflow_general_particulars.patient_name IS NULL OR TRIM(inflow_general_particulars.patient_name) = '', "
+            . "CONCAT('#', inflow_general_particulars.inflow_record_id), "
+            . "CONCAT(TRIM(inflow_general_particulars.patient_name), '|', IFNULL(inflow_general_particulars.date_of_birth, '')))) as people")
+        ->value('people');
     $uniquePatients = $analyticsUniquePatients;
     $analyticsAvgAge = round((clone $query)->avg('inflow_general_particulars.age'), 1);
 
@@ -186,6 +194,7 @@ public function generateReport(Request $request)
             'inflow_general_particulars.inflow_record_id',
             'inflow_general_particulars.id_number',
             'inflow_general_particulars.patient_name',
+            'inflow_general_particulars.date_of_birth',
             'inflow_general_particulars.age',
             'inflow_general_particulars.sex',
             'inflow_general_particulars.barangay',
@@ -294,7 +303,10 @@ public function generateReport(Request $request)
     // --- 3. STATISTICS ---
     // Ihap kada pasyente-record (inflow_record_id) aron parehas sa dashboard
     $totalBites = $records->unique('inflow_record_id')->count();
-    $uniquePatients = $records->unique(fn($r) => $r->id_number ?: $r->patient_name)->count();
+    // same definition as the Analytics page: one person = same name + birthdate (capitals and accents ignored)
+    $uniquePatients = $records->unique(fn($r) => trim((string) $r->patient_name) === ''
+        ? '#' . $r->inflow_record_id
+        : Str::lower(Str::ascii(trim((string) $r->patient_name))) . '|' . ($r->date_of_birth ?? ''))->count();
 
     $cat3Count = $records->filter(fn($r) => in_array(
         strtoupper(trim($r->category ?? '')),

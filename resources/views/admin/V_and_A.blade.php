@@ -440,41 +440,39 @@
             @if(request()->hasAny(['group', 'year', 'date_from', 'date_to', 'week_from', 'week_to', 'month_from', 'month_to', 'quarter_from', 'quarter_to', 'health_area', 'barangay', 'sex', 'age_min', 'age_max']))
 
             <!-- SECTION 3 — REAL LIVE KPI CARDS -->
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
-                <!-- Card 1: Total Bite Cases -->
-                <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 shadow-sm">
-                    <p class="text-xs font-bold uppercase text-on-surface-variant/60 tracking-widest mb-4">Total Bite Cases</p>
-                    <div class="flex items-end justify-between">
-                        <h3 class="text-4xl font-black text-on-surface tracking-tighter">{{ number_format($analyticsTotalBites ?? 0) }}</h3>
-                        <span class="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full font-bold mb-1">Live</span>
-                    </div>
-                </div>
-
-                <!-- Card 2: Unique Patients -->
-                <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 shadow-sm">
-                    <p class="text-xs font-bold uppercase text-on-surface-variant/60 tracking-widest mb-4">Unique Patients</p>
-                    <div class="flex items-end justify-between">
-                        <h3 class="text-4xl font-black text-on-surface tracking-tighter">{{ number_format($analyticsUniquePatients ?? 0) }}</h3>
-                        <div class="w-12 h-6 flex items-end gap-1 mb-1">
-                            <div class="w-2 h-2 bg-primary/20 rounded-t-sm"></div>
-                            <div class="w-2 h-4 bg-primary/40 rounded-t-sm"></div>
-                            <div class="w-2 h-6 bg-primary rounded-t-sm"></div>
+            @php
+                // each card is sized by the value it shows: the longer the number, the more room the card gets,
+                // so a big number never crowds its badge or unit (and the cards wrap on narrow screens)
+                $kpis = [
+                    ['label' => 'Total Bite Cases', 'value' => number_format($analyticsTotalBites ?? 0), 'unit' => 'cases', 'badge' => 'Live', 'note' => null,
+                     'title' => 'Every bite case record that matches the filters'],
+                    ['label' => 'Unique Patients', 'value' => number_format($analyticsUniquePatients ?? 0), 'unit' => 'patients', 'badge' => null, 'note' => 'a patient with several records counts once',
+                     'title' => 'Different registered patients behind the matching records. The same name and birthdate counts once, however many records the person has.'],
+                    ['label' => 'Avg Age', 'value' => (string) ($analyticsAvgAge ?? 0), 'unit' => 'years', 'badge' => null, 'note' => null,
+                     'title' => 'Average age of the matching records'],
+                ];
+            @endphp
+            <div class="flex flex-wrap gap-6">
+                @foreach ($kpis as $kpi)
+                    @php $chars = max(3, strlen($kpi['value'])); @endphp
+                    <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 shadow-sm min-w-0"
+                         style="flex: {{ 3 + $chars }} 1 {{ 150 + $chars * 14 }}px;" title="{{ $kpi['title'] }}">
+                        <div class="flex items-center justify-between gap-3 mb-4">
+                            <p class="text-xs font-bold uppercase text-on-surface-variant/60 tracking-widest">{{ $kpi['label'] }}</p>
+                            @if ($kpi['badge'])
+                                <span class="shrink-0 bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full font-bold">{{ $kpi['badge'] }}</span>
+                            @endif
                         </div>
+                        <div class="flex items-baseline gap-2 min-w-0">
+                            <h3 class="text-4xl font-black text-on-surface tracking-tighter tabular-nums">{{ $kpi['value'] }}</h3>
+                            <span class="text-xs font-bold text-on-surface-variant/70">{{ $kpi['unit'] }}</span>
+                        </div>
+                        @if ($kpi['note'])
+                            <p class="text-[11px] text-on-surface-variant/70 mt-2">{{ $kpi['note'] }}</p>
+                        @endif
                     </div>
-                </div>
-
-                <!-- Card 4: Average Age -->
-                <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 shadow-sm">
-                    <p class="text-xs font-bold uppercase text-on-surface-variant/60 tracking-widest mb-4">Avg Age</p>
-                    <div class="flex items-end justify-between">
-                        <h3 class="text-4xl font-black text-on-surface tracking-tighter">{{ $analyticsAvgAge ?? 0 }}</h3>
-                        <p class="text-[10px] font-bold text-on-surface-variant/70 mb-1">years</p>
-                    </div>
-                </div>
-
-               
+                @endforeach
             </div>
-
             <!-- SECTION 4 — CHARTS & RANKINGS GRID -->
             <div class="grid grid-cols-12 gap-8">
                 <!-- Cases Over Time (Real Database-Driven Chart) -->

@@ -6,10 +6,16 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Support\Audit;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Process;
 
 class ForecastingController extends Controller
 {
+    /** Damping of the trend: far-off days drift back towards the weekly pattern instead of climbing forever. */
+    private const PHI = 0.95;
+
     /**
      * Smoothing constants the sliders start at. Over a 6-week window these already weight the latest
      * days most (alpha 0.3 halves a day's weight every ~2 days). They were picked by backtesting on the
@@ -71,13 +77,13 @@ class ForecastingController extends Controller
                 'smoothing_constant' => $params['alpha'],
                 'data_points_used' => $forecast['points'],
                 'confidence_level' => $forecast['confidence'],
-                'algorithm_used' => $forecast['method'],
+                'algorithm_used' => $forecast['algorithm'],
                 'generated_by' => $by,
                 'generated_date' => now(),
             ];
         }
         DB::table('forecasting')->insert($rows);
-        Audit::log('forecast_saved', 'Saved ' . count($rows) . ' ' . self::PERIODS[$period]['label'] . ' forecast rows as of ' . $asOf->toDateString() . ' (' . $forecast['method'] . ', alpha ' . $params['alpha'] . ')');
+        Audit::log('forecast_saved', 'Saved ' . count($rows) . ' ' . self::PERIODS[$period]['label'] . ' forecast rows as of ' . $asOf->toDateString() . ' (' . $forecast['algorithm'] . ', alpha ' . $params['alpha'] . ')');
 
         return redirect()->route('admin.forecasting', ['period' => $period] + $this->paramQuery($params) + $this->asOfQuery($asOf))
             ->with('success', count($rows) . ' ' . self::PERIODS[$period]['unit'] . ' forecasts saved.');
@@ -158,16 +164,29 @@ class ForecastingController extends Controller
         }
         $n = count($y);
 
-        $fit = $this->holtWinters($y, 7, $params['alpha'], $params['beta'], $params['gamma']);
+        // The numbers come from the Python engine (python/forecast.py, statsmodels Holt-Winters).
+        // If Python cannot run, the page falls back to the same model written in PHP and says so.
+        $python = $this->pythonForecast($y, $trainStart, $params);
+        $engine = 'PHP built-in fallback (Python was not available)';
+        $pythonOk = $python !== null;
 
         // daily forecasts from the as-of day; the trend is damped so far-off days stay realistic
-        $phi = 0.95;
         $days = [];
-        $trendSum = 0.0;
+        if ($pythonOk) {
+            $fit = ['seasonal' => $python['seasonal'], 'sigma' => $python['sigma'], 'mape' => $python['mape']];
+            $engine = $python['engine'];
+            $values = $python['values'];
+        } else {
+            $fit = $this->holtWinters($y, 7, $params['alpha'], $params['beta'], $params['gamma']);
+            $values = [];
+            $trendSum = 0.0;
+            for ($h = 1; $h <= $cfg['horizon_days']; $h++) {
+                $trendSum += self::PHI ** $h;
+                $values[] = max(0, $fit['level'] + $trendSum * $fit['trend'] + ($fit['seasonal'] ? $fit['season'][($n - 1 + $h) % 7] : 0));
+            }
+        }
         for ($h = 1; $h <= $cfg['horizon_days']; $h++) {
-            $trendSum += $phi ** $h;
-            $value = max(0, $fit['level'] + $trendSum * $fit['trend'] + ($fit['seasonal'] ? $fit['season'][($n - 1 + $h) % 7] : 0));
-            $days[] = ['date' => $asOf->copy()->addDays($h - 1), 'value' => $value, 'half' => 1.96 * $fit['sigma'] * sqrt($h)];
+            $days[] = ['date' => $asOf->copy()->addDays($h - 1), 'value' => (float) $values[$h - 1], 'half' => 1.96 * $fit['sigma'] * sqrt($h)];
         }
 
         $future = [];
@@ -215,6 +234,9 @@ class ForecastingController extends Controller
         return array_merge($base, [
             'status' => 'ok',
             'method' => $fit['seasonal'] ? 'Holt-Winters (additive)' : 'Holt Linear Trend',
+            'engine' => $engine,
+            'python' => $pythonOk,
+            'algorithm' => ($fit['seasonal'] ? 'Holt-Winters (additive)' : 'Holt Linear Trend') . ($pythonOk ? ' · Python statsmodels' : ' · PHP fallback'),
             'seasonal' => $fit['seasonal'],
             'points' => $n,
             'span_days' => $spanDays,
@@ -241,6 +263,64 @@ class ForecastingController extends Controller
             'lower' => (int) round(max(0, $value - $half)),
             'upper' => (int) round($value + $half),
         ];
+    }
+
+    /**
+     * Runs python/forecast.py (statsmodels Holt-Winters) on the training window and returns its JSON
+     * answer (the forecast for every day up to the longest horizon, plus the error figures), or null when
+     * Python cannot be run - the caller then falls back to the PHP version below.
+     *
+     * The answer is cached for a day under a key made of the exact input, so the same window and sliders
+     * (and the Daily / Weekly / Monthly tabs, which share one run) do not start Python again, while any
+     * new data or moved slider gives a new key and a fresh run.
+     */
+    private function pythonForecast(array $y, Carbon $start, array $params): ?array
+    {
+        $script = base_path('python/forecast.py');
+        if (!is_file($script)) {
+            return null;
+        }
+
+        $input = json_encode([
+            'y' => $y,
+            'start' => $start->toDateString(),
+            'alpha' => $params['alpha'],
+            'beta' => $params['beta'],
+            'gamma' => $params['gamma'],
+            'phi' => self::PHI,
+            'season' => 7,
+            'horizon' => max(array_column(self::PERIODS, 'horizon_days')),
+        ]);
+        $key = 'forecast.python.' . sha1($input . '|' . filemtime($script));
+
+        try {
+            return Cache::remember($key, now()->addDay(), function () use ($script, $input) {
+                $configured = config('services.python.bin');
+                // PYTHON_BIN in .env wins; otherwise the usual names are tried in turn
+                $candidates = $configured ? [[$configured]] : [['python'], ['python3'], ['py', '-3']];
+
+                foreach ($candidates as $command) {
+                    $result = Process::path(base_path())
+                        ->env(['PYTHONIOENCODING' => 'utf-8'])
+                        ->timeout(60)
+                        ->input($input)
+                        ->run([...$command, $script]);
+
+                    $data = json_decode($result->output(), true);
+                    if (!is_array($data)) {
+                        continue;   // this name is not a working Python (or statsmodels is missing): try the next
+                    }
+                    if (empty($data['ok'])) {
+                        throw new \RuntimeException($data['error'] ?? 'The Python script reported an error.');
+                    }
+                    return $data;
+                }
+                throw new \RuntimeException('No working Python with statsmodels was found. Set PYTHON_BIN in .env.');
+            });
+        } catch (\Throwable $e) {
+            Log::warning('Forecasting: the Python engine could not be used, falling back to PHP - ' . $e->getMessage());
+            return null;
+        }
     }
 
     /** Additive Holt-Winters; with less than two full seasons it falls back to Holt's linear trend. */

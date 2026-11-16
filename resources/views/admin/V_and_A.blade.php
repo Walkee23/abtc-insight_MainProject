@@ -607,7 +607,7 @@
                                      data-tip-title="{{ $row['name'] }}"
                                      data-tip-lines="{{ number_format($row['count']) }} {{ $row['count'] === 1 ? 'case' : 'cases' }}|{{ number_format($row['pct'], 1) }}% of all cases">
                                     <span class="viz-name w-28 text-xs font-bold text-on-surface-variant text-right truncate transition-colors">{{ $row['name'] }}</span>
-                                    <div class="flex-1 h-3 bg-surface-container-highest rounded-full overflow-hidden">
+                                    <div class="viz-track flex-1 h-3 bg-surface-container-highest rounded-full overflow-hidden">
                                         <div class="viz-fill h-full bg-primary rounded-full" style="width: {{ $row['width'] }}%;"></div>
                                     </div>
                                     <span class="viz-count w-10 shrink-0 text-right text-[11px] font-bold text-on-surface-variant tabular-nums transition-colors">{{ number_format($row['count']) }}</span>
@@ -652,7 +652,7 @@
                                         @endif
                                     </div>
                                     <div class="relative w-28 h-28 shrink-0">
-                                        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                                        <svg class="w-full h-full transform -rotate-90 overflow-visible" viewBox="0 0 36 36">
                                             <circle cx="18" cy="18" r="16" fill="none" stroke="#eceef0" stroke-width="4"></circle>
                                             @foreach ($d['segments'] as $i => $seg)
                                                 @if ($seg['frac'] > 0)
@@ -730,8 +730,11 @@
                         .viz-row { transition: opacity .25s ease, background-color .25s ease; cursor: default; }
                         .viz-rows:hover .viz-row:not(:hover) { opacity: .45; }
                         .viz-row:hover { background-color: rgb(0 74 147 / .07); }
-                        .viz-row .viz-fill { transform-origin: left center; transition: transform .25s cubic-bezier(.4, 0, .2, 1), filter .25s ease; }
-                        .viz-row:hover .viz-fill { transform: scaleY(1.4); filter: brightness(1.18); }
+                        .viz-row .viz-track { transition: height .25s cubic-bezier(.4, 0, .2, 1); }
+                        .viz-row .viz-fill { transition: filter .25s ease; }
+                        /* the whole track grows (not the bar scaled inside it), so the bar keeps perfectly round ends */
+                        .viz-row:hover .viz-track { height: 1rem; }
+                        .viz-row:hover .viz-fill { filter: brightness(1.18); }
                         .viz-row:hover .viz-name, .viz-row:hover .viz-count { color: #004a93; }
 
                         /* Age groups: the hovered bar grows a little and brightens */
@@ -747,7 +750,7 @@
                         .viz-legend.is-active { background-color: rgb(0 74 147 / .07); }
                         .viz-donut.has-active .viz-seg:not(.is-active), .viz-donut.has-active .viz-legend:not(.is-active) { opacity: .4; }
                         @media (prefers-reduced-motion: reduce) {
-                            .viz-tip, .viz-row, .viz-col, .viz-seg, .viz-legend, .viz-fill, .viz-bar { transition: none !important; }
+                            .viz-tip, .viz-row, .viz-track, .viz-col, .viz-seg, .viz-legend, .viz-fill, .viz-bar { transition: none !important; }
                         }
                     </style>
                     <script>

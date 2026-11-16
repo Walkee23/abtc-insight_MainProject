@@ -226,7 +226,7 @@
                     </form>
 
                     <a href="{{ route('report.export.csv', request()->all()) }}" class="flex items-center px-6 py-3 bg-[#D4AF37] text-white rounded-xl font-semibold shadow-xl shadow-yellow-700/10 hover:opacity-90 transition-all cursor-pointer">
-                        Export All Results <span class="material-symbols-outlined ml-2">arrow_forward</span> CSV
+                        Export Filtered Results <span class="material-symbols-outlined ml-2">arrow_forward</span> Excel
                     </a>
                 </div>
                 @endif

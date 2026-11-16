@@ -349,15 +349,75 @@ public function generateReport(Request $request)
 }
 
     /**
-     * Export the filtered results of the Visual Analytics page as CSV.
+     * Export the filtered results of the Visual Analytics page as an Excel sheet (.xls).
      * Only the rows matching the filters currently applied on the page are exported.
+     *
+     * Same style as the annual barangay export and the annual report: a title block, the filters that were
+     * applied, a coloured heading row, numbered and banded rows, and a total. The heading is rendered by
+     * admin/filtered_results_excel.blade.php; the rows are streamed after it so even the whole database
+     * (tens of thousands of rows) is written without being held in memory.
+     * (The route and method keep their old "csv" name.)
      */
     public function exportCsv(Request $request): StreamedResponse
     {
         // the file contains patient names, so only a logged-in Admin may download it
         abort_unless(Auth::check() && Auth::user()->role === 'Admin', 403, 'Please log in as an Admin to export results.');
 
-        $query = $this->analyticsQuery($request)
+        $ctx = $this->analyticsContext($request);
+        $query = $this->analyticsQuery($request);
+        $total = (clone $query)->count();
+
+        // Column widths (px), sized to the longest value in this export so nothing wraps or shows as ####
+        // (Excel cannot auto-fit an HTML sheet, so the longest text is measured here instead).
+        $longest = (clone $query)->selectRaw(
+            'MAX(CHAR_LENGTH(inflow_general_particulars.queue_id)) as queue_id, '
+            . 'MAX(CHAR_LENGTH(inflow_general_particulars.patient_name)) as patient_name, '
+            . 'MAX(CHAR_LENGTH(inflow_general_particulars.barangay)) as barangay, '
+            . 'MAX(CHAR_LENGTH(bite_cases.outcome)) as outcome'
+        )->first();
+        $data = fn (int $chars) => (int) ceil($chars * 8 + 28);       // regular 10pt text
+        $caps = fn (string $text) => (int) ceil(strlen($text) * 10 + 30); // bold capitals of the heading
+        $widths = [
+            max($caps('NO.'), $data(strlen((string) $total))),
+            max($caps('DATE'), 118),
+            max($caps('QUEUE ID'), $data((int) ($longest->queue_id ?? 0))),
+            max($caps('PATIENT NAME'), $data((int) ($longest->patient_name ?? 0))),
+            max($caps('AGE'), 60),
+            max($caps('SEX'), $data(6)),
+            max($caps('BARANGAY'), $data((int) ($longest->barangay ?? 0))),
+            max($caps('HEALTH AREA'), $data(17)),                      // "Outside Cebu City" is the longest area
+            max($caps('CATEGORY'), 60),
+            max($caps('CASE NO.'), 60),
+            max($caps('OUTCOME'), $data((int) ($longest->outcome ?? 0))),
+        ];
+
+        // --- the filters, in words, for the top of the sheet ---
+        $periodNames = ['daily' => 'Daily', 'weekly' => 'Weekly', 'monthly' => 'Monthly', 'quarterly' => 'Quarterly', 'yearly' => 'Yearly'];
+        $filters = ['Period' => ($ctx['group'] ? $periodNames[$ctx['group']] : 'Year') . ' - ' . $ctx['subtitle']];
+        if ($request->filled('health_area')) {
+            $filters['Health Area'] = ucfirst(strtolower(trim((string) $request->health_area)));
+        }
+        if ($request->filled('barangay')) {
+            $filters['Barangay'] = 'contains "' . trim((string) $request->barangay) . '"';
+        }
+        if ($request->filled('sex') && $request->sex != 'All') {
+            $filters['Sex'] = $request->sex;
+        }
+        if ($request->filled('age_min') || $request->filled('age_max')) {
+            $filters['Age Range'] = ($request->filled('age_min') ? $request->age_min : '0') . ' - ' . ($request->filled('age_max') ? $request->age_max : 'up');
+        }
+
+        // barangay (spelling-insensitive) -> health area, for the HEALTH AREA column
+        $norm = fn ($s) => preg_replace('/[^a-z0-9]/', '', strtolower(Str::ascii((string) $s)));
+        $areaOf = [];
+        foreach ($this->healthAreaDefs() as $areaName => $def) {
+            $label = ucfirst(strtolower(str_replace(' HEALTH AREA', '', $areaName)));
+            foreach ($def['barangays'] as $b) {
+                $areaOf[$norm($b)] = $label;
+            }
+        }
+
+        $rows = $query
             ->select(
                 'inflow_general_particulars.queue_id',
                 'inflow_general_particulars.queue_date',
@@ -369,35 +429,45 @@ public function generateReport(Request $request)
                 'bite_cases.case_number',
                 'bite_cases.outcome'
             )
-            ->orderByDesc('inflow_general_particulars.queue_date')
-            ->orderByDesc('inflow_general_particulars.inflow_record_id');
+            ->orderBy('inflow_general_particulars.queue_date')
+            ->orderBy('inflow_general_particulars.inflow_record_id');
 
-        $filename = 'abtc_insight_filtered_results_' . date('Y-m-d_His') . '.csv';
+        $head = view('admin.filtered_results_excel', compact('filters', 'total', 'widths'))->render();
+        $filename = 'ABTC_Filtered_Results_' . date('Y-m-d_His') . '.xls';
 
-        // a cell that starts with = + - @ would be run as a formula when the file is opened in Excel
-        $safe = fn ($v) => is_string($v) && $v !== '' && strpbrk($v[0], "=+-@\t\r") !== false ? "'" . $v : $v;
+        return response()->streamDownload(function () use ($head, $rows, $total, $areaOf, $norm) {
+            $h = fn ($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
+            $dash = fn ($v) => ($v === null || $v === '') ? '-' : $h($v);
 
-        return response()->streamDownload(function () use ($query, $safe) {
-            $out = fopen('php://output', 'w');
-            fwrite($out, "\xEF\xBB\xBF"); // UTF-8 BOM so Excel shows names with accents correctly
-            fputcsv($out, ['Queue ID', 'Date', 'Patient Name', 'Age', 'Sex', 'Barangay', 'Category', 'Case No.', 'Outcome']);
+            echo $head;
+            $n = 0;
+            foreach ($rows->cursor() as $r) {
+                $n++;
+                $z = $n % 2 === 0 ? 'z' : '';   // banded rows: the same class with a z, never two classes
+                $barangay = trim((string) $r->barangay);
+                $area = $areaOf[$norm($barangay)] ?? (stripos($barangay, 'others') === 0 ? 'Outside Cebu City' : '-');
+                $cat = (strtoupper(trim((string) $r->category)) === 'III' ? 'b' : 'n') . $z;   // Category III in bold
 
-            foreach ($query->cursor() as $r) {
-                fputcsv($out, [
-                    $safe($r->queue_id),
-                    $r->queue_date,
-                    $safe($r->patient_name),
-                    $r->age,
-                    $r->sex,
-                    $safe($r->barangay),
-                    $r->category,
-                    $r->case_number,
-                    $r->outcome,
-                ]);
+                echo '<tr>'
+                    . '<td class="n' . $z . '">' . $n . '</td>'
+                    . '<td class="d' . $z . '">' . $h($r->queue_date) . '</td>'
+                    . '<td class="n' . $z . '">' . $h($r->queue_id) . '</td>'
+                    . '<td class="t' . $z . '">' . $h($r->patient_name) . '</td>'
+                    . '<td class="n' . $z . '">' . $dash($r->age) . '</td>'
+                    . '<td class="n' . $z . '">' . $dash($r->sex) . '</td>'
+                    . '<td class="t' . $z . '">' . $dash($barangay) . '</td>'
+                    . '<td class="n' . $z . '">' . $h($area) . '</td>'
+                    . '<td class="' . $cat . '">' . $dash($r->category) . '</td>'
+                    . '<td class="n' . $z . '">' . $dash($r->case_number) . '</td>'
+                    . '<td class="n' . $z . '">' . $dash($r->outcome) . '</td>'
+                    . "</tr>\n";
             }
-            fclose($out);
+
+            echo '<tr><td colspan="10" class="grandl">TOTAL NUMBER OF CASES</td><td class="grand">' . number_format($total) . '</td></tr>';
+            echo "\n</table>\n</body>\n</html>";
         }, $filename, [
-            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
+            'Cache-Control' => 'max-age=0',
         ]);
     }
     /**

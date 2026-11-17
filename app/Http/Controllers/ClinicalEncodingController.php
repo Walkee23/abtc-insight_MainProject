@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use App\Support\Audit;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QROptions;
+use chillerlan\QRCode\Output\QRMarkupSVG;
 
 class ClinicalEncodingController extends Controller
 {
@@ -366,10 +369,20 @@ class ClinicalEncodingController extends Controller
         // Finalized: mark the case Completed so it drops out of the queue
         DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->update(['outcome' => 'Completed']);
 
-        // Last section - stay in Clinical Encoding: back to the queue with no case selected,
-        // where the finalized case no longer appears
+        $patientId = DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->value('patient_id');
+
+        $qrImage = (new QRCode(new QROptions([
+            'outputInterface' => QRMarkupSVG::class,
+            'outputBase64'    => true,   // returns a data:image/svg+xml;base64,... string for <img src>
+            'scale'      => 6,
+        ])))->render($patientId);
+
+        $qrPopup = ['patient_id' => $patientId, 'image' => $qrImage];
+
+        // Last section - back to the queue; the QR pop-up shows there
         return redirect()->route('healthworker.clinical-encoding')
-            ->with('status', 'Clinical encoding completed for this case.');
+            ->with('status', 'Clinical encoding completed for this case.')
+            ->with('qr_popup', $qrPopup);
     }
 
     // ---------------------------------------------------------------
@@ -380,9 +393,9 @@ class ClinicalEncodingController extends Controller
     {
         $today = now()->toDateString();
 
-        // Cases still in Clinical Encoding / PEP (finalized or discharged ones have an outcome)
-        $unfinished = fn () => $this->handedOff(DB::table('bite_cases as bc'))->where(function ($q) {
-            $q->whereNull('bc.outcome');
+        // Cases still in Clinical Encoding / PEP (finalized ones have outcome = 'Completed')
+        $unfinished = fn() => $this->handedOff(DB::table('bite_cases as bc'))->where(function ($q) {
+            $q->whereNull('bc.outcome')->orWhere('bc.outcome', '<>', 'Completed');
         });
 
         $stats = [
@@ -454,7 +467,7 @@ class ClinicalEncodingController extends Controller
                 ];
             }
         }
-        usort($reminders, fn ($a, $b) => $b->overdue_by <=> $a->overdue_by);
+        usort($reminders, fn($a, $b) => $b->overdue_by <=> $a->overdue_by);
         $reminders = array_slice($reminders, 0, 5);
 
         // Recent activity, from the dates the system records: newly verified cases
@@ -489,7 +502,7 @@ class ClinicalEncodingController extends Controller
                 }
             }
         }
-        usort($activity, fn ($a, $b) => $b->at <=> $a->at);
+        usort($activity, fn($a, $b) => $b->at <=> $a->at);
         $activity = array_slice($activity, 0, 6);
 
         return view('healthworker.dashboard', compact('stats', 'queue', 'reminders', 'activity'));

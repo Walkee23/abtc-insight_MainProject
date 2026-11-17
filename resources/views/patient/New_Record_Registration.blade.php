@@ -7,6 +7,7 @@
   <meta content="width=device-width, initial-scale=1.0" name="viewport" />
   <title>New Patient Registration | ABTC-Insight</title>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet" />
   <link
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
@@ -259,7 +260,14 @@
                   placeholder="e.g., BRY-001-20260501-0023" required=""
                   type="text" />
 
-                <button type="button" id="autofillBtn" class="bg-primary-container text-white px-5 py-3 rounded-lg text-sm font-bold hover:opacity-90 transition-opacity whitespace-nowrap">
+                <button type="button" id="scanQrBtn" title="Scan Referral QR Code"
+                  class="bg-secondary-container text-on-secondary-container px-4 py-3 rounded-lg text-sm font-bold hover:opacity-90 transition-opacity flex items-center gap-1.5 whitespace-nowrap">
+                  <span class="material-symbols-outlined text-[18px]">qr_code_scanner</span>
+                  <span>Scan</span>
+                </button>
+
+                <button type="button" id="autofillBtn"
+                  class="bg-primary-container text-white px-5 py-3 rounded-lg text-sm font-bold hover:opacity-90 transition-opacity whitespace-nowrap">
                   Autofill
                 </button>
               </div>
@@ -464,6 +472,54 @@
         </div>
       </div>
     </footer>
+    <!-- QR Scanner & Upload Modal -->
+    <div id="qrScannerModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="bg-surface-container-lowest rounded-2xl max-w-md w-full p-6 shadow-2xl border border-outline-variant/30 space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">qr_code_scanner</span>
+            <h3 class="font-bold text-base text-on-surface">Scan or Upload Referral QR</h3>
+          </div>
+          <button type="button" id="closeQrModalBtn" class="p-1 text-on-surface-variant hover:text-on-surface rounded-lg">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <!-- Mode Switcher -->
+        <div class="grid grid-cols-2 gap-2 p-1 bg-surface-container rounded-xl">
+          <button type="button" id="tabCameraBtn" class="py-2 px-3 rounded-lg text-xs font-bold bg-white text-primary shadow-sm transition-all flex items-center justify-center gap-1.5">
+            <span class="material-symbols-outlined text-[16px]">photo_camera</span>
+            Use Camera
+          </button>
+          <button type="button" id="tabUploadBtn" class="py-2 px-3 rounded-lg text-xs font-bold text-on-surface-variant hover:text-on-surface transition-all flex items-center justify-center gap-1.5">
+            <span class="material-symbols-outlined text-[16px]">upload_file</span>
+            Upload QR Photo
+          </button>
+        </div>
+
+        <!-- Camera View -->
+        <div id="cameraPanel" class="space-y-3">
+          <div id="qrReader" class="w-full rounded-xl overflow-hidden bg-black min-h-[240px]"></div>
+          <p class="text-xs text-on-surface-variant text-center">
+            Point your camera at the QR code on the BHW Referral Form.
+          </p>
+        </div>
+
+        <!-- File Upload View -->
+        <div id="uploadPanel" class="hidden space-y-3">
+          <input type="file" id="qrFileInput" accept="image/png,image/jpeg,image/webp" class="hidden" />
+          <div id="qrFileDropzone" class="border-2 border-dashed border-outline-variant/60 hover:border-primary rounded-xl p-8 text-center cursor-pointer transition-colors bg-surface-container-low/50">
+            <span class="material-symbols-outlined text-4xl text-primary mb-2">qr_code_2</span>
+            <p class="text-sm font-bold text-on-surface">Click to choose QR code image</p>
+            <p class="text-[11px] text-on-surface-variant mt-1">Accepts PNG, JPG, or WEBP containing a valid BHW Referral QR code</p>
+          </div>
+          <div id="qrFileReader" class="hidden"></div>
+        </div>
+
+        <!-- Modal Error Message -->
+        <p id="qrModalError" class="hidden text-xs text-error font-semibold text-center bg-error-container/50 py-2 px-3 rounded-lg"></p>
+      </div>
+    </div>
   </main>
 
   <script>
@@ -1097,6 +1153,24 @@
           .then(response => response.json())
           .then(data => {
             if (data.success) {
+              // 1. Auto-select Priority Status card from BHW Referral
+              const priorityIndexMap = {
+                'None': 0,
+                'PWD': 1,
+                'Senior Citizen': 2,
+                'Pregnant': 3
+              };
+              const rawPriority = data.data.priority_status || 'None';
+              const targetIndex = priorityIndexMap[rawPriority] ?? 0;
+
+              if (priorityOptions[targetIndex]) {
+                priorityOptions[targetIndex].click();
+              }
+
+              // 2. Auto-fill Barangay of Incidence if returned
+              if (data.data.barangay) {
+                document.getElementById('barangayInput').value = data.data.barangay;
+              }
               // Map the text inputs
               document.getElementById('surnameInput').value = data.data.last_name || '';
               document.getElementById('givenNameInput').value = data.data.first_name || '';
@@ -1124,7 +1198,7 @@
 
               // Programmatically dispatch 'input' events so your existing UI scripts 
               // (progress bar, name merger, autosave) recognize the newly filled data
-              ['surnameInput', 'givenNameInput', 'middleInitialInput', 'contactNumberInput', 'dobInput'].forEach(id => {
+              ['surnameInput', 'givenNameInput', 'middleInitialInput', 'contactNumberInput', 'dobInput', 'barangayInput'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el.value) el.dispatchEvent(new Event('input', {
                   bubbles: true
@@ -1160,7 +1234,154 @@
         showBhwReferralError('Please enter a valid Referral ID first.');
       }
     });
+
+    // --- QR Code Scanner & Strict Image Upload Logic ---
+    const scanQrBtn = document.getElementById('scanQrBtn');
+    const qrScannerModal = document.getElementById('qrScannerModal');
+    const closeQrModalBtn = document.getElementById('closeQrModalBtn');
+    const tabCameraBtn = document.getElementById('tabCameraBtn');
+    const tabUploadBtn = document.getElementById('tabUploadBtn');
+    const cameraPanel = document.getElementById('cameraPanel');
+    const uploadPanel = document.getElementById('uploadPanel');
+    const qrFileDropzone = document.getElementById('qrFileDropzone');
+    const qrFileInput = document.getElementById('qrFileInput');
+    const qrModalError = document.getElementById('qrModalError');
+
+    let html5QrCode = null;
+    const html5QrFileScanner = new Html5Qrcode('qrFileReader');
+
+    function showQrModalError(msg) {
+      qrModalError.textContent = msg;
+      qrModalError.classList.remove('hidden');
+    }
+
+    function clearQrModalError() {
+      qrModalError.textContent = '';
+      qrModalError.classList.add('hidden');
+    }
+
+    function applyScannedReferralCode(rawText) {
+      const cleanedCode = rawText.trim();
+
+      if (!isBhwReferralFormatValid(cleanedCode)) {
+        showQrModalError('Invalid QR code. Only official BHW Referral QR codes (BRY-XXX-YYYYMMDD-XXXX) are accepted.');
+        return false;
+      }
+
+      clearQrModalError();
+      clearBhwReferralError();
+      bhwReferralInput.value = cleanedCode;
+      bhwReferralInput.dispatchEvent(new Event('input', {
+        bubbles: true
+      }));
+
+      closeQrScannerModal();
+      document.getElementById('autofillBtn').click();
+      return true;
+    }
+
+    function stopCameraStream() {
+      if (html5QrCode && html5QrCode.isScanning) {
+        return html5QrCode.stop().catch(() => {});
+      }
+      return Promise.resolve();
+    }
+
+    function startCameraStream() {
+      clearQrModalError();
+      if (!html5QrCode) {
+        html5QrCode = new Html5Qrcode('qrReader');
+      }
+      if (html5QrCode.isScanning) return;
+
+      html5QrCode.start({
+          facingMode: 'environment'
+        }, {
+          fps: 10,
+          qrbox: {
+            width: 240,
+            height: 240
+          }
+        },
+        (decodedText) => {
+          applyScannedReferralCode(decodedText);
+        },
+        () => {}
+      ).catch(() => {
+        showQrModalError('Camera unavailable or permission denied. Switch to "Upload QR Photo" above.');
+      });
+    }
+
+    function switchToCameraTab() {
+      clearQrModalError();
+      tabCameraBtn.className = 'py-2 px-3 rounded-lg text-xs font-bold bg-white text-primary shadow-sm transition-all flex items-center justify-center gap-1.5';
+      tabUploadBtn.className = 'py-2 px-3 rounded-lg text-xs font-bold text-on-surface-variant hover:text-on-surface transition-all flex items-center justify-center gap-1.5';
+      cameraPanel.classList.remove('hidden');
+      uploadPanel.classList.add('hidden');
+      startCameraStream();
+    }
+
+    function switchToUploadTab() {
+      clearQrModalError();
+      stopCameraStream();
+      tabUploadBtn.className = 'py-2 px-3 rounded-lg text-xs font-bold bg-white text-primary shadow-sm transition-all flex items-center justify-center gap-1.5';
+      tabCameraBtn.className = 'py-2 px-3 rounded-lg text-xs font-bold text-on-surface-variant hover:text-on-surface transition-all flex items-center justify-center gap-1.5';
+      uploadPanel.classList.remove('hidden');
+      cameraPanel.classList.add('hidden');
+    }
+
+    function closeQrScannerModal() {
+      stopCameraStream();
+      qrScannerModal.classList.add('hidden');
+      qrFileInput.value = '';
+      clearQrModalError();
+    }
+
+    scanQrBtn.addEventListener('click', function() {
+      qrScannerModal.classList.remove('hidden');
+      switchToCameraTab();
+    });
+
+    tabCameraBtn.addEventListener('click', switchToCameraTab);
+    tabUploadBtn.addEventListener('click', switchToUploadTab);
+    closeQrModalBtn.addEventListener('click', closeQrScannerModal);
+
+    qrScannerModal.addEventListener('click', function(e) {
+      if (e.target === qrScannerModal) closeQrScannerModal();
+    });
+
+    qrFileDropzone.addEventListener('click', function() {
+      qrFileInput.value = '';
+      qrFileInput.click();
+    });
+
+    qrFileInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      clearQrModalError();
+
+      // 1. Strict image MIME type check
+      const allowedTypes = ['image/png', 'image/jpeg', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        showQrModalError('Invalid file type. Please upload a PNG, JPG, or WEBP image.');
+        qrFileInput.value = '';
+        return;
+      }
+
+      // 2. Decode QR code from file
+      html5QrFileScanner.scanFile(file, false)
+        .then(decodedText => {
+          applyScannedReferralCode(decodedText);
+        })
+        .catch(() => {
+          showQrModalError('No QR code detected in this image. Please upload a clear photo of the referral QR code.');
+        })
+        .finally(() => {
+          qrFileInput.value = '';
+        });
+    });
   </script>
 </body>
-    
+
 </html>

@@ -282,6 +282,9 @@
                             // The BHW form saves 00:00:00 when no time was entered, so treat that as blank
                             $biteTimeVal = ($biteDt && $biteDt->format('H:i:s') !== '00:00:00') ? $biteDt->format('H:i') : '';
                             $animal = $bhwExposure->biting_animal ?? '';
+                            $exposureList = array_map('trim', explode(',', $bhwExposure->exposure_type ?? ''));
+                            $animalFate = $bhwExposure->animal_remarks ?? '';
+                            $obsDateVal = !empty($bhwExposure->obs_14_days) ? \Carbon\Carbon::parse($bhwExposure->obs_14_days)->format('Y-m-d') : '';
                             @endphp
 
                             <!-- Section 3: Details of Exposure -->
@@ -331,13 +334,13 @@
                                         <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Exposure Type <span class="text-error">*</label>
                                         <div class="flex gap-4">
                                             <label class="flex items-center gap-2 text-sm cursor-pointer">
-                                                <input class="rounded text-primary focus:ring-primary" name="exposure_type[]" value="Lick" type="checkbox" /> Lick
+                                                <input class="rounded text-primary focus:ring-primary" name="exposure_type[]" value="Lick" type="checkbox" {{ in_array('Lick', $exposureList, true) ? 'checked' : '' }} /> Lick
                                             </label>
                                             <label class="flex items-center gap-2 text-sm cursor-pointer">
-                                                <input class="rounded text-primary focus:ring-primary" name="exposure_type[]" value="Scratch" type="checkbox" /> Scratch
+                                                <input class="rounded text-primary focus:ring-primary" name="exposure_type[]" value="Scratch" type="checkbox" {{ in_array('Scratch', $exposureList, true) ? 'checked' : '' }} /> Scratch
                                             </label>
                                             <label class="flex items-center gap-2 text-sm cursor-pointer">
-                                                <input class="rounded text-primary focus:ring-primary" name="exposure_type[]" value="Bite" type="checkbox" {{ ($bhwExposure->exposure_type ?? '') === 'Bite' ? 'checked' : '' }} /> Bite
+                                                <input class="rounded text-primary focus:ring-primary" name="exposure_type[]" value="Bite" type="checkbox" {{ in_array('Bite', $exposureList, true) ? 'checked' : '' }} /> Bite
                                             </label>
                                         </div>
                                     </div>
@@ -390,17 +393,17 @@
                                         <div class="space-y-4">
                                             <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Fate of Animal</label>
                                             <div class="grid grid-cols-2 gap-2">
-                                                <label class="text-xs flex items-center gap-2"><input class="text-primary" name="fate" value="Healthy" type="radio" /> Healthy</label>
-                                                <label class="text-xs flex items-center gap-2"><input class="text-primary" name="fate" value="Sick" type="radio" /> Sick</label>
-                                                <label class="text-xs flex items-center gap-2"><input class="text-primary" name="fate" value="Dead" type="radio" /> Dead</label>
-                                                <label class="text-xs flex items-center gap-2"><input class="text-primary" name="fate" value="Lost/Stray" type="radio" /> Lost/Stray</label>
+                                                <label class="text-xs flex items-center gap-2"><input class="text-primary" name="fate" value="Healthy" type="radio" {{ $animalFate === 'Healthy' ? 'checked' : '' }} /> Healthy</label>
+                                                <label class="text-xs flex items-center gap-2"><input class="text-primary" name="fate" value="Sick" type="radio" {{ $animalFate === 'Sick' ? 'checked' : '' }} /> Sick</label>
+                                                <label class="text-xs flex items-center gap-2"><input class="text-primary" name="fate" value="Dead" type="radio" {{ $animalFate === 'Dead' ? 'checked' : '' }} /> Dead</label>
+                                                <label class="text-xs flex items-center gap-2"><input class="text-primary" name="fate" value="Lost/Stray" type="radio" {{ $animalFate === 'Lost/Stray' ? 'checked' : '' }} /> Lost/Stray</label>
                                             </div>
                                         </div>
                                         <div class="space-y-4">
                                             <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">14-Day Observation</label>
                                             <div class="flex flex-col gap-2">
-                                                <label class="text-xs flex items-center gap-2"><input id="obs_checkbox" class="rounded text-primary focus:ring-primary" name="obs" value="1" type="checkbox" /> Under Observation</label>
-                                                <input id="obs_date_input" class="w-full bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20 disabled:opacity-50 disabled:cursor-not-allowed" name="obs_14_days" type="date" min="2000-01-01" max="{{ date('Y-m-d') }}" disabled />
+                                                <label class="text-xs flex items-center gap-2"><input id="obs_checkbox" class="rounded text-primary focus:ring-primary" name="obs" value="1" type="checkbox" {{ $obsDateVal ? 'checked' : '' }} /> Under Observation</label>
+                                                <input id="obs_date_input" class="w-full bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20 disabled:opacity-50 disabled:cursor-not-allowed" name="obs_14_days" type="date" value="{{ $obsDateVal }}" min="2000-01-01" max="{{ date('Y-m-d') }}" {{ $obsDateVal ? '' : 'disabled' }} />
                                             </div>
                                         </div>
                                     </div>
@@ -627,13 +630,13 @@
                     vaxDateInput.value = '';
                 }
             });
-        });
-        // Apply the time limit to a pre-filled bite date
-        limitBiteTime();
+            // Apply the time limit to a pre-filled bite date
+            limitBiteTime();
 
-        // Required when "Others" is pre-selected
-        const othersChecked = document.querySelector('.animal-type-radio[value="Others"]:checked');
-        if (othersChecked) animalOtherInput.required = true;
+            // Required when "Others" is pre-selected
+            const othersChecked = document.querySelector('.animal-type-radio[value="Others"]:checked');
+            if (othersChecked) animalOtherInput.required = true;
+        });
     </script>
 </body>
 

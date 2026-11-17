@@ -7,6 +7,7 @@
   <meta content="width=device-width, initial-scale=1.0" name="viewport" />
   <title>New Patient Registration | ABTC-Insight</title>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet" />
   <link
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
@@ -259,7 +260,14 @@
                   placeholder="e.g., BRY-001-20260501-0023" required=""
                   type="text" />
 
-                <button type="button" id="autofillBtn" class="bg-primary-container text-white px-5 py-3 rounded-lg text-sm font-bold hover:opacity-90 transition-opacity whitespace-nowrap">
+                <button type="button" id="scanQrBtn" title="Scan Referral QR Code"
+                  class="bg-secondary-container text-on-secondary-container px-4 py-3 rounded-lg text-sm font-bold hover:opacity-90 transition-opacity flex items-center gap-1.5 whitespace-nowrap">
+                  <span class="material-symbols-outlined text-[18px]">qr_code_scanner</span>
+                  <span>Scan</span>
+                </button>
+
+                <button type="button" id="autofillBtn"
+                  class="bg-primary-container text-white px-5 py-3 rounded-lg text-sm font-bold hover:opacity-90 transition-opacity whitespace-nowrap">
                   Autofill
                 </button>
               </div>
@@ -464,6 +472,26 @@
         </div>
       </div>
     </footer>
+    <!-- QR Scanner Modal -->
+    <div id="qrScannerModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="bg-surface-container-lowest rounded-2xl max-w-md w-full p-6 shadow-2xl border border-outline-variant/30 space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">qr_code_scanner</span>
+            <h3 class="font-bold text-base text-on-surface">Scan BHW Referral QR</h3>
+          </div>
+          <button type="button" id="closeQrModalBtn" class="p-1 text-on-surface-variant hover:text-on-surface rounded-lg">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <div id="qrReader" class="w-full rounded-xl overflow-hidden bg-black"></div>
+
+        <p class="text-xs text-on-surface-variant text-center">
+          Point your camera at the QR code on the BHW Referral Form.
+        </p>
+      </div>
+    </div>
   </main>
 
   <script>
@@ -1097,6 +1125,24 @@
           .then(response => response.json())
           .then(data => {
             if (data.success) {
+              // 1. Auto-select Priority Status card from BHW Referral
+              const priorityIndexMap = {
+                'None': 0,
+                'PWD': 1,
+                'Senior Citizen': 2,
+                'Pregnant': 3
+              };
+              const rawPriority = data.data.priority_status || 'None';
+              const targetIndex = priorityIndexMap[rawPriority] ?? 0;
+
+              if (priorityOptions[targetIndex]) {
+                priorityOptions[targetIndex].click();
+              }
+
+              // 2. Auto-fill Barangay of Incidence if returned
+              if (data.data.barangay) {
+                document.getElementById('barangayInput').value = data.data.barangay;
+              }
               // Map the text inputs
               document.getElementById('surnameInput').value = data.data.last_name || '';
               document.getElementById('givenNameInput').value = data.data.first_name || '';
@@ -1124,7 +1170,7 @@
 
               // Programmatically dispatch 'input' events so your existing UI scripts 
               // (progress bar, name merger, autosave) recognize the newly filled data
-              ['surnameInput', 'givenNameInput', 'middleInitialInput', 'contactNumberInput', 'dobInput'].forEach(id => {
+              ['surnameInput', 'givenNameInput', 'middleInitialInput', 'contactNumberInput', 'dobInput', 'barangayInput'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el.value) el.dispatchEvent(new Event('input', {
                   bubbles: true
@@ -1160,7 +1206,66 @@
         showBhwReferralError('Please enter a valid Referral ID first.');
       }
     });
+
+    // --- QR Code Scanner Logic ---
+    const scanQrBtn = document.getElementById('scanQrBtn');
+    const qrScannerModal = document.getElementById('qrScannerModal');
+    const closeQrModalBtn = document.getElementById('closeQrModalBtn');
+    let html5QrCode = null;
+
+    function stopQrScanner() {
+      qrScannerModal.classList.add('hidden');
+      if (html5QrCode && html5QrCode.isScanning) {
+        html5QrCode.stop().catch(err => console.error('Error stopping scanner:', err));
+      }
+    }
+
+    scanQrBtn.addEventListener('click', function() {
+      qrScannerModal.classList.remove('hidden');
+
+      if (!html5QrCode) {
+        html5QrCode = new Html5Qrcode('qrReader');
+      }
+
+      html5QrCode.start({
+          facingMode: 'environment'
+        }, {
+          fps: 10,
+          qrbox: {
+            width: 240,
+            height: 240
+          }
+        },
+        (decodedText) => {
+          const scannedCode = decodedText.trim();
+          bhwReferralInput.value = scannedCode;
+          bhwReferralInput.dispatchEvent(new Event('input', {
+            bubbles: true
+          }));
+
+          stopQrScanner();
+
+          // Automatically trigger the existing Autofill button
+          document.getElementById('autofillBtn').click();
+        },
+        () => {
+          // Ignore frame scan misses while searching for a QR code
+        }
+      ).catch(err => {
+        console.error('Camera error:', err);
+        stopQrScanner();
+        showBhwReferralError('Unable to access camera. Please allow camera permissions or enter the ID manually.');
+      });
+    });
+
+    closeQrModalBtn.addEventListener('click', stopQrScanner);
+
+    qrScannerModal.addEventListener('click', function(e) {
+      if (e.target === qrScannerModal) {
+        stopQrScanner();
+      }
+    });
   </script>
 </body>
-    
+
 </html>

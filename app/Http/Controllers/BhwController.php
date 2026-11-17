@@ -40,7 +40,8 @@ class BhwController extends Controller
             'exposure_type'   => 'required|array|min:1',
             'exposure_type.*' => 'in:Bite,Non-Bite',
             'animal_remarks'  => 'required|in:Healthy,Sick,Dead,Lost/Stray',
-            'obs_14_days' => 'nullable|date|before_or_equal:today',
+            'obs_14_days'     => 'nullable|date|before_or_equal:today',
+            'priority_status' => 'required|in:None,PWD,Senior Citizen,Pregnant',
         ]);
         $barangayName = $request->input('patient_barangay');
 
@@ -72,6 +73,7 @@ class BhwController extends Controller
                 'age' => $request->input('age'),
                 'gender' => $request->input('gender'),
                 'civil_status' => $request->input('civil_status', 'Single'),
+                'priority_status' => $request->input('priority_status', 'None'),
                 'patient_barangay' => $barangayName,
                 'contact_num' => $request->input('contact_num'),
                 'referred_by' => auth()->user()->full_name, // FIX: Grabs BHW name

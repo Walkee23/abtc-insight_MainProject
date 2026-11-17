@@ -286,6 +286,15 @@
                         </select>
                     </div>
                     <div class="md:col-span-4 space-y-2">
+                        <label class="text-xs font-semibold text-on-surface-variant ml-1">Priority Status <span class="text-error">*</span></label>
+                        <select name="priority_status" id="priorityStatus" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" required>
+                            <option value="None" selected>None (Regular Queue)</option>
+                            <option value="PWD">PWD</option>
+                            <option value="Senior Citizen">Senior Citizen (60+)</option>
+                            <option value="Pregnant">Pregnant</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-4 space-y-2">
                         <label class="text-xs font-semibold text-on-surface-variant ml-1">Contact Number <span class="text-error">*</span></label>
                         <input type="tel" name="contact_num" id="contactNum" inputmode="numeric" maxlength="11" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" placeholder="+63 000 000 0000" pattern="^09\d{9}$" required />
                         <p id="contactError" class="text-[10px] text-error hidden mt-1">Must be exactly 11 digits and start with 09.</p>
@@ -517,6 +526,12 @@
                     }
 
                     ageInput.value = age;
+
+                    // Auto-select Senior Citizen if 60 or older
+                    const prioritySelect = document.getElementById('priorityStatus');
+                    if (age >= 60 && prioritySelect.value === 'None') {
+                        prioritySelect.value = 'Senior Citizen';
+                    }
 
                     // Restrict age between 0 and 125
                     if (age < 0 || age > 125) {

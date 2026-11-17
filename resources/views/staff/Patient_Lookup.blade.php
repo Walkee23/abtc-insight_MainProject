@@ -136,14 +136,11 @@
             </a>
         </nav>
 </aside>
-<main class="flex-1 flex flex-col ml-72">
+<main class="flex-1 min-w-0 flex flex-col ml-64">
 <!-- TopNavBar -->
 <header class="flex justify-between items-center w-full h-16 px-8 sticky top-0 z-30 bg-white/85 dark:bg-slate-950/85 backdrop-blur-md z-30 shadow-sm shadow-slate-200/50 dark:shadow-none border-b border-slate-100/50">
 <div class="flex items-center gap-8">
-<div class="relative group">
-<span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 text-lg">search</span>
-<input class="pl-10 pr-4 py-1.5 bg-surface-container-low rounded-full text-sm focus:ring-2 focus:ring-primary/20 border-none outline-none w-72 transition-all" placeholder="Search analytics or case IDs..." type="text"/>
-</div>
+
 </div>
 <div class="flex items-center gap-4">
 <div class="hidden lg:flex items-center gap-2 px-3 py-1 bg-green-50 text-green-700 rounded-full text-[10px] font-bold uppercase tracking-wider">
@@ -151,13 +148,6 @@
                      Registered
                 </div>
 <div class="flex items-center gap-1 border-r border-outline-variant/20 pr-4">
-<button class="p-2 text-slate-500 hover:bg-surface-container-high rounded-full transition-colors relative">
-<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
-<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-white"></span>
-</button>
-<button class="p-2 text-slate-500 hover:bg-surface-container-high rounded-full transition-colors">
-<span class="material-symbols-outlined" data-icon="help">help</span>
-</button>
 </div>
 <div class="relative group cursor-pointer pl-2">
 <div class="flex items-center gap-3">
@@ -190,7 +180,7 @@ Log Out
 </div>
 </header>
 <!-- Main Content -->
-<div class="p-8 max-w-7xl mx-auto w-full space-y-8">
+<div class="p-8 w-full space-y-8">
 <!-- Header Section -->
 <section>
 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -230,12 +220,7 @@ Log Out
                         Search Results
                     </h3>
 <div class="flex gap-2">
-<button class="p-2 hover:bg-surface-container-low rounded-lg transition-colors">
-<span class="material-symbols-outlined text-on-surface-variant" data-icon="filter_list">filter_list</span>
-</button>
-<button class="p-2 hover:bg-surface-container-low rounded-lg transition-colors">
-<span class="material-symbols-outlined text-on-surface-variant" data-icon="download">download</span>
-</button>
+
 </div>
 </div>
 <div class="overflow-x-auto">

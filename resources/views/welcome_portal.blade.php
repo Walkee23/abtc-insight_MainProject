@@ -205,6 +205,8 @@
             </div>
         </section>
 
+        <!-- GIS MAP -->
+
         <!-- Call to Action Card Section -->
         <section class="py-12 bg-surface">
             <div class="max-w-7xl mx-auto px-6">
@@ -222,15 +224,10 @@
     <!-- Footer -->
     <footer class="bg-slate-100 w-full py-12 px-8 mt-12">
         <div class="flex flex-col md:flex-row justify-between items-center gap-8 max-w-7xl mx-auto">
-            <div class="text-lg font-black text-slate-900">
-                ABTC-Insight
-            </div>
             <div class="flex flex-wrap justify-center gap-8 font-sans text-xs uppercase tracking-widest font-semibold">
-                <a class="text-slate-500 hover:text-blue-500 transition-colors" href="#">Privacy Policy</a>
-                <a class="text-slate-500 hover:text-blue-500 transition-colors" href="#">Terms of Service</a>
-                <a class="text-slate-500 hover:text-blue-500 transition-colors" href="#">Emergency Contacts</a>
-                <a class="text-slate-500 hover:text-blue-500 transition-colors" href="#">Department of Health</a>
-            </div>
+            <a class="text-slate-500 hover:text-blue-500 transition-colors" href="https://cebucitytour.com/cebu-city-emergecy-hotline/" target="_blank" rel="noopener noreferrer">Emergency Contacts</a>
+            <a class="text-slate-500 hover:text-blue-500 transition-colors" href="https://doh.gov.ph/" target="_blank" rel="noopener noreferrer">Department of Health</a>
+        </div>
             <div class="text-slate-500 text-[10px] uppercase tracking-widest font-bold opacity-60">
                 © 2026 Cebu City Health Center. All rights reserved.
             </div>

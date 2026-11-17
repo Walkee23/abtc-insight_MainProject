@@ -141,20 +141,9 @@
     <!-- Top App Bar -->
     <header class="fixed top-0 right-0 w-[calc(100%-16rem)] z-40 bg-surface-bright/85 backdrop-blur-xl flex justify-between items-center h-20 px-8 border-b border-outline-variant/10 shadow-sm">
         <div class="flex items-center gap-4">
-            <div class="relative">
-                <span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400">search</span>
-                <input class="pl-12 pr-6 py-2.5 bg-slate-100 border-none rounded-full text-sm focus:ring-2 focus:ring-primary/20 w-96 transition-all" placeholder="Search referrals, patients..." type="text" />
-            </div>
         </div>
         <div class="flex items-center gap-8">
             <div class="flex items-center gap-2">
-                <button class="p-2 text-slate-400 hover:text-primary transition-colors">
-                    <span class="material-symbols-outlined">help</span>
-                </button>
-                <button class="p-2 text-slate-400 hover:text-primary transition-colors relative">
-                    <span class="material-symbols-outlined">notifications</span>
-                    <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-                </button>
             </div>
             <div class="h-8 w-px bg-slate-200"></div>
             <div class="relative group cursor-pointer">

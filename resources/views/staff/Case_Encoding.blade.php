@@ -146,20 +146,10 @@
         <!-- TopAppBar -->
         <header class="flex justify-between items-center w-full h-16 px-8 sticky top-0 z-30 bg-white/85 dark:bg-slate-950/85 backdrop-blur-md shadow-sm shadow-slate-200/50 dark:shadow-none border-b border-slate-100/50">
             <div class="flex items-center gap-8">
-                <div class="relative group">
-                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
-                    <input class="pl-10 pr-4 py-2 bg-surface-container-highest/50 border-none rounded-full text-sm w-64 focus:ring-2 focus:ring-primary/20 transition-all outline-none" placeholder="Search records..." type="text" />
-                </div>
             </div>
             <div class="flex items-center gap-4">
                 <div class="flex items-center gap-1 border-r border-outline-variant/20 pr-4">
-                    <button class="p-2 text-slate-500 hover:bg-surface-container-high rounded-full transition-colors relative">
-                        <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
-                        <span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-white"></span>
-                    </button>
-                    <button class="p-2 text-slate-500 hover:bg-surface-container-high rounded-full transition-colors">
-                        <span class="material-symbols-outlined" data-icon="help">help</span>
-                    </button>
+
                 </div>
                 <div class="relative group cursor-pointer pl-2">
                     <div class="flex items-center gap-3">

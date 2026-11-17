@@ -88,12 +88,7 @@
         <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-md px-8 py-3 flex justify-between items-center border-b border-slate-100">
             <div class="flex-1"></div>
             <div class="flex items-center gap-2">
-                <button class="p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors active:scale-95 duration-200">
-                    <span class="material-symbols-outlined text-xl">notifications</span>
-                </button>
-                <button class="p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors active:scale-95 duration-200 mr-2">
-                    <span class="material-symbols-outlined text-xl">help</span>
-                </button>
+
                 <!-- User Profile Section with Dropdown -->
                 <div class="relative group cursor-pointer pl-4 border-l border-slate-200">
                     <div class="flex items-center gap-3">
@@ -147,10 +142,10 @@
         </div>
 
         <!-- Bento Grid Layout -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
             
             <!-- Left Side: Role Stats & User List -->
-            <section class="lg:col-span-8 flex flex-col gap-4">
+            <section class="xl:col-span-8 flex flex-col gap-4 min-w-0">
                 
                 <!-- 3 Bento Counter Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -164,16 +159,16 @@
 
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
                         <div>
-                            <span class="text-3xl font-black text-slate-900 block">{{ $internsCount ?? 0 }}</span>
-                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">OJT / Interns</span>
+                            <span class="text-3xl font-black text-slate-900 block">{{ $bhwCount ?? 0 }}</span>
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">BHW</span>
                         </div>
-                        <span class="material-symbols-outlined text-blue-700 text-3xl opacity-80">school</span>
+                        <span class="material-symbols-outlined text-blue-700 text-3xl opacity-80">groups</span>
                     </div>
 
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
                         <div>
                             <span class="text-3xl font-black text-slate-900 block">{{ $staffCount ?? 0 }}</span>
-                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Administrative Staff</span>
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Staff</span>
                         </div>
                         <span class="material-symbols-outlined text-blue-700 text-3xl opacity-80">badge</span>
                     </div>

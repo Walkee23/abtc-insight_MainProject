@@ -91,12 +91,7 @@
         <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-md px-8 py-3 flex justify-between items-center border-b border-slate-100">
             <div class="flex-1"></div>
             <div class="flex items-center gap-2">
-                <button class="p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors active:scale-95 duration-200">
-                    <span class="material-symbols-outlined text-xl">notifications</span>
-                </button>
-                <button class="p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors active:scale-95 duration-200 mr-2">
-                    <span class="material-symbols-outlined text-xl">help</span>
-                </button>
+                
                 <!-- User Profile Section with Dropdown -->
                 <div class="relative group cursor-pointer pl-4 border-l border-slate-200">
                     <div class="flex items-center gap-3">

@@ -149,14 +149,16 @@
         
     </aside>
     <!-- Main Content Area -->
-    <main class="ml-72 min-h-screen">
+    <main class="ml-64 min-h-screen">
         <!-- TopNavBar -->
         <header class="flex justify-between items-center w-full h-16 px-8 sticky top-0 z-30 bg-white/85 dark:bg-slate-950/85 backdrop-blur-md z-30 shadow-sm shadow-slate-200/50 dark:shadow-none border-b border-slate-100/50">
             <div class="flex items-center gap-8">
                 
                 <form action="{{ route('staff.dashboard') }}" method="GET" class="relative group">
                     <span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 text-lg">search</span>
-                    <input name="search" value="{{ $search ?? '' }}" class="pl-10 pr-4 py-1.5 bg-surface-container-low rounded-full text-sm focus:ring-2 focus:ring-primary/20 border-none outline-none w-72 transition-all" placeholder="Search name, queue no, ID..." type="text" />
+                    <input id="live-search" name="search" value="{{ $search ?? '' }}" autocomplete="off"
+                        class="pl-10 pr-4 py-1.5 bg-surface-container-low rounded-full text-sm focus:ring-2 focus:ring-primary/20 border-none outline-none w-72 transition-all"
+                        placeholder="Search name, queue no, ID..." type="text" />
                 </form>
             </div>
             <div class="flex items-center gap-4">
@@ -173,48 +175,41 @@
                 </div>
 
                 <div class="flex items-center gap-1 border-r border-outline-variant/20 pr-4">
-                    <button class="p-2 text-slate-500 hover:bg-surface-container-high rounded-full transition-colors relative">
-                        <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
-                        <span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-white"></span>
-                    </button>
-                    <button class="p-2 text-slate-500 hover:bg-surface-container-high rounded-full transition-colors">
-                        <span class="material-symbols-outlined" data-icon="help">help</span>
-                    </button>
                 </div>
                 
                 <!-- User Profile Section with Dropdown (Admin Format) -->
-<div class="relative group cursor-pointer pl-2">
-    <div class="flex items-center gap-3">
-        <div class="text-right hidden sm:block">
-            <p class="text-xs font-bold text-on-surface leading-tight"> Staff </p>
-            <p class="text-[10px] text-on-surface-variant leading-tight"> ABTC Staff </p>
-        </div>
-        <div class="w-9 h-9 rounded-full overflow-hidden ring-2 ring-slate-100 border border-slate-200">
-            <img alt="Staff Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCG2nKFZGyYwHKRYoCQT3e-DFv4lhmbOaefZN_pNQ6HkWmU6VSYzY9h1P_RiS1yqN4hdqhLCiP4K6Ea7gARSWG6HK0qt5boVFtv4S1YiWv2O1vutB_s88IrPG_wB7x02LuJj9pA0d9mKcPXNHWbCr_BIg-CKtC_tZCmVz1DmJURoecp6Re7uXEhv9FI1dvVxhWIOr9RdMIXbtQRUjsSOkEc-i5gI18j8iBFPISCiDNXnFP_TQidoFnFp1cFnCO6SpZTN3UK4BIZ1wd1" />
-            <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
-        </div>
-    </div>
+                <div class="relative group cursor-pointer pl-2">
+                    <div class="flex items-center gap-3">
+                        <div class="text-right hidden sm:block">
+                            <p class="text-xs font-bold text-on-surface leading-tight"> Staff </p>
+                            <p class="text-[10px] text-on-surface-variant leading-tight"> ABTC Staff </p>
+                        </div>
+                        <div class="w-9 h-9 rounded-full overflow-hidden ring-2 ring-slate-100 border border-slate-200">
+                            <img alt="Staff Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCG2nKFZGyYwHKRYoCQT3e-DFv4lhmbOaefZN_pNQ6HkWmU6VSYzY9h1P_RiS1yqN4hdqhLCiP4K6Ea7gARSWG6HK0qt5boVFtv4S1YiWv2O1vutB_s88IrPG_wB7x02LuJj9pA0d9mKcPXNHWbCr_BIg-CKtC_tZCmVz1DmJURoecp6Re7uXEhv9FI1dvVxhWIOr9RdMIXbtQRUjsSOkEc-i5gI18j8iBFPISCiDNXnFP_TQidoFnFp1cFnCO6SpZTN3UK4BIZ1wd1" />
+                            <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                        </div>
+                    </div>
 
-    <!-- Hover Dropdown Menu -->
-    <div class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-        <div class="p-2">
-            <a href="#" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary rounded-lg transition-colors">
-                <span class="material-symbols-outlined text-[18px]">person</span>
-                My Profile
-            </a>
-            <div class="h-px bg-slate-100 my-1"></div>
+                    <!-- Hover Dropdown Menu -->
+                    <div class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                        <div class="p-2">
+                            <a href="#" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary rounded-lg transition-colors">
+                                <span class="material-symbols-outlined text-[18px]">person</span>
+                                My Profile
+                            </a>
+                            <div class="h-px bg-slate-100 my-1"></div>
 
-            <!-- Secure Logout Form -->
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors text-left cursor-pointer">
-                    <span class="material-symbols-outlined text-[18px]">logout</span>
-                    Log Out
-                </button>
-            </form>
-        </div>
-    </div>
-</div>
+                            <!-- Secure Logout Form -->
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors text-left cursor-pointer">
+                                    <span class="material-symbols-outlined text-[18px]">logout</span>
+                                    Log Out
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
 
 
             </div>
@@ -387,7 +382,6 @@
                                     <th class="px-4 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest bg-surface-container-high">Queue No</th>
                                     <th class="px-4 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest bg-surface-container-high">Patient</th>
                                     <th class="px-4 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest bg-surface-container-high">Barangay</th>
-                                    <th class="px-4 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest bg-surface-container-high">Status</th>
                                     <th class="px-4 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest text-right bg-surface-container-high">Action</th>
                                 </tr>
                             </thead>
@@ -409,13 +403,6 @@
                                         <!-- 3. Barangay -->
                                         <td class="px-4 py-4 text-xs font-semibold text-on-surface-variant">
                                             {{ $patient->barangay ?? 'N/A' }}
-                                        </td>
-
-                                        <!-- 4. Status -->
-                                        <td class="px-4 py-4">
-                                            <span class="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded-full uppercase">
-                                                {{ $patient->status }}
-                                            </span>
                                         </td>
                                         
                                         <!-- 5. Action Cell -->
@@ -509,31 +496,28 @@
                 </div>
             </div>
 
-        <!-- Section 5: Bottom Collapsed Patient Lookup -->
-        <div class="fixed bottom-0 left-72 right-0 p-4 z-10 pointer-events-none">
-            <div class="max-w-[1200px] mx-auto pointer-events-auto">
-                <div class="bg-white/95 backdrop-blur-md rounded-t-2xl shadow-[0_-10px_30px_rgba(0,0,0,0.1)] border-x border-t border-outline-variant/20">
-                    <!-- [CHANGED]: Converted to functional GET search form -->
-                    <form action="{{ route('staff.dashboard') }}" method="GET" class="flex items-center justify-between px-8 py-4">
-                        <div class="flex items-center gap-4">
-                            <span class="material-symbols-outlined text-primary" data-icon="person_search">person_search</span>
-                            <span class="text-sm font-bold text-on-surface uppercase tracking-wider">Quick Patient Lookup</span>
-                        </div>
-                        <div class="flex items-center gap-4">
-                            <div class="flex bg-surface-container-low rounded-full px-4 py-1.5 border border-outline-variant/20 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
-                                <input name="search" value="{{ $search ?? '' }}" class="bg-transparent border-0 text-xs font-medium w-64 focus:ring-0 outline-none" placeholder="Search by name, ID or queue..." type="text" />
-                                <button type="submit" class="text-primary hover:opacity-80">
-                                    <span class="material-symbols-outlined text-sm text-on-surface-variant" data-icon="search">search</span>
-                                </button>
-                            </div>
-                            <a href="{{ route('staff.patient-lookup') }}" class="p-2 hover:bg-surface-container-high rounded-full transition-colors text-slate-500" title="Go to Patient Lookup">
-                                <span class="material-symbols-outlined" data-icon="open_in_new">open_in_new</span>
-                            </a>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+            <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const input = document.getElementById('live-search');
+                if (!input) return;
+
+                // every real patient row in the queue tables (skips the "No patients..." rows)
+                const rows = [...document.querySelectorAll('main table tbody tr')]
+                    .filter(tr => !tr.querySelector('td[colspan]'));
+
+                const run = () => {
+                    const q = input.value.trim().toLowerCase();
+                    rows.forEach(tr => {
+                        // only the first 3 cells: queue no, patient (name, ID, age), barangay
+                        const text = [...tr.cells].slice(0, 3).map(c => c.textContent).join(' ').toLowerCase();
+                        tr.classList.toggle('hidden', q !== '' && !text.includes(q));
+                    });
+                };
+
+                input.addEventListener('input', run);
+                run(); // also applies a search that is already in the box
+            });
+            </script>
     </main>
 </body>
 

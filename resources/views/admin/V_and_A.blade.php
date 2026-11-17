@@ -154,18 +154,8 @@
         <!-- TopAppBar -->
         <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-md px-8 py-3 flex justify-between items-center border-b border-slate-100">
             <div class="flex items-center gap-6 flex-1">
-                <div class="relative w-full max-w-md group">
-                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
-                    <input class="w-full pl-10 pr-4 py-2 bg-slate-100 border-none rounded-full text-sm focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-400" placeholder="Search analytics or case IDs..." type="text" />
-                </div>
             </div>
             <div class="flex items-center gap-2">
-                <button class="p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors active:scale-95 duration-200">
-                    <span class="material-symbols-outlined text-xl">notifications</span>
-                </button>
-                <button class="p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors active:scale-95 duration-200 mr-2">
-                    <span class="material-symbols-outlined text-xl">help</span>
-                </button>
                 <div class="relative group cursor-pointer pl-4 border-l border-slate-200">
                     <div class="flex items-center gap-3">
                         <div class="text-right">
@@ -628,10 +618,11 @@
                                     <button onclick="switchDemographicTab('exposure')" id="tab-exposure" class="px-3 py-1 text-xs font-bold rounded-md bg-primary text-white shadow-sm transition-all">Exposure</button>
                                     <button onclick="switchDemographicTab('sex')" id="tab-sex" class="px-3 py-1 text-xs font-bold rounded-md text-on-surface-variant transition-all">Sex</button>
                                     <button onclick="switchDemographicTab('animal')" id="tab-animal" class="px-3 py-1 text-xs font-bold rounded-md text-on-surface-variant transition-all">Animal</button>
+                                    <button onclick="switchDemographicTab('ownership')" id="tab-ownership" class="px-3 py-1 text-xs font-bold rounded-md text-on-surface-variant transition-all">Pet/Stray</button>
                                 </div>
                             </div>
 
-                            @foreach (['exposure', 'sex', 'animal'] as $tabKey)
+                            @foreach (['exposure', 'sex', 'animal', 'ownership'] as $tabKey)
                                 @php $d = $breakdowns[$tabKey] ?? ['segments' => [], 'total' => 0]; $offset = 0; @endphp
                                 <div id="content-{{ $tabKey }}" class="viz-donut demographic-tab-content {{ $tabKey === 'exposure' ? '' : 'hidden' }} flex items-center justify-between">
                                     <div class="space-y-1">
@@ -647,6 +638,13 @@
                                         @endforeach
                                         @if ($d['total'] === 0)
                                             <p class="text-xs text-on-surface-variant">No data for these filters.</p>
+                                        @endif
+                                        @if ($tabKey === 'ownership' && $d['total'] > 0 && isset($own))
+                                            <div class="pt-2 text-[10px] text-on-surface-variant leading-relaxed">
+                                                <p>Dogs: Pet {{ $own['dog']['Pet'] }} · Stray {{ $own['dog']['Stray'] }}</p>
+                                                <p>Cats: Pet {{ $own['cat']['Pet'] }} · Stray {{ $own['cat']['Stray'] }}</p>
+                                                <p>Others: Pet {{ $own['other']['Pet'] }} · Stray {{ $own['other']['Stray'] }}</p>
+                                            </div>
                                         @endif
                                     </div>
                                     <div class="relative w-28 h-28 shrink-0">
@@ -685,7 +683,7 @@
                     <script>
                         function switchDemographicTab(tab) {
                             document.querySelectorAll('.demographic-tab-content').forEach(el => el.classList.add('hidden'));
-                            ['exposure', 'sex', 'animal'].forEach(t => {
+                            ['exposure', 'sex', 'animal', 'ownership'].forEach(t => {
                                 const btn = document.getElementById('tab-' + t);
                                 btn.className = "px-3 py-1 text-xs font-bold rounded-md text-on-surface-variant transition-all";
                             });
@@ -877,7 +875,7 @@
                     </div>
                     <h3 class="text-xl font-bold text-on-surface">No Filters Applied Yet</h3>
                     <p class="text-sm text-on-surface-variant max-w-md mx-auto">
-                        Palihug pagpili og period grouping o ubang filters sa taas unya i-klik ang <strong>"Apply Filters"</strong> aron makita ang analytics ug mga charts.
+                       Please select a period grouping or other filters above, then click <strong>"Apply Filters"</strong> to view the analytics and charts.
                     </p>
                 </div>
             @endif

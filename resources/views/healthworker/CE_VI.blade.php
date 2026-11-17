@@ -7,11 +7,8 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Clinical Encoding Wizard - Section VI | ABTC-Insight</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap"
-        rel="stylesheet" />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
-        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -95,25 +92,27 @@
             display: none;
         }
     </style>
+    <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
 </head>
-
-<aside class="h-screen w-64 fixed left-0 top-0 bg-slate-100 dark:bg-slate-900 flex flex-col pt-6 pb-4 gap-2 z-50">
-    <!-- Brand / Header Section -->
-    <div class="px-6 mb-8">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg">
-                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">health_and_safety</span>
-            </div>
-            <div>
-                <h1 class="text-blue-900 dark:text-blue-50 font-bold text-sm tracking-tight leading-none">ABTC-Insight</h1>
+    
+    <aside class="h-screen w-64 fixed left-0 top-0 bg-slate-50 dark:bg-slate-900 flex flex-col border-r border-slate-200/50 dark:border-slate-800/50 z-50">
+        <!-- Brand -->
+        <div class="px-6 pt-8">
+            <div class="flex items-center gap-3 mb-10">
+                <div class="w-10 h-10 bg-primary rounded-[1rem] flex items-center justify-center">
+                    <span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">health_and_safety</span>
+                </div>
+                <div>
+                    <h1 class="font-black uppercase text-primary dark:text-blue-100 text-sm tracking-wider leading-none">ABTC-Insight</h1>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Navigation sits right beneath it -->
-    <nav class="space-y-1 px-4 dark:bg-slate-900">
-        <!-- Dashboard (Inactive) -->
-        <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50"
+        <!-- Navigation -->
+        <nav class="space-y-1 px-6">
+            <!-- Dashboard (Inactive) -->
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
             href="{{ route('healthworker.dashboard') }}">
             <span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
             <span class="font-['Inter'] text-sm tracking-wide">Dashboard</span>
@@ -385,6 +384,10 @@
                                         </label>
                                         @endforeach
                                     </div>
+                                    <div id="catIHint" class="{{ $selectedCategory === 'I' && $selectedDeep !== '1' ? '' : 'hidden' }} mt-3 flex items-start gap-2 bg-emerald-50 text-emerald-700 rounded-lg px-3 py-2.5">
+                                        <span class="material-symbols-outlined text-[18px] mt-0.5">info</span>
+                                        <p class="text-[11px] font-semibold leading-snug">Category I: no vaccine is needed. You can discharge this patient.</p>
+                                    </div>
                                     <div class="mt-5">
                                         <label
                                             class="block text-xs font-bold text-outline uppercase tracking-wider mb-3">Is
@@ -449,7 +452,36 @@
                                 </div>
                             </div>
                         </div>
-                    </form>
+                        </form>
+                    </div>
+                    <!-- Wizard Footer Actions -->
+                    <div
+                        class="p-6 bg-surface-container-low border-t border-outline-variant/20 flex justify-between items-center px-8">
+                        <div class="flex items-center gap-2">
+                            <button type="submit" form="section6Form" id="draftBtn" {{ $case ? '' : 'disabled' }}
+                                class="px-6 py-2.5 text-sm font-bold text-outline hover:text-on-surface transition-all flex items-center gap-2 {{ $case ? '' : 'opacity-40 cursor-not-allowed' }}">
+                                Save as Draft
+                            </button>
+                            <button type="button" id="dischargeBtn" {{ $case ? '' : 'disabled' }}
+                                class="{{ $selectedCategory === 'I' && $selectedDeep !== '1' ? '' : 'hidden' }} px-5 py-2.5 text-sm font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-all flex items-center gap-2">
+                                <span class="material-symbols-outlined text-[18px]">logout</span>
+                                Discharge Patient
+                            </button>
+                        </div>
+                        <div class="flex gap-4">
+                            <button
+                                class="px-6 py-2.5 text-sm font-bold text-outline hover:bg-slate-200/50 rounded-lg transition-all hidden"
+                                id="backBtn">
+                                Back
+                            </button>
+                            <button {{ $case ? '' : 'disabled' }}
+                                class="px-8 py-2.5 bg-primary text-on-primary text-sm font-bold rounded-lg shadow-md shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-2 {{ $case ? '' : 'opacity-40 cursor-not-allowed' }}"
+                                id="nextBtn">
+                                Next Step
+                                <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 <!-- Wizard Footer Actions -->
                 <div
@@ -472,19 +504,33 @@
                         </button>
                     </div>
                 </div>
+                @endif
+            </section>
+        </div>
+    </main>
+    @if($case)
+    <!-- Discharge confirmation -->
+    <div id="dischargeModal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden">
+            <div class="px-6 py-5 flex items-start gap-3">
+                <div class="w-10 h-10 shrink-0 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                    <span class="material-symbols-outlined">logout</span>
+                </div>
+                <div>
+                    <h3 class="font-bold text-slate-900 text-sm">Discharge {{ $case->patient_name }}?</h3>
+                    <p class="text-xs text-slate-500 mt-1 leading-relaxed">This is a Category I exposure, so no vaccine is needed. The case will be marked as discharged and removed from your clinical queue. Section VI is saved first.</p>
+                </div>
             </div>
-            @else
-            <!-- No case selected -->
-            <div
-                class="bg-surface-container-lowest rounded-xl shadow-lg shadow-blue-900/5 border border-outline-variant/10 flex flex-col items-center justify-center h-[calc(100vh-12rem)] gap-3">
-                <span class="material-symbols-outlined text-5xl text-outline-variant">folder_open</span>
-                <p class="text-sm font-bold text-on-surface-variant">Please select a case.</p>
+            <div class="px-6 py-4 bg-slate-50 flex items-center justify-end gap-2">
+                <button type="button" id="dischargeCancel" class="px-4 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-100 rounded-xl transition-colors">Cancel</button>
+                <button type="button" id="dischargeConfirm" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-600/20 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[16px]">logout</span> Discharge Patient
+                </button>
             </div>
-            @endif
-        </section>
+        </div>
     </div>
-</main>
-<!--
+    @endif
+    <!--
     <div
         class="fixed bottom-8 right-8 bg-surface-bright/90 backdrop-blur shadow-2xl rounded-2xl p-4 border border-outline-variant/15 w-64 hidden xl:block">
         <div class="flex items-center gap-3 mb-3">
@@ -625,6 +671,53 @@
             const deep = form.querySelector('input[name="is_deep"]:checked');
             if (deep && deep.value === '1' && catIII) catIII.checked = true;
         }));
+            // Required-field checks shared by Next and Discharge; true when everything is filled in
+            function runChecks() {
+                const results = {
+                    site: [checks.site(), siteError, siteInput, 'Please enter the site of bite / exposure.'],
+                    wound: [checks.wound(), woundError, woundBox, 'Please select at least one wound description.'],
+                    deep: [checks.deep(), deepError, deepBox, 'Please tell whether the wound is deep.'],
+                };
+                let first = null;
+                Object.values(results).forEach(([ok, errorEl, ringEl, message]) => {
+                    setError(errorEl, ringEl, ok ? '' : message);
+                    if (!ok && !first) first = ringEl;
+                });
+                if (first) {
+                    errorToast.show();
+                    first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return false;
+                }
+                return true;
+            }
+
+            nextBtn.addEventListener('click', () => {
+                formActionInput.value = 'next';
+                if (runChecks()) form.submit();
+            });
+
+            // Category I: no vaccine needed, so the patient can be discharged
+            const dischargeBtn = document.getElementById('dischargeBtn');
+            const dischargeModal = document.getElementById('dischargeModal');
+            const catHint = document.getElementById('catIHint');
+            function syncDischarge() {
+                const cat = form.querySelector('input[name="category_of_exposure"]:checked');
+                const deep = form.querySelector('input[name="is_deep"]:checked');
+                const eligible = !!cat && cat.value === 'I' && !(deep && deep.value === '1');
+                dischargeBtn.classList.toggle('hidden', !eligible);
+                catHint.classList.toggle('hidden', !eligible);
+            }
+            categoryRadios.forEach((radio) => radio.addEventListener('change', syncDischarge));
+            form.querySelectorAll('input[name="is_deep"]').forEach((radio) => radio.addEventListener('change', syncDischarge));
+            syncDischarge();
+
+            dischargeBtn.addEventListener('click', () => { if (runChecks()) dischargeModal.classList.remove('hidden'); });
+            document.getElementById('dischargeCancel').addEventListener('click', () => dischargeModal.classList.add('hidden'));
+            dischargeModal.addEventListener('click', (e) => { if (e.target === dischargeModal) dischargeModal.classList.add('hidden'); });
+            document.getElementById('dischargeConfirm').addEventListener('click', () => {
+                formActionInput.value = 'discharge';
+                form.submit();
+            });
 
         nextBtn.addEventListener('click', () => {
             formActionInput.value = 'next';

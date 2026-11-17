@@ -15,6 +15,13 @@ class AdminController extends Controller
 {
     public function systemManagement()
 {
+    // Catch up on an auto-backup that was due while no scheduler was running
+    try {
+        \App\Support\DatabaseBackup::runIfDue();
+    } catch (\Throwable $e) {
+        // the page must still open
+    }
+
     // 1. Role-based User Counts
     $healthWorkersCount = DB::table('users')->where('role', 'Health Worker')->count();
     $internsCount       = DB::table('users')->whereIn('role', ['OJT', 'Intern'])->count();
@@ -56,15 +63,20 @@ class AdminController extends Controller
     // 1. Total Registered Patients
     $totalPatients = DB::table('patients')->count();
 
-    // 2. Active PEP Courses
-    $activePepCount = DB::table('inflow_general_particulars')
-        ->where('status', '!=', 'Completed')
+    // 2. Ongoing PEP Courses: PEP started (Day 0 given) and the case has no outcome yet.
+    // Same rule as the Health Worker dashboard: the outcome stays NULL until the course ends.
+    $ongoingPepCount = DB::table('bite_cases as bc')
+        ->join('bite_section7_immunization as s7', 's7.bite_case_id', '=', 'bc.bite_case_id')
+        ->whereNull('bc.outcome')
+        ->whereNotNull('s7.day0_date')
         ->count();
 
-    // 3. Verified Cases Today
-    $verifiedToday = DB::table('inflow_general_particulars')
-        ->whereDate('queue_date', today())
-        ->where('status', 'Verified')
+    // 3. Completed PEP Today: cases finalized as Completed whose last recorded dose is dated today.
+    // (There is no "completed at" column, so the last dose date is the closest signal.)
+    $completedToday = DB::table('bite_cases as bc')
+        ->join('bite_section7_immunization as s7', 's7.bite_case_id', '=', 'bc.bite_case_id')
+        ->where('bc.outcome', 'Completed')
+        ->whereRaw('COALESCE(s7.day28_date, s7.day7_date, s7.day3_date, s7.day0_date) = ?', [today()->toDateString()])
         ->count();
 
     // 4. Top Incident Hotspots (30 o 90 ka adlaw)
@@ -80,26 +92,65 @@ class AdminController extends Controller
         ->limit(5)
         ->get();
 
-    // 5. Bite Categories (monthly / quarterly) gamit ang queue_date
+    // 5. Bite Categories for a chosen year and month / quarter / whole year (by queue_date)
     $filter = $request->query('filter', 'monthly');
-    if (!in_array($filter, ['monthly', 'quarterly'])) {
+    if (!in_array($filter, ['monthly', 'quarterly', 'yearly'], true)) {
         $filter = 'monthly';
     }
 
-    $query = DB::table('bite_cases')
+    $baseQuery = fn () => DB::table('bite_cases')
         ->join('inflow_general_particulars', 'bite_cases.inflow_record_id', '=', 'inflow_general_particulars.inflow_record_id');
 
-    if ($filter === 'monthly') {
-        $query->whereBetween('inflow_general_particulars.queue_date', [
-            now()->startOfMonth()->toDateString(),
-            now()->endOfMonth()->toDateString(),
-        ]);
-    } else {
-        $query->whereBetween('inflow_general_particulars.queue_date', [
-            now()->startOfQuarter()->toDateString(),
-            now()->endOfQuarter()->toDateString(),
-        ]);
+    // years that have cases, plus the current year, newest first
+    $biteYears = $baseQuery()
+        ->whereNotNull('inflow_general_particulars.queue_date')
+        ->selectRaw('DISTINCT YEAR(inflow_general_particulars.queue_date) as y')
+        ->pluck('y')->map(fn ($y) => (int) $y)->push(now()->year)->unique()->sortDesc()->values()->all();
+
+    $periodOf = fn (Carbon $d) => $filter === 'quarterly' ? (int) ceil($d->month / 3) : $d->month;
+    $periodMax = $filter === 'quarterly' ? 4 : 12;
+
+    $biteYear = (int) $request->query('year', now()->year);
+    if (!in_array($biteYear, $biteYears, true)) {
+        $biteYear = now()->year;
     }
+    $bitePeriod = (int) $request->query('period', 0);
+    if ($bitePeriod < 1 || $bitePeriod > $periodMax) {
+        $bitePeriod = $periodOf(now());
+    }
+
+    // start / end of the chosen period
+    $rangeOf = function () use (&$filter, &$biteYear, &$bitePeriod) {
+        if ($filter === 'yearly') {
+            return [Carbon::create($biteYear, 1, 1), Carbon::create($biteYear, 12, 31)];
+        }
+        $from = $filter === 'quarterly'
+            ? Carbon::create($biteYear, ($bitePeriod - 1) * 3 + 1, 1)
+            : Carbon::create($biteYear, $bitePeriod, 1);
+        return [$from->copy()->startOfMonth(), $from->copy()->addMonths($filter === 'quarterly' ? 2 : 0)->endOfMonth()];
+    };
+    [$biteFrom, $biteTo] = $rangeOf();
+
+    // Opening the dashboard with no choice made and nothing recorded in the current period:
+    // show the latest period that has data instead of an empty chart
+    if (!$request->hasAny(['filter', 'year', 'period'])
+        && !$baseQuery()->whereBetween('inflow_general_particulars.queue_date', [$biteFrom->toDateString(), $biteTo->toDateString()])->exists()) {
+        $latest = $baseQuery()->max('inflow_general_particulars.queue_date');
+        if ($latest) {
+            $latest = Carbon::parse($latest);
+            $biteYear = $latest->year;
+            $bitePeriod = $periodOf($latest);
+            [$biteFrom, $biteTo] = $rangeOf();
+        }
+    }
+
+    $periodLabel = match ($filter) {
+        'yearly'    => (string) $biteYear,
+        'quarterly' => 'Q' . $bitePeriod . ' ' . $biteYear,
+        default     => Carbon::create($biteYear, $bitePeriod, 1)->format('F Y'),
+    };
+
+    $query = $baseQuery()->whereBetween('inflow_general_particulars.queue_date', [$biteFrom->toDateString(), $biteTo->toDateString()]);
 
     $catExpr = 'UPPER(TRIM(bite_cases.category))';
 
@@ -114,14 +165,15 @@ class AdminController extends Controller
 
     return view('admin.dashboard', compact(
         'totalPatients',
-        'activePepCount',
-        'verifiedToday',
+        'ongoingPepCount',
+        'completedToday',
         'hotspots',
         'hotspotRange',
         'totalBites',
         'cat1', 'cat2', 'cat3',
         'cat1Pct', 'cat2Pct', 'cat3Pct',
-        'filter'
+        'filter',
+        'biteYear', 'bitePeriod', 'biteYears', 'periodLabel'
     ));
 }
 

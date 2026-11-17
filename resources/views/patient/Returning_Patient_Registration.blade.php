@@ -106,6 +106,7 @@
       background: linear-gradient(135deg, #004a93 0%, #0b61bb 100%);
     }
   </style>
+    <script src="{{ asset('js/custom-select.js') }}" defer></script>
 </head>
 
 <body class="bg-surface text-on-surface min-h-screen flex flex-col">

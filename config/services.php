@@ -35,6 +35,11 @@ return [
         ],
     ],
 
+    // Python used by the forecasting engine (python/forecast.py). Leave PYTHON_BIN empty to use `python` from PATH.
+    'python' => [
+        'bin' => env('PYTHON_BIN'),
+    ],
+
     'iprogsms' => [
     'url'   => env('IPROGSMS_URL'),
     'token' => env('IPROGSMS_API_TOKEN'),

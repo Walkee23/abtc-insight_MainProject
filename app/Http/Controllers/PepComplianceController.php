@@ -126,12 +126,12 @@ class PepComplianceController extends Controller
             ->get([
                 'bc.bite_case_id', 'bc.case_number', 'bc.category', 'bc.barangay', 'bc.assigned_health_worker_id',
                 'p.patient_id', 'p.patient_name',
-                's7.dose_type', 's7.day0_date', 's7.day3_date', 's7.day7_date', 's7.day28_date',
+                's7.dose_type', 's7.day0_date', 's7.day3_date', 's7.day7_date', 's7.day14_date', 's7.day28_date',
             ]);
 
         $doses = collect();
         foreach ($cases as $c) {
-            $schedule = $c->dose_type === 'Booster' ? [0, 3] : [0, 3, 7, 28];
+            $schedule = $c->dose_type === 'Booster' ? [0, 3] : ($c->day14_date ? [0, 3, 7, 14, 28] : [0, 3, 7, 28]);
             $label = $c->category === 'III' ? 'High Risk' : ($c->dose_type === 'Booster' ? 'Booster' : 'Standard');
             $day0 = Carbon::parse($c->day0_date)->startOfDay();
 

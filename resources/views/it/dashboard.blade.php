@@ -10,6 +10,7 @@
         tailwind.config = { theme: { extend: { colors: { primary: '#004a93', surface: '#f7f9fb', error: '#ba1a1a' } } } }
     </script>
     <style>body { font-family: 'Inter', sans-serif; }</style>
+    <script src="{{ asset('js/custom-select.js') }}" defer></script>
 </head>
 <body class="bg-surface text-slate-800 min-h-screen">
 

@@ -13,24 +13,31 @@ class BhwController extends Controller
 {
     public function dashboard()
     {
-        // 1. Get the currently logged-in BHW ID
         $userId = auth()->id();
 
-        // 2. Count the metrics for the cards
         $totalSubmissions = DB::table('bhw_referral_info')->where('bhw_user_id', $userId)->count();
         $pending = DB::table('bhw_referral_info')->where('bhw_user_id', $userId)->where('status', 'Pending')->count();
         $received = DB::table('bhw_referral_info')->where('bhw_user_id', $userId)->where('status', 'Received')->count();
         $completed = DB::table('bhw_referral_info')->where('bhw_user_id', $userId)->where('status', 'Completed')->count();
 
-        // 3. Get the list of referrals and join with exposure table to get the exposure type
+        $qrOptions = new QROptions([
+            'eccLevel'     => EccLevel::M,
+            'scale'        => 6,
+            'outputBase64' => true,
+        ]);
+        $qrGenerator = new QRCode($qrOptions);
+
         $referrals = DB::table('bhw_referral_info')
             ->leftJoin('bhw_referral_exposure', 'bhw_referral_info.referral_id', '=', 'bhw_referral_exposure.referral_id')
             ->select('bhw_referral_info.*', 'bhw_referral_exposure.exposure_type')
             ->where('bhw_user_id', $userId)
             ->orderBy('bhw_referral_info.submitted_at', 'desc')
-            ->get();
+            ->get()
+            ->map(function ($referral) use ($qrGenerator) {
+                $referral->qr_code = $qrGenerator->render($referral->reference_no);
+                return $referral;
+            });
 
-        // 4. Send the data to the view
         return view('bhw.dashboard', compact('totalSubmissions', 'pending', 'received', 'completed', 'referrals'));
     }
 

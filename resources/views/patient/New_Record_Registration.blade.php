@@ -472,24 +472,52 @@
         </div>
       </div>
     </footer>
-    <!-- QR Scanner Modal -->
+    <!-- QR Scanner & Upload Modal -->
     <div id="qrScannerModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
       <div class="bg-surface-container-lowest rounded-2xl max-w-md w-full p-6 shadow-2xl border border-outline-variant/30 space-y-4">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-primary">qr_code_scanner</span>
-            <h3 class="font-bold text-base text-on-surface">Scan BHW Referral QR</h3>
+            <h3 class="font-bold text-base text-on-surface">Scan or Upload Referral QR</h3>
           </div>
           <button type="button" id="closeQrModalBtn" class="p-1 text-on-surface-variant hover:text-on-surface rounded-lg">
             <span class="material-symbols-outlined">close</span>
           </button>
         </div>
 
-        <div id="qrReader" class="w-full rounded-xl overflow-hidden bg-black"></div>
+        <!-- Mode Switcher -->
+        <div class="grid grid-cols-2 gap-2 p-1 bg-surface-container rounded-xl">
+          <button type="button" id="tabCameraBtn" class="py-2 px-3 rounded-lg text-xs font-bold bg-white text-primary shadow-sm transition-all flex items-center justify-center gap-1.5">
+            <span class="material-symbols-outlined text-[16px]">photo_camera</span>
+            Use Camera
+          </button>
+          <button type="button" id="tabUploadBtn" class="py-2 px-3 rounded-lg text-xs font-bold text-on-surface-variant hover:text-on-surface transition-all flex items-center justify-center gap-1.5">
+            <span class="material-symbols-outlined text-[16px]">upload_file</span>
+            Upload QR Photo
+          </button>
+        </div>
 
-        <p class="text-xs text-on-surface-variant text-center">
-          Point your camera at the QR code on the BHW Referral Form.
-        </p>
+        <!-- Camera View -->
+        <div id="cameraPanel" class="space-y-3">
+          <div id="qrReader" class="w-full rounded-xl overflow-hidden bg-black min-h-[240px]"></div>
+          <p class="text-xs text-on-surface-variant text-center">
+            Point your camera at the QR code on the BHW Referral Form.
+          </p>
+        </div>
+
+        <!-- File Upload View -->
+        <div id="uploadPanel" class="hidden space-y-3">
+          <input type="file" id="qrFileInput" accept="image/png,image/jpeg,image/webp" class="hidden" />
+          <div id="qrFileDropzone" class="border-2 border-dashed border-outline-variant/60 hover:border-primary rounded-xl p-8 text-center cursor-pointer transition-colors bg-surface-container-low/50">
+            <span class="material-symbols-outlined text-4xl text-primary mb-2">qr_code_2</span>
+            <p class="text-sm font-bold text-on-surface">Click to choose QR code image</p>
+            <p class="text-[11px] text-on-surface-variant mt-1">Accepts PNG, JPG, or WEBP containing a valid BHW Referral QR code</p>
+          </div>
+          <div id="qrFileReader" class="hidden"></div>
+        </div>
+
+        <!-- Modal Error Message -->
+        <p id="qrModalError" class="hidden text-xs text-error font-semibold text-center bg-error-container/50 py-2 px-3 rounded-lg"></p>
       </div>
     </div>
   </main>
@@ -1207,25 +1235,64 @@
       }
     });
 
-    // --- QR Code Scanner Logic ---
+    // --- QR Code Scanner & Strict Image Upload Logic ---
     const scanQrBtn = document.getElementById('scanQrBtn');
     const qrScannerModal = document.getElementById('qrScannerModal');
     const closeQrModalBtn = document.getElementById('closeQrModalBtn');
-    let html5QrCode = null;
+    const tabCameraBtn = document.getElementById('tabCameraBtn');
+    const tabUploadBtn = document.getElementById('tabUploadBtn');
+    const cameraPanel = document.getElementById('cameraPanel');
+    const uploadPanel = document.getElementById('uploadPanel');
+    const qrFileDropzone = document.getElementById('qrFileDropzone');
+    const qrFileInput = document.getElementById('qrFileInput');
+    const qrModalError = document.getElementById('qrModalError');
 
-    function stopQrScanner() {
-      qrScannerModal.classList.add('hidden');
-      if (html5QrCode && html5QrCode.isScanning) {
-        html5QrCode.stop().catch(err => console.error('Error stopping scanner:', err));
-      }
+    let html5QrCode = null;
+    const html5QrFileScanner = new Html5Qrcode('qrFileReader');
+
+    function showQrModalError(msg) {
+      qrModalError.textContent = msg;
+      qrModalError.classList.remove('hidden');
     }
 
-    scanQrBtn.addEventListener('click', function() {
-      qrScannerModal.classList.remove('hidden');
+    function clearQrModalError() {
+      qrModalError.textContent = '';
+      qrModalError.classList.add('hidden');
+    }
 
+    function applyScannedReferralCode(rawText) {
+      const cleanedCode = rawText.trim();
+
+      if (!isBhwReferralFormatValid(cleanedCode)) {
+        showQrModalError('Invalid QR code. Only official BHW Referral QR codes (BRY-XXX-YYYYMMDD-XXXX) are accepted.');
+        return false;
+      }
+
+      clearQrModalError();
+      clearBhwReferralError();
+      bhwReferralInput.value = cleanedCode;
+      bhwReferralInput.dispatchEvent(new Event('input', {
+        bubbles: true
+      }));
+
+      closeQrScannerModal();
+      document.getElementById('autofillBtn').click();
+      return true;
+    }
+
+    function stopCameraStream() {
+      if (html5QrCode && html5QrCode.isScanning) {
+        return html5QrCode.stop().catch(() => {});
+      }
+      return Promise.resolve();
+    }
+
+    function startCameraStream() {
+      clearQrModalError();
       if (!html5QrCode) {
         html5QrCode = new Html5Qrcode('qrReader');
       }
+      if (html5QrCode.isScanning) return;
 
       html5QrCode.start({
           facingMode: 'environment'
@@ -1237,33 +1304,82 @@
           }
         },
         (decodedText) => {
-          const scannedCode = decodedText.trim();
-          bhwReferralInput.value = scannedCode;
-          bhwReferralInput.dispatchEvent(new Event('input', {
-            bubbles: true
-          }));
-
-          stopQrScanner();
-
-          // Automatically trigger the existing Autofill button
-          document.getElementById('autofillBtn').click();
+          applyScannedReferralCode(decodedText);
         },
-        () => {
-          // Ignore frame scan misses while searching for a QR code
-        }
-      ).catch(err => {
-        console.error('Camera error:', err);
-        stopQrScanner();
-        showBhwReferralError('Unable to access camera. Please allow camera permissions or enter the ID manually.');
+        () => {}
+      ).catch(() => {
+        showQrModalError('Camera unavailable or permission denied. Switch to "Upload QR Photo" above.');
       });
+    }
+
+    function switchToCameraTab() {
+      clearQrModalError();
+      tabCameraBtn.className = 'py-2 px-3 rounded-lg text-xs font-bold bg-white text-primary shadow-sm transition-all flex items-center justify-center gap-1.5';
+      tabUploadBtn.className = 'py-2 px-3 rounded-lg text-xs font-bold text-on-surface-variant hover:text-on-surface transition-all flex items-center justify-center gap-1.5';
+      cameraPanel.classList.remove('hidden');
+      uploadPanel.classList.add('hidden');
+      startCameraStream();
+    }
+
+    function switchToUploadTab() {
+      clearQrModalError();
+      stopCameraStream();
+      tabUploadBtn.className = 'py-2 px-3 rounded-lg text-xs font-bold bg-white text-primary shadow-sm transition-all flex items-center justify-center gap-1.5';
+      tabCameraBtn.className = 'py-2 px-3 rounded-lg text-xs font-bold text-on-surface-variant hover:text-on-surface transition-all flex items-center justify-center gap-1.5';
+      uploadPanel.classList.remove('hidden');
+      cameraPanel.classList.add('hidden');
+    }
+
+    function closeQrScannerModal() {
+      stopCameraStream();
+      qrScannerModal.classList.add('hidden');
+      qrFileInput.value = '';
+      clearQrModalError();
+    }
+
+    scanQrBtn.addEventListener('click', function() {
+      qrScannerModal.classList.remove('hidden');
+      switchToCameraTab();
     });
 
-    closeQrModalBtn.addEventListener('click', stopQrScanner);
+    tabCameraBtn.addEventListener('click', switchToCameraTab);
+    tabUploadBtn.addEventListener('click', switchToUploadTab);
+    closeQrModalBtn.addEventListener('click', closeQrScannerModal);
 
     qrScannerModal.addEventListener('click', function(e) {
-      if (e.target === qrScannerModal) {
-        stopQrScanner();
+      if (e.target === qrScannerModal) closeQrScannerModal();
+    });
+
+    qrFileDropzone.addEventListener('click', function() {
+      qrFileInput.value = '';
+      qrFileInput.click();
+    });
+
+    qrFileInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      clearQrModalError();
+
+      // 1. Strict image MIME type check
+      const allowedTypes = ['image/png', 'image/jpeg', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        showQrModalError('Invalid file type. Please upload a PNG, JPG, or WEBP image.');
+        qrFileInput.value = '';
+        return;
       }
+
+      // 2. Decode QR code from file
+      html5QrFileScanner.scanFile(file, false)
+        .then(decodedText => {
+          applyScannedReferralCode(decodedText);
+        })
+        .catch(() => {
+          showQrModalError('No QR code detected in this image. Please upload a clear photo of the referral QR code.');
+        })
+        .finally(() => {
+          qrFileInput.value = '';
+        });
     });
   </script>
 </body>

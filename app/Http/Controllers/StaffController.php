@@ -140,11 +140,11 @@ class StaffController extends Controller
             $selectedPatient = $verifiedQueue->first();
         }
         $bhwExposure = null;
-        if ($selectedPatient) {
-            $bhwExposure = DB::table('bite_cases')
-                ->join('bhw_referral_exposure', 'bite_cases.bhw_referral_id', '=', 'bhw_referral_exposure.referral_id')
-                ->where('bite_cases.inflow_record_id', $selectedPatient->inflow_record_id)
-                ->select('bhw_referral_exposure.*')
+        if ($selectedPatient && !empty($selectedPatient->bhw_referral_id)) {
+            $bhwExposure = DB::table('bhw_referral_info')
+                ->join('bhw_referral_exposure', 'bhw_referral_info.referral_id', '=', 'bhw_referral_exposure.referral_id')
+                ->where('bhw_referral_info.reference_no', $selectedPatient->bhw_referral_id)
+                ->select('bhw_referral_info.referral_id', 'bhw_referral_exposure.*')
                 ->first();
         }
 
@@ -193,6 +193,14 @@ class StaffController extends Controller
         // (status 'Encoded' puts the case in their Clinical Encoding queue), drafts stay with Staff.
         return DB::transaction(function () use ($request, $inflow_record_id, $patient, $inflow, $isComplete, $category) {
 
+            // Look up integer referral_id if this inflow came from a BHW referral
+            $bhwReferralId = null;
+            if (!empty($inflow->bhw_referral_id)) {
+                $bhwReferralId = DB::table('bhw_referral_info')
+                    ->where('reference_no', $inflow->bhw_referral_id)
+                    ->value('referral_id');
+            }
+
             // Get or create the bite_cases record for this patient
             $biteCase = DB::table('bite_cases')->where('inflow_record_id', $inflow_record_id)->first();
 
@@ -202,12 +210,19 @@ class StaffController extends Controller
                 $biteCaseId = DB::table('bite_cases')->insertGetId([
                     'patient_id'        => $patient->patient_id,
                     'inflow_record_id'  => $inflow_record_id,
+                    'bhw_referral_id'   => $bhwReferralId,
                     'case_number'       => $caseNumber,
                     'date_verified'     => now(),
                     'barangay'          => $inflow->barangay ?? 'Unknown',
                     'category'          => $category,
                     'philhealth_status' => $patient->philhealth_member ? 'Member' : 'Non-member',
                 ], 'bite_case_id');
+
+                if ($bhwReferralId) {
+                    DB::table('bhw_referral_info')
+                        ->where('referral_id', $bhwReferralId)
+                        ->update(['bite_case_id' => $biteCaseId]);
+                }
             } else {
                 $biteCaseId = $biteCase->bite_case_id;
 

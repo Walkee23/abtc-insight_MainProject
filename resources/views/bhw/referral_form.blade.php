@@ -93,25 +93,27 @@
             -webkit-backdrop-filter: blur(12px);
         }
     </style>
+    <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
+    <script src="{{ asset('js/custom-select.js') }}" defer></script>
 </head>
 
 <body class="text-on-surface">
 
-    <aside class="h-screen w-64 fixed left-0 top-0 bg-slate-100 dark:bg-slate-900 flex flex-col pt-6 pb-4 gap-2 z-50">
-        <!-- Brand / Header Section -->
-        <div class="px-6 mb-8">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg">
-                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">health_and_safety</span>
+    <aside class="h-screen w-64 fixed left-0 top-0 bg-slate-50 dark:bg-slate-900 flex flex-col border-r border-slate-200/50 dark:border-slate-800/50 z-50">
+        <!-- Brand -->
+        <div class="px-6 pt-8">
+            <div class="flex items-center gap-3 mb-10">
+                <div class="w-10 h-10 bg-primary rounded-[1rem] flex items-center justify-center">
+                    <span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">health_and_safety</span>
                 </div>
                 <div>
-                    <h1 class="text-blue-900 dark:text-blue-50 font-bold text-sm tracking-tight leading-none">ABTC-Insight</h1>
+                    <h1 class="font-black uppercase text-primary dark:text-blue-100 text-sm tracking-wider leading-none">ABTC-Insight</h1>
                 </div>
             </div>
         </div>
 
         <!-- Navigation -->
-        <nav class="space-y-1 px-4 dark:bg-slate-900">
+        <nav class="space-y-1 px-6">
             <!-- My Referrals (Inactive) -->
             <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50"
                 href="{{ route('bhw.dashboard') }}">
@@ -281,6 +283,15 @@
                             <option value="Married">Married</option>
                             <option value="Widowed">Widowed</option>
                             <option value="Separated">Separated</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-4 space-y-2">
+                        <label class="text-xs font-semibold text-on-surface-variant ml-1">Priority Status <span class="text-error">*</span></label>
+                        <select name="priority_status" id="priorityStatus" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" required>
+                            <option value="None" selected>None (Regular Queue)</option>
+                            <option value="PWD">PWD</option>
+                            <option value="Senior Citizen">Senior Citizen (60+)</option>
+                            <option value="Pregnant">Pregnant</option>
                         </select>
                     </div>
                     <div class="md:col-span-4 space-y-2">
@@ -515,6 +526,12 @@
                     }
 
                     ageInput.value = age;
+
+                    // Auto-select Senior Citizen if 60 or older
+                    const prioritySelect = document.getElementById('priorityStatus');
+                    if (age >= 60 && prioritySelect.value === 'None') {
+                        prioritySelect.value = 'Senior Citizen';
+                    }
 
                     // Restrict age between 0 and 125
                     if (age < 0 || age > 125) {

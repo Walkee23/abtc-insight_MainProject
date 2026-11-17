@@ -4,30 +4,40 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QROptions;
+use chillerlan\QRCode\Common\EccLevel;
 use Carbon\Carbon;
 
 class BhwController extends Controller
 {
     public function dashboard()
     {
-        // 1. Get the currently logged-in BHW ID
         $userId = auth()->id();
 
-        // 2. Count the metrics for the cards
         $totalSubmissions = DB::table('bhw_referral_info')->where('bhw_user_id', $userId)->count();
         $pending = DB::table('bhw_referral_info')->where('bhw_user_id', $userId)->where('status', 'Pending')->count();
         $received = DB::table('bhw_referral_info')->where('bhw_user_id', $userId)->where('status', 'Received')->count();
         $completed = DB::table('bhw_referral_info')->where('bhw_user_id', $userId)->where('status', 'Completed')->count();
 
-        // 3. Get the list of referrals and join with exposure table to get the exposure type
+        $qrOptions = new QROptions([
+            'eccLevel'     => EccLevel::M,
+            'scale'        => 6,
+            'outputBase64' => true,
+        ]);
+        $qrGenerator = new QRCode($qrOptions);
+
         $referrals = DB::table('bhw_referral_info')
             ->leftJoin('bhw_referral_exposure', 'bhw_referral_info.referral_id', '=', 'bhw_referral_exposure.referral_id')
             ->select('bhw_referral_info.*', 'bhw_referral_exposure.exposure_type')
             ->where('bhw_user_id', $userId)
             ->orderBy('bhw_referral_info.submitted_at', 'desc')
-            ->get();
+            ->get()
+            ->map(function ($referral) use ($qrGenerator) {
+                $referral->qr_code = $qrGenerator->render($referral->reference_no);
+                return $referral;
+            });
 
-        // 4. Send the data to the view
         return view('bhw.dashboard', compact('totalSubmissions', 'pending', 'received', 'completed', 'referrals'));
     }
 
@@ -37,7 +47,8 @@ class BhwController extends Controller
             'exposure_type'   => 'required|array|min:1',
             'exposure_type.*' => 'in:Bite,Non-Bite',
             'animal_remarks'  => 'required|in:Healthy,Sick,Dead,Lost/Stray',
-            'obs_14_days' => 'nullable|date|before_or_equal:today',
+            'obs_14_days'     => 'nullable|date|before_or_equal:today',
+            'priority_status' => 'required|in:None,PWD,Senior Citizen,Pregnant',
         ]);
         $barangayName = $request->input('patient_barangay');
 
@@ -69,6 +80,7 @@ class BhwController extends Controller
                 'age' => $request->input('age'),
                 'gender' => $request->input('gender'),
                 'civil_status' => $request->input('civil_status', 'Single'),
+                'priority_status' => $request->input('priority_status', 'None'),
                 'patient_barangay' => $barangayName,
                 'contact_num' => $request->input('contact_num'),
                 'referred_by' => auth()->user()->full_name, // FIX: Grabs BHW name
@@ -102,10 +114,10 @@ class BhwController extends Controller
             ]);
 
             DB::commit();
-            } catch (\Throwable $e) {
-                DB::rollBack();
-                throw $e;
-            }
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            throw $e;
+        }
 
         // Go to the dashboard and show the success pop-up
         return redirect()->route('bhw.dashboard')->with('new_referral', [
@@ -115,11 +127,9 @@ class BhwController extends Controller
         ]);
     }
 
-
-
     public function printReferral($id)
     {
-        // Fetch the referral and join the vitals and exposure tables
+        // 1. Fetch the referral and join the vitals and exposure tables FIRST
         $referral = DB::table('bhw_referral_info')
             ->leftJoin('bhw_referral_vitals', 'bhw_referral_info.referral_id', '=', 'bhw_referral_vitals.referral_id')
             ->leftJoin('bhw_referral_exposure', 'bhw_referral_info.referral_id', '=', 'bhw_referral_exposure.referral_id')
@@ -131,6 +141,16 @@ class BhwController extends Controller
             return redirect()->route('bhw.dashboard')->with('error', 'Referral not found.');
         }
 
-        return view('bhw.print_referral', compact('referral'));
+        // 2. Generate the QR code using the actual column name: $referral->reference_no
+        $qrOptions = new QROptions([
+            'eccLevel'     => EccLevel::M,
+            'scale'        => 5,
+            'outputBase64' => true,
+        ]);
+
+        $qrCode = (new QRCode($qrOptions))->render($referral->reference_no);
+
+        // 3. Return the view with both $referral and $qrCode
+        return view('bhw.print_referral', compact('referral', 'qrCode'));
     }
 }

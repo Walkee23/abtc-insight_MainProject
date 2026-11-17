@@ -7,11 +7,8 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Clinical Encoding Wizard - Section IX | ABTC-Insight</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap"
-        rel="stylesheet" />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
-        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -95,24 +92,25 @@
             display: none;
         }
     </style>
+    <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
 </head>
 
 <body class="bg-surface text-on-surface selection:bg-primary-container selection:text-on-primary-container">
-    <aside class="h-screen w-64 fixed left-0 top-0 bg-slate-100 dark:bg-slate-900 flex flex-col pt-6 pb-4 gap-2 z-50">
-        <!-- Brand / Header Section -->
-        <div class="px-6 mb-8">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg">
-                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">health_and_safety</span>
+    <aside class="h-screen w-64 fixed left-0 top-0 bg-slate-50 dark:bg-slate-900 flex flex-col border-r border-slate-200/50 dark:border-slate-800/50 z-50">
+        <!-- Brand -->
+        <div class="px-6 pt-8">
+            <div class="flex items-center gap-3 mb-10">
+                <div class="w-10 h-10 bg-primary rounded-[1rem] flex items-center justify-center">
+                    <span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">health_and_safety</span>
                 </div>
                 <div>
-                    <h1 class="text-blue-900 dark:text-blue-50 font-bold text-sm tracking-tight leading-none">ABTC-Insight</h1>
+                    <h1 class="font-black uppercase text-primary dark:text-blue-100 text-sm tracking-wider leading-none">ABTC-Insight</h1>
                 </div>
             </div>
         </div>
 
-        <!-- Navigation sits right beneath it -->
-        <nav class="space-y-1 px-4 dark:bg-slate-900">
+        <!-- Navigation -->
+        <nav class="space-y-1 px-6">
             <!-- Dashboard (Inactive) -->
             <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50"
                 href="{{ route('healthworker.dashboard') }}">

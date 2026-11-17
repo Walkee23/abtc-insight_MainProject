@@ -40,6 +40,8 @@
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
     </style>
+    <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
+    <script src="{{ asset('js/custom-select.js') }}" defer></script>
 </head>
 
 <body class="bg-surface text-on-surface">
@@ -108,7 +110,8 @@
                     </div>
 
                     <!-- Hover Dropdown Menu -->
-                    <div class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <div class="absolute right-0 top-full pt-2 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                        <div class="bg-white rounded-xl shadow-lg border border-slate-100">
                         <div class="p-2">
                             <a href="#" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary rounded-lg transition-colors">
                                 <span class="material-symbols-outlined text-[18px]">person</span>
@@ -124,6 +127,7 @@
                                     Log Out
                                 </button>
                             </form>
+                        </div>
                         </div>
                     </div>
                 </div>

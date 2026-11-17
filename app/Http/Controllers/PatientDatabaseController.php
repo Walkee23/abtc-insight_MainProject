@@ -35,12 +35,12 @@ class PatientDatabaseController extends Controller
         $scope = $request->query('scope') === 'mine' ? 'mine' : 'all';
         $userId = Auth::id() ?? 0;
 
-        // A case is "unfinished" until Clinical Encoding is finalized (outcome = 'Completed')
+        // A case is "unfinished" until it is finalized or discharged (it then has an outcome)
         $unfinishedCase = function ($q) {
             $this->handedOff($q->select(DB::raw(1))->from('bite_cases as uc'), 'uc')
                 ->whereColumn('uc.patient_id', 'p.patient_id')
                 ->where(function ($w) {
-                    $w->whereNull('uc.outcome')->orWhere('uc.outcome', '<>', 'Completed');
+                    $w->whereNull('uc.outcome');
                 });
         };
 
@@ -114,14 +114,14 @@ class PatientDatabaseController extends Controller
         $records = [];
         foreach ($patients as $patient) {
             $patientCases = ($cases[$patient->patient_id] ?? collect())->map(function ($c) use ($userId) {
-                $finished = $c->outcome === 'Completed';
+                $finished = $c->outcome !== null;
                 return [
                     'bite_case_id' => $c->bite_case_id,
                     'case_number' => $c->case_number,
                     'category' => $c->category,
                     'barangay' => $c->barangay,
                     'date' => \Carbon\Carbon::parse($c->date_verified)->format('M d, Y'),
-                    'status' => $finished ? 'Completed'
+                    'status' => $finished ? ($c->outcome === 'Completed' ? 'Completed' : 'Discharged')
                         : (($c->progress_id || $c->wound_desc_id || $c->day0_date) ? 'In Progress' : 'Awaiting Encoding'),
                     'finished' => $finished,
                     // Only the assigned health worker can open a case in Clinical Encoding
@@ -131,7 +131,7 @@ class PatientDatabaseController extends Controller
 
             // Patient-level status: any unfinished case wins
             $open = $patientCases->firstWhere('finished', false);
-            $patient->pep_status = $patientCases->isEmpty() ? 'No Case' : ($open ? $open['status'] : 'Completed');
+            $patient->pep_status = $patientCases->isEmpty() ? 'No Case' : ($open ? $open['status'] : $patientCases->first()['status']);
 
             $d = $details[$patient->patient_id];
             $records[$patient->patient_id] = [

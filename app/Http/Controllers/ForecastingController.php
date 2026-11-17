@@ -4,22 +4,33 @@ namespace App\Http\Controllers;
 
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use App\Support\Audit;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Process;
 
 class ForecastingController extends Controller
 {
-    /** Smoothing constants the sliders start at. */
-    private const DEFAULTS = ['alpha' => 0.45, 'beta' => 0.12, 'gamma' => 0.30];
+    /** Damping of the trend: far-off days drift back towards the weekly pattern instead of climbing forever. */
+    private const PHI = 0.95;
 
     /**
-     * period => label, seasonal cycle length, forecast horizon, periods of history shown.
-     * (Season: weekday pattern for daily, ~monthly cycle for weekly, yearly for monthly.)
+     * Smoothing constants the sliders start at. Over a 6-week window these already weight the latest
+     * days most (alpha 0.3 halves a day's weight every ~2 days). They were picked by backtesting on the
+     * 2025 data: heavier alpha/beta made the next-14-day forecasts worse, not better.
      */
+    private const DEFAULTS = ['alpha' => 0.30, 'beta' => 0.10, 'gamma' => 0.10];
+
+    /** The model learns from this many days (6 weeks) before the as-of date. */
+    private const TRAIN_DAYS = 42;
+
+    /** period => label and how far ahead to forecast (in periods, and the days that covers). */
     private const PERIODS = [
-        'daily' => ['label' => 'Daily', 'season' => 7, 'horizon' => 14, 'history' => 60, 'unit' => 'day'],
-        'weekly' => ['label' => 'Weekly', 'season' => 4, 'horizon' => 8, 'history' => 26, 'unit' => 'week'],
-        'monthly' => ['label' => 'Monthly', 'season' => 12, 'horizon' => 6, 'history' => 24, 'unit' => 'month'],
+        'daily' => ['label' => 'Daily', 'horizon' => 14, 'horizon_days' => 14, 'unit' => 'day'],
+        'weekly' => ['label' => 'Weekly', 'horizon' => 8, 'horizon_days' => 63, 'unit' => 'week'],
+        'monthly' => ['label' => 'Monthly', 'horizon' => 6, 'horizon_days' => 190, 'unit' => 'month'],
     ];
 
     // ------------------------------------------------------------------ page
@@ -28,25 +39,29 @@ class ForecastingController extends Controller
     {
         $period = array_key_exists($request->query('period'), self::PERIODS) ? $request->query('period') : 'monthly';
         $params = $this->params($request->query());
+        $asOf = $this->asOf($request->query('asof'));
 
-        $forecast = $this->forecast($period, $params);
+        $forecast = $this->forecast($period, $params, $asOf);
         $outbreak = $this->outbreak();
 
         $saved = DB::table('forecasting')->count();
         $lastSaved = DB::table('forecasting')->max('generated_date');
 
-        return view('admin.F_and_O', compact('period', 'params', 'forecast', 'outbreak', 'saved', 'lastSaved') + [
+        return view('admin.F_and_O', compact('period', 'params', 'asOf', 'forecast', 'outbreak', 'saved', 'lastSaved') + [
             'periods' => self::PERIODS,
             'defaults' => self::DEFAULTS,
+            'trainWeeks' => self::TRAIN_DAYS / 7,
+            'today' => $this->today(),
         ]);
     }
 
-    /** Stores the forecast currently shown (same period and smoothing constants) in `forecasting`. */
+    /** Stores the forecast currently shown (same period, date and smoothing constants) in `forecasting`. */
     public function save(Request $request)
     {
         $period = array_key_exists($request->input('period'), self::PERIODS) ? $request->input('period') : 'monthly';
         $params = $this->params($request->all());
-        $forecast = $this->forecast($period, $params);
+        $asOf = $this->asOf($request->input('asof'));
+        $forecast = $this->forecast($period, $params, $asOf);
 
         if ($forecast['status'] !== 'ok') {
             return back()->with('error', 'Not enough data to save a forecast yet.');
@@ -62,14 +77,15 @@ class ForecastingController extends Controller
                 'smoothing_constant' => $params['alpha'],
                 'data_points_used' => $forecast['points'],
                 'confidence_level' => $forecast['confidence'],
-                'algorithm_used' => $forecast['method'],
+                'algorithm_used' => $forecast['algorithm'],
                 'generated_by' => $by,
                 'generated_date' => now(),
             ];
         }
         DB::table('forecasting')->insert($rows);
+        Audit::log('forecast_saved', 'Saved ' . count($rows) . ' ' . self::PERIODS[$period]['label'] . ' forecast rows as of ' . $asOf->toDateString() . ' (' . $forecast['algorithm'] . ', alpha ' . $params['alpha'] . ')');
 
-        return redirect()->route('admin.forecasting', ['period' => $period] + $this->paramQuery($params))
+        return redirect()->route('admin.forecasting', ['period' => $period] + $this->paramQuery($params) + $this->asOfQuery($asOf))
             ->with('success', count($rows) . ' ' . self::PERIODS[$period]['unit'] . ' forecasts saved.');
     }
 
@@ -96,59 +112,120 @@ class ForecastingController extends Controller
         return now('Asia/Manila')->startOfDay();
     }
 
+    /** The date the forecast starts from (default today, never in the future). */
+    private function asOf(mixed $value): Carbon
+    {
+        $today = $this->today();
+        try {
+            $date = $value ? Carbon::parse((string) $value, 'Asia/Manila')->startOfDay() : $today;
+        } catch (\Throwable $e) {
+            return $today;
+        }
+        return $date->gt($today) ? $today : $date;
+    }
+
+    /** Only the as-of date when it is not today, for tidy URLs. */
+    private function asOfQuery(Carbon $asOf): array
+    {
+        return $asOf->isSameDay($this->today()) ? [] : ['asof' => $asOf->toDateString()];
+    }
+
     /**
-     * Patient volume forecast. Volume = walk-in registrations per period
-     * (inflow_general_particulars.queue_date). Only completed periods are fitted: today
-     * and the current week/month are still filling up, so they are the first forecast step.
+     * Patient volume forecast. Volume = walk-in registrations (inflow_general_particulars.queue_date).
+     *
+     * The model learns only from the 6 weeks (42 days) of daily counts before the as-of date, so
+     * the most recent days carry the weight: Holt-Winters exponential smoothing with a weekly
+     * (weekday) season, and a high alpha so the level follows the latest days. Weekly and monthly
+     * views add up the daily forecasts. The chart still shows every earlier period for context.
      */
-    private function forecast(string $period, array $params): array
+    private function forecast(string $period, array $params, Carbon $asOf): array
     {
         $cfg = self::PERIODS[$period];
-        $today = $this->today();
         $first = DB::table('inflow_general_particulars')->min('queue_date');
 
-        $base = ['status' => 'empty', 'period' => $period, 'cfg' => $cfg];
+        $base = ['status' => 'empty', 'period' => $period, 'cfg' => $cfg, 'as_of' => $asOf];
         if (!$first) {
             return $base;
         }
 
-        $firstDate = Carbon::parse($first)->startOfDay();
-        $currentStart = $this->bucketStart($today, $period);
+        $firstDate = Carbon::parse($first, 'Asia/Manila')->startOfDay();
+        $daily = $this->dailyCounts();
 
-        // completed periods from the first record up to (not including) the current one
-        $starts = [];
-        for ($d = $this->bucketStart($firstDate, $period); $d->lt($currentStart); $d = $this->next($d, $period)) {
-            $starts[] = $d->copy();
-        }
-        $starts = array_slice($starts, -$cfg['history']);
-        if (count($starts) < 3) {
-            return array_merge($base, ['status' => 'short', 'points' => count($starts)]);
+        // training window: the 6 weeks before the as-of date (less if the data starts later)
+        $trainStart = $firstDate->gt($asOf->copy()->subDays(self::TRAIN_DAYS)) ? $firstDate->copy() : $asOf->copy()->subDays(self::TRAIN_DAYS);
+        $trainDays = $trainStart->lt($asOf) ? (int) $trainStart->diffInDays($asOf) : 0;
+        if ($trainDays < 3) {
+            return array_merge($base, ['status' => 'short', 'points' => $trainDays]);
         }
 
-        $counts = $this->countsPerBucket($period);
-        $y = array_map(fn ($d) => (float) ($counts[$d->toDateString()] ?? 0), $starts);
+        $y = [];
+        for ($d = $trainStart->copy(); $d->lt($asOf); $d->addDay()) {
+            $y[] = (float) ($daily[$d->toDateString()] ?? 0);
+        }
         $n = count($y);
 
-        $fit = $this->holtWinters($y, $cfg['season'], $params['alpha'], $params['beta'], $params['gamma']);
-        $sigma = $fit['sigma'];
+        // The numbers come from the Python engine (python/forecast.py, statsmodels Holt-Winters).
+        // If Python cannot run, the page falls back to the same model written in PHP and says so.
+        $python = $this->pythonForecast($y, $trainStart, $params);
+        $engine = 'PHP built-in fallback (Python was not available)';
+        $pythonOk = $python !== null;
 
-        $future = [];
-        $step = $currentStart->copy();
-        for ($h = 1; $h <= $cfg['horizon']; $h++) {
-            $value = max(0, $fit['level'] + $h * $fit['trend']
-                + ($fit['seasonal'] ? $fit['season'][($n - 1 + $h) % $cfg['season']] : 0));
-            $half = 1.96 * $sigma * sqrt($h);
-            $future[] = [
-                'date' => $step->toDateString(),
-                'label' => $this->label($step, $period),
-                'value' => round($value, 2),
-                'lower' => round(max(0, $value - $half), 2),
-                'upper' => round($value + $half, 2),
-            ];
-            $step = $this->next($step, $period);
+        // daily forecasts from the as-of day; the trend is damped so far-off days stay realistic
+        $days = [];
+        if ($pythonOk) {
+            $fit = ['seasonal' => $python['seasonal'], 'sigma' => $python['sigma'], 'mape' => $python['mape']];
+            $engine = $python['engine'];
+            $values = $python['values'];
+        } else {
+            $fit = $this->holtWinters($y, 7, $params['alpha'], $params['beta'], $params['gamma']);
+            $values = [];
+            $trendSum = 0.0;
+            for ($h = 1; $h <= $cfg['horizon_days']; $h++) {
+                $trendSum += self::PHI ** $h;
+                $values[] = max(0, $fit['level'] + $trendSum * $fit['trend'] + ($fit['seasonal'] ? $fit['season'][($n - 1 + $h) % 7] : 0));
+            }
+        }
+        for ($h = 1; $h <= $cfg['horizon_days']; $h++) {
+            $days[] = ['date' => $asOf->copy()->addDays($h - 1), 'value' => (float) $values[$h - 1], 'half' => 1.96 * $fit['sigma'] * sqrt($h)];
         }
 
-        $spanDays = (int) $firstDate->diffInDays($today) + 1;
+        $future = [];
+        if ($period === 'daily') {
+            foreach (array_slice($days, 0, $cfg['horizon']) as $day) {
+                $future[] = $this->point($day['date'], $period, $day['value'], $day['half']);
+            }
+        } else {
+            // weekly / monthly: add up the daily forecasts per period; the part of the first period
+            // that is already over counts as the actual registrations
+            $buckets = [];
+            foreach ($days as $day) {
+                $key = $this->bucketStart($day['date'], $period)->toDateString();
+                $buckets[$key]['sum'] = ($buckets[$key]['sum'] ?? 0) + $day['value'];
+                $buckets[$key]['var'] = ($buckets[$key]['var'] ?? 0) + $day['half'] ** 2;
+            }
+            foreach (array_slice($buckets, 0, $cfg['horizon'], true) as $key => $b) {
+                $start = Carbon::parse($key, 'Asia/Manila')->startOfDay();
+                $actualSoFar = 0;
+                for ($d = $start->copy(); $d->lt($asOf); $d->addDay()) {
+                    $actualSoFar += $daily[$d->toDateString()] ?? 0;
+                }
+                $future[] = $this->point($start, $period, $actualSoFar + $b['sum'], sqrt($b['var']));
+            }
+        }
+
+        // every completed period before the as-of period, for the chart
+        $asOfStart = $this->bucketStart($asOf, $period);
+        $perBucket = [];
+        foreach ($daily as $date => $count) {
+            $key = $this->bucketStart(Carbon::parse($date, 'Asia/Manila'), $period)->toDateString();
+            $perBucket[$key] = ($perBucket[$key] ?? 0) + $count;
+        }
+        $history = [];
+        for ($d = $this->bucketStart($firstDate, $period); $d->lt($asOfStart); $d = $this->next($d, $period)) {
+            $history[] = ['date' => $d->toDateString(), 'label' => $this->label($d, $period), 'value' => (float) ($perBucket[$d->toDateString()] ?? 0)];
+        }
+
+        $spanDays = (int) $firstDate->diffInDays($asOf) + 1;
         $confidence = $spanDays >= 90 ? 'High' : ($spanDays >= 30 ? 'Moderate' : 'Low');
 
         $mape = $fit['mape'];
@@ -157,17 +234,93 @@ class ForecastingController extends Controller
         return array_merge($base, [
             'status' => 'ok',
             'method' => $fit['seasonal'] ? 'Holt-Winters (additive)' : 'Holt Linear Trend',
+            'engine' => $engine,
+            'python' => $pythonOk,
+            'algorithm' => ($fit['seasonal'] ? 'Holt-Winters (additive)' : 'Holt Linear Trend') . ($pythonOk ? ' · Python statsmodels' : ' · PHP fallback'),
             'seasonal' => $fit['seasonal'],
             'points' => $n,
             'span_days' => $spanDays,
             'confidence' => $confidence,
             'mape' => $mape === null ? null : round($mape, 1),
             'mape_label' => $mapeLabel,
-            'history' => array_map(fn ($d, $v) => ['date' => $d->toDateString(), 'label' => $this->label($d, $period), 'value' => $v], $starts, $y),
+            'history' => $history,
+            // how many chart periods the training window covers (none for months: 6 weeks is under 2 months)
+            'window' => match ($period) { 'daily' => $n, 'weekly' => intdiv($n, 7), default => 0 },
+            'window_start' => $trainStart->toDateString(),
             'future' => $future,
             'next_value' => $future[0]['value'],
-            'total_horizon' => round(array_sum(array_column($future, 'value')), 1),
+            'total_horizon' => (int) array_sum(array_column($future, 'value')),
         ]);
+    }
+
+    private function point(Carbon $date, string $period, float $value, float $half): array
+    {
+        return [
+            'date' => $date->toDateString(),
+            'label' => $this->label($date, $period),
+            // whole patients: a forecast of 91.3 people reads as 91
+            'value' => (int) round($value),
+            'lower' => (int) round(max(0, $value - $half)),
+            'upper' => (int) round($value + $half),
+        ];
+    }
+
+    /**
+     * Runs python/forecast.py (statsmodels Holt-Winters) on the training window and returns its JSON
+     * answer (the forecast for every day up to the longest horizon, plus the error figures), or null when
+     * Python cannot be run - the caller then falls back to the PHP version below.
+     *
+     * The answer is cached for a day under a key made of the exact input, so the same window and sliders
+     * (and the Daily / Weekly / Monthly tabs, which share one run) do not start Python again, while any
+     * new data or moved slider gives a new key and a fresh run.
+     */
+    private function pythonForecast(array $y, Carbon $start, array $params): ?array
+    {
+        $script = base_path('python/forecast.py');
+        if (!is_file($script)) {
+            return null;
+        }
+
+        $input = json_encode([
+            'y' => $y,
+            'start' => $start->toDateString(),
+            'alpha' => $params['alpha'],
+            'beta' => $params['beta'],
+            'gamma' => $params['gamma'],
+            'phi' => self::PHI,
+            'season' => 7,
+            'horizon' => max(array_column(self::PERIODS, 'horizon_days')),
+        ]);
+        $key = 'forecast.python.' . sha1($input . '|' . filemtime($script));
+
+        try {
+            return Cache::remember($key, now()->addDay(), function () use ($script, $input) {
+                $configured = config('services.python.bin');
+                // PYTHON_BIN in .env wins; otherwise the usual names are tried in turn
+                $candidates = $configured ? [[$configured]] : [['python'], ['python3'], ['py', '-3']];
+
+                foreach ($candidates as $command) {
+                    $result = Process::path(base_path())
+                        ->env(['PYTHONIOENCODING' => 'utf-8'])
+                        ->timeout(60)
+                        ->input($input)
+                        ->run([...$command, $script]);
+
+                    $data = json_decode($result->output(), true);
+                    if (!is_array($data)) {
+                        continue;   // this name is not a working Python (or statsmodels is missing): try the next
+                    }
+                    if (empty($data['ok'])) {
+                        throw new \RuntimeException($data['error'] ?? 'The Python script reported an error.');
+                    }
+                    return $data;
+                }
+                throw new \RuntimeException('No working Python with statsmodels was found. Set PYTHON_BIN in .env.');
+            });
+        } catch (\Throwable $e) {
+            Log::warning('Forecasting: the Python engine could not be used, falling back to PHP - ' . $e->getMessage());
+            return null;
+        }
     }
 
     /** Additive Holt-Winters; with less than two full seasons it falls back to Holt's linear trend. */
@@ -177,13 +330,25 @@ class ForecastingController extends Controller
         $seasonal = $n >= 2 * $m;
 
         if ($seasonal) {
-            $level = array_sum(array_slice($y, 0, $m)) / $m;
-            $trend = (array_sum(array_slice($y, $m, $m)) / $m - $level) / $m;
+            // start values from every complete season (not just the first), so one odd week
+            // doesn't set the weekday pattern: level = first season's mean, trend = change of
+            // the season means, seasonal index = average gap of each weekday from its season's mean
+            $seasons = intdiv($n, $m);
+            $means = [];
+            for ($k = 0; $k < $seasons; $k++) {
+                $means[$k] = array_sum(array_slice($y, $k * $m, $m)) / $m;
+            }
+            $level = $means[0];
+            $trend = ($means[$seasons - 1] - $means[0]) / (($seasons - 1) * $m);
             $season = [];
             for ($i = 0; $i < $m; $i++) {
-                $season[$i] = $y[$i] - $level;
+                $gaps = 0.0;
+                for ($k = 0; $k < $seasons; $k++) {
+                    $gaps += $y[$k * $m + $i] - $means[$k];
+                }
+                $season[$i] = $gaps / $seasons;
             }
-            $start = $m;
+            $start = 0;
         } else {
             $level = $y[0];
             $trend = $y[1] - $y[0];
@@ -192,13 +357,16 @@ class ForecastingController extends Controller
         }
 
         $errors = [];
-        $pct = [];
+        $absError = 0.0;
+        $actualSum = 0.0;
         for ($t = $start; $t < $n; $t++) {
             $s = $seasonal ? $season[$t % $m] : 0.0;
             $pred = $level + $trend + $s;
-            $errors[] = $y[$t] - $pred;
-            if ($y[$t] > 0) {
-                $pct[] = abs($y[$t] - $pred) / $y[$t] * 100;
+            // the first season only settles the start values, so it is left out of the error figures
+            if ($t >= ($seasonal ? $m : 1)) {
+                $errors[] = $y[$t] - $pred;
+                $absError += abs($y[$t] - $pred);
+                $actualSum += $y[$t];
             }
 
             $previous = $level;
@@ -215,7 +383,9 @@ class ForecastingController extends Controller
             'season' => $season,
             'seasonal' => $seasonal,
             'sigma' => count($errors) > 1 ? sqrt(array_sum(array_map(fn ($e) => $e * $e, $errors)) / count($errors)) : 0.0,
-            'mape' => $pct ? array_sum($pct) / count($pct) : null,
+            // weighted absolute % error: total miss / total actual. A plain MAPE explodes on the
+            // near-empty weekend days, where one patient off is a huge percentage.
+            'mape' => $actualSum > 0 ? $absError / $actualSum * 100 : null,
         ];
     }
 
@@ -242,15 +412,10 @@ class ForecastingController extends Controller
         return $period === 'monthly' ? $date->format('M Y') : $date->format('M d');
     }
 
-    /** Registrations per bucket start date (Y-m-d). */
-    private function countsPerBucket(string $period): array
+    /** Registrations per day (Y-m-d => count). */
+    private function dailyCounts(): array
     {
-        $counts = [];
-        foreach (DB::table('inflow_general_particulars')->selectRaw('queue_date as d, count(*) as c')->groupBy('queue_date')->get() as $row) {
-            $key = $this->bucketStart(Carbon::parse($row->d), $period)->toDateString();
-            $counts[$key] = ($counts[$key] ?? 0) + $row->c;
-        }
-        return $counts;
+        return DB::table('inflow_general_particulars')->selectRaw('queue_date as d, count(*) as c')->groupBy('queue_date')->pluck('c', 'd')->all();
     }
 
     // -------------------------------------------------------------- outbreak

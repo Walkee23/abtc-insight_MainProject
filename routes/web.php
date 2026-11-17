@@ -13,6 +13,7 @@ use App\Http\Controllers\visualAnalyticsController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\TreatmentTrackerController;
 use App\Http\Controllers\ForecastingController;
+use App\Http\Controllers\SystemToolsController;
 use App\Http\Controllers\ItDashboardController;
 use App\Http\Controllers\GisMapController;
 use Illuminate\Http\Request;
@@ -30,7 +31,8 @@ Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Role Dashboards
-Route::prefix('admin')->group(function () {
+// Everything under /admin needs a logged-in Admin (see App\Http\Middleware\EnsureAdmin)
+Route::prefix('admin')->middleware('admin')->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\AdminController::class, 'dashboard'])->name('admin.dashboard');
 
     Route::get('/spatial-map', [GisMapController::class, 'index'])->name('admin.gis_map');
@@ -54,7 +56,7 @@ Route::prefix('admin')->group(function () {
     Route::post('/forecasting/save', [ForecastingController::class, 'save'])->name('admin.forecasting.save');
 
     Route::get('/system-management', [AdminController::class, 'systemManagement'])->name('admin.usm');
-    
+
     Route::post('/system-management/store-user', function (Illuminate\Http\Request $request) {
         $request->validate([
             'username'            => 'required|string|max:50|unique:users,username',
@@ -74,8 +76,26 @@ Route::prefix('admin')->group(function () {
             'barangay_assignment' => $request->role === 'BHW' ? $request->barangay_assignment : null,
         ]);
 
+        \App\Support\Audit::log('user_created', "Created {$request->role} account '{$request->username}' ({$request->full_name})");
+
         return redirect()->route('admin.usm')->with('success', 'User account created successfully!');
     })->name('admin.store-user');
+
+    // System tools (Admin only, enforced in the controller): backups, auto-backup, audit logs, health
+    Route::prefix('system')->group(function () {
+        Route::get('/backups', [SystemToolsController::class, 'backups'])->name('admin.system.backups');
+        Route::post('/backups', [SystemToolsController::class, 'createBackup'])->name('admin.system.backups.create');
+        Route::get('/backups/{file}', [SystemToolsController::class, 'downloadBackup'])->name('admin.system.backups.download');
+        Route::delete('/backups/{file}', [SystemToolsController::class, 'deleteBackup'])->name('admin.system.backups.delete');
+        Route::get('/auto-backup', [SystemToolsController::class, 'autoBackup'])->name('admin.system.auto-backup');
+        Route::post('/auto-backup', [SystemToolsController::class, 'saveAutoBackup'])->name('admin.system.auto-backup.save');
+        Route::get('/audit-logs', [SystemToolsController::class, 'auditLogs'])->name('admin.system.audit-logs');
+        Route::get('/audit-logs/export', [SystemToolsController::class, 'exportAuditLogs'])->name('admin.system.audit-logs.export');
+        Route::get('/health', [SystemToolsController::class, 'health'])->name('admin.system.health');
+        Route::post('/import-cases/chunk', [SystemToolsController::class, 'importChunk'])->name('admin.system.import-cases.chunk');
+        Route::post('/import-cases', [SystemToolsController::class, 'importCases'])->name('admin.system.import-cases');
+        Route::get('/import-cases/template', [SystemToolsController::class, 'importTemplate'])->name('admin.system.import-cases.template');
+    });
 });
 
 // Staff Routes

@@ -111,7 +111,8 @@ def run(req: dict) -> dict:
 
 def main() -> int:
     try:
-        result = run(json.load(sys.stdin))
+        # utf-8-sig: also accepts input piped from Windows PowerShell, which puts an invisible BOM in front
+        result = run(json.loads(sys.stdin.buffer.read().decode("utf-8-sig")))
     except Exception as exc:  # report anything unexpected as JSON so the page can fall back
         result = {"ok": False, "error": f"{type(exc).__name__}: {exc}"}
     sys.stdout.write(json.dumps(result))

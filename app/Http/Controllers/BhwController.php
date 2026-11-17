@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QROptions;
+use chillerlan\QRCode\Common\EccLevel;
 use Carbon\Carbon;
 
 class BhwController extends Controller
@@ -102,10 +105,10 @@ class BhwController extends Controller
             ]);
 
             DB::commit();
-            } catch (\Throwable $e) {
-                DB::rollBack();
-                throw $e;
-            }
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            throw $e;
+        }
 
         // Go to the dashboard and show the success pop-up
         return redirect()->route('bhw.dashboard')->with('new_referral', [
@@ -115,11 +118,9 @@ class BhwController extends Controller
         ]);
     }
 
-
-
     public function printReferral($id)
     {
-        // Fetch the referral and join the vitals and exposure tables
+        // 1. Fetch the referral and join the vitals and exposure tables FIRST
         $referral = DB::table('bhw_referral_info')
             ->leftJoin('bhw_referral_vitals', 'bhw_referral_info.referral_id', '=', 'bhw_referral_vitals.referral_id')
             ->leftJoin('bhw_referral_exposure', 'bhw_referral_info.referral_id', '=', 'bhw_referral_exposure.referral_id')
@@ -131,6 +132,16 @@ class BhwController extends Controller
             return redirect()->route('bhw.dashboard')->with('error', 'Referral not found.');
         }
 
-        return view('bhw.print_referral', compact('referral'));
+        // 2. Generate the QR code using the actual column name: $referral->reference_no
+        $qrOptions = new QROptions([
+            'eccLevel'     => EccLevel::M,
+            'scale'        => 5,
+            'outputBase64' => true,
+        ]);
+
+        $qrCode = (new QRCode($qrOptions))->render($referral->reference_no);
+
+        // 3. Return the view with both $referral and $qrCode
+        return view('bhw.print_referral', compact('referral', 'qrCode'));
     }
 }

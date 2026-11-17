@@ -1,153 +1,212 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="utf-8"/>
-    <title>Print Referral | {{ $referral->reference_no }}</title>
+    <meta charset="UTF-8">
+    <title>BHW Referral - {{ $referral->reference_no }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"/>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
-        
-        @media print {
-            @page {
-                /* Setting margin to 0 removes the browser's date, URL, and page numbers */
-                margin: 0;
+        /* Match print view directly to standard Short Bond Paper (8.5in x 11in) */
+        @page {
+            size: 8.5in 11in;
+            margin: 0.5in;
+        }
+
+        @media screen {
+            body {
+                background: #e2e8f0;
+                padding: 24px 0;
             }
-            body { 
-                background-color: white; 
-                margin: 0; 
-                padding: 0; 
-                /* Overrides the flex centering just for the printer */
-                display: block !important; 
-            }
-            .no-print { display: none !important; }
-            .print-container { 
-                box-shadow: none !important; 
-                /* Forces the slip to the top-left corner */
-                margin: 0 !important; 
-                /* Adds a tiny margin so ink doesn't bleed off the physical paper edge */
-                padding: 0.25in !important; 
-                width: 4.25in !important; 
-                height: 5.5in !important; 
-                border: none !important;
+
+            .bond-paper {
+                width: 8.5in;
+                min-height: 11in;
+                padding: 0.5in;
+                margin: 0 auto;
+                background: #ffffff;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
             }
         }
-        
-        /* Forces the web preview to match the physical slip size */
-        .print-container {
-            width: 4.25in;
-            min-height: 5.5in;
+
+        @media print {
+
+            html,
+            body {
+                width: 100%;
+                height: 100%;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #ffffff !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .bond-paper {
+                width: 100% !important;
+                max-width: 100% !important;
+                min-height: auto !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                box-shadow: none !important;
+            }
+
+            .no-print {
+                display: none !important;
+            }
         }
     </style>
 </head>
-<!-- Center on screen, but align top-left for print -->
-<body class="py-10 flex flex-col items-center print:block print:py-0">
 
-    <!-- Action Bar (Hidden when printing) -->
-    <div class="w-full max-w-sm mb-6 flex justify-end gap-3 no-print">
-        <button onclick="window.close()" class="px-3 py-1.5 bg-slate-200 text-slate-700 text-sm font-bold rounded hover:bg-slate-300">Close</button>
-        <button onclick="window.print()" class="px-3 py-1.5 bg-blue-700 text-white text-sm font-bold rounded hover:bg-blue-800 shadow">🖨️ Print Slip</button>
+<body class="text-slate-900 font-sans antialiased">
+
+    {{-- Screen-only Action Bar --}}
+    <div class="no-print max-w-[8.5in] mx-auto mb-4 flex justify-between items-center">
+        <a href="{{ route('bhw.dashboard') }}" class="px-4 py-2 bg-slate-600 text-white text-sm font-semibold rounded-lg shadow hover:bg-slate-700">
+            &larr; Back to Dashboard
+        </a>
+        <button onclick="window.print()" class="px-4 py-2 bg-blue-700 text-white text-sm font-semibold rounded-lg shadow hover:bg-blue-800">
+            Print Referral
+        </button>
     </div>
 
-    <!-- Official Referral Slip -->
-    <div class="print-container bg-white p-4 border border-slate-300 shadow-xl rounded mx-auto print:mx-0 relative">
-        
-        <!-- Header -->
-        <div class="text-center mb-3 border-b border-slate-800 pb-2">
-            <h1 class="text-[11px] font-black uppercase tracking-wider text-slate-900">Cebu City Health Dept.</h1>
-            <h2 class="text-[9px] font-bold text-slate-700">Animal Bite Treatment Center</h2>
-            <div class="mt-2 inline-block bg-slate-100 border border-slate-300 px-3 py-1 rounded">
-                <p class="text-[7px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">Referral ID</p>
-                <p class="text-sm font-black text-blue-800 tracking-wide">{{ $referral->reference_no }}</p>
+    {{-- Full-width Bond Paper Container --}}
+    <div class="bond-paper">
+
+        {{-- Header with Top-Left Cebu City Seal & Top-Right CHD Logo --}}
+        <div class="flex items-center justify-between border-b-2 border-slate-900 pb-4 mb-5">
+            <img src="{{ asset('images/cebu_city_seal.jpg') }}"
+                alt="Official Seal City of Cebu"
+                class="w-20 h-20 object-contain shrink-0">
+
+            <div class="text-center px-4">
+                <p class="text-xs uppercase tracking-widest text-slate-600 font-semibold">Republic of the Philippines</p>
+                <p class="text-sm uppercase font-bold text-slate-800">City Government of Cebu</p>
+                <h1 class="text-xl font-extrabold uppercase tracking-tight text-slate-900 mt-0.5">
+                    Cebu City Health Department
+                </h1>
+                <p class="text-sm font-semibold text-blue-800">Animal Bite Treatment Center (ABTC)</p>
+                <p class="text-xs text-slate-500 mt-1">BARANGAY HEALTH WORKER REFERRAL SLIP</p>
+            </div>
+
+            <img src="{{ asset('images/chd_logo.jpg') }}"
+                alt="City Health Department Logo"
+                class="w-20 h-20 object-contain shrink-0">
+        </div>
+
+        {{-- Referral ID & Chillerlan QR Code Box --}}
+        <div class="flex items-center justify-between border border-slate-300 rounded-xl p-4 mb-6 bg-slate-50">
+            <div>
+                <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-500">Referral ID</span>
+                <span class="text-2xl font-extrabold tracking-wide text-blue-700">
+                    {{ $referral->reference_no }}
+                </span>
+                <p class="text-xs text-slate-500 mt-1">Present this slip or scan the QR code upon arrival at ABTC.</p>
+            </div>
+
+            <div class="flex flex-col items-center bg-white p-2 border border-slate-200 rounded-lg">
+                <img src="{{ $qrCode }}" alt="Referral QR Code" class="w-24 h-24">
+                <span class="text-[9px] font-mono text-slate-500 mt-1">{{ $referral->reference_no }}</span>
             </div>
         </div>
 
-        <!-- Details Grid -->
-        <div class="grid grid-cols-2 gap-x-2 gap-y-2 mb-3">
-            <div class="col-span-2">
-                <p class="text-[7px] font-bold text-slate-400 uppercase">Patient Name</p>
-                <p class="text-xs font-bold text-slate-900 leading-tight">{{ $referral->patient_name }}</p>
+        {{-- Patient Details Grid --}}
+        <div class="grid grid-cols-2 gap-y-4 gap-x-8 mb-6 text-sm">
+            <div class="col-span-2 border-b border-slate-200 pb-2">
+                <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Patient Name</span>
+                <span class="text-lg font-bold text-slate-900">
+                    {{ $referral->patient_name }}
+                </span>
             </div>
+
             <div>
-                <p class="text-[7px] font-bold text-slate-400 uppercase">Date of Referral</p>
-                <p class="text-[10px] font-bold text-slate-800">{{ \Carbon\Carbon::parse($referral->referral_date)->format('M d, Y') }}</p>
+                <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Date of Referral</span>
+                <span class="font-semibold">{{ \Carbon\Carbon::parse($referral->referral_date)->format('M d, Y') }}</span>
             </div>
+
             <div>
-                <p class="text-[7px] font-bold text-slate-400 uppercase">Demographics</p>
-                <p class="text-[10px] font-medium text-slate-800">{{ $referral->age }}yo • {{ substr($referral->gender, 0, 1) }} • {{ substr($referral->civil_status, 0, 1) }}</p>
+                <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Demographics</span>
+                <span class="font-semibold">{{ $referral->age }}yo &bull; {{ $referral->gender }} &bull; {{ $referral->civil_status }}</span>
             </div>
+
             <div>
-                <p class="text-[7px] font-bold text-slate-400 uppercase">Contact</p>
-                <p class="text-[10px] font-medium text-slate-800">{{ $referral->contact_num }}</p>
+                <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Contact Number</span>
+                <span class="font-semibold">{{ $referral->contact_num ?? 'N/A' }}</span>
             </div>
+
             <div>
-                <p class="text-[7px] font-bold text-slate-400 uppercase">Barangay</p>
-                <p class="text-[10px] font-bold text-slate-800">{{ $referral->patient_barangay }}</p>
+                <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Barangay</span>
+                <span class="font-semibold">{{ $referral->patient_barangay }}</span>
             </div>
         </div>
 
-        <!-- Vitals & Exposure Section -->
-        <div class="bg-slate-50 p-2 rounded border border-slate-200 mb-3">
-            <h3 class="text-[8px] font-bold text-slate-800 uppercase border-b border-slate-200 pb-1 mb-1.5">Clinical Assessment</h3>
-            
-            <div class="grid grid-cols-3 gap-1 mb-2">
+        {{-- Clinical Assessment Box --}}
+        <div class="border border-slate-300 rounded-xl p-5 mb-10">
+            <h2 class="text-xs font-extrabold uppercase tracking-wider text-slate-700 border-b border-slate-200 pb-2 mb-4">
+                Clinical Assessment
+            </h2>
+
+            <div class="grid grid-cols-3 gap-4 mb-4 text-sm">
                 <div>
-                    <p class="text-[6px] font-bold text-slate-400 uppercase">T(°C) / BP</p>
-                    <p class="text-[9px] font-medium">{{ $referral->temperature ?? '-' }} / {{ $referral->blood_pressure ?? '-' }}</p>
+                    <span class="block text-[10px] font-bold uppercase text-slate-500">T (&deg;C) / BP</span>
+                    <span class="font-semibold">{{ $referral->temperature ?? '-' }} / {{ $referral->blood_pressure ?? '-' }}</span>
                 </div>
                 <div>
-                    <p class="text-[6px] font-bold text-slate-400 uppercase">PR / RR</p>
-                    <p class="text-[9px] font-medium">{{ $referral->pulse_rate ?? '-' }} / {{ $referral->respiratory_rate ?? '-' }}</p>
+                    <span class="block text-[10px] font-bold uppercase text-slate-500">PR / RR</span>
+                    <span class="font-semibold">{{ $referral->pulse_rate ?? '-' }} / {{ $referral->respiratory_rate ?? '-' }}</span>
                 </div>
                 <div>
-                    <p class="text-[6px] font-bold text-slate-400 uppercase">Wt(kg) / Ht(cm)</p>
-                    <p class="text-[9px] font-medium">{{ $referral->weight_kg ?? '-' }} / {{ $referral->height_cm ?? '-' }}</p>
+                    <span class="block text-[10px] font-bold uppercase text-slate-500">WT (KG) / HT (CM)</span>
+                    <span class="font-semibold">{{ $referral->weight_kg ?? '-' }} / {{ $referral->height_cm ?? '-' }}</span>
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-1.5">
+            <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
                 <div>
-                    <p class="text-[6px] font-bold text-slate-400 uppercase">Exposure Type</p>
-                    <p class="text-[9px] font-bold text-red-600">{{ $referral->exposure_type }}</p>
+                    <span class="block text-[10px] font-bold uppercase text-slate-500">Exposure Type</span>
+                    <span class="font-bold text-red-600">{{ $referral->exposure_type }}</span>
                 </div>
                 <div>
-                    <p class="text-[6px] font-bold text-slate-400 uppercase">Animal</p>
-                    <p class="text-[9px] font-bold">{{ $referral->biting_animal === 'Others' ? $referral->biting_animal_other : $referral->biting_animal }}</p>
+                    <span class="block text-[10px] font-bold uppercase text-slate-500">Animal</span>
+                    <span class="font-semibold">
+                        {{ $referral->biting_animal === 'Others' && $referral->biting_animal_other ? $referral->biting_animal_other : $referral->biting_animal }}
+                        @if($referral->animal_remarks)
+                        ({{ $referral->animal_remarks }})
+                        @endif
+                    </span>
                 </div>
-                <div class="col-span-2">
-                    <p class="text-[6px] font-bold text-slate-400 uppercase">Date & Site</p>
-                    <p class="text-[9px] font-medium">{{ \Carbon\Carbon::parse($referral->exposure_datetime)->format('M d, Y g:i A') }} • {{ $referral->site_of_bite }}</p>
-                </div>
-                <div class="col-span-2">
-                    <p class="text-[6px] font-bold text-slate-400 uppercase">Remarks / Action</p>
-                    <p class="text-[9px] italic text-slate-600 truncate">{{ $referral->action_desired ?: 'None' }}</p>
-                </div>
+            </div>
+
+            <div class="mb-4 text-sm">
+                <span class="block text-[10px] font-bold uppercase text-slate-500">Date &amp; Site of Bite</span>
+                <span class="font-semibold">
+                    {{ \Carbon\Carbon::parse($referral->exposure_datetime)->format('M d, Y h:i A') }} &bull; {{ $referral->site_of_bite }}
+                </span>
+            </div>
+
+            <div class="text-sm">
+                <span class="block text-[10px] font-bold uppercase text-slate-500">Remarks / Action</span>
+                <span class="italic text-slate-700">{{ $referral->action_desired ?: 'None' }}</span>
             </div>
         </div>
 
-        <!-- Footer / Signature -->
-        <div class="mt-4 pt-2 border-t border-slate-200 flex justify-between items-end">
-            <div>
-                <p class="text-[7px] text-slate-400 italic">System Status: <strong class="{{ $referral->status === 'Pending' ? 'text-amber-600' : 'text-emerald-600' }}">{{ $referral->status }}</strong></p>
+        {{-- Footer & Signature Line --}}
+        <div class="flex items-end justify-between pt-8 border-t border-slate-300 mt-12">
+            <div class="text-xs text-slate-500">
+                System Status: <span class="font-bold text-amber-600">{{ ucfirst($referral->status ?? 'Pending') }}</span>
             </div>
-            <div class="text-center w-28">
-                <div class="border-b border-slate-800 pb-0.5 mb-0.5">
-                    <p class="font-bold text-[10px] text-slate-800 truncate">{{ $referral->referred_by }}</p>
-                </div>
-                <p class="text-[6px] font-bold text-slate-500 uppercase">Referring BHW</p>
+
+            <div class="text-center w-64">
+                <p class="font-bold text-sm text-slate-900 pb-1 border-b border-slate-900">
+                    {{ $referral->referred_by }}
+                </p>
+                <p class="text-[10px] font-bold uppercase tracking-wider text-slate-600 mt-1">
+                    Referring BHW
+                </p>
             </div>
         </div>
 
     </div>
 
-    <!-- Auto-print script -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            if(urlParams.get('autoprint') === 'true') {
-                setTimeout(() => { window.print(); }, 500);
-            }
-        });
-    </script>
 </body>
+
 </html>

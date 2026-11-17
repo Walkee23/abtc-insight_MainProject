@@ -7,7 +7,7 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>ABTC-Insight | Health Administrator Dashboard</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
     <script id="tailwind-config">
         tailwind.config = {
@@ -117,6 +117,8 @@
         opacity: 1;
     }
     </style>
+    <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
+    <script src="{{ asset('js/custom-select.js') }}" defer></script>
 </head>
 
 <body class="bg-surface text-on-surface flex min-h-screen">
@@ -187,7 +189,8 @@
                     </div>
 
                     <!-- Hover Dropdown Menu -->
-                    <div class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <div class="absolute right-0 top-full pt-2 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                        <div class="bg-white rounded-xl shadow-lg border border-slate-100">
                         <div class="p-2">
                             <a href="#" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary rounded-lg transition-colors">
                                 <span class="material-symbols-outlined text-[18px]">person</span>
@@ -203,6 +206,7 @@
                                     Log Out
                                 </button>
                             </form>
+                        </div>
                         </div>
                     </div>
                 </div>
@@ -231,28 +235,28 @@
                     <h3 class="text-3xl font-bold mt-1">{{ number_format($totalPatients) }}</h3>
                 </div>
 
-                <!-- Card 2: Active PEP Courses -->
+                <!-- Card 2: Ongoing PEP Courses -->
                 <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/15 transition-all hover:shadow-md">
                     <div class="flex items-center justify-between mb-4">
                         <div class="p-2 bg-orange-50 text-tertiary rounded-lg">
                             <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">medical_services</span>
                         </div>
-                        <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">Active</span>
+                        <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">Ongoing</span>
                     </div>
-                    <p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Active PEP Courses</p>
-                    <h3 class="text-3xl font-bold mt-1">{{ number_format($activePepCount) }}</h3>
+                    <p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Ongoing PEP Courses</p>
+                    <h3 class="text-3xl font-bold mt-1">{{ number_format($ongoingPepCount) }}</h3>
                 </div>
 
-                <!-- Card 3: Verified Cases Today -->
+                <!-- Card 3: Completed PEP Today -->
                 <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/15 transition-all hover:shadow-md">
                     <div class="flex items-center justify-between mb-4">
-                        <div class="p-2 bg-red-50 text-error rounded-lg">
-                            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+                        <div class="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
+                            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">task_alt</span>
                         </div>
-                        <span class="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded-full">Today</span>
+                        <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">Today</span>
                     </div>
-                    <p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Verified Cases Today</p>
-                    <h3 class="text-3xl font-bold mt-1">{{ number_format($verifiedToday) }}</h3>
+                    <p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Completed PEP Today</p>
+                    <h3 class="text-3xl font-bold mt-1">{{ number_format($completedToday) }}</h3>
                 </div>
 
             </div>
@@ -278,12 +282,56 @@
 
                 <!-- Bite Categories Donut Chart -->
                 <div class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/15 flex flex-col relative">
-                    <div class="flex items-center justify-between mb-8">
-                        <h3 class="text-lg font-bold">Bite Categories</h3>
-                        <select id="bite-filter" onchange="filterBiteCategories(this.value)" class="text-xs font-semibold bg-surface-container-low border-none rounded-lg py-1 px-3 focus:ring-0 cursor-pointer">
-                            <option value="monthly" {{ ($filter ?? 'monthly') == 'monthly' ? 'selected' : '' }}>Monthly</option>
-                            <option value="quarterly" {{ ($filter ?? 'monthly') == 'quarterly' ? 'selected' : '' }}>Quarterly</option>
-                        </select>
+                    @php
+                        $filter      = $filter ?? 'monthly';
+                        $biteYear    = $biteYear ?? now()->year;
+                        $bitePeriod  = $bitePeriod ?? now()->month;
+                        $biteYears   = $biteYears ?? [now()->year];
+                        $periodLabel = $periodLabel ?? '';
+                        $periodOpts  = $filter === 'quarterly'
+                            ? collect(range(1, 4))->mapWithKeys(fn ($q) => [$q => 'Q' . $q . ' (' . date('M', mktime(0, 0, 0, ($q - 1) * 3 + 1, 1)) . ' - ' . date('M', mktime(0, 0, 0, $q * 3, 1)) . ')'])
+                            : collect(range(1, 12))->mapWithKeys(fn ($m) => [$m => date('F', mktime(0, 0, 0, $m, 1))]);
+                        $selectCls   = 'appearance-none w-full text-xs font-semibold text-on-surface bg-white border border-outline-variant/60 rounded-lg pl-3 pr-8 py-2 cursor-pointer hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors';
+                    @endphp
+
+                    <div class="mb-6">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <h3 class="text-lg font-bold">Bite Categories</h3>
+                                <p class="text-xs text-on-surface-variant mt-1">Showing <span class="font-bold text-primary">{{ $periodLabel }}</span></p>
+                            </div>
+                        </div>
+
+                        <!-- Filters: period type, month / quarter, year -->
+                        <div class="mt-4 space-y-3">
+                            <div class="flex p-1 bg-surface-container-low rounded-lg" role="group" aria-label="Period type">
+                                @foreach (['monthly' => 'Monthly', 'quarterly' => 'Quarterly', 'yearly' => 'Yearly'] as $key => $text)
+                                    <button type="button" onclick="biteNav({ filter: '{{ $key }}', period: null })"
+                                            class="flex-1 px-3 py-1.5 text-xs font-bold rounded-md transition-all {{ $filter === $key ? 'bg-white text-primary shadow-sm' : 'text-on-surface-variant hover:text-primary' }}"
+                                            @if ($filter === $key) aria-pressed="true" @endif>{{ $text }}</button>
+                                @endforeach
+                            </div>
+
+                            <div class="flex items-center gap-3">
+                            @if ($filter !== 'yearly')
+                                <div class="relative flex-1">
+                                    <select id="bite-period" onchange="biteNav({ period: this.value })" class="{{ $selectCls }}" aria-label="{{ $filter === 'quarterly' ? 'Quarter' : 'Month' }}">
+                                        @foreach ($periodOpts as $value => $text)
+                                            <option value="{{ $value }}" {{ (int) $bitePeriod === (int) $value ? 'selected' : '' }}>{{ $text }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endif
+
+                            <div class="relative {{ $filter === 'yearly' ? 'flex-1' : 'w-28' }}">
+                                <select id="bite-year" onchange="biteNav({ year: this.value })" class="{{ $selectCls }}" aria-label="Year">
+                                    @foreach ($biteYears as $y)
+                                        <option value="{{ $y }}" {{ (int) $biteYear === (int) $y ? 'selected' : '' }}>{{ $y }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="flex-1 flex flex-col items-center justify-center">
@@ -317,6 +365,10 @@
 
                             <div id="chart-tooltip" class="absolute bg-slate-900 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-xl pointer-events-none z-50 whitespace-nowrap"></div>
                         </div>
+
+                        @if (($totalBites ?? 0) === 0)
+                            <p class="text-xs text-on-surface-variant -mt-4 mb-6 text-center">No bite cases recorded for {{ $periodLabel }}.</p>
+                        @endif
 
                         <div class="w-full space-y-3">
                             <div class="flex items-center justify-between">
@@ -435,9 +487,13 @@
         }, { passive: true });
     })();
  
-    function filterBiteCategories(value) {
+    // changes = { filter, period, year }; null removes a value so the server picks its default
+    function biteNav(changes) {
         var url = new URL(window.location.href);
-        url.searchParams.set('filter', value);
+        Object.keys(changes).forEach(function (key) {
+            if (changes[key] === null) url.searchParams.delete(key);
+            else url.searchParams.set(key, changes[key]);
+        });
         window.location.href = url.toString();
     }
 

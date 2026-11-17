@@ -8,7 +8,6 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -105,6 +104,8 @@
             border-radius: 10px;
         }
     </style>
+    <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
+    <script src="{{ asset('js/custom-select.js') }}" defer></script>
 </head>
 
 <body class="text-on-surface flex min-h-screen bg-surface">
@@ -175,7 +176,10 @@
                             <img alt="Admin Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAWLozmctqDvlYpuogkSKhuQXYqgyRVKTkvnu27_vfksbBi0fRp_28CpvFMkWokTvJIwFCvycusJ03sd70MxGv-IN-9EoSewtoGCMoJCboWhZiyXr9Zka7bBUMXl7Htj8b_rELNobmm3tu5deKHeXDYC1OZQpXtFhCTDycSm3-mjAqV-0zADcM6iNlwgsTmbuHbbvihLUWj2DhK1AdlgzJR_geD3xRe39h4TMEC10LJqKK5azvYdpi-szDRrOG0jL1N9x6qJeeLjIj9" />
                         </div>
                     </div>
-                    <div class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+
+                    <!-- Hover Dropdown Menu -->
+                    <div class="absolute right-0 top-full pt-2 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                        <div class="bg-white rounded-xl shadow-lg border border-slate-100">
                         <div class="p-2">
                             <a href="#" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary rounded-lg transition-colors">
                                 <span class="material-symbols-outlined text-[18px]">person</span>
@@ -190,6 +194,7 @@
                                 </button>
                             </form>
                         </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -202,7 +207,7 @@
                     <h2 class="text-3xl font-extrabold text-on-surface tracking-tight leading-none mb-2">Visual Analytics</h2>
                     <p class="text-on-surface-variant text-lg font-medium opacity-70">Query and visualize bite case data across all dimensions.</p>
                 </div>
-                @if(request()->hasAny(['group', 'health_area', 'barangay', 'sex', 'age_min', 'age_max']))
+                @if(request()->hasAny(['group', 'year', 'date_from', 'date_to', 'week_from', 'week_to', 'month_from', 'month_to', 'quarter_from', 'quarter_to', 'health_area', 'barangay', 'sex', 'age_min', 'age_max']))
                 <div class="flex gap-3">
                     <form action="{{ route('admin.generate.report') }}" method="GET" target="_blank">
                         <!-- I-pasa ang tanang kasamtangang request parameters (apil ang barangay, sex, etc.) ngadto sa report -->
@@ -211,6 +216,9 @@
                                 <input type="hidden" name="{{ $key }}" value="{{ $value }}">
                             @endif
                         @endforeach
+                        {{-- the report covers exactly the range shown on this page --}}
+                        <input type="hidden" name="date_from" value="{{ $rangeFrom ?? '' }}">
+                        <input type="hidden" name="date_to" value="{{ $rangeTo ?? '' }}">
 
                         <button type="submit" class="flex items-center px-6 py-3 bg-primary text-white rounded-xl font-semibold shadow-xl shadow-primary/20 hover:opacity-90 transition-all cursor-pointer">
                             Generate Official Report
@@ -218,7 +226,7 @@
                     </form>
 
                     <a href="{{ route('report.export.csv', request()->all()) }}" class="flex items-center px-6 py-3 bg-[#D4AF37] text-white rounded-xl font-semibold shadow-xl shadow-yellow-700/10 hover:opacity-90 transition-all cursor-pointer">
-                        Export All Results <span class="material-symbols-outlined ml-2">arrow_forward</span> CSV
+                        Export Filtered Results
                     </a>
                 </div>
                 @endif
@@ -230,19 +238,158 @@
                     <div class="grid grid-cols-1 md:grid-cols-6 gap-6">
                         
     
-                        <!-- Period Grouping (takes 3 columns) -->
+                        <!-- Period Grouping (takes 3 columns). The buttons only choose; the choice is sent with "Apply Filters". -->
                         <div class="md:col-span-3">
                             <label class="block text-xs font-bold uppercase text-on-surface-variant/60 tracking-widest mb-2">Period Grouping</label>
-                            <div class="flex bg-surface-container-highest p-1 rounded-lg">
-                                @php $currentGroup = request('group'); @endphp
-                                <button type="submit" name="group" value="daily" class="flex-1 py-1.5 text-xs font-semibold rounded-md transition-all {{ $currentGroup == 'daily' ? 'bg-white shadow-sm text-primary font-bold' : 'text-on-surface-variant' }}">Daily</button>
-                                <button type="submit" name="group" value="weekly" class="flex-1 py-1.5 text-xs font-semibold rounded-md transition-all {{ $currentGroup == 'weekly' ? 'bg-white shadow-sm text-primary font-bold' : 'text-on-surface-variant' }}">Weekly</button>
-                                <button type="submit" name="group" value="monthly" class="flex-1 py-1.5 text-xs font-semibold rounded-md transition-all {{ $currentGroup == 'monthly' ? 'bg-white shadow-sm text-primary font-bold' : 'text-on-surface-variant' }}">Monthly</button>
-                                <button type="submit" name="group" value="quarterly" class="flex-1 py-1.5 text-xs font-semibold rounded-md transition-all {{ $currentGroup == 'quarterly' ? 'bg-white shadow-sm text-primary font-bold' : 'text-on-surface-variant' }}">Quarterly</button>
-                                <button type="submit" name="group" value="yearly" class="flex-1 py-1.5 text-xs font-semibold rounded-md transition-all {{ $currentGroup == 'yearly' ? 'bg-white shadow-sm text-primary font-bold' : 'text-on-surface-variant' }}">Yearly</button>
+                            @php $currentGroup = request('group'); @endphp
+                            <div id="periodGroup" class="flex h-9 bg-surface-container-highest p-1 rounded-lg" role="group" aria-label="Period grouping">
+                                @foreach (['daily' => 'Daily', 'weekly' => 'Weekly', 'monthly' => 'Monthly', 'quarterly' => 'Quarterly', 'yearly' => 'Yearly'] as $groupValue => $groupText)
+                                    <button type="button" data-group="{{ $groupValue }}" aria-pressed="{{ $currentGroup == $groupValue ? 'true' : 'false' }}"
+                                        class="flex-1 py-1.5 text-xs font-semibold rounded-md transition-all {{ $currentGroup == $groupValue ? 'bg-white shadow-sm text-primary font-bold' : 'text-on-surface-variant hover:text-primary' }}">{{ $groupText }}</button>
+                                @endforeach
                             </div>
+                            <input type="hidden" name="group" id="groupInput" value="{{ $currentGroup }}" @if(!$currentGroup) disabled @endif />
+                        </div>
+
+                        <!-- Range of the chosen period grouping. Only the fields of the chosen period are sent. -->
+                        @php
+                            $rv = $rangeValues ?? [];
+                            $rb = $rangeBounds ?? ['min' => '2000-01-01', 'max' => date('Y-m-d'), 'min_month' => '2000-01', 'max_month' => date('Y-m'), 'min_week' => '2000-W01', 'max_week' => date('o-\WW')];
+                            $fieldCls = 'w-full h-9 bg-surface-container-highest border-none rounded-lg px-3 text-sm focus:ring-2 focus:ring-primary/20';
+                            $lblCls = 'block text-xs font-bold uppercase text-on-surface-variant/60 tracking-widest mb-2';
+                            $activePanel = in_array($currentGroup, ['daily', 'weekly', 'monthly', 'quarterly', 'yearly'], true) ? $currentGroup : 'none';
+                            $yearsList = $analyticsYears ?? [date('Y')];
+                            $yearsAsc = array_reverse($yearsList);
+                            $panelAttr = fn ($name) => 'data-range="' . $name . '" class="grid grid-cols-2 gap-6' . ($activePanel === $name ? '' : ' hidden') . '"';
+                            $off = fn ($name) => $activePanel === $name ? '' : 'disabled';
+                        @endphp
+                        <div class="md:col-span-3">
+                            <div {!! $panelAttr('none') !!}>
+                                <div>
+                                    <span class="{{ $lblCls }}">Year</span>
+                                    <select name="year" {{ $off('none') }} class="{{ $fieldCls }}">
+                                        @foreach ($yearsList as $yearOption)
+                                            <option value="{{ $yearOption }}" {{ (string) ($rv['year'] ?? '') === (string) $yearOption ? 'selected' : '' }}>{{ $yearOption }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <p class="text-[11px] leading-snug text-on-surface-variant self-end h-9 flex items-center">Pick a period grouping to choose a range.</p>
+                            </div>
+
+                            <div {!! $panelAttr('daily') !!}>
+                                <div>
+                                    <span class="{{ $lblCls }}">From date</span>
+                                    <input type="date" name="date_from" value="{{ $rv['date_from'] ?? '' }}" min="{{ $rb['min'] }}" max="{{ $rb['max'] }}" {{ $off('daily') }} class="{{ $fieldCls }}" />
+                                </div>
+                                <div>
+                                    <span class="{{ $lblCls }}">To date</span>
+                                    <input type="date" name="date_to" value="{{ $rv['date_to'] ?? '' }}" min="{{ $rb['min'] }}" max="{{ $rb['max'] }}" {{ $off('daily') }} class="{{ $fieldCls }}" />
+                                </div>
+                            </div>
+
+                            <div {!! $panelAttr('weekly') !!}>
+                                <div>
+                                    <span class="{{ $lblCls }}">From week</span>
+                                    <input type="week" name="week_from" value="{{ $rv['week_from'] ?? '' }}" min="{{ $rb['min_week'] }}" max="{{ $rb['max_week'] }}" placeholder="2025-W01" pattern="\d{4}-W\d{2}" {{ $off('weekly') }} class="{{ $fieldCls }}" />
+                                </div>
+                                <div>
+                                    <span class="{{ $lblCls }}">To week</span>
+                                    <input type="week" name="week_to" value="{{ $rv['week_to'] ?? '' }}" min="{{ $rb['min_week'] }}" max="{{ $rb['max_week'] }}" placeholder="2025-W52" pattern="\d{4}-W\d{2}" {{ $off('weekly') }} class="{{ $fieldCls }}" />
+                                </div>
+                            </div>
+
+                            <div {!! $panelAttr('monthly') !!}>
+                                <div>
+                                    <span class="{{ $lblCls }}">From month</span>
+                                    <input type="month" name="month_from" value="{{ $rv['month_from'] ?? '' }}" min="{{ $rb['min_month'] }}" max="{{ $rb['max_month'] }}" placeholder="2025-01" pattern="\d{4}-\d{2}" {{ $off('monthly') }} class="{{ $fieldCls }}" />
+                                </div>
+                                <div>
+                                    <span class="{{ $lblCls }}">To month</span>
+                                    <input type="month" name="month_to" value="{{ $rv['month_to'] ?? '' }}" min="{{ $rb['min_month'] }}" max="{{ $rb['max_month'] }}" placeholder="2025-12" pattern="\d{4}-\d{2}" {{ $off('monthly') }} class="{{ $fieldCls }}" />
+                                </div>
+                            </div>
+
+                            <div {!! $panelAttr('quarterly') !!}>
+                                <div>
+                                    <span class="{{ $lblCls }}">From quarter</span>
+                                    <select name="quarter_from" {{ $off('quarterly') }} class="{{ $fieldCls }}">
+                                        @foreach (($quarterOptions ?? []) as $q)
+                                            <option value="{{ $q['value'] }}" {{ ($rv['quarter_from'] ?? '') === $q['value'] ? 'selected' : '' }}>{{ $q['label'] }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <span class="{{ $lblCls }}">To quarter</span>
+                                    <select name="quarter_to" {{ $off('quarterly') }} class="{{ $fieldCls }}">
+                                        @foreach (($quarterOptions ?? []) as $q)
+                                            <option value="{{ $q['value'] }}" {{ ($rv['quarter_to'] ?? '') === $q['value'] ? 'selected' : '' }}>{{ $q['label'] }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div {!! $panelAttr('yearly') !!}>
+                                <div>
+                                    <span class="{{ $lblCls }}">Year</span>
+                                    <select name="year" {{ $off('yearly') }} class="{{ $fieldCls }}">
+                                        @foreach ($yearsAsc as $yearOption)
+                                            <option value="{{ $yearOption }}" {{ (string) ($rv['year_start'] ?? '') === (string) $yearOption ? 'selected' : '' }}>{{ $yearOption }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <span class="{{ $lblCls }}">To year (optional)</span>
+                                    <select name="year_to" {{ $off('yearly') }} class="{{ $fieldCls }}">
+                                        <option value="">—</option>
+                                        @foreach ($yearsAsc as $yearOption)
+                                            <option value="{{ $yearOption }}" {{ (string) ($rv['year_end'] ?? '') === (string) $yearOption ? 'selected' : '' }}>{{ $yearOption }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            @if (!empty($rangeNotice))
+                                <p class="text-[11px] font-semibold text-amber-700 mt-2">{{ $rangeNotice }}</p>
+                            @endif
                         </div>
                     </div>
+                    <script>
+                        (function () {
+                            // Clicking a period highlights it straight away (clicking it again clears the choice) and shows the
+                            // range fields of that period. Only the visible fields are sent when "Apply Filters" is pressed.
+                            const box = document.getElementById('periodGroup');
+                            const input = document.getElementById('groupInput');
+                            const panels = document.querySelectorAll('[data-range]');
+                            const ON = ['bg-white', 'shadow-sm', 'text-primary', 'font-bold'];
+                            const OFF = ['text-on-surface-variant', 'hover:text-primary'];
+                            function paint() {
+                                const current = input.disabled ? 'none' : input.value;
+                                box.querySelectorAll('button[data-group]').forEach((btn) => {
+                                    const on = btn.dataset.group === current;
+                                    ON.forEach((c) => btn.classList.toggle(c, on));
+                                    OFF.forEach((c) => btn.classList.toggle(c, !on));
+                                    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+                                });
+                                panels.forEach((panel) => {
+                                    const on = panel.dataset.range === current;
+                                    panel.classList.toggle('hidden', !on);
+                                    panel.querySelectorAll('input, select').forEach((el) => { el.disabled = !on; });
+                                });
+                            }
+                            box.addEventListener('click', (e) => {
+                                const btn = e.target.closest('button[data-group]');
+                                if (!btn) return;
+                                if (!input.disabled && input.value === btn.dataset.group) {
+                                    input.disabled = true;       // not sent: no period grouping
+                                    input.value = '';
+                                } else {
+                                    input.disabled = false;
+                                    input.value = btn.dataset.group;
+                                }
+                                paint();
+                            });
+                        })();
+                    </script>
 
                     <div class="grid grid-cols-1 md:grid-cols-5 gap-6 border-t border-outline-variant/10 pt-6">
                         <div>
@@ -251,6 +398,8 @@
                                 <option value="">All Areas</option>
                                 <option value="North" {{ request('health_area') == 'North' ? 'selected' : '' }}>North</option>
                                 <option value="South" {{ request('health_area') == 'South' ? 'selected' : '' }}>South</option>
+                                <option value="East" {{ request('health_area') == 'East' ? 'selected' : '' }}>East</option>
+                                <option value="West" {{ request('health_area') == 'West' ? 'selected' : '' }}>West</option>
                             </select>
                         </div>
                         <div>
@@ -288,44 +437,42 @@
                 </form>
             </section>
 
-            @if(request()->hasAny(['group', 'health_area', 'barangay', 'sex', 'age_min', 'age_max']))
+            @if(request()->hasAny(['group', 'year', 'date_from', 'date_to', 'week_from', 'week_to', 'month_from', 'month_to', 'quarter_from', 'quarter_to', 'health_area', 'barangay', 'sex', 'age_min', 'age_max']))
 
             <!-- SECTION 3 — REAL LIVE KPI CARDS -->
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
-                <!-- Card 1: Total Bite Cases -->
-                <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 shadow-sm">
-                    <p class="text-xs font-bold uppercase text-on-surface-variant/60 tracking-widest mb-4">Total Bite Cases</p>
-                    <div class="flex items-end justify-between">
-                        <h3 class="text-4xl font-black text-on-surface tracking-tighter">{{ number_format($analyticsTotalBites ?? 0) }}</h3>
-                        <span class="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full font-bold mb-1">Live</span>
-                    </div>
-                </div>
-
-                <!-- Card 2: Unique Patients -->
-                <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 shadow-sm">
-                    <p class="text-xs font-bold uppercase text-on-surface-variant/60 tracking-widest mb-4">Unique Patients</p>
-                    <div class="flex items-end justify-between">
-                        <h3 class="text-4xl font-black text-on-surface tracking-tighter">{{ number_format($analyticsUniquePatients ?? 0) }}</h3>
-                        <div class="w-12 h-6 flex items-end gap-1 mb-1">
-                            <div class="w-2 h-2 bg-primary/20 rounded-t-sm"></div>
-                            <div class="w-2 h-4 bg-primary/40 rounded-t-sm"></div>
-                            <div class="w-2 h-6 bg-primary rounded-t-sm"></div>
+            @php
+                // each card is sized by the value it shows: the longer the number, the more room the card gets,
+                // so a big number never crowds its badge or unit (and the cards wrap on narrow screens)
+                $kpis = [
+                    ['label' => 'Total Bite Cases', 'value' => number_format($analyticsTotalBites ?? 0), 'unit' => 'cases', 'badge' => 'Live', 'note' => null,
+                     'title' => 'Every bite case record that matches the filters'],
+                    ['label' => 'Unique Patients', 'value' => number_format($analyticsUniquePatients ?? 0), 'unit' => 'patients', 'badge' => null, 'note' => 'a patient with several records counts once',
+                     'title' => 'Different registered patients behind the matching records. The same name and birthdate counts once, however many records the person has.'],
+                    ['label' => 'Avg Age', 'value' => (string) ($analyticsAvgAge ?? 0), 'unit' => 'years', 'badge' => null, 'note' => null,
+                     'title' => 'Average age of the matching records'],
+                ];
+            @endphp
+            <div class="flex flex-wrap gap-6">
+                @foreach ($kpis as $kpi)
+                    @php $chars = max(3, strlen($kpi['value'])); @endphp
+                    <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 shadow-sm min-w-0"
+                         style="flex: {{ 3 + $chars }} 1 {{ 150 + $chars * 14 }}px;" title="{{ $kpi['title'] }}">
+                        <div class="flex items-center justify-between gap-3 mb-4">
+                            <p class="text-xs font-bold uppercase text-on-surface-variant/60 tracking-widest">{{ $kpi['label'] }}</p>
+                            @if ($kpi['badge'])
+                                <span class="shrink-0 bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full font-bold">{{ $kpi['badge'] }}</span>
+                            @endif
                         </div>
+                        <div class="flex items-baseline gap-2 min-w-0">
+                            <h3 class="text-4xl font-black text-on-surface tracking-tighter tabular-nums">{{ $kpi['value'] }}</h3>
+                            <span class="text-xs font-bold text-on-surface-variant/70">{{ $kpi['unit'] }}</span>
+                        </div>
+                        @if ($kpi['note'])
+                            <p class="text-[11px] text-on-surface-variant/70 mt-2">{{ $kpi['note'] }}</p>
+                        @endif
                     </div>
-                </div>
-
-                <!-- Card 4: Average Age -->
-                <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 shadow-sm">
-                    <p class="text-xs font-bold uppercase text-on-surface-variant/60 tracking-widest mb-4">Avg Age</p>
-                    <div class="flex items-end justify-between">
-                        <h3 class="text-4xl font-black text-on-surface tracking-tighter">{{ $analyticsAvgAge ?? 0 }}</h3>
-                        <p class="text-[10px] font-bold text-on-surface-variant/70 mb-1">years</p>
-                    </div>
-                </div>
-
-               
+                @endforeach
             </div>
-
             <!-- SECTION 4 — CHARTS & RANKINGS GRID -->
             <div class="grid grid-cols-12 gap-8">
                 <!-- Cases Over Time (Real Database-Driven Chart) -->
@@ -333,7 +480,7 @@
                     <div class="flex items-center justify-between mb-8">
                         <div>
                             <h4 class="text-xl font-bold text-on-surface tracking-tight">Cases Over Time</h4>
-                            <p class="text-sm text-on-surface-variant">Historical volume of new vs returning patient visits matching current filters</p>
+                            <p class="text-sm text-on-surface-variant">Historical volume of new vs returning patient visits matching current filters @if(!empty($chartSubtitle)) · <span class="font-semibold text-primary">{{ $chartSubtitle }}</span>@endif</p>
                         </div>
                         <div class="flex gap-4">
                             <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-[#004a93]"></span> <span class="text-xs font-medium text-on-surface-variant">Total</span></div>
@@ -341,82 +488,127 @@
                             <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-[#c1c7d3]"></span> <span class="text-xs font-medium text-on-surface-variant">Returning</span></div>
                         </div>
                     </div>
-                    <div class="h-[350px] w-full">
-                        <canvas id="casesOverTimeChart"></canvas>
+                    <div id="casesChartWrap" class="relative w-full" style="aspect-ratio: 1000 / 340;">
+                        <svg id="casesChart" class="w-full h-full block touch-none" viewBox="0 0 1000 340" preserveAspectRatio="xMidYMid meet"></svg>
+                        <div id="casesTip" class="hidden pointer-events-none absolute z-10 bg-slate-900/95 text-white rounded-lg px-3 py-2 shadow-xl text-xs leading-snug whitespace-nowrap"></div>
                     </div>
+                    <script type="application/json" id="casesData">{!! json_encode(['labels' => $chartLabels ?? [], 'total' => $totalCasesData ?? [], 'new' => $newCasesData ?? [], 'returning' => $returningCasesData ?? []], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
                     <script>
-                        document.addEventListener('DOMContentLoaded', function() {
-                            const ctx = document.getElementById('casesOverTimeChart').getContext('2d');
-                            const chartLabels = {!! json_encode($chartLabels ?? ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']) !!};
-                            const totalData = {!! json_encode($totalCasesData ?? []) !!};
-                            const newData = {!! json_encode($newCasesData ?? []) !!};
-                            const returningData = {!! json_encode($returningCasesData ?? []) !!};
+                        // Cases Over Time (SVG): same look as the forecasting chart - light grid, thick round line,
+                        // dots, a hover guide with a dark tooltip
+                        (function () {
+                            const svg = document.getElementById('casesChart');
+                            const tip = document.getElementById('casesTip');
+                            const data = JSON.parse(document.getElementById('casesData').textContent);
+                            const labels = data.labels, n = labels.length;
+                            const series = [
+                                { key: 'returning', name: 'Returning', color: '#c1c7d3', width: 2.5, dash: null, r: 3 },
+                                { key: 'new', name: 'New', color: '#49607f', width: 2.5, dash: '7,4', r: 3 },
+                                { key: 'total', name: 'Total', color: '#004a93', width: 3, dash: null, r: 4 },
+                            ];
+                            const W = 1000, H = 340, left = 44, right = 16, top = 16, bottom = 34;
+                            const NS = 'http://www.w3.org/2000/svg';
+                            const fmt = (v) => Number(v).toLocaleString();
+                            const add = (tag, attrs, text) => {
+                                const el = document.createElementNS(NS, tag);
+                                Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
+                                if (text !== undefined) el.textContent = text;
+                                svg.appendChild(el);
+                                return el;
+                            };
 
-                            new Chart(ctx, {
-                                type: 'line',
-                                data: {
-                                    labels: chartLabels,
-                                    datasets: [
-                                        {
-                                            label: 'Total Cases',
-                                            data: totalData,
-                                            borderColor: '#004a93',
-                                            backgroundColor: '#004a93',
-                                            borderWidth: 3,
-                                            tension: 0.4,
-                                            pointRadius: 4,
-                                            pointBackgroundColor: '#004a93'
-                                        },
-                                        {
-                                            label: 'New Patients',
-                                            data: newData,
-                                            borderColor: '#49607f',
-                                            backgroundColor: '#49607f',
-                                            borderWidth: 2,
-                                            borderDash: [5, 5],
-                                            tension: 0.4,
-                                            pointRadius: 2
-                                        },
-                                        {
-                                            label: 'Returning',
-                                            data: returningData,
-                                            borderColor: '#c1c7d3',
-                                            backgroundColor: '#c1c7d3',
-                                            borderWidth: 2,
-                                            tension: 0.4,
-                                            pointRadius: 2
-                                        }
-                                    ]
-                                },
-                                options: {
-                                    responsive: true,
-                                    maintainAspectRatio: false,
-                                    plugins: { legend: { display: false } },
-                                    scales: {
-                                        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
-                                        x: { grid: { display: false } }
-                                    }
-                                }
+                            const maxVal = Math.max(1, ...data.total, ...data.new, ...data.returning);
+                            const step = maxVal <= 4 ? 1 : Math.pow(10, Math.floor(Math.log10(maxVal / 4)));
+                            const niceStep = [1, 2, 5, 10].map((m) => m * step).find((st) => maxVal / st <= 5) || step * 10;
+                            const yMax = Math.ceil(maxVal / niceStep) * niceStep;
+                            const x = (i) => left + (n === 1 ? (W - left - right) / 2 : i * (W - left - right) / (n - 1));
+                            const y = (v) => top + (1 - v / yMax) * (H - top - bottom);
+
+                            for (let v = 0; v <= yMax + 1e-9; v += niceStep) {
+                                add('line', { x1: left, x2: W - right, y1: y(v), y2: y(v), stroke: '#eceef0', 'stroke-width': 1 });
+                                add('text', { x: left - 8, y: y(v) + 4, 'text-anchor': 'end', 'font-size': 11, fill: '#717782' }, fmt(v));
+                            }
+                            const ticks = n <= 14 ? n : 8;
+                            for (let t = 0; t < ticks; t++) {
+                                const i = ticks === 1 ? 0 : Math.round(t * (n - 1) / (ticks - 1));
+                                add('text', { x: x(i), y: H - 10, 'text-anchor': 'middle', 'font-size': 11, fill: '#717782' }, labels[i]);
+                            }
+
+                            if (!data.total.some((v) => v > 0)) {
+                                add('text', { x: W / 2, y: H / 2, 'text-anchor': 'middle', 'font-size': 14, fill: '#717782' }, 'No cases match these filters in this period.');
+                            }
+
+                            // soft area under the Total line
+                            if (n > 1) {
+                                const pts = data.total.map((v, i) => x(i) + ',' + y(v)).join(' ');
+                                add('polygon', { points: x(0) + ',' + y(0) + ' ' + pts + ' ' + x(n - 1) + ',' + y(0), fill: '#004a93', 'fill-opacity': 0.06 });
+                            }
+                            series.forEach((s) => {
+                                const vals = data[s.key];
+                                const attrs = { d: vals.map((v, i) => (i ? 'L' : 'M') + x(i) + ',' + y(v)).join(' '), fill: 'none', stroke: s.color, 'stroke-width': s.width, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' };
+                                if (s.dash) attrs['stroke-dasharray'] = s.dash;
+                                add('path', attrs);
+                                if (n <= 40) vals.forEach((v, i) => add('circle', { cx: x(i), cy: y(v), r: s.r, fill: s.color, stroke: s.color, 'stroke-width': 2 }));
                             });
-                        });
+
+                            // hover guides sit on top of everything else
+                            const hoverLine = add('line', { x1: 0, x2: 0, y1: top, y2: H - bottom, stroke: '#004a93', 'stroke-opacity': 0.35, 'stroke-width': 1.5, visibility: 'hidden' });
+                            const hoverRing = add('circle', { cx: 0, cy: 0, r: 7, fill: 'none', stroke: '#004a93', 'stroke-width': 2.5, visibility: 'hidden' });
+
+                            function show(i, rect) {
+                                const px = x(i), py = y(data.total[i]);
+                                hoverLine.setAttribute('x1', px); hoverLine.setAttribute('x2', px); hoverLine.setAttribute('visibility', 'visible');
+                                hoverRing.setAttribute('cx', px); hoverRing.setAttribute('cy', py); hoverRing.setAttribute('visibility', 'visible');
+
+                                tip.replaceChildren();
+                                const title = document.createElement('div');
+                                title.className = 'font-bold';
+                                title.textContent = labels[i];
+                                tip.appendChild(title);
+                                [['Total', 'total', '#ffffff'], ['New', 'new', '#cbd5e1'], ['Returning', 'returning', '#cbd5e1']].forEach(([name, key, color]) => {
+                                    const row = document.createElement('div');
+                                    row.style.color = color;
+                                    row.textContent = name + ': ' + fmt(data[key][i]);
+                                    tip.appendChild(row);
+                                });
+                                tip.classList.remove('hidden');
+                                const cx = px / W * rect.width, cy = py / H * rect.height;
+                                const tw = tip.offsetWidth, th = tip.offsetHeight;
+                                tip.style.left = Math.min(Math.max(8, cx - tw / 2), rect.width - tw - 8) + 'px';
+                                tip.style.top = (cy - th - 14 < 0 ? cy + 16 : cy - th - 14) + 'px';
+                            }
+                            svg.addEventListener('pointermove', (e) => {
+                                if (!n) return;
+                                const rect = svg.getBoundingClientRect();
+                                const vx = (e.clientX - rect.left) * (W / rect.width);
+                                let best = 0;
+                                for (let i = 1; i < n; i++) if (Math.abs(x(i) - vx) < Math.abs(x(best) - vx)) best = i;
+                                show(best, rect);
+                            });
+                            svg.addEventListener('pointerleave', () => {
+                                tip.classList.add('hidden');
+                                hoverLine.setAttribute('visibility', 'hidden');
+                                hoverRing.setAttribute('visibility', 'hidden');
+                            });
+                        })();
                     </script>
                 </div>
                     
                 <!-- Top Barangays Ranking -->
                 <div class="col-span-12 md:col-span-6 bg-surface-container-lowest p-8 rounded-xl border border-outline-variant/10 shadow-sm">
                     <h4 class="text-lg font-bold text-on-surface mb-6">Top 15 Barangays by Incidence</h4>
-                    @if(isset($topBarangays) && $topBarangays->count() > 0)
-                        <div class="space-y-3">
-                            @foreach($topBarangays as $b)
-                                @php
-                                    $percentage = $maxBarangayTotal > 0 ? round(($b->total / $maxBarangayTotal) * 100) : 0;
-                                @endphp
-                                <div class="flex items-center gap-3">
-                                    <span class="w-28 text-xs font-bold text-on-surface-variant text-right truncate" title="{{ $b->barangay }}">{{ $b->barangay }}</span>
-                                    <div class="flex-1 h-3 bg-surface-container-highest rounded-full overflow-hidden">
-                                        <div class="h-full bg-primary transition-all duration-500" style="width: {{ $percentage }}%;"></div>
+                    @php $bc = $barangayChart ?? ['rows' => [], 'total' => 0]; @endphp
+                    @if(count($bc['rows']) > 0)
+                        <div class="viz-rows space-y-1">
+                            @foreach($bc['rows'] as $row)
+                                <div class="viz-row group flex items-center gap-3 -mx-2 px-2 py-1.5 rounded-lg"
+                                     data-tip-title="{{ $row['name'] }}"
+                                     data-tip-lines="{{ number_format($row['count']) }} {{ $row['count'] === 1 ? 'case' : 'cases' }}|{{ number_format($row['pct'], 1) }}% of all cases">
+                                    <span class="viz-name w-28 text-xs font-bold text-on-surface-variant text-right truncate transition-colors">{{ $row['name'] }}</span>
+                                    <div class="viz-track flex-1 h-3 bg-surface-container-highest rounded-full overflow-hidden">
+                                        <div class="viz-fill h-full bg-primary rounded-full" style="width: {{ $row['width'] }}%;"></div>
                                     </div>
-                                    <span class="w-8 text-[10px] font-bold text-on-surface-variant">{{ number_format($b->total) }}</span>
+                                    <span class="viz-count w-10 shrink-0 text-right text-[11px] font-bold text-on-surface-variant tabular-nums transition-colors">{{ number_format($row['count']) }}</span>
                                 </div>
                             @endforeach
                         </div>
@@ -439,55 +631,54 @@
                                 </div>
                             </div>
 
-                            <!-- TAB 1: Exposure Category Content -->
-                            <div id="content-exposure" class="demographic-tab-content flex items-center justify-between">
-                                <div class="space-y-1">
-                                    <div class="flex items-center gap-2 text-xs font-bold"><span class="w-2 h-2 rounded-full bg-primary"></span> Category III ({{ $cat3Pct ?? 0 }}%)</div>
-                                    <div class="flex items-center gap-2 text-xs font-bold"><span class="w-2 h-2 rounded-full bg-secondary"></span> Category II ({{ $cat2Pct ?? 0 }}%)</div>
-                                    <div class="flex items-center gap-2 text-xs font-bold"><span class="w-2 h-2 rounded-full bg-outline"></span> Category I ({{ $cat1Pct ?? 0 }}%)</div>
+                            @foreach (['exposure', 'sex', 'animal'] as $tabKey)
+                                @php $d = $breakdowns[$tabKey] ?? ['segments' => [], 'total' => 0]; $offset = 0; @endphp
+                                <div id="content-{{ $tabKey }}" class="viz-donut demographic-tab-content {{ $tabKey === 'exposure' ? '' : 'hidden' }} flex items-center justify-between">
+                                    <div class="space-y-1">
+                                        @foreach ($d['segments'] as $i => $seg)
+                                            <div class="viz-legend flex items-center gap-2 text-xs font-bold -ml-2 px-2 py-1 rounded-lg"
+                                                 data-donut="{{ $tabKey }}" data-idx="{{ $i }}"
+                                                 data-tip-title="{{ $seg['label'] }}"
+                                                 data-tip-lines="{{ number_format($seg['count']) }} {{ $seg['count'] === 1 ? 'case' : 'cases' }}|{{ $seg['pct'] === 0 && $seg['count'] > 0 ? '<1' : $seg['pct'] }}% of {{ number_format($d['total']) }}">
+                                                <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: {{ $seg['color'] }};"></span>
+                                                <span>{{ $seg['label'] }}</span>
+                                                <span class="font-semibold text-on-surface-variant">{{ $seg['pct'] === 0 && $seg['count'] > 0 ? '<1' : $seg['pct'] }}%</span>
+                                            </div>
+                                        @endforeach
+                                        @if ($d['total'] === 0)
+                                            <p class="text-xs text-on-surface-variant">No data for these filters.</p>
+                                        @endif
+                                    </div>
+                                    <div class="relative w-28 h-28 shrink-0">
+                                        <svg class="w-full h-full transform -rotate-90 overflow-visible" viewBox="0 0 36 36" @if ($tabKey === 'sex') style="transform: scaleX(-1) rotate(-90deg);" @endif>
+                                            <circle cx="18" cy="18" r="16" fill="none" stroke="#eceef0" stroke-width="4"></circle>
+                                            @foreach ($d['segments'] as $i => $seg)
+                                                @if ($seg['frac'] > 0)
+                                                    <circle class="viz-seg" cx="18" cy="18" r="16" fill="none" stroke="{{ $seg['color'] }}" stroke-width="4" pathLength="100"
+                                                            stroke-dasharray="{{ $seg['frac'] }} {{ round(100 - $seg['frac'], 3) }}" stroke-dashoffset="{{ -round($offset, 3) }}"
+                                                            data-donut="{{ $tabKey }}" data-idx="{{ $i }}"
+                                                            data-tip-title="{{ $seg['label'] }}"
+                                                            data-tip-lines="{{ number_format($seg['count']) }} {{ $seg['count'] === 1 ? 'case' : 'cases' }}|{{ $seg['pct'] === 0 && $seg['count'] > 0 ? '<1' : $seg['pct'] }}% of {{ number_format($d['total']) }}"></circle>
+                                                    @php $offset += $seg['frac']; @endphp
+                                                @endif
+                                            @endforeach
+                                        </svg>
+                                        <div class="absolute inset-0 flex flex-col items-center justify-center leading-none pointer-events-none">
+                                            @if ($tabKey === 'sex')
+                                                {{-- the ratio of the two shares (they add up to 100), e.g. 47:53; Male is first, like the slice on the left --}}
+                                                @php $maleSeg = $d['segments'][0] ?? ['pct' => 0, 'color' => '#3b82f6']; $femaleSeg = $d['segments'][1] ?? ['pct' => 0, 'color' => '#f472b6']; @endphp
+                                                <span class="font-black text-lg tracking-tighter tabular-nums">
+                                                    <span style="color: {{ $maleSeg['color'] }};">{{ $maleSeg['pct'] }}</span><span class="text-on-surface-variant/50">:</span><span style="color: {{ $femaleSeg['color'] }};">{{ $femaleSeg['pct'] }}</span>
+                                                </span>
+                                                <span class="text-[8px] font-bold uppercase tracking-wide text-on-surface-variant/70 mt-1.5 whitespace-nowrap">Male : Female</span>
+                                            @else
+                                                <span class="font-black text-on-surface text-base tracking-tighter">{{ number_format($d['total']) }}</span>
+                                                <span class="text-[9px] font-bold uppercase tracking-wider text-on-surface-variant/60 mt-1">Cases</span>
+                                            @endif
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="relative w-28 h-28">
-                                    <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                                        <circle class="stroke-outline/20" cx="18" cy="18" fill="none" r="16" stroke-width="4"></circle>
-                                        <circle class="stroke-primary" cx="18" cy="18" fill="none" r="16" stroke-dasharray="{{ $cat3Pct ?? 0 }}, 100" stroke-width="4"></circle>
-                                        <circle class="stroke-secondary" cx="18" cy="18" fill="none" r="16" stroke-dasharray="{{ $cat2Pct ?? 0 }}, 100" stroke-dashoffset="-{{ $cat3Pct ?? 0 }}" stroke-width="4"></circle>
-                                    </svg>
-                                    <div class="absolute inset-0 flex items-center justify-center font-black text-primary text-base tracking-tighter">{{ $cat3Pct ?? 0 }}%</div>
-                                </div>
-                            </div>
-
-                            <!-- TAB 2: Sex Distribution Content -->
-                            <div id="content-sex" class="demographic-tab-content hidden flex items-center justify-between">
-                                <div class="space-y-1">
-                                    <div class="flex items-center gap-2 text-xs font-bold"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Male ({{ $malePct ?? 0 }}%)</div>
-                                    <div class="flex items-center gap-2 text-xs font-bold"><span class="w-2 h-2 rounded-full bg-pink-400"></span> Female ({{ $femalePct ?? 0 }}%)</div>
-                                </div>
-                                <div class="relative w-28 h-28">
-                                    <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                                        <circle class="stroke-pink-400" cx="18" cy="18" fill="none" r="16" stroke-width="4"></circle>
-                                        <circle class="stroke-blue-500" cx="18" cy="18" fill="none" r="16" stroke-dasharray="{{ $malePct ?? 0 }}, 100" stroke-width="4"></circle>
-                                    </svg>
-                                    <div class="absolute inset-0 flex items-center justify-center font-black text-on-surface text-base tracking-tighter">{{ $malePct ?? 0 }}:{{ $femalePct ?? 0 }}</div>
-                                </div>
-                            </div>
-
-                            <!-- TAB 3: Animal Type Content (3 Kolor na: Dogs, Cats, Others) -->
-                            <div id="content-animal" class="demographic-tab-content hidden flex items-center justify-between">
-                                <div class="space-y-2">
-                                    <div class="flex items-center gap-2 text-xs font-bold"><span class="w-2 h-2 rounded-full bg-primary"></span> Dogs ({{ $dogPct ?? 0 }}%)</div>
-                                    <div class="flex items-center gap-2 text-xs font-bold"><span class="w-2 h-2 rounded-full bg-[#D4AF37]"></span> Cats ({{ $catAnimalPct ?? 0 }}%)</div>
-                                    <div class="flex items-center gap-2 text-xs font-bold"><span class="w-2 h-2 rounded-full bg-secondary"></span> Others ({{ $otherAnimalPct ?? 0 }}%)</div>
-                                </div>
-                                <div class="relative w-28 h-28">
-                                    <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                                        <circle class="stroke-outline/10" cx="18" cy="18" fill="none" r="16" stroke-width="4"></circle>
-                                        <circle class="stroke-primary" cx="18" cy="18" fill="none" r="16" stroke-dasharray="{{ $dogPct ?? 0 }}, 100" stroke-width="4"></circle>
-                                        <circle class="stroke-[#D4AF37]" cx="18" cy="18" fill="none" r="16" stroke-dasharray="{{ $catAnimalPct ?? 0 }}, 100" stroke-dashoffset="-{{ $dogPct ?? 0 }}" stroke-width="4"></circle>
-                                        <circle class="stroke-secondary" cx="18" cy="18" fill="none" r="16" stroke-dasharray="{{ $otherAnimalPct ?? 0 }}, 100" stroke-dashoffset="-{{ ($dogPct ?? 0) + ($catAnimalPct ?? 0) }}" stroke-width="4"></circle>
-                                    </svg>
-                                    <div class="absolute inset-0 flex items-center justify-center font-black text-on-surface text-base tracking-tighter">{{ number_format($analyticsTotalBites ?? 0) }}</div>
-                                </div>
-                            </div>
+                            @endforeach
                         </div>
                     </div>
 
@@ -506,32 +697,118 @@
                     <!-- 2. Age Group Distribution (DIREKTA NA NGA NAKAPAHIMUTANG SA ILAWOM SA DEMOGRAPHICS) -->
                     <div class="bg-surface-container-lowest p-8 rounded-xl border border-outline-variant/10 shadow-sm">
                         <h4 class="text-lg font-bold text-on-surface mb-6">Age Group Distribution</h4>
-                        <div class="flex items-end h-48 gap-4 px-4">
-                            <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-                                <div class="w-full bg-primary/20 rounded-t-lg transition-all duration-500" style="height: {{ $age0_12_pct ?? 0 }}%;"></div>
-                                <span class="text-[10px] font-bold text-on-surface-variant">0-12 ({{ $age0_12 ?? 0 }})</span>
-                            </div>
-                            <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-                                <div class="w-full bg-primary/40 rounded-t-lg transition-all duration-500" style="height: {{ $age13_19_pct ?? 0 }}%;"></div>
-                                <span class="text-[10px] font-bold text-on-surface-variant">13-19 ({{ $age13_19 ?? 0 }})</span>
-                            </div>
-                            <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-                                <div class="w-full bg-primary rounded-t-lg transition-all duration-500" style="height: {{ $age20_39_pct ?? 0 }}%;"></div>
-                                <span class="text-[10px] font-bold text-on-surface-variant">20-39 ({{ $age20_39 ?? 0 }})</span>
-                            </div>
-                            <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-                                <div class="w-full bg-primary/60 rounded-t-lg transition-all duration-500" style="height: {{ $age40_59_pct ?? 0 }}%;"></div>
-                                <span class="text-[10px] font-bold text-on-surface-variant">40-59 ({{ $age40_59 ?? 0 }})</span>
-                            </div>
-                            <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-                                <div class="w-full bg-primary/30 rounded-t-lg transition-all duration-500" style="height: {{ $age60_up_pct ?? 0 }}%;"></div>
-                                <span class="text-[10px] font-bold text-on-surface-variant">60+ ({{ $age60_up ?? 0 }})</span>
-                            </div>
+                        @php $ages = $ageChart ?? ['bars' => [], 'known' => 0, 'unknown' => 0]; @endphp
+                        <div class="viz-cols flex gap-4 px-2">
+                            @foreach($ages['bars'] as $bar)
+                                <div class="viz-col group flex-1 min-w-0 flex flex-col items-center"
+                                     data-tip-title="Age {{ $bar['label'] }}"
+                                     data-tip-lines="{{ number_format($bar['count']) }} {{ $bar['count'] === 1 ? 'case' : 'cases' }}|{{ number_format($bar['pct'], 1) }}% of cases with an age">
+                                    {{-- fixed plot area: every bar is a share of the tallest one, and the labels sit outside it --}}
+                                    <div class="h-40 w-full flex items-end">
+                                        <div class="viz-bar w-full rounded-t-lg" style="height: {{ $bar['height'] }}%; background-color: {{ $bar['color'] }};"></div>
+                                    </div>
+                                    <div class="mt-3 text-center leading-tight">
+                                        <p class="flex items-center justify-center gap-1.5 text-[11px] font-bold text-on-surface">
+                                            <span class="w-2 h-2 rounded-full shrink-0" style="background-color: {{ $bar['color'] }};"></span>{{ $bar['label'] }}
+                                        </p>
+                                        <p class="text-[11px] font-semibold text-on-surface-variant mt-1 tabular-nums">{{ number_format($bar['count']) }}</p>
+                                    </div>
+                                </div>
+                            @endforeach
                         </div>
                     </div>
 
                 </div>
             </div>
+
+                    <style>
+                        /* ---- hover effects of the Top Barangays, Demographic & Exposure and Age Group charts ---- */
+                        .viz-tip { position: fixed; z-index: 70; pointer-events: none; opacity: 0; transform: translateY(4px) scale(.97);
+                                   transition: opacity .15s ease, transform .15s ease; }
+                        .viz-tip.show { opacity: 1; transform: none; }
+
+                        /* Top barangays: the hovered row lights up, the others fade back */
+                        .viz-row { transition: opacity .25s ease, background-color .25s ease; cursor: default; }
+                        .viz-rows:hover .viz-row:not(:hover) { opacity: .45; }
+                        .viz-row:hover { background-color: rgb(0 74 147 / .07); }
+                        .viz-row .viz-track { transition: height .25s cubic-bezier(.4, 0, .2, 1); }
+                        .viz-row .viz-fill { transition: filter .25s ease; }
+                        /* the whole track grows (not the bar scaled inside it), so the bar keeps perfectly round ends */
+                        .viz-row:hover .viz-track { height: 1rem; }
+                        .viz-row:hover .viz-fill { filter: brightness(1.18); }
+                        .viz-row:hover .viz-name, .viz-row:hover .viz-count { color: #004a93; }
+
+                        /* Age groups: the hovered bar grows a little and brightens */
+                        .viz-col { transition: opacity .25s ease; cursor: default; }
+                        .viz-cols:hover .viz-col:not(:hover) { opacity: .45; }
+                        .viz-col .viz-bar { transform-origin: bottom center; transition: transform .3s cubic-bezier(.4, 0, .2, 1), filter .25s ease; }
+                        .viz-col:hover .viz-bar { transform: scaleY(1.05); filter: brightness(1.12) saturate(1.1); }
+
+                        /* Donuts: slice and legend row light up together, the rest fade back */
+                        .viz-seg { cursor: pointer; transition: stroke-width .25s cubic-bezier(.4, 0, .2, 1), opacity .25s ease; }
+                        .viz-seg.is-active { stroke-width: 5.4; }
+                        .viz-legend { cursor: default; transition: opacity .25s ease, background-color .25s ease; }
+                        .viz-legend.is-active { background-color: rgb(0 74 147 / .07); }
+                        .viz-donut.has-active .viz-seg:not(.is-active), .viz-donut.has-active .viz-legend:not(.is-active) { opacity: .4; }
+                        @media (prefers-reduced-motion: reduce) {
+                            .viz-tip, .viz-row, .viz-track, .viz-col, .viz-seg, .viz-legend, .viz-fill, .viz-bar { transition: none !important; }
+                        }
+                    </style>
+                    <script>
+                        (function () {
+                            // One dark tooltip for all three charts: any element with data-tip-title / data-tip-lines ("a|b|c").
+                            const tip = document.createElement('div');
+                            tip.className = 'viz-tip bg-slate-900/95 text-white rounded-lg px-3 py-2 shadow-xl text-xs leading-snug whitespace-nowrap';
+                            document.body.appendChild(tip);
+                            let current = null;
+
+                            function fill(el) {
+                                tip.replaceChildren();
+                                const title = document.createElement('div');
+                                title.className = 'font-bold';
+                                title.textContent = el.dataset.tipTitle;
+                                tip.appendChild(title);
+                                (el.dataset.tipLines || '').split('|').filter(Boolean).forEach((line, i) => {
+                                    const row = document.createElement('div');
+                                    row.className = i === 0 ? 'text-white' : 'text-slate-300';
+                                    row.textContent = line;
+                                    tip.appendChild(row);
+                                });
+                            }
+                            function place(e) {
+                                const w = tip.offsetWidth, h = tip.offsetHeight;
+                                let x = e.clientX + 14, y = e.clientY - h - 14;
+                                if (x + w > window.innerWidth - 8) x = e.clientX - w - 14;
+                                if (y < 8) y = e.clientY + 18;
+                                tip.style.left = Math.max(8, x) + 'px';
+                                tip.style.top = y + 'px';
+                            }
+                            function hide() { tip.classList.remove('show'); current = null; setActive(null, null); }
+
+                            // a donut slice and its legend row are highlighted together
+                            function setActive(group, idx) {
+                                document.querySelectorAll('.viz-donut').forEach((box) => {
+                                    const on = group !== null && box.id === 'content-' + group;
+                                    box.classList.toggle('has-active', on);
+                                    box.querySelectorAll('[data-donut]').forEach((el) => el.classList.toggle('is-active', on && el.dataset.idx === String(idx)));
+                                });
+                            }
+
+                            document.addEventListener('pointerover', (e) => {
+                                const el = e.target.closest ? e.target.closest('[data-tip-title]') : null;
+                                if (el === current) return;
+                                current = el;
+                                if (!el) { hide(); return; }
+                                fill(el);
+                                tip.classList.add('show');
+                                place(e);
+                                setActive(el.dataset.donut || null, el.dataset.idx);
+                            });
+                            document.addEventListener('pointermove', (e) => { if (current) place(e); });
+                            window.addEventListener('scroll', hide, true);
+                            document.addEventListener('pointerout', (e) => { if (!e.relatedTarget) hide(); });
+                        })();
+                    </script>
 
             <!-- COLLAPSIBLE ACCORDION FOR EXPORTS & ANNUAL MATRIX TABLE -->
             <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/10 shadow-sm overflow-hidden mb-8">
@@ -545,45 +822,49 @@
                     </div>
                     <span id="accordion-icon" class="material-symbols-outlined transition-transform duration-300">expand_more</span>
                 </button>
-<div id="accordion-content" class="hidden p-6 space-y-8 border-t border-outline-variant/10">
+@php
+    // the two annual files cover one whole year; offer every year that has data, newest first
+    $exportYears = !empty($analyticsYears) ? $analyticsYears : [(int) date('Y')];
+    $exportYear = in_array((int) ($rangeValues['year'] ?? 0), $exportYears, true) ? (int) $rangeValues['year'] : (int) $exportYears[0];
+    $exportCards = [
+        ['route' => 'admin.export.monthly', 'icon' => 'table_view', 'title' => 'Annual Barangay Export', 'text' => 'Animal bite cases per barangay, per month and quarter.'],
+        ['route' => 'admin.export.annual', 'icon' => 'summarize', 'title' => 'Annual Report', 'text' => 'Monthly and quarterly summary by sex, age, animal, category and PEP.'],
+    ];
+@endphp
+<div id="accordion-content" class="hidden p-6 space-y-6 border-t border-outline-variant/10">
+
+    {{-- Year to export --}}
+    <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+            <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant/60">Export Year</p>
+            <p class="text-xs text-on-surface-variant mt-1">Both annual files cover the whole selected year, January to December.</p>
+        </div>
+        <select id="exportYear" aria-label="Export year" class="w-36 h-9 bg-surface-container-highest border-none rounded-lg px-3 text-sm font-semibold focus:ring-2 focus:ring-primary/20">
+            @foreach ($exportYears as $yearOption)
+                <option value="{{ $yearOption }}" {{ (int) $yearOption === $exportYear ? 'selected' : '' }}>{{ $yearOption }}</option>
+            @endforeach
+        </select>
+    </div>
+
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-        {{-- CARD 1: Barangay Export --}}
-        <a href="{{ route('admin.export.monthly', ['year' => request('year', date('Y'))]) }}"
-           class="bg-primary/5 p-6 rounded-xl border border-primary/10 flex items-center justify-between group hover:bg-primary/15 transition-all cursor-pointer">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
-                    <span class="material-symbols-outlined text-2xl">table_view</span>
+        @foreach ($exportCards as $card)
+            <a href="{{ route($card['route'], ['year' => $exportYear]) }}" data-export-link data-base="{{ route($card['route']) }}"
+               class="group flex items-center gap-4 p-5 rounded-xl border border-primary/10 bg-primary/5 hover:bg-primary/10 hover:border-primary/20 transition-all cursor-pointer">
+                <div class="w-12 h-12 shrink-0 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
+                    <span class="material-symbols-outlined text-2xl">{{ $card['icon'] }}</span>
                 </div>
-                <div>
-                    <h5 class="text-lg font-bold text-primary">Annual Barangay Export</h5>
-                    <p class="text-xs text-on-surface-variant">Animal bite cases per barangay, per month and quarter.</p>
+                <div class="min-w-0 flex-1">
+                    <h5 class="text-lg font-bold text-primary leading-tight">{{ $card['title'] }}</h5>
+                    <p class="text-xs text-on-surface-variant leading-snug mt-1">{{ $card['text'] }}</p>
                 </div>
-            </div>
-            <div class="flex flex-col items-end">
-                <span class="text-[10px] font-black uppercase text-primary/60 mb-1">Format: EXCEL</span>
-                <span class="material-symbols-outlined text-primary group-hover:translate-x-1 transition-transform">download</span>
-            </div>
-        </a>
-
-        {{-- CARD 2: Annual Report --}}
-        <a href="{{ route('admin.export.annual', ['year' => request('year', date('Y'))]) }}"
-           class="bg-primary/5 p-6 rounded-xl border border-primary/10 flex items-center justify-between group hover:bg-primary/15 transition-all cursor-pointer">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
-                    <span class="material-symbols-outlined text-2xl">summarize</span>
+                <div class="shrink-0 flex flex-col items-end gap-2">
+                    <span class="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-primary whitespace-nowrap"><span data-export-year>{{ $exportYear }}</span>&nbsp;·&nbsp;Excel</span>
+                    <span class="w-9 h-9 rounded-full bg-white/80 text-primary flex items-center justify-center shadow-sm transition-colors group-hover:bg-primary group-hover:text-white">
+                        <span class="material-symbols-outlined text-[20px]">download</span>
+                    </span>
                 </div>
-                <div>
-                    <h5 class="text-lg font-bold text-primary">Annual Report</h5>
-                    <p class="text-xs text-on-surface-variant">Monthly and quarterly summary by sex, age, animal, category and PEP.</p>
-                </div>
-            </div>
-            <div class="flex flex-col items-end">
-                <span class="text-[10px] font-black uppercase text-primary/60 mb-1">Format: EXCEL</span>
-                <span class="material-symbols-outlined text-primary group-hover:translate-x-1 transition-transform">download</span>
-            </div>
-        </a>
-
+            </a>
+        @endforeach
     </div>
 </div>
             </div>
@@ -601,6 +882,21 @@
                 </div>
             @endif
 
+            <script>
+                // the year chosen for the annual exports goes into both download links (and the chip on each card)
+                document.addEventListener('DOMContentLoaded', function () {
+                    const select = document.getElementById('exportYear');
+                    if (!select) return;
+                    const sync = () => {
+                        document.querySelectorAll('[data-export-link]').forEach((a) => {
+                            a.href = a.dataset.base + '?year=' + encodeURIComponent(select.value);
+                        });
+                        document.querySelectorAll('[data-export-year]').forEach((s) => { s.textContent = select.value; });
+                    };
+                    select.addEventListener('change', sync);
+                    sync();
+                });
+            </script>
             <script>
                 function toggleAccordion() {
                     const content = document.getElementById('accordion-content');

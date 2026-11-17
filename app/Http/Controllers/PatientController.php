@@ -60,13 +60,15 @@ class PatientController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
-                'last_name'      => $lastName,
-                'first_name'     => $firstName,
-                'middle_initial' => str_replace('.', '', $middleInitial),
-                'contact_number' => $referral->contact_num ?? '',
-                'date_of_birth'  => $referral->date_of_birth ?? '',
-                'sex'            => strtolower($referral->gender ?? ''),
-                'civil_status'   => strtolower($referral->civil_status ?? '')
+                'last_name'       => $lastName,
+                'first_name'      => $firstName,
+                'middle_initial'  => str_replace('.', '', $middleInitial),
+                'contact_number'  => $referral->contact_num ?? '',
+                'date_of_birth'   => $referral->date_of_birth ?? '',
+                'sex'             => strtolower($referral->gender ?? ''),
+                'civil_status'    => strtolower($referral->civil_status ?? ''),
+                'priority_status' => $referral->priority_status ?? 'None',
+                'barangay'        => $referral->patient_barangay ?? ($referral->barangay ?? ''),
             ]
         ]);
     }
@@ -76,16 +78,11 @@ class PatientController extends Controller
     {
         $query = trim($request->input('query', ''));
 
-        // Names are stored as "Surname, Given Name, M.I." but people naturally
-        // type them as "Given Name M.I. Surname" - so split into words and
-        // require each one to appear somewhere in patient_name, regardless of order.
         $words = array_filter(
             preg_split('/[\s,]+/', $query),
             fn($w) => mb_strlen($w) >= 2
         );
 
-        // Walk-in registrations live in inflow_general_particulars, not patients
-        // (patients only gets a row once ABTC staff verifies the record)
         $patient = DB::table('inflow_general_particulars')
             ->where(function ($q) use ($words, $query) {
                 if (count($words) > 0) {
@@ -108,13 +105,12 @@ class PatientController extends Controller
         return response()->json([
             'found' => true,
             'patient' => [
-                // aliased to patient_id so the existing frontend JS doesn't need changes
-                'patient_id' => $patient->inflow_record_id,
-                'patient_name' => $patient->patient_name,
+                'patient_id'    => $patient->inflow_record_id,
+                'patient_name'  => $patient->patient_name,
                 'date_of_birth' => $patient->date_of_birth,
-                'sex' => $patient->sex,
-                'age' => $patient->age,
-                'id_number' => $patient->id_number,
+                'sex'           => $patient->sex,
+                'age'           => $patient->age,
+                'id_number'     => $patient->id_number,
             ],
         ]);
     }
@@ -122,12 +118,12 @@ class PatientController extends Controller
     public function storeReturning(Request $request)
     {
         $validated = $request->validate([
-            'patient_id'         => 'required|string', // actually an inflow_record_id, see search() above
-            'contact_num'        => 'required|string|max:20',
-            'civil_status'       => 'nullable|string|max:20',
-            'philhealth_member'  => 'required|boolean',
-            'barangay'           => 'required|string|max:100',
-            'priority_status'    => 'nullable|string',
+            'patient_id'        => 'required|string',
+            'contact_num'       => 'required|string|max:20',
+            'civil_status'      => 'nullable|string|max:20',
+            'philhealth_member' => 'required|boolean',
+            'barangay'          => 'required|string|max:100',
+            'priority_status'   => 'nullable|string',
         ]);
 
         $patient = DB::table('inflow_general_particulars')->where('inflow_record_id', $validated['patient_id'])->first();
@@ -167,18 +163,14 @@ class PatientController extends Controller
             : view('patient.NQ_confirmation', ['queueNumber' => $queueId]);
     }
 
-    // BHW-referral registration (from main)
+    // BHW-referral registration
     public function registerPatient(Request $request)
     {
-        // The form field is named `bhw_referral_id` (see
-        // New_Record_Registration.blade.php), not `reference_no` — reading
-        // the wrong key meant this always resolved to null and every
-        // submission was rejected regardless of the referral code entered.
         $validated = $request->validate([
             'bhw_referral_id'        => ['required', 'string', 'regex:/^BRY-\d{3}-\d{8}-\d{4}$/'],
             'full_name'              => 'required|string|max:100',
             'date_of_birth'          => 'required|date',
-            'sex'                    => 'required|string|in:Male,Female',
+            'sex'                    => 'required|string|in:Male,Female,male,female',
             'civil_status'           => 'nullable|string|max:20',
             'contact_number'         => 'required|string|max:20',
             'barangay_of_incidence'  => 'required|string|max:100',
@@ -191,16 +183,8 @@ class PatientController extends Controller
             'priority_status'        => 'nullable|string',
         ]);
 
-        // Client-side JS trims the value before its own format check, but
-        // nothing guaranteed that server-side, so trim again here in case
-        // the request bypassed the browser entirely.
         $referralCode = trim($validated['bhw_referral_id']);
 
-        // Wrap the existence check and every write in a single transaction,
-        // with lockForUpdate() on the referral row. Without this, two
-        // requests submitted close together could both read the referral as
-        // "Pending" before either one updates it, letting the same referral
-        // be consumed twice.
         return DB::transaction(function () use ($referralCode, $validated) {
 
             // 1. Verify the code exists and is still Pending
@@ -211,9 +195,6 @@ class PatientController extends Controller
                 ->first();
 
             if (!$validReferral) {
-                // Error key now matches @error('bhw_referral_id') in the
-                // blade view — under the old 'reference_no' key the inline
-                // error message next to the field would never have rendered.
                 return back()
                     ->withErrors(['bhw_referral_id' => 'Referral code is invalid or has already been used.'])
                     ->withInput();
@@ -222,17 +203,11 @@ class PatientController extends Controller
             $age = \Carbon\Carbon::parse($validated['date_of_birth'])->age;
             $isPriority = ($validated['priority_status'] ?? 'none') !== 'none';
             $isPhilhealthMember = $validated['philhealth_member'] === 'yes';
+            $normalizedSex = ucfirst(strtolower($validated['sex']));
+            $normalizedCivilStatus = ucfirst(strtolower($validated['civil_status'] ?? 'Single'));
             $queueDate = now()->toDateString();
 
-            // 2. Queue entry — patients.inflow_record_id and
-            // bite_cases.inflow_record_id are both NOT NULL, but this
-            // referral flow previously never created the
-            // inflow_general_particulars row the walk-in flow (see
-            // storeReturning() above) creates to satisfy that. Since the
-            // table already has a bhw_referral_id column made for exactly
-            // this case, this flow now writes one too, following the same
-            // queue_id pattern as storeReturning() so referred patients join
-            // the same physical queue as walk-ins.
+            // 2. Queue entry
             $prefix = $isPriority ? 'P' : 'N';
             $countToday = DB::table('inflow_general_particulars')
                 ->where('queue_date', $queueDate)
@@ -248,9 +223,9 @@ class PatientController extends Controller
                 'bhw_referral_id'   => $referralCode,
                 'patient_name'      => $validated['full_name'],
                 'age'               => $age,
-                'sex'               => $validated['sex'],
+                'sex'               => $normalizedSex,
                 'date_of_birth'     => $validated['date_of_birth'],
-                'civil_status'      => $validated['civil_status'] ?? 'Single',
+                'civil_status'      => $normalizedCivilStatus,
                 'contact_num'       => $validated['contact_number'],
                 'barangay'          => $validated['barangay_of_incidence'],
                 'philhealth_member' => $isPhilhealthMember,
@@ -268,9 +243,9 @@ class PatientController extends Controller
                 'inflow_record_id'  => $inflowRecordId,
                 'patient_name'      => $validated['full_name'],
                 'age'               => $age,
-                'sex'               => $validated['sex'],
+                'sex'               => $normalizedSex,
                 'date_of_birth'     => $validated['date_of_birth'],
-                'civil_status'      => $validated['civil_status'] ?? 'Single',
+                'civil_status'      => $normalizedCivilStatus,
                 'contact_num'       => $validated['contact_number'],
                 'id_number'         => $validated['valid_id_number'] ?? null,
                 'philhealth_member' => $isPhilhealthMember,
@@ -294,44 +269,18 @@ class PatientController extends Controller
                 'patient_id'       => $patientId,
                 'inflow_record_id' => $inflowRecordId,
                 'barangay'         => $validated['barangay_of_incidence'],
-                // PLACEHOLDER: WHO exposure category (I/II/III) isn't
-                // captured anywhere on this form or in bhw_referral_info —
-                // in practice it's assigned by clinical staff during
-                // in-person triage, not at referral/registration time. This
-                // satisfies the NOT NULL constraint so the insert doesn't
-                // fail, but confirm with the team where this should really
-                // come from (a staff-facing update step, most likely) before
-                // treating "Pending" as meaningful data.
                 'category'         => 'Pending',
                 'bhw_referral_id'  => $validReferral->referral_id,
                 'date_verified'    => now(),
             ]);
 
-            // 6. Reuse the same confirmation views as storeReturning() —
-            // route('patient.queue.normal')/('patient.queue.priority')
-            // don't exist anywhere in web.php, so the original redirect
-            // would have thrown a RouteNotFoundException on every
-            // successful registration.
+            // 6. Return queue confirmation view
             return $isPriority
                 ? view('patient.PQ_confirmation', ['queueNumber' => $queueId])
                 : view('patient.NQ_confirmation', ['queueNumber' => $queueId]);
         });
     }
 
-    /**
-     * Build a patient_id in the CEB-[REG DATE]-[DOB]-[SEQ] format described
-     * by the comment on patients.patient_id in the schema.
-     *
-     * Caveat: the sequence number comes from a same-day COUNT() inside the
-     * calling transaction. That's fine against the specific race this fix
-     * targets (two submissions for the same referral, which lockForUpdate()
-     * on bhw_referral_info already serializes), but two *different*
-     * referrals registering at the same moment could still COUNT() before
-     * either INSERT lands and collide on the same sequence number, since
-     * patients has no unique constraint enforcing it. If that's a real
-     * concern at your expected traffic, replace this with a dedicated
-     * sequence table or an auto-increment shadow column.
-     */
     private function generatePatientId(string $dateOfBirth): string
     {
         $today = now()->format('Ymd');

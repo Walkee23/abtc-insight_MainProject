@@ -272,14 +272,14 @@
                                     </div>
                                 </td>
                                 <!-- Status -->
-                                <td class="px-6 py-4">
+                                <td class="px-6 py-4 text-center">
                                     @if($referral->status === 'Pending')
                                     <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
                                         <span class="w-1.5 h-1.5 rounded-full bg-amber-600"></span> Pending
                                     </span>
                                     @elseif($referral->status === 'Received')
                                     <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span> Received
+                                        <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span> Received at ABTC
                                     </span>
                                     @elseif($referral->status === 'Completed')
                                     <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
@@ -293,7 +293,14 @@
                                 </td>
                                 <!-- Actions -->
                                 <td class="px-6 py-4 text-right">
-                                    <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <button type="button"
+                                            onclick="openBhwQrModal('{{ $referral->reference_no }}', '{{ addslashes($referral->patient_name) }}', '{{ $referral->qr_code }}')"
+                                            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-bold transition-colors"
+                                            title="Show QR Code">
+                                            <span class="material-symbols-outlined text-[16px]">qr_code_2</span>
+                                            QR
+                                        </button>
                                         <a href="{{ route('bhw.print', $referral->referral_id) }}" target="_blank" class="p-1.5 text-slate-400 hover:text-blue-600 transition-colors" title="View">
                                             <span class="material-symbols-outlined text-sm">visibility</span>
                                         </a>
@@ -375,6 +382,48 @@
         </div>
     </div>
     @endif
+
+    <!-- Referral QR Code Only Modal -->
+    <div id="bhwQrModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center space-y-4 border border-slate-100">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-extrabold uppercase tracking-wider text-blue-700">Referral QR Code</span>
+                <button type="button" onclick="closeBhwQrModal()" class="p-1 text-slate-400 hover:text-slate-700 rounded-lg">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex justify-center">
+                <img id="bhwModalQrImg" src="" alt="Referral QR Code" class="w-56 h-56 object-contain" />
+            </div>
+
+            <div>
+                <p id="bhwModalRefNo" class="font-mono font-extrabold text-base text-slate-900"></p>
+                <p id="bhwModalPatientName" class="text-xs font-medium text-slate-500 mt-0.5"></p>
+            </div>
+
+            <p class="text-[11px] text-slate-400">
+                Scan or take a clear photo of this QR code for ABTC patient registration.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        function openBhwQrModal(refNo, patientName, qrBase64) {
+            document.getElementById('bhwModalRefNo').textContent = refNo;
+            document.getElementById('bhwModalPatientName').textContent = patientName;
+            document.getElementById('bhwModalQrImg').src = qrBase64;
+            document.getElementById('bhwQrModal').classList.remove('hidden');
+        }
+
+        function closeBhwQrModal() {
+            document.getElementById('bhwQrModal').classList.add('hidden');
+        }
+
+        document.getElementById('bhwQrModal').addEventListener('click', function(e) {
+            if (e.target === this) closeBhwQrModal();
+        });
+    </script>
 </body>
 
 </html>

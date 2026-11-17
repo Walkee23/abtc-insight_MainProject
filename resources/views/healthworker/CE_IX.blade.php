@@ -112,36 +112,36 @@
         <!-- Navigation -->
         <nav class="space-y-1 px-6">
             <!-- Dashboard (Inactive) -->
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
-            href="{{ route('healthworker.dashboard') }}">
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50"
+                href="{{ route('healthworker.dashboard') }}">
                 <span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
                 <span class="font-['Inter'] text-sm tracking-wide">Dashboard</span>
             </a>
 
             <!-- Clinical Encoding (Active - Admin Style) -->
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-blue-700 dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600 translate-x-1 duration-150" 
-            href="{{ route('healthworker.clinical-encoding') }}">
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-blue-700 dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600 translate-x-1 duration-150"
+                href="{{ route('healthworker.clinical-encoding') }}">
                 <span class="material-symbols-outlined" data-icon="medical_services">medical_services</span>
                 <span class="font-['Inter'] text-sm tracking-wide">Clinical Encoding</span>
             </a>
 
             <!-- Treatment Tracker -->
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
-            href="{{ route('healthworker.treatment-tracker') }}">
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50"
+                href="{{ route('healthworker.treatment-tracker') }}">
                 <span class="material-symbols-outlined" data-icon="monitor_heart">monitor_heart</span>
                 <span class="font-['Inter'] text-sm tracking-wide">Treatment Tracker</span>
             </a>
 
             <!-- Patient Database -->
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
-            href="{{ route('healthworker.patient-database') }}">
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50"
+                href="{{ route('healthworker.patient-database') }}">
                 <span class="material-symbols-outlined" data-icon="database">database</span>
                 <span class="font-['Inter'] text-sm tracking-wide">Patient Database</span>
             </a>
 
             <!-- Compliance -->
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
-            href="{{ route('healthworker.compliance') }}">
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50"
+                href="{{ route('healthworker.compliance') }}">
                 <span class="material-symbols-outlined" data-icon="verified_user">verified_user</span>
                 <span class="font-['Inter'] text-sm tracking-wide">Compliance</span>
             </a>
@@ -337,30 +337,30 @@
                     </div>
                     <!-- Wizard Body (Section IX) -->
                     <div class="flex-1 p-8 overflow-y-auto">
-                    <form id="section9Form" method="POST"
-                        action="{{ route('healthworker.ce-ix', ['bite_case_id' => $case->bite_case_id]) }}">
-                        @csrf
-                        <input type="hidden" name="action" id="formActionInput" value="next" />
-                        @php $val = fn ($key, $default = '') => old($key, $section->$key ?? $default); @endphp
-                        <div class="step-content" id="step4">
-                            <div class="flex items-center gap-3 mb-8">
-                                <span
-                                    class="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center font-bold text-sm">IX</span>
-                                <h3 class="text-sm font-extrabold uppercase tracking-widest text-on-surface-variant">
-                                    Progress Notes</h3>
-                            </div>
-                            <div class="space-y-6">
-                                @foreach(['day3_notes' => 'Day 3 Notes', 'day7_notes' => 'Day 7 Notes', 'day28_notes' => 'Day 28 Notes'] as $key => $label)
-                                <div>
-                                    <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-3">{{ $label }}</label>
-                                    <textarea name="{{ $key }}" maxlength="5000"
-                                        class="w-full bg-surface-container-low border-none rounded-xl p-4 focus:ring-2 focus:ring-primary/20 text-sm resize-none h-28"
-                                        placeholder="Wound healing observations, adverse reactions, or follow-up notes for this visit...">{{ $val($key) }}</textarea>
+                        <form id="section9Form" method="POST"
+                            action="{{ route('healthworker.ce-ix', ['bite_case_id' => $case->bite_case_id]) }}">
+                            @csrf
+                            <input type="hidden" name="action" id="formActionInput" value="next" />
+                            @php $val = fn ($key, $default = '') => old($key, $section->$key ?? $default); @endphp
+                            <div class="step-content" id="step4">
+                                <div class="flex items-center gap-3 mb-8">
+                                    <span
+                                        class="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center font-bold text-sm">IX</span>
+                                    <h3 class="text-sm font-extrabold uppercase tracking-widest text-on-surface-variant">
+                                        Progress Notes</h3>
                                 </div>
-                                @endforeach
+                                <div class="space-y-6">
+                                    @foreach(['day3_notes' => 'Day 3 Notes', 'day7_notes' => 'Day 7 Notes', 'day28_notes' => 'Day 28 Notes'] as $key => $label)
+                                    <div>
+                                        <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-3">{{ $label }}</label>
+                                        <textarea name="{{ $key }}" maxlength="5000"
+                                            class="w-full bg-surface-container-low border-none rounded-xl p-4 focus:ring-2 focus:ring-primary/20 text-sm resize-none h-28"
+                                            placeholder="Wound healing observations, adverse reactions, or follow-up notes for this visit...">{{ $val($key) }}</textarea>
+                                    </div>
+                                    @endforeach
+                                </div>
                             </div>
-                        </div>
-                    </form>
+                        </form>
                     </div>
                     <div
                         class="p-6 bg-surface-container-low border-t border-outline-variant/20 flex justify-between items-center px-8">
@@ -416,7 +416,7 @@
     </script>
     <script>
         // Draft-saved toast: closes on the X button or by itself after 4 seconds
-        (function () {
+        (function() {
             const toast = document.getElementById('statusToast');
             if (!toast) return;
             const dismiss = () => {
@@ -430,7 +430,7 @@
     <script>
         // Queue filter: every word typed must match somewhere in the case card
         // (patient name, case no., category, status, incident date)
-        (function () {
+        (function() {
             const input = document.getElementById('queueFilterInput');
             const items = document.querySelectorAll('#queueList .queue-item');
             const noMatch = document.getElementById('queueNoMatch');
@@ -447,15 +447,51 @@
                     if (match) shown++;
                 });
                 if (noMatch) noMatch.classList.toggle('hidden', shown > 0 || items.length === 0);
-                try { sessionStorage.setItem(KEY, input.value); } catch (e) {}
+                try {
+                    sessionStorage.setItem(KEY, input.value);
+                } catch (e) {}
             };
 
             input.addEventListener('input', apply);
             // Keep the filter when moving between sections / selecting a case
-            try { input.value = sessionStorage.getItem(KEY) || ''; } catch (e) {}
+            try {
+                input.value = sessionStorage.getItem(KEY) || '';
+            } catch (e) {}
             apply();
         })();
     </script>
+
+    @if(session('qr_popup'))
+    <div id="qrModal" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-8 text-center">
+            <h2 class="text-xl font-extrabold text-slate-900 mb-1">Case Saved</h2>
+            <p class="text-sm text-slate-500 mb-4">Patient QR Code</p>
+            <img id="qrImg" src="{{ session('qr_popup')['image'] }}" alt="QR Code" class="w-48 h-48 mx-auto">
+            <p class="mt-3 font-mono text-sm font-bold text-blue-700">{{ session('qr_popup')['patient_id'] }}</p>
+            <div class="flex gap-3 mt-6">
+                <button type="button" onclick="document.getElementById('qrModal').remove()" class="flex-1 py-3 rounded-xl border-2 border-slate-200 text-slate-600 font-bold hover:bg-slate-50">Close</button>
+                <button type="button" onclick="printQr()" class="flex-1 py-3 rounded-xl bg-primary text-white font-bold hover:bg-primary-container">Print</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        function printQr() {
+            const pid = @json(session('qr_popup')['patient_id']);
+            const w = window.open('', '_blank', 'width=400,height=500');
+            w.document.write(
+                '<div style="text-align:center;font-family:sans-serif">' +
+                '<img src="' + document.getElementById('qrImg').src + '" style="width:240px">' +
+                '<p style="font-size:18px;font-weight:bold">' + pid + '</p></div>'
+            );
+            w.document.close();
+            w.focus();
+            setTimeout(() => {
+                w.print();
+                w.close();
+            }, 300);
+        }
+    </script>
+    @endif
 </body>
 
 </html>

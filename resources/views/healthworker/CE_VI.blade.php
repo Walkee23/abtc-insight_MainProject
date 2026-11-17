@@ -745,6 +745,38 @@
             apply();
         })();
     </script>
+@if(session('qr_popup'))
+<div id="qrModal" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-8 text-center">
+        <h2 class="text-xl font-extrabold text-slate-900 mb-1">Case Saved</h2>
+        <p class="text-sm text-slate-500 mb-4">Patient QR Code</p>
+        <img id="qrImg" src="{{ session('qr_popup')['image'] }}" alt="QR Code" class="w-48 h-48 mx-auto">
+        <p class="mt-3 font-mono text-sm font-bold text-blue-700">{{ session('qr_popup')['patient_id'] }}</p>
+        <div class="flex gap-3 mt-6">
+            <button type="button" onclick="document.getElementById('qrModal').remove()" class="flex-1 py-3 rounded-xl border-2 border-slate-200 text-slate-600 font-bold hover:bg-slate-50">Close</button>
+            <button type="button" onclick="printQr()" class="flex-1 py-3 rounded-xl bg-blue-700 text-white font-bold hover:bg-blue-800">Print</button>
+        </div>
+    </div>
+</div>
+<script>
+    function printQr() {
+        const pid = @json(session('qr_popup')['patient_id']);
+        const w = window.open('', '_blank', 'width=400,height=500');
+        w.document.write(
+            '<div style="text-align:center;font-family:sans-serif">' +
+            '<img src="' + document.getElementById('qrImg').src + '" style="width:240px">' +
+            '<p style="font-size:18px;font-weight:bold">' + pid + '</p></div>'
+        );
+        w.document.close();
+        w.focus();
+        setTimeout(() => {
+            w.print();
+            w.close();
+        }, 300);
+    }
+</script>
+@endif
+
 </body>
 
 </html>

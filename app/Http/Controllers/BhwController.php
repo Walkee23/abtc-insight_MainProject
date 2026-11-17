@@ -4,29 +4,40 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QROptions;
+use chillerlan\QRCode\Common\EccLevel;
 use Carbon\Carbon;
 
 class BhwController extends Controller
 {
     public function dashboard()
     {
-        // 1. Get the currently logged-in BHW ID
         $userId = auth()->id();
 
-        // 2. Count the metrics for the cards
         $totalSubmissions = DB::table('bhw_referral_info')->where('bhw_user_id', $userId)->count();
         $pending = DB::table('bhw_referral_info')->where('bhw_user_id', $userId)->where('status', 'Pending')->count();
         $received = DB::table('bhw_referral_info')->where('bhw_user_id', $userId)->where('status', 'Received')->count();
         $completed = DB::table('bhw_referral_info')->where('bhw_user_id', $userId)->where('status', 'Completed')->count();
 
-        // 3. Get the list of referrals and join with exposure table to get the exposure type
+        $qrOptions = new QROptions([
+            'eccLevel'     => EccLevel::M,
+            'scale'        => 6,
+            'outputBase64' => true,
+        ]);
+        $qrGenerator = new QRCode($qrOptions);
+
         $referrals = DB::table('bhw_referral_info')
             ->leftJoin('bhw_referral_exposure', 'bhw_referral_info.referral_id', '=', 'bhw_referral_exposure.referral_id')
+            ->select('bhw_referral_info.*', 'bhw_referral_exposure.exposure_type')
             ->where('bhw_user_id', $userId)
             ->orderBy('bhw_referral_info.submitted_at', 'desc')
-            ->get();
+            ->get()
+            ->map(function ($referral) use ($qrGenerator) {
+                $referral->qr_code = $qrGenerator->render($referral->reference_no);
+                return $referral;
+            });
 
-        // 4. Send the data to the view
         return view('bhw.dashboard', compact('totalSubmissions', 'pending', 'received', 'completed', 'referrals'));
     }
 
@@ -35,7 +46,9 @@ class BhwController extends Controller
         $request->validate([
             'exposure_type'   => 'required|array|min:1',
             'exposure_type.*' => 'in:Bite,Non-Bite',
-            'animal_remarks'  => 'nullable|string|max:1000',
+            'animal_remarks'  => 'required|in:Healthy,Sick,Dead,Lost/Stray',
+            'obs_14_days'     => 'nullable|date|before_or_equal:today',
+            'priority_status' => 'required|in:None,PWD,Senior Citizen,Pregnant',
         ]);
         $barangayName = $request->input('patient_barangay');
 
@@ -53,47 +66,58 @@ class BhwController extends Controller
         // 3. Assemble the final unique code
         $referenceNo = "BRY-{$brgyCode}-{$dateStr}-{$sequence}";
 
-        // 4. Save to the main bhw_referral_info table and get the new ID
-        $referralId = DB::table('bhw_referral_info')->insertGetId([
-            'reference_no' => $referenceNo,
-            'bhw_user_id' => auth()->id(), // FIX: Grabs the logged-in user's ID
-            'status' => 'Pending',
-            'patient_name' => $request->input('patient_name'),
-            'date_of_birth' => $request->input('date_of_birth'),
-            'age' => $request->input('age'),
-            'gender' => $request->input('gender'),
-            'civil_status' => $request->input('civil_status', 'Single'),
-            'patient_barangay' => $barangayName,
-            'contact_num' => $request->input('contact_num'),
-            'referred_by' => auth()->user()->full_name, // FIX: Grabs BHW name
-            'referral_date' => now()->toDateString(),
-            'submitted_at' => now(),
-            'updated_at' => now()
-        ]);
+        // All 3 inserts succeed together or none do (no orphan referral rows if one fails)
+        DB::beginTransaction();
+        try {
 
-        // 5. Save the vitals into the bhw_referral_vitals table
-        DB::table('bhw_referral_vitals')->insert([
-            'referral_id' => $referralId,
-            'temperature' => $request->input('temperature'),
-            'blood_pressure' => $request->input('blood_pressure'),
-            'pulse_rate' => $request->input('pulse_rate'),
-            'respiratory_rate' => $request->input('respiratory_rate'),
-            'height_cm' => $request->input('height_cm'),
-            'weight_kg' => $request->input('weight_kg')
-        ]);
+            // 4. Save to the main bhw_referral_info table and get the new ID
+            $referralId = DB::table('bhw_referral_info')->insertGetId([
+                'reference_no' => $referenceNo,
+                'bhw_user_id' => auth()->id(), // FIX: Grabs the logged-in user's ID
+                'status' => 'Pending',
+                'patient_name' => $request->input('patient_name'),
+                'date_of_birth' => $request->input('date_of_birth'),
+                'age' => $request->input('age'),
+                'gender' => $request->input('gender'),
+                'civil_status' => $request->input('civil_status', 'Single'),
+                'priority_status' => $request->input('priority_status', 'None'),
+                'patient_barangay' => $barangayName,
+                'contact_num' => $request->input('contact_num'),
+                'referred_by' => auth()->user()->full_name, // FIX: Grabs BHW name
+                'referral_date' => now()->toDateString(),
+                'submitted_at' => now(),
+                'updated_at' => now()
+            ]);
 
-        // 6. Save the exposure details into the bhw_referral_exposure table
-        DB::table('bhw_referral_exposure')->insert([
-            'referral_id' => $referralId,
-            'exposure_type' => implode(', ', $request->input('exposure_type', [])),
-            'exposure_datetime' => $request->input('exposure_date') . ' ' . ($request->input('exposure_time') ?: '00:00:00'),
-            'site_of_bite' => $request->input('site_of_bite'),
-            'biting_animal' => $request->input('biting_animal'),
-            'biting_animal_other' => $request->input('biting_animal_other'),
-            'lab_exam' => $request->input('lab_exam'),
-            'action_desired' => $request->input('action_desired'),
-            'animal_remarks' => $request->input('animal_remarks')
-        ]);
+            // 5. Save the vitals into the bhw_referral_vitals table
+            DB::table('bhw_referral_vitals')->insert([
+                'referral_id' => $referralId,
+                'temperature' => $request->input('temperature'),
+                'blood_pressure' => $request->input('blood_pressure'),
+                'pulse_rate' => $request->input('pulse_rate'),
+                'respiratory_rate' => $request->input('respiratory_rate'),
+                'height_cm' => $request->input('height_cm'),
+                'weight_kg' => $request->input('weight_kg')
+            ]);
+
+            // 6. Save the exposure details into the bhw_referral_exposure table
+            DB::table('bhw_referral_exposure')->insert([
+                'referral_id' => $referralId,
+                'exposure_type' => implode(', ', $request->input('exposure_type', [])),
+                'exposure_datetime' => $request->input('exposure_date') . ' ' . ($request->input('exposure_time') ?: '00:00:00'),
+                'site_of_bite' => $request->input('site_of_bite'),
+                'biting_animal' => $request->input('biting_animal'),
+                'biting_animal_other' => $request->input('biting_animal_other'),
+                'lab_exam' => $request->input('lab_exam'),
+                'action_desired' => $request->input('action_desired'),
+                'animal_remarks' => $request->input('animal_remarks')
+            ]);
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            throw $e;
+        }
 
         // Go to the dashboard and show the success pop-up
         return redirect()->route('bhw.dashboard')->with('new_referral', [
@@ -103,11 +127,9 @@ class BhwController extends Controller
         ]);
     }
 
-
-
     public function printReferral($id)
     {
-        // Fetch the referral and join the vitals and exposure tables
+        // 1. Fetch the referral and join the vitals and exposure tables FIRST
         $referral = DB::table('bhw_referral_info')
             ->leftJoin('bhw_referral_vitals', 'bhw_referral_info.referral_id', '=', 'bhw_referral_vitals.referral_id')
             ->leftJoin('bhw_referral_exposure', 'bhw_referral_info.referral_id', '=', 'bhw_referral_exposure.referral_id')
@@ -119,6 +141,16 @@ class BhwController extends Controller
             return redirect()->route('bhw.dashboard')->with('error', 'Referral not found.');
         }
 
-        return view('bhw.print_referral', compact('referral'));
+        // 2. Generate the QR code using the actual column name: $referral->reference_no
+        $qrOptions = new QROptions([
+            'eccLevel'     => EccLevel::M,
+            'scale'        => 5,
+            'outputBase64' => true,
+        ]);
+
+        $qrCode = (new QRCode($qrOptions))->render($referral->reference_no);
+
+        // 3. Return the view with both $referral and $qrCode
+        return view('bhw.print_referral', compact('referral', 'qrCode'));
     }
 }

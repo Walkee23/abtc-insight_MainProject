@@ -175,6 +175,9 @@ Route::get('/patient/tracking-portal', function () {
     return view('patient.Tracking_Portal');
 })->name('patient.tracking.portal');
 
+// Public map data (counts per barangay only, no patient details)
+Route::get('/public/gis-data', [GisMapController::class, 'data'])->name('public.gis_data');
+
 Route::get('/patient/queue/normal', function () {
     return view('patient.NQ_confirmation');
 })->name('patient.queue.normal');

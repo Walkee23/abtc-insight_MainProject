@@ -206,6 +206,49 @@
         </section>
 
         <!-- GIS MAP -->
+        <section class="max-w-6xl mx-auto px-6 py-12">
+            <h2 class="text-2xl font-extrabold tracking-tight mb-1">Animal Bite Cases Across Cebu City</h2>
+            <p class="text-sm text-slate-500 mb-4">Bubble size shows the number of cases in each barangay.</p>
+            <div id="publicMap" style="height:520px;border-radius:12px;position:relative;z-index:0"></div>
+        </section>
+
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const COLORS = ['#fbbf24', '#f97316', '#ef4444', '#991b1b'];
+            const norm = s => (s || '').toUpperCase().replace(/\(.*?\)/g, ' ').replace(/\bPOB\b\.?/g, ' ').replace(/[^A-Z0-9]+/g, ' ').trim();
+
+            const map = L.map('publicMap', { scrollWheelZoom: false }).setView([10.3157, 123.8854], 12);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(map);
+
+            const layers = {};
+            const [geo, rows] = await Promise.all([
+                fetch("{{ asset('geojson/cebu_city_barangays.geojson') }}").then(r => r.json()),
+                fetch("{{ route('public.gis_data') }}", { headers: { 'Accept': 'application/json' } }).then(r => r.json()),
+            ]);
+
+            L.geoJSON(geo, {
+                style: { color: '#0b61bb', weight: 1, fillOpacity: 0.03 },
+                onEachFeature: (f, layer) => { const n = f.properties.BGY_NAME || 'Unknown'; layers[norm(n)] = { name: n, layer }; }
+            }).addTo(map);
+
+            const agg = {};
+            rows.forEach(r => { const k = norm(r.barangay); if (layers[k]) agg[k] = (agg[k] || 0) + (+r.n); });
+
+            const max = Math.max(1, ...Object.values(agg));
+            const tier = n => { const q = n / max; return q > 0.75 ? 3 : q > 0.5 ? 2 : q > 0.25 ? 1 : 0; };
+
+            Object.entries(agg).forEach(([k, n]) => {
+                const { name, layer } = layers[k];
+                layer.setStyle({ fillColor: COLORS[tier(n)], fillOpacity: 0.2 });
+                L.circleMarker(layer.getBounds().getCenter(), {
+                    radius: 6 + 26 * Math.sqrt(n / max),
+                    fillColor: COLORS[tier(n)], color: '#7f1d1d', weight: 1, fillOpacity: 0.65
+                }).addTo(map).bindTooltip(name + ': ' + n + (n === 1 ? ' case' : ' cases'));
+            });
+        });
+        </script>
 
         <!-- Call to Action Card Section -->
         <section class="py-12 bg-surface">

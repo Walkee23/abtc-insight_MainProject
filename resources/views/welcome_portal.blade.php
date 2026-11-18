@@ -202,6 +202,49 @@
                     </div>
                 </div>
 
+                <script>
+                    (function () {
+                        const slides = document.querySelectorAll('.carousel-slide');
+                        const dots   = document.querySelectorAll('.dot-indicator');
+                        const box    = document.getElementById('carouselSlides');
+                        const DELAY  = 4000;            // 4 ka segundo kada slide
+                        let index = 0, timer = null;
+
+                        function show(i) {
+                            index = (i + slides.length) % slides.length;
+                            slides.forEach((s, n) => {
+                                const on = n === index;
+                                s.classList.toggle('opacity-100', on);
+                                s.classList.toggle('opacity-0', !on);
+                                s.classList.toggle('pointer-events-none', !on);
+                            });
+                            dots.forEach((d, n) => {
+                                const on = n === index;
+                                d.classList.toggle('w-6', on);
+                                d.classList.toggle('bg-primary', on);
+                                d.classList.toggle('w-2', !on);
+                                d.classList.toggle('bg-slate-300', !on);
+                            });
+                        }
+
+                        function start() { stop(); timer = setInterval(() => show(index + 1), DELAY); }
+                        function stop()  { if (timer) clearInterval(timer); timer = null; }
+
+                        // gi-tawag sa imong onclick buttons
+                        window.nextSlide    = () => { show(index + 1); start(); };
+                        window.prevSlide    = () => { show(index - 1); start(); };
+                        window.currentSlide = (i) => { show(i); start(); };
+
+                        // hunong kung naa ang mouse sa ibabaw, padayon kung gawas na
+                        const card = box.closest('.relative');
+                        card.addEventListener('mouseenter', stop);
+                        card.addEventListener('mouseleave', start);
+
+                        show(0);
+                        start();
+                    })();
+                </script>
+
             </div>
         </section>
 

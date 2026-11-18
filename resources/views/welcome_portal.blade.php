@@ -205,8 +205,9 @@
             </div>
         </section>
 
-        <!-- GIS MAP -->
-        <section class="max-w-6xl mx-auto px-6 py-12">
+        <!-- GIS BUbble Map -->
+
+       <section class="max-w-7xl mx-auto px-6 pt-0 pb-12">
             <h2 class="text-2xl font-extrabold tracking-tight mb-1">Animal Bite Cases Across Cebu City</h2>
             <p class="text-sm text-slate-500 mb-4">Bubble size shows the number of cases in each barangay.</p>
             <div id="publicMap" style="height:520px;border-radius:12px;position:relative;z-index:0"></div>

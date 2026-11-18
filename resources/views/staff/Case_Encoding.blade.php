@@ -144,13 +144,7 @@
     <!-- Main Content Area -->
     <main class="ml-64 flex-1 flex flex-col min-h-screen">
         <!-- TopAppBar -->
-        <header class="flex justify-between items-center w-full h-16 px-8 sticky top-0 z-30 bg-white/85 dark:bg-slate-950/85 backdrop-blur-md shadow-sm shadow-slate-200/50 dark:shadow-none border-b border-slate-100/50">
-            <div class="flex items-center gap-8">
-                <div class="relative group">
-                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
-                    <input class="pl-10 pr-4 py-2 bg-surface-container-highest/50 border-none rounded-full text-sm w-64 focus:ring-2 focus:ring-primary/20 transition-all outline-none" placeholder="Search records..." type="text" />
-                </div>
-            </div>
+        <header class="flex justify-end items-center w-full h-16 px-8 sticky top-0 z-30 bg-white/85 dark:bg-slate-950/85 backdrop-blur-md shadow-sm shadow-slate-200/50 dark:shadow-none border-b border-slate-100/50">
             <div class="flex items-center gap-4">
                 <div class="flex items-center gap-1 border-r border-outline-variant/20 pr-4">
                     <button class="p-2 text-slate-500 hover:bg-surface-container-high rounded-full transition-colors relative">

@@ -185,15 +185,25 @@ Route::get('/patient/queue/priority', function () {
 
 // Walk-in New Patient self-registration (Section I + II)
 Route::post('/patient/new-submit', function (Request $request) {
-    // BHW Referral ID must match a real referral on file - reject if not found
-    $referralId = $request->input('bhw_referral_id');
-    $referralExists = DB::table('bhw_referral_info')
+    // BHW Referral ID must match a real referral on file and must not be used yet
+    $referralId = trim((string) $request->input('bhw_referral_id'));
+    $referral = DB::table('bhw_referral_info')
         ->where('reference_no', $referralId)
-        ->exists();
+        ->first();
 
-    if (!$referralExists) {
+    if (!$referral) {
         return back()
             ->withErrors(['bhw_referral_id' => 'This BHW Referral ID was not found. Please check it and try again.'])
+            ->withInput();
+    }
+
+    $alreadyUsed = DB::table('inflow_general_particulars')
+        ->where('bhw_referral_id', $referralId)
+        ->exists();
+
+    if ($alreadyUsed || in_array($referral->status, ['Arrived', 'Completed'], true)) {
+        return back()
+            ->withErrors(['bhw_referral_id' => 'This BHW Referral ID has already been used for a registration and cannot be reused.'])
             ->withInput();
     }
 
@@ -233,6 +243,11 @@ Route::post('/patient/new-submit', function (Request $request) {
         'illness_history' => $request->input('current_illnesses'),
         'allergy_history' => $request->input('known_allergies'),
     ]);
+
+    // Mark the BHW referral as Arrived so it cannot be reused
+    DB::table('bhw_referral_info')
+        ->where('reference_no', $referralId)
+        ->update(['status' => 'Arrived']);
 
     return $isPriority
         ? view('patient.PQ_confirmation', ['queueNumber' => $queueId])

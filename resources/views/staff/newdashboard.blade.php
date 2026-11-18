@@ -162,7 +162,7 @@
                 <div class="relative group cursor-pointer pl-2">
                     <div class="flex items-center gap-3">
                         <div class="text-right hidden sm:block">
-                            <p class="text-xs font-bold text-on-surface leading-tight">Staff</p>
+                            <p class="text-xs font-bold text-on-surface leading-tight">{{ Auth::user()->full_name ?? 'Staff' }}</p>
                             <p class="text-[10px] text-on-surface-variant leading-tight">ABTC Staff</p>
                         </div>
                         <div class="relative w-9 h-9">

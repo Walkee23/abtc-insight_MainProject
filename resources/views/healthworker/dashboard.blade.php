@@ -452,10 +452,10 @@
                         </thead>
                         <tbody class="divide-y divide-surface-container-low">
                             @foreach($unclaimed as $u)
-                            @php $uInfo = $u->case_number > 1 ? 'Returning Case #' . $u->case_number : 'New Exposure'; @endphp
+                            @php $uInfo = $u->return_dose_day ? 'Returning · Day ' . $u->return_dose_day . ' dose' : ($u->case_number > 1 ? 'Returning Case #' . $u->case_number : 'New Exposure'); @endphp
                             <tr class="hover:bg-surface/50 transition-colors">
                                 <td class="py-5 pl-4 pr-5 align-middle">
-                                    <span class="inline-block whitespace-nowrap text-sm font-bold {{ $u->category === 'III' ? 'text-blue-700 bg-blue-50' : 'text-slate-600 bg-slate-100' }} px-3 py-1 rounded-lg">{{ $u->queue_id ?? '—' }}</span>
+                                    <span class="inline-block whitespace-nowrap text-sm font-bold {{ $u->category === 'III' ? 'text-blue-700 bg-blue-50' : 'text-slate-600 bg-slate-100' }} px-3 py-1 rounded-lg">{{ $u->return_dose_day ? '—' : ($u->queue_id ?? '—') }}</span>
                                 </td>
                                 <td class="py-5 pr-5 align-middle">
                                     <p class="text-sm font-bold text-on-surface whitespace-nowrap">{{ $u->patient_name }}</p>

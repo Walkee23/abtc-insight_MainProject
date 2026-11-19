@@ -257,10 +257,10 @@ Route::post('/patient/new-submit', function (Request $request) {
 })->name('patient.new-submit');
 
 // Returning Patient — search for an existing patient record
-Route::get('/patient/search', [PatientController::class, 'search'])->name('patient.search');
+Route::get('/patient/search', [PatientController::class, 'search'])->middleware('throttle:15,1')->name('patient.search');
 
 // Returning Patient — handle the returning patient form submission
-Route::post('/patient/submit-registration-returning', [PatientController::class, 'storeReturning'])->name('patient.submit.returning');
+Route::post('/patient/submit-registration-returning', [PatientController::class, 'storeReturning'])->middleware('throttle:15,1')->name('patient.submit.returning');
 
 // New Patient (via BHW referral) — handle the form submission using the controller
 Route::post('/patient/submit-registration', [PatientController::class, 'registerPatient'])->name('patient.submit');

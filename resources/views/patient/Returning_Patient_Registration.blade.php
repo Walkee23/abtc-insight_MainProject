@@ -145,7 +145,7 @@
         <div class="flex justify-between items-start mb-10">
           <div>
             <h1 class="text-3xl font-extrabold tracking-tight text-on-surface">Returning Patient</h1>
-            <p class="text-on-surface-variant mt-2 text-lg">Report a new bite incident using your existing ABTC record</p>
+            <p class="text-on-surface-variant mt-2 text-lg">Check in for your next anti-rabies vaccine dose</p>
           </div>
           <span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-[12px] font-bold tracking-wide uppercase whitespace-nowrap shrink-0">Existing Record</span>
         </div>
@@ -164,7 +164,7 @@
             <div class="w-10 h-10 rounded-full step-inactive flex items-center justify-center" id="returningStepCircle-2">
               <span class="font-bold">2</span>
             </div>
-            <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider" id="returningStepLabel-2">Confirm Details</span>
+            <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider" id="returningStepLabel-2">Choose Dose</span>
           </div>
           <div class="flex-1 h-[2px] bg-surface-container-high mx-1 -mt-6 transition-colors" id="returningStepLine-2"></div>
           <!-- Step 3 -->
@@ -172,144 +172,69 @@
             <div class="w-10 h-10 rounded-full step-inactive flex items-center justify-center" id="returningStepCircle-3">
               <span class="font-bold">3</span>
             </div>
-            <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider" id="returningStepLabel-3">Priority + Confirm</span>
+            <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider" id="returningStepLabel-3">Confirm</span>
           </div>
         </div>
 
-        <form action="{{ route('patient.submit.returning') }}" method="POST">
-          @csrf
-          <input type="hidden" name="priority_status" id="priorityInput" value="none">
-          <input type="hidden" name="patient_id" id="patientIdInput" value="">
+        @if($errors->any())
+        <div class="bg-red-50 text-red-700 px-6 py-4 rounded-lg text-sm font-medium mb-6">{{ $errors->first() }}</div>
+        @endif
 
-          <!-- Section 1: Record Summary (Collapsed) -->
+        <form action="{{ route('patient.submit.returning') }}" method="POST" id="returningForm">
+          @csrf
+          <input type="hidden" name="token" id="tokenInput" value="">
+          <input type="hidden" name="bite_case_id" id="caseInput" value="">
+          <input type="hidden" name="dose_day" id="doseInput" value="">
+
+          <!-- Section 1: Find the record (full name + date of birth, both required) -->
           <div class="mb-10" id="lookupSection">
-            <div class="flex gap-3 mb-4">
-              <input type="text" id="searchInput" placeholder="Enter Patient ID or Full Name..." class="flex-1 bg-surface-container-highest border-0 focus:ring-2 focus:ring-primary/20 rounded-lg px-4 py-3.5 font-medium" />
-                 <button type="button" id="searchBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 rounded-lg transition-all">Search</button>
-            </div>
-           <div id="notFoundMsg" class="hidden bg-red-50 text-red-700 px-6 py-4 rounded-lg text-sm font-medium mb-4">
-             No matching patient record found. Please check the ID or name and try again.
-           </div>
-           <div id="recordFoundBox" class="hidden bg-emerald-600 text-white px-6 py-4 rounded-lg items-center gap-3 shadow-md">
-                <span class="material-symbols-outlined">person_check</span>
-                <div class="text-sm">
-                  <span class="font-bold">Record found:</span> <span id="foundName"></span> · <span class="font-mono text-emerald-100" id="foundId"></span>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div class="space-y-1.5">
+                <label class="text-xs font-bold text-on-surface-variant uppercase ml-1" for="searchName">Full Name</label>
+                <input type="text" id="searchName" autocomplete="off" placeholder="e.g. Juan Dela Cruz" class="w-full bg-surface-container-highest border-0 focus:ring-2 focus:ring-primary/20 rounded-lg px-4 py-3.5 font-medium" />
               </div>
+              <div class="space-y-1.5">
+                <label class="text-xs font-bold text-on-surface-variant uppercase ml-1" for="searchDob">Date of Birth</label>
+                <input type="date" id="searchDob" class="w-full bg-surface-container-highest border-0 focus:ring-2 focus:ring-primary/20 rounded-lg px-4 py-3.5 font-medium" />
+              </div>
+            </div>
+            <button type="button" id="searchBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3.5 rounded-lg transition-all">Find My Record</button>
+            <div id="notFoundMsg" class="hidden mt-4 bg-red-50 text-red-700 px-6 py-4 rounded-lg text-sm font-medium">
+              No matching record found. Please check your full name and date of birth, or approach the registration desk.
+            </div>
+            <div id="recordFoundBox" class="hidden mt-4 bg-emerald-600 text-white px-6 py-4 rounded-lg items-center gap-3 shadow-md">
+              <span class="material-symbols-outlined">person_check</span>
+              <div class="text-sm"><span class="font-bold">Record found:</span> <span id="foundName"></span></div>
             </div>
           </div>
-          <!-- Details + Priority + Footer: only usable once a record has been found -->
+
+          <!-- Section 2: Choose the dose. Shown once a record has been found -->
           <div id="detailsSection" class="hidden">
-          <!-- Section 2: Details -->
-          <div class="space-y-8">
-            <div class="flex items-center gap-3">
-              <h2 class="text-xs font-black tracking-[0.15em] text-on-surface-variant uppercase">Confirm Your Details</h2>
+            <div class="flex items-center gap-3 mb-6">
+              <h2 class="text-xs font-black tracking-[0.15em] text-on-surface-variant uppercase">Which dose are you here for?</h2>
               <div class="h-px flex-grow bg-outline-variant opacity-20"></div>
             </div>
-            <div class="bg-blue-50/80 border border-blue-100 rounded-lg p-4 flex gap-3">
-              <span class="material-symbols-outlined text-blue-600">info</span>
-              <p class="text-sm text-blue-800 leading-relaxed">Some fields are locked to your existing clinical record. If you need to change your name or DOB, please approach the registration desk.</p>
+
+            <div id="noCaseMsg" class="hidden bg-amber-50 border border-amber-200 text-amber-800 px-6 py-4 rounded-lg text-sm font-medium">
+              You have no ongoing vaccine course to check in for. If you were bitten again, please register as a new patient with a new BHW referral, or approach the registration desk.
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <!-- Locked Fields -->
+
+            <div id="casesList" class="space-y-5"></div>
+
+            <div id="confirmArea" class="hidden mt-8 space-y-6">
               <div class="space-y-1.5">
-                <label class="text-xs font-bold text-on-surface-variant uppercase ml-1">Full Name</label>
-                <div class="flex items-center justify-between bg-surface-container-low px-4 py-3.5 rounded-lg text-on-surface-variant cursor-not-allowed">
-                  <span class="font-medium" id="lockedName">—</span>
-                  <span class="material-symbols-outlined text-lg opacity-40">lock</span>
-                </div>
-              </div>
-              <div class="space-y-1.5">
-                <label class="text-xs font-bold text-on-surface-variant uppercase ml-1">Date of Birth</label>
-                <div class="bg-surface-container-low px-4 py-3.5 rounded-lg text-on-surface-variant cursor-not-allowed font-medium" id="lockedDob">
-                  -
-                </div>
-              </div>
-              <div class="space-y-1.5">
-                <label class="text-xs font-bold text-on-surface-variant uppercase ml-1">Sex</label>
-                <div class="bg-surface-container-low px-4 py-3.5 rounded-lg text-on-surface-variant cursor-not-allowed font-medium" id="lockedSex">
-                  -
-                </div>
-              </div>
-              <!-- Editable Fields -->
-              <div class="space-y-1.5">
-                <label class="text-xs font-bold text-emerald-700 uppercase ml-1">Contact Number</label>
+                <label class="text-xs font-bold text-emerald-700 uppercase ml-1" for="returningContactNumberInput">Contact Number (update if changed)</label>
                 <input name="contact_num" id="returningContactNumberInput" class="w-full bg-emerald-50/30 border-0 border-b-2 border-emerald-500/30 focus:border-emerald-500 focus:ring-0 text-on-surface font-medium px-4 py-3.5 rounded-t-lg transition-all" type="text" placeholder="09XX XXX XXXX" />
               </div>
-              <div class="space-y-1.5">
-                <label class="text-xs font-bold text-on-surface-variant uppercase ml-1">Civil Status</label>
-                <select name="civil_status" class="w-full bg-surface-container-highest border-0 focus:ring-2 focus:ring-primary/20 rounded-lg px-4 py-3.5 font-medium">
-                  <option value="Single" selected>Single</option>
-                  <option value="Married">Married</option>
-                  <option value="Widowed">Widowed</option>
-                  <option value="Separated">Separated</option>
-                </select>
-              </div>
-              <div class="space-y-1.5">
-                <label class="text-xs font-bold text-on-surface-variant uppercase ml-1">PhilHealth Member?</label>
-                <select name="philhealth_member" class="w-full bg-surface-container-highest border-0 focus:ring-2 focus:ring-primary/20 rounded-lg px-4 py-3.5 font-medium">
-                  <option value="1" selected>Yes</option>
-                  <option value="0">No</option>
-                </select>
+              <div class="pt-6 border-t border-outline-variant/15 flex flex-col md:flex-row items-center justify-between gap-4">
+                <button type="button" id="clearBtn" class="text-on-surface-variant font-bold text-sm px-6 py-3 rounded-lg hover:bg-surface-container-low transition-colors">Start Over</button>
+                <button type="submit" id="submitBtn" disabled class="w-full md:w-auto bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold px-8 py-4 rounded-xl shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-3 transition-transform active:scale-[0.98]">
+                  Confirm Check-in
+                  <span class="material-symbols-outlined">arrow_forward</span>
+                </button>
               </div>
             </div>
-            <!-- Barangay Section -->
-            <div class="bg-amber-50/30 border border-amber-100 rounded-xl p-6 space-y-4">
-              <div class="flex items-center justify-between">
-                <label class="text-sm font-bold text-on-surface flex items-center gap-1">
-                  Barangay of this incident <span class="text-error">*</span>
-                  <span class="material-symbols-outlined text-base text-on-surface-variant/40 ml-1">info</span>
-                </label>
-              </div>
-              <div class="relative">
-                <input autocomplete="off" type="text" id="returningBarangayInput" name="barangay"
-                  class="w-full bg-white border-2 border-amber-200 focus:border-amber-500 focus:ring-0 rounded-lg px-4 py-4 text-on-surface font-medium shadow-sm"
-                  placeholder="Search your barangay..." required />
-                <div id="returningBarangayDropdown"
-                  class="hidden absolute left-0 right-0 top-full mt-1 max-h-56 overflow-y-auto bg-surface-container-lowest rounded-lg shadow-lg border border-outline-variant/20 z-20"></div>
-              </div>
-              <p class="text-[11px] text-amber-700 font-medium flex items-center gap-1">
-                <span class="material-symbols-outlined text-sm">priority_high</span>
-                Required for every new incident report to map local outbreaks.
-              </p>
-            </div>
           </div>
-          <!-- Section 3: Priority -->
-          <div class="mt-12 space-y-8">
-            <div class="flex items-center gap-3">
-              <h2 class="text-xs font-black tracking-[0.15em] text-on-surface-variant uppercase">Priority Status Today</h2>
-              <div class="h-px flex-grow bg-outline-variant opacity-20"></div>
-            </div>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <button class="priority-option flex flex-col items-center justify-center p-4 rounded-xl border-2 border-surface-container-high hover:border-primary-container transition-all gap-2 group" data-priority="none">
-                <span class="material-symbols-outlined text-2xl text-on-surface-variant group-hover:text-primary">block</span>
-                <span class="text-xs font-bold uppercase tracking-tighter">None</span>
-              </button>
-              <button class="priority-option flex flex-col items-center justify-center p-4 rounded-xl border-2 border-surface-container-high hover:border-primary-container transition-all gap-2 relative" data-priority="priority">
-                <span class="material-symbols-outlined text-2xl text-on-surface-variant">accessible</span>
-                <span class="text-xs font-bold uppercase tracking-tighter">PWD</span>
-                <span class="absolute -top-2 -right-1 bg-surface-container-highest text-[9px] px-2 py-0.5 rounded-full font-bold">PERMANENT</span>
-              </button>
-              <button id="seniorPriorityOption" class="priority-option flex flex-col items-center justify-center p-4 rounded-xl border-2 border-surface-container-high hover:border-primary-container transition-all gap-2 relative group" data-priority="priority">
-                <span id="seniorIcon" class="material-symbols-outlined text-2xl text-on-surface-variant group-hover:text-primary">elderly</span>
-                <span id="seniorLabel" class="text-xs font-bold uppercase tracking-tighter">Senior</span>
-                <div id="seniorAutoDetectedBadge" class="hidden absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-[9px] px-2 py-1 rounded-full font-bold whitespace-nowrap shadow-sm">AUTO-DETECTED</div>
-              </button>
-              <button class="priority-option flex flex-col items-center justify-center p-4 rounded-xl border-2 border-surface-container-high hover:border-primary-container transition-all gap-2 group" data-priority="priority">
-                <span class="material-symbols-outlined text-2xl text-on-surface-variant group-hover:text-primary">pregnant_woman</span>
-                <span class="text-xs font-bold uppercase tracking-tighter">Pregnant</span>
-              </button>
-            </div>
-          </div>
-          <!-- Footer Actions -->
-          <div class="mt-16 flex flex-col md:flex-row items-center justify-between gap-4 pt-8 border-t border-outline-variant/15">
-            <button type="reset" class="text-on-surface-variant font-bold text-sm px-6 py-3 rounded-lg hover:bg-surface-container-low transition-colors">Clear Form</button>
-            <button type="submit" class="w-full md:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-8 py-4 rounded-xl shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-3 transition-transform active:scale-[0.98]">
-              Confirm and Get Queue Number
-              <span class="material-symbols-outlined">arrow_forward</span>
-            </button>
-          </div>
-          </div>
-
         </form>
       </div>
     </div>
@@ -327,117 +252,7 @@
     </div>
   </footer>
  
- <script>
-    document.getElementById('searchBtn').addEventListener('click', async function() {
-        const query = document.getElementById('searchInput').value.trim();
-        if (!query) return;
-
-        const notFoundMsg = document.getElementById('notFoundMsg');
-        const recordFoundBox = document.getElementById('recordFoundBox');
-
-        try {
-            const response = await fetch(`/patient/search?query=${encodeURIComponent(query)}`);
-            const data = await response.json();
-
-            if (!data.found) {
-                notFoundMsg.classList.remove('hidden');
-                recordFoundBox.classList.add('hidden');
-                recordFoundBox.classList.remove('flex');
-                return;
-            }
-
-            notFoundMsg.classList.add('hidden');
-            recordFoundBox.classList.remove('hidden');
-            recordFoundBox.classList.add('flex');
-
-            const patient = data.patient;
-
-            // Fill in locked fields
-            document.getElementById('lockedName').textContent = patient.patient_name;
-            document.getElementById('lockedDob').textContent = patient.date_of_birth;
-            document.getElementById('lockedSex').textContent = patient.sex;
-
-            // Fill in record found box
-            document.getElementById('foundName').textContent = patient.patient_name;
-            document.getElementById('foundId').textContent = patient.patient_id;
-
-            // Set hidden input for form submission
-            document.getElementById('patientIdInput').value = patient.patient_id;
-
-            // Reveal the Details + Priority + Footer section now that a record was found
-            document.getElementById('detailsSection').classList.remove('hidden');
-
-            // Step 1 is now done, Step 2 becomes active
-            markReturningStep(1, 'done');
-            markReturningStep(2, 'active');
-
-            // Auto-detect Senior Citizen status from date of birth (age 60+)
-            const dob = new Date(patient.date_of_birth);
-            const today = new Date();
-            let computedAge = today.getFullYear() - dob.getFullYear();
-            const monthDiff = today.getMonth() - dob.getMonth();
-            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
-                computedAge--;
-            }
-
-            const seniorAutoDetectedBadge = document.getElementById('seniorAutoDetectedBadge');
-            const seniorPriorityOption = document.getElementById('seniorPriorityOption');
-            if (computedAge >= 60) {
-                seniorAutoDetectedBadge.classList.remove('hidden');
-                seniorPriorityOption.click();
-            } else {
-                seniorAutoDetectedBadge.classList.add('hidden');
-            }
-
-        } catch (error) {
-            console.error('Search failed:', error);
-            notFoundMsg.textContent = 'Something went wrong. Please try again.';
-            notFoundMsg.classList.remove('hidden');
-        }
-    });
-</script>
-
   <script>
-    // Barangay search dropdown (same pattern as New Patient Registration)
-    const returningBarangayList = ['Adlaon', 'Agsungot', 'Apas', 'Babag', 'Bacayan', 'Banawa', 'Banilad', 'Basak Pardo', 'Basak San Nicolas', 'Binaliw', 'Barrio Luz', 'Bonbon', 'Buot-Taup', 'Budlaan', 'Buhisan', 'Bulacao', 'Busay', 'Calamba', 'Cambinocot', 'Capitol', 'Carreta', 'Cogon Pardo', 'Cogon Ramos', 'Day-as', 'Duljo', 'Ermita', 'Guadalupe', 'Guba', 'Hipodromo', 'Inayawan', 'Kalubihan', 'Kalunasan', 'Kamagayan', 'Kamputhaw', 'Kasambagan', 'Kinasang-an', 'Labangon', 'Lahug', 'Lorega', 'Lusaran', 'Mabini', 'Mabolo', 'Malubog', 'Mambaling', 'Pahina Central', 'Pamutan', 'Pardo', 'Pari-an', 'Paril', 'Pasil', 'Pit-os', 'Pulangbato', 'Pung-ol', 'Punta Princesa', 'Quiot', 'Sambag I', 'Sambag II', 'San Antonio', 'San Jose', 'San Nicolas Pahina', 'San Nicolas Proper', 'San Roque', 'Sapangdaku', 'Sawang Calero', 'Sinsin', 'Sirao', 'Sta. Cruz', 'Sto. Niño', 'Suba', 'Sudlon I', 'Sudlon II', 'T. Padilla', 'Tabunan', 'Tagbao', 'Talamban', 'TapTap', 'Tejero', 'Tinago', 'Tisa', 'Toong', 'Zapatera'];
-    const returningBarangayInput = document.getElementById('returningBarangayInput');
-    const returningBarangayDropdown = document.getElementById('returningBarangayDropdown');
-
-    function renderReturningBarangayOptions(filterText) {
-      const filtered = returningBarangayList.filter(b => b.toLowerCase().includes(filterText.toLowerCase()));
-      if (filtered.length === 0) {
-        returningBarangayDropdown.classList.add('hidden');
-        returningBarangayDropdown.innerHTML = '';
-        return;
-      }
-      returningBarangayDropdown.innerHTML = filtered.map(b =>
-        `<div class="px-4 py-2.5 text-sm cursor-pointer hover:bg-surface-container transition-colors returning-barangay-option">${b}</div>`
-      ).join('');
-      returningBarangayDropdown.classList.remove('hidden');
-    }
-
-    returningBarangayInput.addEventListener('focus', function () {
-      renderReturningBarangayOptions(this.value);
-    });
-
-    returningBarangayInput.addEventListener('input', function () {
-      renderReturningBarangayOptions(this.value);
-    });
-
-    returningBarangayDropdown.addEventListener('click', function (e) {
-      if (e.target.classList.contains('returning-barangay-option')) {
-        returningBarangayInput.value = e.target.textContent;
-        returningBarangayDropdown.classList.add('hidden');
-        returningBarangayDropdown.innerHTML = '';
-      }
-    });
-
-    document.addEventListener('click', function (e) {
-      if (!returningBarangayInput.contains(e.target) && !returningBarangayDropdown.contains(e.target)) {
-        returningBarangayDropdown.classList.add('hidden');
-      }
-    });
-
     // Helper to update the 3-step progress indicator
     function markReturningStep(stepNum, state) {
       const circle = document.getElementById(`returningStepCircle-${stepNum}`);
@@ -457,88 +272,146 @@
         circle.innerHTML = `<span class="font-bold">${stepNum}</span>`;
         label.classList.remove('text-emerald-600', 'text-on-surface-variant');
         label.classList.add('text-primary');
+        if (line) line.className = 'flex-1 h-[2px] bg-surface-container-high mx-1 -mt-6 transition-colors';
       } else {
         circle.classList.add('step-inactive');
         circle.innerHTML = `<span class="font-bold">${stepNum}</span>`;
         label.classList.remove('text-emerald-600', 'text-primary');
         label.classList.add('text-on-surface-variant');
+        if (line) line.className = 'flex-1 h-[2px] bg-surface-container-high mx-1 -mt-6 transition-colors';
       }
     }
 
-    // Get the hidden input
-    const priorityInput = document.getElementById('priorityInput');
-    const priorityOptions = document.querySelectorAll('.priority-option');
-
-    // Step 2 (Confirm Details) is only done once Contact Number and Barangay are actually filled in
-    const returningContactNumberInput = document.getElementById('returningContactNumberInput');
-
-    function isReturningStep2Complete() {
-      return returningContactNumberInput.value.trim() !== '' &&
-        returningBarangayInput.value.trim() !== '';
+    const $ = (id) => document.getElementById(id);
+    const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    function fmtDate(iso) {
+      if (!iso) return null;
+      const [y, m, d] = String(iso).slice(0, 10).split('-').map(Number);
+      return `${MONTHS[m - 1]} ${d}, ${y}`;
     }
 
-    function recalcReturningStep2() {
-      // Only recalculate step 2 once a record has actually been found (step 1 done)
-      if (!document.getElementById('detailsSection') || document.getElementById('detailsSection').classList.contains('hidden')) {
+    $('searchDob').max = new Date().toISOString().slice(0, 10);
+
+    // Pick a dose: highlight it, remember it, and let the patient confirm
+    function chooseDose(caseId, day) {
+      $('caseInput').value = caseId;
+      $('doseInput').value = day;
+      document.querySelectorAll('.dose-chip').forEach((chip) => {
+        const on = chip.dataset.case === String(caseId) && chip.dataset.day === String(day);
+        chip.classList.toggle('bg-primary', on);
+        chip.classList.toggle('text-white', on);
+        chip.classList.toggle('border-primary', on);
+        chip.classList.toggle('ring-2', on);
+        chip.classList.toggle('ring-primary/20', on);
+      });
+      $('submitBtn').disabled = false;
+      markReturningStep(2, 'done');
+      markReturningStep(3, 'active');
+    }
+
+    // One card per ongoing case: D0 and the doses already given are filled in from the record
+    function renderCases(cases) {
+      const list = $('casesList');
+      list.innerHTML = cases.map((c) => {
+        const cells = [0, ...c.days].map((day) => {
+          const date = c.dates[day];
+          const given = !!date;
+          const selectable = day !== 0 && !given;
+          const base = 'dose-chip rounded-xl border-2 px-3 py-3 text-center transition-all ';
+          if (day === 0 || given) {
+            return `<div class="${base} border-emerald-200 bg-emerald-50 text-emerald-800">
+              <div class="text-[11px] font-black uppercase tracking-wide">Day ${day}</div>
+              <div class="text-[11px] font-semibold mt-1">${esc(fmtDate(date) ?? 'Given')}</div>
+              <div class="text-[10px] font-bold text-emerald-600 mt-0.5">Given</div></div>`;
+          }
+          return `<button type="button" class="${base} border-surface-container-high hover:border-primary bg-white text-on-surface"
+              data-case="${c.bite_case_id}" data-day="${day}">
+              <div class="text-[11px] font-black uppercase tracking-wide">Day ${day}</div>
+              <div class="text-[11px] font-semibold mt-1 text-on-surface-variant">${c.checked_in_for === day ? 'Already checked in' : 'Tap to select'}</div></button>`;
+        }).join('');
+        return `<div class="border border-outline-variant/30 rounded-xl p-5">
+          <div class="flex items-center justify-between mb-4">
+            <p class="text-sm font-bold text-on-surface">Bite case #${esc(c.case_number)} · ${esc(c.dose_type)} course</p>
+            <span class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-surface-container-high text-on-surface-variant">Category ${esc(c.category)}</span>
+          </div>
+          <div class="grid grid-cols-3 sm:grid-cols-5 gap-3">${cells}</div></div>`;
+      }).join('');
+
+      list.querySelectorAll('button.dose-chip').forEach((chip) => {
+        chip.addEventListener('click', () => chooseDose(chip.dataset.case, Number(chip.dataset.day)));
+      });
+    }
+
+    function resetAll() {
+      $('detailsSection').classList.add('hidden');
+      $('notFoundMsg').classList.add('hidden');
+      $('recordFoundBox').classList.add('hidden');
+      $('recordFoundBox').classList.remove('flex');
+      $('noCaseMsg').classList.add('hidden');
+      $('confirmArea').classList.add('hidden');
+      $('casesList').innerHTML = '';
+      ['tokenInput', 'caseInput', 'doseInput', 'searchName', 'searchDob', 'returningContactNumberInput'].forEach((id) => { $(id).value = ''; });
+      $('submitBtn').disabled = true;
+      markReturningStep(1, 'active');
+      markReturningStep(2, 'inactive');
+      markReturningStep(3, 'inactive');
+    }
+
+    $('clearBtn').addEventListener('click', resetAll);
+
+    $('searchBtn').addEventListener('click', async function () {
+      const name = $('searchName').value.trim();
+      const dob = $('searchDob').value;
+      const notFoundMsg = $('notFoundMsg');
+      if (!name || !dob) {
+        notFoundMsg.textContent = 'Please enter your full name and date of birth.';
+        notFoundMsg.classList.remove('hidden');
         return;
       }
-      if (isReturningStep2Complete()) {
-        markReturningStep(2, 'done');
-        markReturningStep(3, 'active');
-      } else {
-        markReturningStep(2, 'active');
+
+      try {
+        const response = await fetch(`/patient/search?name=${encodeURIComponent(name)}&dob=${encodeURIComponent(dob)}`, { headers: { Accept: 'application/json' } });
+        if (response.status === 429) {
+          notFoundMsg.textContent = 'Too many searches. Please wait a minute and try again.';
+          notFoundMsg.classList.remove('hidden');
+          return;
+        }
+        const data = await response.json();
+
+        if (!data.found) {
+          notFoundMsg.textContent = 'No matching record found. Please check your full name and date of birth, or approach the registration desk.';
+          notFoundMsg.classList.remove('hidden');
+          $('recordFoundBox').classList.add('hidden');
+          $('recordFoundBox').classList.remove('flex');
+          $('detailsSection').classList.add('hidden');
+          return;
+        }
+
+        notFoundMsg.classList.add('hidden');
+        $('recordFoundBox').classList.remove('hidden');
+        $('recordFoundBox').classList.add('flex');
+        $('foundName').textContent = data.patient.patient_name;
+        $('tokenInput').value = data.token;
+        $('returningContactNumberInput').value = data.patient.contact_num || '';
+        $('caseInput').value = '';
+        $('doseInput').value = '';
+        $('submitBtn').disabled = true;
+
+        $('detailsSection').classList.remove('hidden');
+        const hasCases = data.cases.length > 0;
+        $('noCaseMsg').classList.toggle('hidden', hasCases);
+        $('confirmArea').classList.toggle('hidden', !hasCases);
+        renderCases(data.cases);
+
+        markReturningStep(1, 'done');
+        markReturningStep(2, hasCases ? 'active' : 'inactive');
         markReturningStep(3, 'inactive');
+      } catch (error) {
+        console.error('Search failed:', error);
+        notFoundMsg.textContent = 'Something went wrong. Please try again.';
+        notFoundMsg.classList.remove('hidden');
       }
-    }
-
-    [returningContactNumberInput, returningBarangayInput].forEach(field => {
-      if (field) {
-        field.addEventListener('input', recalcReturningStep2);
-      }
-    });
-
-    priorityOptions.forEach(option => {
-      option.addEventListener('click', function(e) {
-        // Prevent the button from submitting the form immediately
-        e.preventDefault();
-
-        // Set the hidden input value
-        priorityInput.value = this.getAttribute('data-priority');
-
-        // 1. Remove the blue highlight from ALL cards
-        priorityOptions.forEach(opt => {
-          opt.classList.remove('border-primary', 'bg-primary/5', 'ring-2', 'ring-primary/20');
-          opt.classList.add('border-surface-container-high');
-        });
-
-        // 2. Add the blue highlight to the CLICKED card
-        this.classList.remove('border-surface-container-high');
-        this.classList.add('border-primary', 'bg-primary/5', 'ring-2', 'ring-primary/20');
-      });
-    });
-
-    // Clear Form: native reset only clears input/select values, so this cleans up
-    // everything else that JS controls (locked fields, badges, highlighted cards, steps)
-    document.querySelector('form').addEventListener('reset', function () {
-      setTimeout(function () {
-        document.getElementById('detailsSection').classList.add('hidden');
-        document.getElementById('notFoundMsg').classList.add('hidden');
-        document.getElementById('recordFoundBox').classList.add('hidden');
-        document.getElementById('recordFoundBox').classList.remove('flex');
-        document.getElementById('lockedName').textContent = '—';
-        document.getElementById('lockedDob').textContent = '—';
-        document.getElementById('lockedSex').textContent = '—';
-        document.getElementById('seniorAutoDetectedBadge').classList.add('hidden');
-
-        document.querySelectorAll('.priority-option').forEach(opt => {
-          opt.classList.remove('border-primary', 'bg-primary/5', 'ring-2', 'ring-primary/20');
-          opt.classList.add('border-surface-container-high');
-        });
-
-        markReturningStep(1, 'active');
-        markReturningStep(2, 'inactive');
-        markReturningStep(3, 'inactive');
-      }, 0);
     });
   </script>
 </body>

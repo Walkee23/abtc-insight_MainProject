@@ -344,6 +344,11 @@ class ClinicalEncodingController extends Controller
             $validated
         );
 
+        // The dose the patient checked in for (Returning Patient) is now recorded: clear the mark
+        if ($case->return_dose_day && !empty($validated['day' . $case->return_dose_day . '_date'])) {
+            DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->update(['return_dose_day' => null, 'returned_at' => null]);
+        }
+
         if ($isDraft) {
             return back()->with('status', 'Section VII saved as draft.');
         }
@@ -506,9 +511,9 @@ class ClinicalEncodingController extends Controller
             ->join('patients as p', 'p.patient_id', '=', 'bc.patient_id')
             ->leftJoin('inflow_general_particulars as ig', 'ig.inflow_record_id', '=', 'bc.inflow_record_id')
             ->orderByRaw("CASE WHEN bc.category = 'III' THEN 0 ELSE 1 END")
-            ->orderBy('bc.date_verified')
-            ->limit(20)
-            ->get(['bc.bite_case_id', 'bc.case_number', 'bc.category', 'bc.date_verified', 'p.patient_id', 'p.patient_name', 'ig.queue_id']);
+            ->orderByRaw('COALESCE(bc.returned_at, bc.date_verified)')
+            ->limit(50)
+            ->get(['bc.bite_case_id', 'bc.case_number', 'bc.category', 'bc.date_verified', 'bc.return_dose_day', 'bc.returned_at', 'p.patient_id', 'p.patient_name', 'ig.queue_id']);
 
         // Reminders: PEP doses that are due or overdue, worked out from the Day 0 date
         // (Primary: Day 3 / 7 / 28, Booster: Day 3), skipping doses already recorded

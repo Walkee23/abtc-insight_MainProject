@@ -503,14 +503,14 @@
                             </section>
 
                             <section class="space-y-3">
-                                <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Assign to Healthworker <span class="text-error">*</span></label>
+                                <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Assign to Healthworker <span class="text-on-surface-variant normal-case font-medium">(optional)</span></label>
                                 <select name="assigned_health_worker_id" class="w-full md:w-1/2 bg-surface-container-highest border-none rounded-lg text-sm px-4 py-2.5 focus:ring-2 focus:ring-primary/20">
-                                    <option value="" selected disabled hidden>--</option>
+                                    <option value="" selected>Leave unassigned (a Health Worker will claim it)</option>
                                     @foreach($healthworkers as $hw)
                                     <option value="{{ $hw->user_id }}">{{ $hw->full_name }}</option>
                                     @endforeach
                                 </select>
-                                <p class="text-[10px] text-on-surface-variant italic">Required when you click Complete Encoding.</p>
+                                <p class="text-[10px] text-on-surface-variant italic">Leave this empty to let any Health Worker claim the case from their dashboard.</p>
                             </section>
 
                             <!-- Form Submission -->

@@ -48,6 +48,67 @@ class ClinicalEncodingController extends Controller
             : $query->whereRaw('1 = 0');
     }
 
+    /**
+     * Cases Staff has finished that no Health Worker owns yet: the pool Health Workers
+     * pick from. Once one claims a case it leaves this pool and only that account can
+     * open or change it (see ownCase).
+     */
+    private function unclaimed($query, string $alias = 'bc')
+    {
+        return $query
+            ->whereExists(function ($e) use ($alias) {
+                $e->select(DB::raw(1))->from('inflow_general_particulars as hg')
+                    ->whereColumn('hg.inflow_record_id', $alias . '.inflow_record_id')
+                    ->where('hg.status', 'Encoded');
+            })
+            ->whereNull($alias . '.assigned_health_worker_id')
+            ->whereNull($alias . '.outcome');
+    }
+
+    /**
+     * Claim an unassigned case. One UPDATE that only matches while nobody owns the case,
+     * so if two Health Workers click at the same moment exactly one gets it.
+     */
+    public function claim($biteCaseId)
+    {
+        $userId = Auth::id();
+        abort_unless($userId, 403);
+
+        $claimed = $this->unclaimed(DB::table('bite_cases as bc'))
+            ->where('bc.bite_case_id', $biteCaseId)
+            ->update(['bc.assigned_health_worker_id' => $userId]);
+
+        if ($claimed !== 1) {
+            return redirect()->route('healthworker.dashboard')
+                ->with('claim_error', 'That case is no longer available. Another Health Worker already took it.');
+        }
+
+        $case = DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->first();
+        Audit::log('case_claimed', "Claimed case #{$case->case_number} of patient {$case->patient_id}");
+
+        return redirect()->route('healthworker.clinical-encoding', ['bite_case_id' => $biteCaseId])
+            ->with('status', 'Case claimed. It is now yours and hidden from other Health Workers.');
+    }
+
+    /** Give a case back to the pool. Only its owner can do this, and finished cases stay put. */
+    public function release($biteCaseId)
+    {
+        $case = $this->ownCase($biteCaseId);
+
+        $released = DB::table('bite_cases')
+            ->where('bite_case_id', $biteCaseId)
+            ->where('assigned_health_worker_id', Auth::id())
+            ->whereNull('outcome')
+            ->update(['assigned_health_worker_id' => null]);
+
+        if ($released === 1) {
+            Audit::log('case_released', "Released case #{$case->case_number} of patient {$case->patient_id} back to the unclaimed pool");
+        }
+
+        return redirect()->route('healthworker.dashboard')
+            ->with('status', $released === 1 ? 'Case released. Other Health Workers can now claim it.' : 'Finished cases cannot be released.');
+    }
+
     /** A case that is assigned to the logged-in health worker, or a 404. */
     private function ownCase($biteCaseId)
     {
@@ -440,6 +501,15 @@ class ClinicalEncodingController extends Controller
             ->limit(10)
             ->get();
 
+        // Unclaimed pool: handed-off cases nobody owns yet (Category III first, longest-waiting first)
+        $unclaimed = $this->unclaimed(DB::table('bite_cases as bc'))
+            ->join('patients as p', 'p.patient_id', '=', 'bc.patient_id')
+            ->leftJoin('inflow_general_particulars as ig', 'ig.inflow_record_id', '=', 'bc.inflow_record_id')
+            ->orderByRaw("CASE WHEN bc.category = 'III' THEN 0 ELSE 1 END")
+            ->orderBy('bc.date_verified')
+            ->limit(20)
+            ->get(['bc.bite_case_id', 'bc.case_number', 'bc.category', 'bc.date_verified', 'p.patient_id', 'p.patient_name', 'ig.queue_id']);
+
         // Reminders: PEP doses that are due or overdue, worked out from the Day 0 date
         // (Primary: Day 3 / 7 / 28, Booster: Day 3), skipping doses already recorded
         $reminders = [];
@@ -505,6 +575,6 @@ class ClinicalEncodingController extends Controller
         usort($activity, fn($a, $b) => $b->at <=> $a->at);
         $activity = array_slice($activity, 0, 6);
 
-        return view('healthworker.dashboard', compact('stats', 'queue', 'reminders', 'activity'));
+        return view('healthworker.dashboard', compact('stats', 'queue', 'unclaimed', 'reminders', 'activity'));
     }
 }

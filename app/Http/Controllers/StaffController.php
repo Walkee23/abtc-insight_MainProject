@@ -169,10 +169,6 @@ class StaffController extends Controller
 
         $isComplete = $request->input('action') === 'complete';
 
-        if ($isComplete && !$request->filled('assigned_health_worker_id')) {
-            return back()->withErrors(['error' => 'Please assign a healthworker before completing.'])->withInput();
-        }
-
         if ($isComplete && $request->input('prev_arv_given') === '1') {
             $hasDoseDate = $request->filled('dose1_date') || $request->filled('dose2_date') || $request->filled('dose3_date') || $request->filled('booster_date');
             if (!$hasDoseDate) {

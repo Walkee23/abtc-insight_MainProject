@@ -244,6 +244,17 @@
             </button>
         </div>
         @endif
+        @if(session('claim_error'))
+        <div id="claimErrorToast" role="alert"
+            class="fixed bottom-6 right-8 z-50 max-w-sm flex items-center gap-3 bg-red-50 text-red-700 text-sm font-semibold pl-4 pr-2 py-3 rounded-lg shadow-lg shadow-blue-900/10 border border-red-200 transition-opacity duration-300">
+            <span class="material-symbols-outlined text-[18px]">error</span>
+            <span class="flex-1">{{ session('claim_error') }}</span>
+            <button type="button" onclick="document.getElementById('claimErrorToast').remove()" aria-label="Dismiss"
+                class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-red-100 transition-colors">
+                <span class="material-symbols-outlined text-[18px]">close</span>
+            </button>
+        </div>
+        @endif
         <!-- Header Section -->
         <header class="mb-10">
             <h2 class="text-3xl font-extrabold tracking-tight text-on-surface mb-1">{{ $greeting }}, {{ $displayName }}</h2>
@@ -398,8 +409,16 @@
                                     @endif
                                 </td>
                                 <td class="py-5 text-right pr-4 align-middle">
+                                    <div class="inline-flex items-center gap-2">
                                     <a href="{{ route('healthworker.clinical-encoding', ['bite_case_id' => $row->bite_case_id]) }}"
                                         class="inline-block whitespace-nowrap text-xs font-bold text-primary hover:bg-primary/5 px-4 py-2 rounded-lg transition-colors border border-primary/10">{{ $row->encoding_status === 'In Progress' ? 'Continue Encoding' : 'Start Encoding' }}</a>
+                                    <form method="POST" action="{{ route('healthworker.case.release', ['bite_case_id' => $row->bite_case_id]) }}"
+                                        onsubmit="return confirm('Release this case back to the unclaimed pool? Other Health Workers will be able to claim it.')">
+                                        @csrf
+                                        <button type="submit" title="Release case"
+                                            class="whitespace-nowrap text-xs font-bold text-slate-500 hover:text-error hover:bg-error/5 px-3 py-2 rounded-lg transition-colors">Release</button>
+                                    </form>
+                                    </div>
                                 </td>
                             </tr>
                             @endforeach
@@ -416,8 +435,51 @@
                 </div>
                 @endif
             </section>
+            <!-- Unclaimed Cases: cases nobody owns yet; claiming one locks it to this account -->
+            <section class="col-span-12 xl:col-span-8 bg-surface-container-lowest rounded-xl p-8 overflow-hidden">
+                <div class="mb-6">
+                    <h2 class="text-xl font-bold tracking-tight text-on-surface">Unclaimed Cases</h2>
+                    <p class="text-sm text-on-surface-variant">Pick a case to work on. Once you claim it, no other Health Worker can open or change it.</p>
+                </div>
+                <div class="overflow-x-auto no-scrollbar">
+                    <table class="w-full min-w-[520px] text-left">
+                        <thead>
+                            <tr class="text-[11px] uppercase tracking-widest text-slate-400 font-bold border-b border-surface-container-low">
+                                <th class="pb-4 pl-4 pr-5 font-bold whitespace-nowrap">Queue No.</th>
+                                <th class="pb-4 pr-5 font-bold whitespace-nowrap">Patient Name</th>
+                                <th class="pb-4 text-right pr-4 font-bold whitespace-nowrap">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-surface-container-low">
+                            @foreach($unclaimed as $u)
+                            @php $uInfo = $u->case_number > 1 ? 'Returning Case #' . $u->case_number : 'New Exposure'; @endphp
+                            <tr class="hover:bg-surface/50 transition-colors">
+                                <td class="py-5 pl-4 pr-5 align-middle">
+                                    <span class="inline-block whitespace-nowrap text-sm font-bold {{ $u->category === 'III' ? 'text-blue-700 bg-blue-50' : 'text-slate-600 bg-slate-100' }} px-3 py-1 rounded-lg">{{ $u->queue_id ?? '—' }}</span>
+                                </td>
+                                <td class="py-5 pr-5 align-middle">
+                                    <p class="text-sm font-bold text-on-surface whitespace-nowrap">{{ $u->patient_name }}</p>
+                                    <p class="text-[11px] text-on-surface-variant whitespace-nowrap">ID: {{ $u->patient_id }}</p>
+                                    <p class="mt-1 text-[11px] font-semibold whitespace-nowrap {{ $u->category === 'III' ? 'text-error' : ($u->category === 'II' ? 'text-tertiary' : 'text-on-surface-variant') }}">{{ $uInfo }} · Cat {{ $u->category }}</p>
+                                </td>
+                                <td class="py-5 text-right pr-4 align-middle">
+                                    <form method="POST" action="{{ route('healthworker.case.claim', ['bite_case_id' => $u->bite_case_id]) }}">
+                                        @csrf
+                                        <button type="submit"
+                                            class="inline-block whitespace-nowrap text-xs font-bold text-white bg-primary hover:bg-primary-container px-4 py-2 rounded-lg transition-colors">Claim Case</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                    @if($unclaimed->isEmpty())
+                    <p class="text-sm text-on-surface-variant text-center py-10">No unclaimed cases right now.</p>
+                    @endif
+                </div>
+            </section>
             <!-- Sidebar Analytics/Reminders -->
-            <section class="col-span-12 xl:col-span-4 space-y-8">
+            <section class="col-span-12 xl:col-span-4 xl:col-start-9 xl:row-start-1 xl:row-span-2 space-y-8">
                 <!-- Clinical Reminders -->
                 <div class="bg-surface-container-low rounded-xl p-6 border border-outline-variant/15">
                     <h3 class="text-md font-bold text-on-surface flex items-center gap-2 mb-6">

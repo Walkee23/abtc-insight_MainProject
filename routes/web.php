@@ -119,6 +119,8 @@ Route::prefix('staff')->group(function () {
 // Healthworker Routes
 Route::prefix('healthworker')->group(function () {
     Route::get('/dashboard', [ClinicalEncodingController::class, 'dashboard'])->name('healthworker.dashboard');
+    Route::post('/cases/{bite_case_id}/claim', [ClinicalEncodingController::class, 'claim'])->name('healthworker.case.claim');
+    Route::post('/cases/{bite_case_id}/release', [ClinicalEncodingController::class, 'release'])->name('healthworker.case.release');
 
     // Clinical Encoding (Sections VI-IX), connected to the real bite_cases queue
     Route::get('/clinical-encoding/{bite_case_id?}', [ClinicalEncodingController::class, 'sectionVI'])

@@ -155,6 +155,13 @@
                         </div>
                     </div>
 
+                    @if(request('timeout'))
+                    <div class="flex items-center gap-2 text-amber-700 bg-amber-50 border border-amber-200 text-sm font-semibold px-3 py-2 rounded-lg">
+                        <span class="material-symbols-outlined text-[18px]">schedule</span>
+                        You were logged out due to inactivity. Please sign in again.
+                    </div>
+                    @endif
+
                     @if($errors->any())
                     <div class="text-red-500 text-sm font-semibold px-2">
                         {{ $errors->first() }}

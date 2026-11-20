@@ -1157,6 +1157,6 @@
                 if (e.key === 'Escape') closeProfileModal();
             });
         </script>
-
-</body>
+            @include('partials.idle-timeout')
+    </body>
 </html>

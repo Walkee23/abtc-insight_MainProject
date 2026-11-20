@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Support\Audit;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;   // NEW
+use Illuminate\Support\Str;                   // NEW
 
 class AuthController extends Controller
 {
@@ -15,6 +17,9 @@ class AuthController extends Controller
             'username' => ['required'],
             'password' => ['required'],
         ]);
+
+         // NEW: lockout check (5 failed attempts per username + IP)
+        $throttleKey = Str::lower($request->input('username')) . '|' . $request->ip();
 
         // 2. Attempt to log them in
         if (Auth::attempt($credentials)) {
@@ -41,12 +46,15 @@ class AuthController extends Controller
             }
         }
 
+         // NEW: count this failed attempt (lock window = 300 seconds = 5 minutes)
+        RateLimiter::hit($throttleKey, 300);
+
         // 5. If it fails, send them back with an error
         Audit::log('login_failed', "Failed sign-in attempt for username '{$request->input('username')}'", $request->input('username'));
 
         return back()->withErrors([
             'username' => 'The provided credentials do not match our records.',
-        ]);
+        ])->onlyInput('username'); 
     }
 
     public function logout(Request $request)

@@ -156,7 +156,21 @@ class StaffController extends Controller
             ->get();
 
 
-        return view('staff.Case_Encoding', compact('verifiedQueue', 'selectedPatient', 'search', 'bhwExposure', 'healthworkers'));
+        // Progress saved earlier with "Save Progress", so the form shows it again instead of starting blank
+        $saved = null;
+        if ($selectedPatient) {
+            $draftCase = DB::table('bite_cases')->where('inflow_record_id', $selectedPatient->inflow_record_id)->first();
+            if ($draftCase) {
+                $saved = (object) [
+                    's3'       => DB::table('bite_section3_exposure')->where('bite_case_id', $draftCase->bite_case_id)->first(),
+                    's4'       => DB::table('bite_section4_wound_treatment')->where('bite_case_id', $draftCase->bite_case_id)->first(),
+                    's5'       => DB::table('bite_section5_prior_arv')->where('bite_case_id', $draftCase->bite_case_id)->first(),
+                    'assigned' => $draftCase->assigned_health_worker_id,
+                ];
+            }
+        }
+
+        return view('staff.Case_Encoding', compact('verifiedQueue', 'selectedPatient', 'search', 'bhwExposure', 'healthworkers', 'saved'));
     }
 
     public function storeCaseEncoding(Request $request, string $inflow_record_id)
@@ -174,6 +188,17 @@ class StaffController extends Controller
             if (!$hasDoseDate) {
                 return back()->withErrors(['error' => 'Please provide at least one dose date since "Previously Vaccinated" is set to Yes.'])->withInput();
             }
+        }
+
+        // Save Progress may be incomplete; Complete Encoding needs the core exposure facts
+        if ($isComplete) {
+            $request->validate([
+                'animal_type' => 'required|string|max:50',
+                'bite_date'   => 'required|date|before_or_equal:today',
+            ], [
+                'animal_type.required' => 'Please choose the animal type before completing.',
+                'bite_date.required'   => 'Please enter the date of the bite before completing.',
+            ]);
         }
 
         $inflow = DB::table('inflow_general_particulars')->where('inflow_record_id', $inflow_record_id)->first();
@@ -233,14 +258,17 @@ class StaffController extends Controller
             DB::table('bite_section3_exposure')->updateOrInsert(
                 ['bite_case_id' => $biteCaseId],
                 [
-                    'animal_type'       => $request->input('animal_type'),
+                    // A draft can still be missing these, so blank is stored as NULL (never a made-up value)
+                    'animal_type'       => $request->input('animal_type') ?: null,
                     'animal_type_other' => $request->input('animal_type_other'),
-                    'bite_date_time'    => $request->input('bite_date') . ($request->input('bite_time') ? ' ' . $request->input('bite_time') : ' 00:00:00'),
+                    'bite_date_time'    => $request->filled('bite_date')
+                        ? $request->input('bite_date') . ($request->input('bite_time') ? ' ' . $request->input('bite_time') : ' 00:00:00')
+                        : null,
                     'animal_vax_status' => $request->input('animal_vax_status'),
                     'animal_vax_date'   => $request->input('animal_vax_date') ?: null,
                     'animal_fate'       => $request->input('fate'),
                     'obs_14_days'       => $request->input('obs_14_days') ?: null,
-                    'exposure_type'     => implode(', ', $request->input('exposure_type', [])),
+                    'exposure_type'     => implode(', ', $request->input('exposure_type', [])) ?: null,
                     'is_provoked'       => $request->input('provoked'),
                     'is_leashed'        => $request->input('leash'),
                     'has_gate'          => $request->input('gate'),

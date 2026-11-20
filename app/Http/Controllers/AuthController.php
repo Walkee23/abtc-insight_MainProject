@@ -5,56 +5,46 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Support\Audit;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\RateLimiter;   // NEW
-use Illuminate\Support\Str;                   // NEW
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
+    public function showLogin()
+    {
+        if (Auth::check()) {
+            return $this->redirectByRole(Auth::user()->role);
+        }
+
+        return view('auth.login');
+    }
+
     public function login(Request $request)
     {
-        // 1. Check if the user filled in both fields
         $credentials = $request->validate([
             'username' => ['required'],
             'password' => ['required'],
         ]);
 
-         // NEW: lockout check (5 failed attempts per username + IP)
         $throttleKey = Str::lower($request->input('username')) . '|' . $request->ip();
 
-        // 2. Attempt to log them in
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
+            $request->session()->forget('url.intended'); // Clear any stale intended URL
 
-            // 3. Get the user's role from the database
             $role = Auth::user()->role;
             Audit::log('login', "Signed in as {$role}");
 
-            // 4. Send them to the correct dashboard based on their role
-            if ($role === 'Admin') {
-                return redirect()->intended('/admin/dashboard');
-            } elseif ($role === 'Staff') {
-                return redirect()->intended('/staff/dashboard');
-            } elseif ($role === 'Health Worker') {
-                return redirect()->intended('/healthworker/dashboard');
-            } elseif ($role === 'BHW') {
-                return redirect()->intended('/bhw/dashboard');
-            } elseif ($role === 'IT') {
-                return redirect()->intended('/it/dashboard');
-            } else {
-                // Default fallback if role is missing
-                return redirect('/');
-            }
+            return $this->redirectByRole($role);
         }
 
-         // NEW: count this failed attempt (lock window = 300 seconds = 5 minutes)
         RateLimiter::hit($throttleKey, 300);
 
-        // 5. If it fails, send them back with an error
         Audit::log('login_failed', "Failed sign-in attempt for username '{$request->input('username')}'", $request->input('username'));
 
         return back()->withErrors([
             'username' => 'The provided credentials do not match our records.',
-        ])->onlyInput('username'); 
+        ])->onlyInput('username');
     }
 
     public function logout(Request $request)
@@ -62,10 +52,29 @@ class AuthController extends Controller
         Audit::log('logout', 'Signed out');
         Auth::logout();
 
+        $request->session()->forget('url.intended');
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        // Every role (Admin, Staff, Health Worker, BHW) lands back on the login page
+        $redirectTo = $request->input('redirect_to');
+        if ($redirectTo && str_starts_with($redirectTo, '/')) {
+            return redirect($redirectTo);
+        }
+
         return redirect()->route('login');
+    }
+
+    private function redirectByRole(?string $role)
+    {
+        $url = match ($role) {
+            'Admin'         => '/admin/dashboard',
+            'Staff'         => '/staff/dashboard',
+            'Health Worker' => '/healthworker/dashboard',
+            'BHW'           => '/bhw/dashboard',
+            'IT'            => '/it/dashboard',
+            default         => '/',
+        };
+
+        return redirect($url);
     }
 }

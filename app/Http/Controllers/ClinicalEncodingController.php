@@ -507,9 +507,30 @@ class ClinicalEncodingController extends Controller
             ->get();
 
         // Unclaimed pool: handed-off cases nobody owns yet (Category III first, longest-waiting first)
+        // Filters (all optional): search text, WHO category, and new vs returning
+        $uFilter = [
+            'q'    => trim((string) request('uq', '')),
+            'cat'  => in_array(request('ucat'), ['I', 'II', 'III'], true) ? request('ucat') : '',
+            'type' => in_array(request('utype'), ['new', 'returning'], true) ? request('utype') : '',
+        ];
         $unclaimedQuery = fn () => $this->unclaimed(DB::table('bite_cases as bc'))
             ->join('patients as p', 'p.patient_id', '=', 'bc.patient_id')
             ->leftJoin('inflow_general_particulars as ig', 'ig.inflow_record_id', '=', 'bc.inflow_record_id')
+            ->when($uFilter['q'] !== '', function ($q) use ($uFilter) {
+                // every typed word must appear in the name; the whole text may also be a patient ID or queue number
+                $words = array_filter(preg_split('/[\s,]+/', $uFilter['q']), fn ($w) => $w !== '');
+                $q->where(function ($w) use ($words, $uFilter) {
+                    $w->where(function ($n) use ($words) {
+                        foreach ($words as $word) {
+                            $n->where('p.patient_name', 'like', '%' . $word . '%');
+                        }
+                    })->orWhere('p.patient_id', 'like', '%' . $uFilter['q'] . '%')
+                      ->orWhere('ig.queue_id', 'like', '%' . $uFilter['q'] . '%');
+                });
+            })
+            ->when($uFilter['cat'] !== '', fn ($q) => $q->where('bc.category', $uFilter['cat']))
+            ->when($uFilter['type'] === 'new', fn ($q) => $q->whereNull('bc.return_dose_day')->where('bc.case_number', '<=', 1))
+            ->when($uFilter['type'] === 'returning', fn ($q) => $q->where(fn ($r) => $r->whereNotNull('bc.return_dose_day')->orWhere('bc.case_number', '>', 1)))
             ->orderByRaw("CASE WHEN bc.category = 'III' THEN 0 ELSE 1 END")
             ->orderByRaw('COALESCE(bc.returned_at, bc.date_verified)');
         // 5 per page; a page past the end (e.g. the last case on it was just claimed) falls back to the last page
@@ -585,6 +606,6 @@ class ClinicalEncodingController extends Controller
         usort($activity, fn($a, $b) => $b->at <=> $a->at);
         $activity = array_slice($activity, 0, 6);
 
-        return view('healthworker.dashboard', compact('stats', 'queue', 'unclaimed', 'reminders', 'activity'));
+        return view('healthworker.dashboard', compact('stats', 'queue', 'unclaimed', 'uFilter', 'reminders', 'activity'));
     }
 }

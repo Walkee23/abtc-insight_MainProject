@@ -93,6 +93,7 @@
         }
     </style>
     <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
+    <script src="{{ asset('js/custom-select.js') }}" defer></script>
 </head>
 
 <body class="bg-surface text-on-surface">
@@ -437,10 +438,43 @@
             </section>
             <!-- Unclaimed Cases: cases nobody owns yet; claiming one locks it to this account -->
             <section id="unclaimed" class="col-span-12 xl:col-span-8 bg-surface-container-lowest rounded-xl p-8 overflow-hidden">
-                <div class="mb-6">
-                    <h2 class="text-xl font-bold tracking-tight text-on-surface">Unclaimed Cases</h2>
-                    <p class="text-sm text-on-surface-variant">Pick a case to work on. Once you claim it, no other Health Worker can open or change it.</p>
+                @php $uActive = $uFilter['q'] !== '' || $uFilter['cat'] !== '' || $uFilter['type'] !== ''; @endphp
+                <div class="flex items-start justify-between gap-4 mb-6">
+                    <div>
+                        <h2 class="text-xl font-bold tracking-tight text-on-surface">Unclaimed Cases</h2>
+                        <p class="text-sm text-on-surface-variant">Pick a case to work on. Once you claim it, no other Health Worker can open or change it.</p>
+                    </div>
+                    <button type="button" id="unclaimedFilterToggle"
+                        class="shrink-0 px-4 py-2 text-sm font-semibold {{ $uActive ? 'bg-primary text-white' : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-variant' }} rounded-full transition-colors">Filter{{ $uActive ? ' (on)' : '' }}</button>
                 </div>
+                <form method="GET" action="{{ route('healthworker.dashboard') }}#unclaimed" id="unclaimedFilterForm"
+                    class="{{ $uActive ? '' : 'hidden' }} mb-6 grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+                    <div class="md:col-span-5 flex items-center bg-surface-container-low rounded-lg px-3 py-2 border border-outline-variant/20 focus-within:border-primary/40 transition-all">
+                        <span class="material-symbols-outlined text-outline text-[18px]">search</span>
+                        <input type="text" name="uq" value="{{ $uFilter['q'] }}" placeholder="Name, patient ID or queue no..."
+                            class="bg-transparent border-none focus:ring-0 text-sm w-full py-0" />
+                    </div>
+                    <select name="ucat" class="md:col-span-2 bg-surface-container-low border border-outline-variant/20 rounded-lg text-sm px-3 py-2.5">
+                        <option value="">All categories</option>
+                        @foreach(['III', 'II', 'I'] as $c)
+                        <option value="{{ $c }}" {{ $uFilter['cat'] === $c ? 'selected' : '' }}>Category {{ $c }}</option>
+                        @endforeach
+                    </select>
+                    <select name="utype" class="md:col-span-2 bg-surface-container-low border border-outline-variant/20 rounded-lg text-sm px-3 py-2.5">
+                        <option value="">New &amp; returning</option>
+                        <option value="new" {{ $uFilter['type'] === 'new' ? 'selected' : '' }}>New exposure</option>
+                        <option value="returning" {{ $uFilter['type'] === 'returning' ? 'selected' : '' }}>Returning</option>
+                    </select>
+                    <div class="md:col-span-3 flex items-center justify-end gap-2">
+                        <a href="{{ route('healthworker.dashboard') }}#unclaimed" class="px-3 py-2 text-xs font-bold text-slate-500 hover:text-on-surface rounded-lg transition-colors">Clear</a>
+                        <button type="submit" class="px-4 py-2 text-xs font-bold text-white bg-primary hover:bg-primary-container rounded-lg transition-colors">Apply</button>
+                    </div>
+                </form>
+                <script>
+                    document.getElementById('unclaimedFilterToggle').addEventListener('click', function () {
+                        document.getElementById('unclaimedFilterForm').classList.toggle('hidden');
+                    });
+                </script>
                 <div class="overflow-x-auto no-scrollbar">
                     <table class="w-full min-w-[520px] text-left">
                         <thead>
@@ -474,7 +508,7 @@
                         </tbody>
                     </table>
                     @if($unclaimed->isEmpty())
-                    <p class="text-sm text-on-surface-variant text-center py-10">No unclaimed cases right now.</p>
+                    <p class="text-sm text-on-surface-variant text-center py-10">{{ $uActive ? 'No unclaimed cases match your filter.' : 'No unclaimed cases right now.' }}</p>
                     @endif
                 </div>
                 @if($unclaimed->hasPages())

@@ -165,7 +165,7 @@
                 <!-- Status/Live indicator moved or kept subtle -->
                 <a href="{{ route('patient.new-patient') }}" class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold shadow-sm hover:shadow-md hover:bg-primary/90 transition-all active:scale-95 mr-2">
                     <span class="material-symbols-outlined text-[20px]" data-icon="person_add">person_add</span>
-                    <span>Register New Patient</span>
+                    <span class="hidden sm:inline">Register New Patient</span>
                 </a>
 
                 <!--  total of pending priority and normal queue items -->

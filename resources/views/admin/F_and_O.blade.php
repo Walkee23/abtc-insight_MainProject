@@ -241,7 +241,7 @@
                         </p>
                         @endif
                     </div>
-                    <div class="flex items-end gap-6">
+                    <div class="flex flex-wrap items-end gap-4 md:gap-6">
                     <form method="GET" action="{{ route('admin.forecasting') }}" class="flex flex-col items-end gap-2">
                         <input type="hidden" name="period" value="{{ $period }}" />
                         @foreach(array_filter($params, fn ($v, $k) => $v !== $defaults[$k], ARRAY_FILTER_USE_BOTH) as $paramKey => $paramValue)

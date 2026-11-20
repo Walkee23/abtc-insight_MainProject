@@ -217,9 +217,9 @@
         </div>
     </header>
     <main class="ml-64 pt-16 min-h-screen bg-surface">
-        <div class="max-w-[1600px] mx-auto p-8 flex gap-8">
-            <section class="w-1/3 flex flex-col gap-6">
-                <div class="bg-surface-container-low rounded-xl p-6 flex flex-col h-[calc(100vh-12rem)]">
+        <div class="max-w-[1600px] mx-auto p-8 flex flex-col lg:flex-row gap-8">
+            <section class="w-full lg:w-1/3 flex flex-col gap-6">
+                <div class="bg-surface-container-low rounded-xl p-6 flex flex-col h-80 lg:h-[calc(100vh-12rem)]">
                     <div class="flex items-center justify-between mb-6">
                         <h2 class="text-lg font-bold tracking-tight text-on-surface leading-tight">Pending Encoding<br>Queue</h2>
                         <span class="px-2.5 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full whitespace-nowrap shrink-0">{{ $queue->count() }} Active</span>
@@ -258,7 +258,7 @@
                     </div>
                 </div>
             </section>
-            <section class="w-2/3 min-w-0 flex flex-col gap-6">
+            <section class="w-full lg:w-2/3 min-w-0 flex flex-col gap-6">
                 @if(session('status'))
                 {{-- Toast: fixed bottom-right (below the form card, so it never overlaps the footer buttons), auto-dismisses after 4s --}}
                 <div id="statusToast" role="status"
@@ -272,7 +272,7 @@
                 </div>
                 @endif
                 <div
-                    class="bg-surface-container-lowest rounded-xl shadow-lg shadow-blue-900/5 overflow-hidden border border-outline-variant/10 flex flex-col h-[calc(100vh-12rem)]">
+                    class="bg-surface-container-lowest rounded-xl shadow-lg shadow-blue-900/5 overflow-hidden border border-outline-variant/10 flex flex-col min-h-[14rem] h-auto lg:h-[calc(100vh-12rem)]">
                     @if($case)
                     <!-- Form Header & Step Indicator -->
                     <div class="bg-surface-container-low border-b border-outline-variant/20">
@@ -381,7 +381,7 @@
                                     <h3 class="text-sm font-extrabold uppercase tracking-widest text-on-surface-variant">
                                         Immunization Schedule</h3>
                                 </div>
-                                <div class="grid grid-cols-[1fr_auto_auto] gap-6 mb-8">
+                                <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-6 mb-8">
                                     <div>
                                         <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Vaccine Brand <span class="text-error">*</span></label>
                                         {!! $dropdown('vaccine_brand', ['VERORAB' => 'VERORAB (PVRV)', 'SPEEDA' => 'SPEEDA (PVRV)', 'VAXIRAB' => 'VAXIRAB (PCEC)', 'ABHAYRAB' => 'ABHAYRAB (PVRV)']) !!}
@@ -412,7 +412,7 @@
                                             placeholder="Logged-in health worker" />
                                     </div>
                                 </div>
-                                <div class="grid grid-cols-2 gap-6 mb-8">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
                                     <div class="bg-surface-container-low rounded-xl p-5">
                                         <p class="text-xs font-extrabold text-outline uppercase tracking-widest mb-3">Tetanus
                                             Prophylaxis</p>
@@ -462,7 +462,7 @@
                                 <div class="bg-surface-container-low rounded-xl p-6 mb-8">
                                     <p class="text-xs font-extrabold text-outline uppercase tracking-widest mb-4">Passive
                                         Immunization (Rabies)</p>
-                                    <div class="grid grid-cols-2 gap-6">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                         <div>
                                             <label
                                                 class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Type</label>

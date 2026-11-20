@@ -268,7 +268,7 @@
                 <!-- Right Column: Encoding Form -->
                 <div class="lg:col-span-9">
                     <div class="bg-surface-container-lowest rounded-lg shadow-sm border border-outline-variant/10">
-                        <div class="p-6 border-b border-surface-container-high flex items-center justify-between bg-primary/5 sticky top-16 z-20 backdrop-blur-sm">
+                        <div class="p-6 border-b border-surface-container-high flex items-center justify-between bg-primary/5 lg:sticky lg:top-16 z-20 backdrop-blur-sm">
                             <div>
                                 <h3 class="text-lg font-bold text-primary">Animal Bite Case Encoding Form</h3>
                                 <p class="text-xs text-on-surface-variant">
@@ -411,7 +411,7 @@
                                         <textarea class="w-full bg-surface-container-highest border-none rounded-lg text-sm px-4 py-3 focus:ring-2 focus:ring-primary/20 transition-all outline-none resize-none" name="circumstances" placeholder="Brief description of the incident..." rows="3">{{ $s3->circumstances ?? '' }}</textarea>
                                     </div>
 
-                                    <div class="md:col-span-2 grid grid-cols-2 gap-8">
+                                    <div class="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-8">
                                         <div class="space-y-4">
                                             <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Fate of Animal</label>
                                             <div class="grid grid-cols-2 gap-2">

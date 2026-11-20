@@ -247,7 +247,7 @@
             @endif
           </div>
         </form>
-        <div class="flex gap-2">
+        <div class="flex flex-wrap gap-2">
           @foreach(['all' => 'All Patients', 'active' => 'Active PEP', 'completed' => 'Completed'] as $key => $label)
           <a href="{{ route('healthworker.patient-database', array_filter(['q' => $search, 'status' => $key === 'all' ? null : $key, 'scope' => $scope === 'mine' ? 'mine' : null])) }}"
             class="px-4 py-2 text-sm font-semibold rounded-full transition-colors {{ $status === $key ? 'bg-primary text-on-primary shadow-sm' : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-variant' }}">{{ $label }}</a>

@@ -427,9 +427,9 @@
 
                     <div class="flex items-center justify-between pt-6 border-t border-outline-variant/10">
                         <div class="flex items-center gap-2 text-sm text-on-surface-variant">
-                            <span class="material-symbols-outlined text-primary text-lg">info</span>
-                            Showing <strong class="text-on-surface">{{ number_format($totalBites ?? 0) }} bite cases</strong> matching current filters 
-                            <span class="mx-1 text-outline">•</span> {{ number_format($uniquePatients ?? 0) }} unique patients
+                            <span class="material-symbols-outlined text-primary text-lg shrink-0">info</span>
+                            <span>Showing <strong class="text-on-surface">{{ number_format($totalBites ?? 0) }} bite cases</strong> matching current filters
+                            <span class="mx-1 text-outline">•</span> {{ number_format($uniquePatients ?? 0) }} unique patients</span>
                         </div>
                         <div class="flex gap-3">
                             <a href="{{ route('admin.analytics') }}" class="px-6 py-2 border border-outline-variant text-on-surface-variant font-semibold rounded-lg hover:bg-surface-container-low transition-colors text-center">Reset All</a>

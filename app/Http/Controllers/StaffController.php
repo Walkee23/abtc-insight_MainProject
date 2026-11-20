@@ -55,7 +55,96 @@ class StaffController extends Controller
             $selectedPatient = $normalQueue->first();
         }
 
-        return view('staff.Patient_Verification', compact('priorityQueue', 'normalQueue', 'search', 'selectedPatient'));
+        // BHW referrals still waiting for the patient to arrive (listed in their own section of the page)
+        $bhwReferrals = DB::table('bhw_referral_info')
+            ->leftJoin('bhw_referral_exposure', 'bhw_referral_info.referral_id', '=', 'bhw_referral_exposure.referral_id')
+            ->where('bhw_referral_info.status', 'Pending')
+            ->when($search, function ($q) use ($search) {
+                $q->where(function ($w) use ($search) {
+                    $w->where('bhw_referral_info.patient_name', 'LIKE', "%{$search}%")
+                        ->orWhere('bhw_referral_info.reference_no', 'LIKE', "%{$search}%");
+                });
+            })
+            ->select('bhw_referral_info.*', 'bhw_referral_exposure.exposure_category')
+            ->orderBy('bhw_referral_info.submitted_at')
+            ->get();
+
+        return view('staff.Patient_Verification', compact('priorityQueue', 'normalQueue', 'search', 'selectedPatient', 'bhwReferrals'));
+    }
+
+    /**
+     * "Verify Attendance & Transfer" on a pending BHW referral: the referred patient is at the
+     * counter, so Staff skip the self-registration queue. The walk-in record is created already
+     * Verified (carrying the referral code, which Case Encoding uses to link the bite case), the
+     * permanent patients row is created, and the referral is marked Received so the code cannot
+     * be used a second time. The bite case itself is created later, in Case Encoding.
+     */
+    public function verifyBhwReferral(int $referral_id)
+    {
+        return DB::transaction(function () use ($referral_id) {
+            $referral = DB::table('bhw_referral_info')
+                ->where('referral_id', $referral_id)
+                ->where('status', 'Pending')
+                ->lockForUpdate()
+                ->first();
+
+            if (!$referral) {
+                return back()->withErrors(['error' => 'Referral not found or already processed.']);
+            }
+
+            $isPriority = !in_array(strtolower((string) ($referral->priority_status ?? 'none')), ['', 'none'], true);
+            $prefix = $isPriority ? 'P' : 'N';
+            $queueDate = now()->toDateString();
+
+            $maxSeq = DB::table('inflow_general_particulars')
+                ->where('queue_date', $queueDate)
+                ->where('queue_id', 'LIKE', $prefix . '%')
+                ->lockForUpdate()
+                ->selectRaw('MAX(CAST(SUBSTRING(queue_id, 2) AS UNSIGNED)) as m')
+                ->value('m');
+            $queueId = $prefix . ((int) $maxSeq + 1);
+
+            $inflowId = DB::table('inflow_general_particulars')->insertGetId([
+                'queue_id'          => $queueId,
+                'queue_date'        => $queueDate,
+                'bhw_referral_id'   => $referral->reference_no,
+                'patient_name'      => $referral->patient_name,
+                'age'               => $referral->age,
+                'sex'               => ucfirst(strtolower((string) $referral->gender)),
+                'date_of_birth'     => $referral->date_of_birth,
+                'civil_status'      => $referral->civil_status,
+                'contact_num'       => $referral->contact_num,
+                'barangay'          => $referral->patient_barangay,
+                'philhealth_member' => 0,
+                'reg_date'          => now(),
+                'status'            => 'Verified',
+            ], 'inflow_record_id');
+
+            $regDate = now()->format('Ymd');
+            $dob = \Carbon\Carbon::parse($referral->date_of_birth)->format('Ymd');
+            $count = DB::table('patients')->where('patient_id', 'LIKE', "CEB-{$regDate}-{$dob}-%")->count();
+            $patientId = "CEB-{$regDate}-{$dob}-" . str_pad((string) ($count + 1), 3, '0', STR_PAD_LEFT);
+
+            DB::table('patients')->insert([
+                'patient_id'        => $patientId,
+                'inflow_record_id'  => $inflowId,
+                'date_registered'   => now(),
+                'patient_name'      => $referral->patient_name,
+                'age'               => $referral->age,
+                'sex'               => ucfirst(strtolower((string) $referral->gender)),
+                'date_of_birth'     => $referral->date_of_birth,
+                'civil_status'      => $referral->civil_status,
+                'contact_num'       => $referral->contact_num,
+                'philhealth_member' => 0,
+            ]);
+
+            DB::table('bhw_referral_info')
+                ->where('referral_id', $referral->referral_id)
+                ->update(['status' => 'Received', 'updated_at' => now()]);
+
+            return redirect()->route('staff.patient-verification')
+                ->with('success', 'Referral verified. The patient is now in Case Encoding.');
+        });
     }
 
     public function verifyAttendance(string $inflow_record_id)

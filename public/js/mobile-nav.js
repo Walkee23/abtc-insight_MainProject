@@ -49,6 +49,10 @@
     }
 
     function addHamburger() {
+        // the top bar's brand name is only a repeat of the sidebar's: it makes room on a phone
+        document.querySelectorAll('header h1').forEach(function (h) {
+            if (!aside.contains(h) && /ABTC/i.test(h.textContent)) h.classList.add('mn-hide-sm');
+        });
         var bar = findTopBar();
         if (!bar) {
             document.body.classList.add('mn-has-fab');
@@ -110,10 +114,24 @@
         });
     }
 
+    // Line charts are drawn on a 1000px-wide canvas: squeezed into a phone their labels become
+    // unreadable, so they keep a readable width and scroll sideways inside their card instead
+    function wrapCharts() {
+        if (!MOBILE.matches) return;
+        document.querySelectorAll('[style*="aspect-ratio: 1000 / 340"]').forEach(function (c) {
+            var p = c.parentElement;
+            if (!p || p.classList.contains('mn-chart-scroll')) return;
+            var wrap = document.createElement('div');
+            wrap.className = 'mn-chart-scroll';
+            p.insertBefore(wrap, c);
+            wrap.appendChild(c);
+        });
+    }
+
     var pending = null;
     function scheduleWrap() {
         if (pending) return;
-        pending = setTimeout(function () { pending = null; wrapTables(); }, 120);
+        pending = setTimeout(function () { pending = null; wrapTables(); wrapCharts(); }, 120);
     }
 
     // ---- start ------------------------------------------------------------------------
@@ -136,8 +154,9 @@
 
         syncCollapsed();
         wrapTables();
+        wrapCharts();
 
-        var onChange = function () { syncCollapsed(); wrapTables(); };
+        var onChange = function () { syncCollapsed(); wrapTables(); wrapCharts(); };
         if (MOBILE.addEventListener) MOBILE.addEventListener('change', onChange);
         else if (MOBILE.addListener) MOBILE.addListener(onChange);
 

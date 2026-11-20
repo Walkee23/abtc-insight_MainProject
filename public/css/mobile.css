@@ -110,6 +110,12 @@
   [class*="ml-64"], [class*="ml-72"] { margin-left: 0 !important; }
   [class*="pl-72"] { padding-left: 0 !important; }
 
+  /* the content column of a side-by-side page may shrink below its widest child instead of widening the page */
+  main { min-width: 0; max-width: 100%; }
+
+  /* bars pinned to the screen edge were offset by the sidebar width */
+  [class*="left-72"], [class*="left-64"] { left: 0 !important; }
+
   /* the BHW header is sized to "everything right of the sidebar" */
   header.fixed.right-0 { left: 0 !important; width: 100% !important; }
 
@@ -121,6 +127,12 @@
     -webkit-overflow-scrolling: touch;
   }
   .mn-table-scroll > table { min-width: 36rem; }
+
+  .mn-chart-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .mn-chart-scroll > * { min-width: 640px; }
+
+  /* some top bars repeat the brand and are hidden under the desktop sidebar: show it on a phone */
+  header [style*="visibility: hidden"] { visibility: visible !important; }
 
   /* images, svgs and charts never push the page wider than the screen */
   main img, main canvas { max-width: 100%; height: auto; }
@@ -141,11 +153,22 @@
   }
   main[class*="pb-12"], main[class*="pb-20"] { padding-bottom: 2rem !important; }
 
+  /* generous desktop padding inside pages and cards */
+  .p-8:not(aside *), .p-10:not(aside *), .p-12:not(aside *) { padding: 1.25rem !important; }
+  .px-8:not(aside *), .px-10:not(aside *), .px-12:not(aside *) { padding-left: 1rem !important; padding-right: 1rem !important; }
+
+  /* rows with something on the left and something on the right wrap instead of overflowing
+     (the top bar and the sidebar keep their single line) */
+  .flex.justify-between:not(.flex-col):not(.flex-nowrap):not(header):not(header *):not(aside *) { flex-wrap: wrap; row-gap: .75rem; }
+
   /* 12-column desktop grids stack, 3-6 column ones become 2 */
   .grid.grid-cols-12 > * { grid-column: 1 / -1 !important; }
   .grid.grid-cols-3, .grid.grid-cols-4, .grid.grid-cols-5, .grid.grid-cols-6 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  /* form sections indented for the step badge on desktop use the full width on a phone */
+  main div[class~="pl-11"] { padding-left: 0 !important; }
 
   /* headline sizes */
   main h1[class*="text-4xl"], main h1[class*="text-5xl"], main h2[class*="text-4xl"] { font-size: 1.75rem; line-height: 2rem; }
@@ -154,6 +177,21 @@
   /* fixed-width search boxes and filters fit the screen */
   header [class*="w-96"], header [class*="w-80"], header [class*="max-w-xl"] { max-width: 100%; }
   header form[class*="w-"], header .relative[class*="w-"] { min-width: 0; }
+
+  /* top bar: brand name is dropped (the logo stays) and spacing tightens so the profile always fits */
+  header .mn-hide-sm { display: none; }
+  header [class*="gap-4"], header [class*="gap-6"], header [class*="gap-8"] { gap: .5rem !important; }
+  header [class*="ml-12"], header [class*="ml-8"] { margin-left: .5rem !important; }
+
+  /* search boxes in the top bar take the space that is left instead of a fixed width */
+  header > div:first-child { min-width: 0; flex: 1 1 auto; }
+  header form.relative, header form[class*="max-w"], header div.relative.flex-1 { flex: 1 1 auto; min-width: 0; max-width: 100%; }
+  header input[class*="w-72"], header input[class*="w-64"], header input[class*="w-80"], header input[class*="w-96"] { width: 100% !important; min-width: 0; }
+
+  /* the profile name/role beside the avatar stays on one line (cut with ...) so the avatar is never pushed off */
+  header .text-right { max-width: 5.5rem; min-width: 0; }
+  header .text-right > * { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  header [class*="flex-1"] { min-width: 0; }
 
   /* the header's text blocks give way before the buttons do */
   header .truncate, header p { min-width: 0; }
@@ -165,5 +203,5 @@
   #statusToast, #claimErrorToast { left: 1rem; right: 1rem; max-width: none; }
 
   /* touch-sized controls */
-  main button, main select, main input:not([type="checkbox"]):not([type="radio"]) { min-height: 2.5rem; }
+  main select, main input:not([type="checkbox"]):not([type="radio"]) { min-height: 2.5rem; }
 }

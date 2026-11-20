@@ -303,8 +303,8 @@
                     </div>
                     <div class="md:col-span-12 space-y-2">
                         <label class="text-xs font-semibold text-on-surface-variant ml-1">Address (Barangay) <span class="text-error">*</span></label>
-                        <div class="flex gap-4">
-                            <input type="text" class="w-48 bg-surface-container border-none rounded-lg px-4 py-3 font-semibold text-primary" value="{{ auth()->user()->barangay_assignment ?? 'Guadalupe' }}" readonly />
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <input type="text" class="w-full sm:w-48 bg-surface-container border-none rounded-lg px-4 py-3 font-semibold text-primary" value="{{ auth()->user()->barangay_assignment ?? 'Guadalupe' }}" readonly />
                             <input type="text" name="street_address" class="flex-1 bg-surface-container-highest border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20" placeholder="Street, Sitio, or Landmark" required />
 
                         </div>

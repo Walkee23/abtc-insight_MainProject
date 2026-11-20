@@ -358,11 +358,11 @@
                     </div>
                 </div>
                 <div class="overflow-x-auto no-scrollbar">
-                    <table class="w-full min-w-[520px] text-left">
+                    <table class="w-full sm:min-w-[520px] text-left">
                         <thead>
                             <tr
                                 class="text-[11px] uppercase tracking-widest text-slate-400 font-bold border-b border-surface-container-low">
-                                <th class="pb-4 pl-4 pr-5 font-bold whitespace-nowrap">Queue No.</th>
+                                <th class="hidden sm:table-cell pb-4 pl-4 pr-5 font-bold whitespace-nowrap">Queue No.</th>
                                 <th class="pb-4 pr-5 font-bold whitespace-nowrap">Patient Name</th>
                                 <th class="pb-4 pr-5 font-bold whitespace-nowrap">Priority</th>
                                 <th class="pb-4 text-right pr-4 font-bold whitespace-nowrap">Action</th>
@@ -382,7 +382,7 @@
                             @endphp
                             <tr class="queue-row group hover:bg-surface/50 transition-colors"
                                 data-export="{{ json_encode([$row->queue_id ?? '', $row->patient_name, $row->patient_id, $caseInfo, 'Cat ' . $row->category, $priority, $row->encoding_status]) }}">
-                                <td class="py-5 pl-4 pr-5 align-middle">
+                                <td class="hidden sm:table-cell py-5 pl-4 pr-5 align-middle">
                                     <span
                                         class="inline-block whitespace-nowrap text-sm font-bold {{ $priority === 'Urgent' ? 'text-blue-700 bg-blue-50' : 'text-slate-600 bg-slate-100' }} px-3 py-1 rounded-lg">{{ $row->queue_id ?? '—' }}</span>
                                 </td>
@@ -482,10 +482,10 @@
                     });
                 </script>
                 <div class="overflow-x-auto no-scrollbar">
-                    <table class="w-full min-w-[520px] text-left">
+                    <table class="w-full sm:min-w-[520px] text-left">
                         <thead>
                             <tr class="text-[11px] uppercase tracking-widest text-slate-400 font-bold border-b border-surface-container-low">
-                                <th class="pb-4 pl-4 pr-5 font-bold whitespace-nowrap">Queue No.</th>
+                                <th class="hidden sm:table-cell pb-4 pl-4 pr-5 font-bold whitespace-nowrap">Queue No.</th>
                                 <th class="pb-4 pr-5 font-bold whitespace-nowrap">Patient Name</th>
                                 <th class="pb-4 text-right pr-4 font-bold whitespace-nowrap">Action</th>
                             </tr>
@@ -494,7 +494,7 @@
                             @foreach($unclaimed as $u)
                             @php $uInfo = $u->return_dose_day ? 'Returning · Day ' . $u->return_dose_day . ' dose' : ($u->case_number > 1 ? 'Returning Case #' . $u->case_number : 'New Exposure'); @endphp
                             <tr class="hover:bg-surface/50 transition-colors">
-                                <td class="py-5 pl-4 pr-5 align-middle">
+                                <td class="hidden sm:table-cell py-5 pl-4 pr-5 align-middle">
                                     <span class="inline-block whitespace-nowrap text-sm font-bold {{ $u->category === 'III' ? 'text-blue-700 bg-blue-50' : 'text-slate-600 bg-slate-100' }} px-3 py-1 rounded-lg">{{ $u->return_dose_day ? '—' : ($u->queue_id ?? '—') }}</span>
                                 </td>
                                 <td class="py-5 pr-5 align-middle">

@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class PepComplianceController extends Controller
@@ -26,56 +27,83 @@ class PepComplianceController extends Controller
         // "mine" (default): the cards and table cover only the doses of the cases assigned to
         // the logged-in health worker; "all" is the whole facility, read-only
         $scope = $request->query('scope') === 'all' ? 'all' : 'mine';
-        $allDoses = $this->doses();
-        $doses = $scope === 'mine' ? $allDoses->where('mine', true)->values() : $allDoses;
+
+        // Everything below is computed by the database. The doses of tens of thousands of cases are
+        // never loaded into PHP at once: only the 10 rows of the current page are.
+        $doses = fn () => $this->doses($scope === 'mine');
 
         // --- Summary cards --------------------------------------------------
-        $completed = $doses->filter(fn ($d) => str_starts_with($d->status, 'Completed'))->count();
-        $onTime = $doses->where('status', 'Completed On Time')->count();
-        $missed = $doses->where('status', 'Missed')->count();
-        $tomorrow = $this->today()->copy()->addDay();
-        $dueSoon = $doses->where('status', 'Pending')
-            ->filter(fn ($d) => $d->scheduled->lte($tomorrow))->count();
+        $tomorrow = $this->today()->copy()->addDay()->toDateString();
+        $agg = $doses()->selectRaw(
+            "COALESCE(SUM(x.status LIKE 'Completed%'), 0) as completed,
+             COALESCE(SUM(x.status = 'Completed On Time'), 0) as on_time,
+             COALESCE(SUM(x.status = 'Missed'), 0) as missed,
+             COALESCE(SUM(x.status = 'Pending' AND x.scheduled <= ?), 0) as due_soon",
+            [$tomorrow]
+        )->first();
+        $completed = (int) $agg->completed;
+        $onTime = (int) $agg->on_time;
+        $missed = (int) $agg->missed;
 
         $stats = [
             'completion' => ($completed + $missed) > 0 ? round($completed / ($completed + $missed) * 100, 1) : null,
             'on_time_pct' => $completed > 0 ? (int) round($onTime / $completed * 100) : null,
             'missed' => $missed,
-            'due_soon' => $dueSoon,
+            'due_soon' => (int) $agg->due_soon,
         ];
 
         // --- Tracking table: needs-attention first ---------------------------
-        $rows = $doses->filter(function ($d) use ($status, $search) {
-            if ($status === 'pending' && $d->status !== 'Pending') return false;
-            if ($status === 'missed' && $d->status !== 'Missed') return false;
-            if ($status === 'completed' && !str_starts_with($d->status, 'Completed')) return false;
-            $hay = mb_strtolower($d->patient_name . ' ' . $d->patient_id . ' ' . $d->dose_label . ' ' . $d->label . ' ' . $d->barangay);
-            foreach (preg_split('/\s+/', mb_strtolower($search), -1, PREG_SPLIT_NO_EMPTY) as $term) {
-                if (!str_contains($hay, $term)) return false;
-            }
-            return true;
-        })->sort(function ($a, $b) {
-            $rank = ['Missed' => 0, 'Pending' => 1, 'Completed Late' => 2, 'Completed On Time' => 2];
-            return [$rank[$a->status], $a->status === 'Missed' || $a->status === 'Pending' ? $a->scheduled->timestamp : -$a->scheduled->timestamp]
-                <=> [$rank[$b->status], $b->status === 'Missed' || $b->status === 'Pending' ? $b->scheduled->timestamp : -$b->scheduled->timestamp];
-        })->values();
+        $rows = $doses();
+        if ($status === 'pending') {
+            $rows->where('x.status', 'Pending');
+        } elseif ($status === 'missed') {
+            $rows->where('x.status', 'Missed');
+        } elseif ($status === 'completed') {
+            $rows->where('x.status', 'like', 'Completed%');
+        }
+        foreach (preg_split('/\s+/', mb_strtolower($search), -1, PREG_SPLIT_NO_EMPTY) as $term) {
+            $rows->whereRaw(
+                "LOWER(CONCAT_WS(' ', x.patient_name, x.patient_id, CONCAT('Dose ', x.dose_no, ' (D', x.day_no, ')'), x.label, x.barangay)) LIKE ?",
+                ['%' . addcslashes($term, '%_\\') . '%']
+            );
+        }
+        $rank = "CASE x.status WHEN 'Missed' THEN 0 WHEN 'Pending' THEN 1 ELSE 2 END";
+        $tracking = $rows
+            ->orderByRaw($rank)
+            ->orderByRaw("CASE WHEN {$rank} < 2 THEN x.scheduled END ASC")
+            ->orderByRaw("CASE WHEN {$rank} = 2 THEN x.scheduled END DESC")
+            ->orderBy('x.bite_case_id')
+            ->orderBy('x.day_no')
+            ->paginate(10)
+            ->withQueryString();
 
-        $perPage = 10;
-        $page = max(1, (int) $request->query('page', 1));
-        $tracking = new LengthAwarePaginator(
-            $rows->forPage($page, $perPage)->values(), $rows->count(), $perPage, $page,
-            ['path' => $request->url(), 'query' => $request->query()]
-        );
+        $tracking->getCollection()->transform(function ($d) {
+            $d->scheduled = Carbon::parse($d->scheduled)->startOfDay();
+            $d->actual = $d->actual ? Carbon::parse($d->actual)->startOfDay() : null;
+            $d->dose_label = 'Dose ' . $d->dose_no . ' (D' . $d->day_no . ')';
+            $d->mine = Auth::id() !== null && (int) $d->assigned_health_worker_id === (int) Auth::id();
+            return $d;
+        });
 
         // --- Performance by barangay (completed vs. completed + missed) ------
         // Always facility-wide: comparing barangays only makes sense across every case
-        $barangays = $allDoses->groupBy('barangay')->map(function ($group, $name) {
-            $done = $group->filter(fn ($d) => str_starts_with($d->status, 'Completed'))->count();
-            $miss = $group->where('status', 'Missed')->count();
+        // It scans every dose of every case, so it is worked out once and kept for 10 minutes.
+        $groups = Cache::remember('pep.barangay-performance.' . $this->today()->toDateString(), 600, function () {
+            return $this->doses(false)->groupBy('x.barangay')
+                ->selectRaw("x.barangay, SUM(x.status LIKE 'Completed%') as done, SUM(x.status = 'Missed') as miss")
+                ->get()->map(fn ($g) => ['barangay' => $g->barangay, 'done' => (int) $g->done, 'miss' => (int) $g->miss])->all();
+        });
+        $byBarangay = [];
+        foreach ($groups as $g) {
+            $name = $g['barangay'] ?: 'Unknown';
+            $byBarangay[$name]['done'] = ($byBarangay[$name]['done'] ?? 0) + $g['done'];
+            $byBarangay[$name]['miss'] = ($byBarangay[$name]['miss'] ?? 0) + $g['miss'];
+        }
+        $barangays = collect($byBarangay)->map(function ($g, $name) {
             return (object) [
-                'name' => $name ?: 'Unknown',
-                'pct' => ($done + $miss) > 0 ? (int) round($done / ($done + $miss) * 100) : null,
-                'doses' => $done + $miss,
+                'name' => $name,
+                'pct' => ($g['done'] + $g['miss']) > 0 ? (int) round($g['done'] / ($g['done'] + $g['miss']) * 100) : null,
+                'doses' => $g['done'] + $g['miss'],
             ];
         })->filter(fn ($b) => $b->pct !== null)->sortByDesc('pct')->values()->take(12);
 
@@ -87,20 +115,28 @@ class PepComplianceController extends Controller
     /** Compliance report as CSV: the same scope as the page (mine by default, or all). */
     public function export(Request $request)
     {
-        $doses = $this->doses();
-        if ($request->query('scope') !== 'all') {
-            $doses = $doses->where('mine', true);
-        }
-        $doses = $doses->sortBy(fn ($d) => [$d->patient_name, $d->scheduled->timestamp])->values();
+        $mine = $request->query('scope') !== 'all';
 
-        return response()->streamDownload(function () use ($doses) {
+        return response()->streamDownload(function () use ($mine) {
             $out = fopen('php://output', 'w');
             fputcsv($out, ['Patient Name', 'Patient ID', 'Barangay', 'Case No.', 'Dose', 'Label', 'Scheduled Date', 'Actual Date', 'Status']);
-            foreach ($doses as $d) {
-                fputcsv($out, [
-                    $d->patient_name, $d->patient_id, $d->barangay, $d->case_number, $d->dose_label, $d->label,
-                    $d->scheduled->toDateString(), $d->actual ? $d->actual->toDateString() : '', $d->status,
-                ]);
+
+            // Rows are streamed one at a time from the database (unbuffered), so a facility-wide
+            // report of 100,000+ doses never has to fit in memory.
+            $pdo = DB::connection()->getPdo();
+            $pdo->setAttribute(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
+            try {
+                $query = $this->doses($mine)
+                    ->orderBy('x.patient_name')->orderBy('x.scheduled')->orderBy('x.bite_case_id')->orderBy('x.day_no');
+                foreach ($query->cursor() as $d) {
+                    fputcsv($out, [
+                        $d->patient_name, $d->patient_id, $d->barangay, $d->case_number,
+                        'Dose ' . $d->dose_no . ' (D' . $d->day_no . ')', $d->label,
+                        $d->scheduled, $d->actual ?? '', $d->status,
+                    ]);
+                }
+            } finally {
+                $pdo->setAttribute(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, true);
             }
             fclose($out);
         }, 'pep-compliance-report-' . $this->today()->toDateString() . '.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
@@ -112,56 +148,52 @@ class PepComplianceController extends Controller
     }
 
     /**
-     * Every scheduled dose of every case that has a Day 0 date, with its status:
+     * Every scheduled dose of every case that has a Day 0 date, as a query (alias "x") with the
+     * dose's scheduled date, actual date and status worked out in SQL:
      * Completed On Time / Completed Late / Missed / Pending.
+     *
+     * Schedule: Primary D0/D3/D7/(D14 when recorded)/D28, Booster D0/D3. Dose numbers follow
+     * that order. $mine limits it to the cases assigned to the logged-in health worker.
      */
-    private function doses()
+    private function doses(bool $mine)
     {
-        $today = $this->today();
+        // a health worker's own scope is applied inside every slice, so only their cases are ever read
+        $owner = $mine ? (Auth::id() ?? 0) : null;
 
-        $cases = DB::table('bite_cases as bc')
-            ->join('patients as p', 'p.patient_id', '=', 'bc.patient_id')
-            ->join('bite_section7_immunization as s7', 's7.bite_case_id', '=', 'bc.bite_case_id')
-            ->whereNotNull('s7.day0_date')
-            ->get([
-                'bc.bite_case_id', 'bc.case_number', 'bc.category', 'bc.barangay', 'bc.assigned_health_worker_id',
-                'p.patient_id', 'p.patient_name',
-                's7.dose_type', 's7.day0_date', 's7.day3_date', 's7.day7_date', 's7.day14_date', 's7.day28_date',
-            ]);
-
-        $doses = collect();
-        foreach ($cases as $c) {
-            $schedule = $c->dose_type === 'Booster' ? [0, 3] : ($c->day14_date ? [0, 3, 7, 14, 28] : [0, 3, 7, 28]);
-            $label = $c->category === 'III' ? 'High Risk' : ($c->dose_type === 'Booster' ? 'Booster' : 'Standard');
-            $day0 = Carbon::parse($c->day0_date)->startOfDay();
-
-            foreach ($schedule as $i => $day) {
-                $scheduled = $day0->copy()->addDays($day);
-                $actualRaw = $c->{'day' . $day . '_date'};
-                $actual = $actualRaw ? Carbon::parse($actualRaw)->startOfDay() : null;
-
-                if ($actual) {
-                    $status = $actual->lte($scheduled) ? 'Completed On Time' : 'Completed Late';
-                } else {
-                    $status = $scheduled->lt($today) ? 'Missed' : 'Pending';
-                }
-
-                $doses->push((object) [
-                    'bite_case_id' => $c->bite_case_id,
-                    'mine' => Auth::id() !== null && (int) $c->assigned_health_worker_id === (int) Auth::id(),
-                    'case_number' => $c->case_number,
-                    'patient_id' => $c->patient_id,
-                    'patient_name' => $c->patient_name,
-                    'barangay' => $c->barangay,
-                    'dose_label' => 'Dose ' . ($i + 1) . ' (D' . $day . ')',
-                    'label' => $label,
-                    'scheduled' => $scheduled,
-                    'actual' => $actual,
-                    'status' => $status,
-                ]);
+        $slot = function (int $day, string $doseNo, string $only = '') use ($owner) {
+            $q = DB::table('bite_cases as bc')
+                ->join('patients as p', 'p.patient_id', '=', 'bc.patient_id')
+                ->join('bite_section7_immunization as s7', 's7.bite_case_id', '=', 'bc.bite_case_id')
+                ->whereNotNull('s7.day0_date')
+                ->select('bc.bite_case_id', 'bc.case_number', 'bc.category', 'bc.barangay', 'bc.assigned_health_worker_id',
+                    'p.patient_id', 'p.patient_name', 's7.dose_type', 's7.day0_date as day0')
+                ->selectRaw("{$day} as day_no, {$doseNo} as dose_no, s7.day{$day}_date as actual");
+            if ($only !== '') {
+                $q->whereRaw($only);
             }
-        }
+            if ($owner !== null) {
+                $q->where('bc.assigned_health_worker_id', $owner);
+            }
+            return $q;
+        };
+        $primary = "(s7.dose_type IS NULL OR s7.dose_type <> 'Booster')";
 
-        return $doses;
+        $union = $slot(0, '1')
+            ->unionAll($slot(3, '2'))
+            ->unionAll($slot(7, '3', $primary))
+            ->unionAll($slot(14, '4', $primary . ' AND s7.day14_date IS NOT NULL'))
+            ->unionAll($slot(28, 'IF(s7.day14_date IS NOT NULL, 5, 4)', $primary));
+
+        $today = DB::getPdo()->quote($this->today()->toDateString());
+        $scheduled = 'DATE(DATE_ADD(d.day0, INTERVAL d.day_no DAY))';
+
+        $withStatus = DB::query()->fromSub($union, 'd')->selectRaw(
+            "d.*, {$scheduled} as scheduled,
+             CASE WHEN d.actual IS NOT NULL THEN (CASE WHEN d.actual <= {$scheduled} THEN 'Completed On Time' ELSE 'Completed Late' END)
+                  WHEN {$scheduled} < {$today} THEN 'Missed' ELSE 'Pending' END as status,
+             CASE WHEN d.category = 'III' THEN 'High Risk' WHEN d.dose_type = 'Booster' THEN 'Booster' ELSE 'Standard' END as label"
+        );
+
+        return DB::query()->fromSub($withStatus, 'x');
     }
 }

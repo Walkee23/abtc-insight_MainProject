@@ -98,9 +98,14 @@ Route::prefix('admin')->middleware('admin')->group(function () {
     });
 });
 
+        Route::middleware('auth')->group(function () {
+            Route::get('/keep-alive', fn () => response()->noContent())->name('keep-alive');
+        });
+
 // Staff Routes
 Route::prefix('staff')->middleware('auth')->group(function () {
     // ---  Route now directs to StaffController@dashboard instead of inline view ---
+   
     Route::get('/dashboard', [StaffController::class, 'newDashboard'])->name('staff.newdashboard');
     Route::get('/queue', [StaffController::class, 'dashboard'])->name('staff.dashboard');
     Route::post('/staff/call-patient/{inflowRecordId}', [App\Http\Controllers\StaffController::class, 'callPatient'])

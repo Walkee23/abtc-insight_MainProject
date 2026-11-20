@@ -171,5 +171,6 @@
     </section>
     @endif
 </main>
+@include('partials.idle-timeout')
 </body>
 </html>

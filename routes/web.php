@@ -99,7 +99,7 @@ Route::prefix('admin')->middleware('admin')->group(function () {
 });
 
 // Staff Routes
-Route::prefix('staff')->group(function () {
+Route::prefix('staff')->middleware('auth')->group(function () {
     // ---  Route now directs to StaffController@dashboard instead of inline view ---
     Route::get('/dashboard', [StaffController::class, 'newDashboard'])->name('staff.newdashboard');
     Route::get('/queue', [StaffController::class, 'dashboard'])->name('staff.dashboard');

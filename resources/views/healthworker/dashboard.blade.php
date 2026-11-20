@@ -409,14 +409,14 @@
                                     @endif
                                 </td>
                                 <td class="py-5 text-right pr-4 align-middle">
-                                    <div class="inline-flex items-center gap-2">
+                                    <div class="inline-flex flex-col items-end gap-1">
                                     <a href="{{ route('healthworker.clinical-encoding', ['bite_case_id' => $row->bite_case_id]) }}"
                                         class="inline-block whitespace-nowrap text-xs font-bold text-primary hover:bg-primary/5 px-4 py-2 rounded-lg transition-colors border border-primary/10">{{ $row->encoding_status === 'In Progress' ? 'Continue Encoding' : 'Start Encoding' }}</a>
                                     <form method="POST" action="{{ route('healthworker.case.release', ['bite_case_id' => $row->bite_case_id]) }}"
                                         onsubmit="return confirm('Release this case back to the unclaimed pool? Other Health Workers will be able to claim it.')">
                                         @csrf
                                         <button type="submit" title="Release case"
-                                            class="whitespace-nowrap text-xs font-bold text-slate-500 hover:text-error hover:bg-error/5 px-3 py-2 rounded-lg transition-colors">Release</button>
+                                            class="whitespace-nowrap text-xs font-bold text-slate-500 hover:text-error hover:bg-error/5 px-3 py-1 rounded-lg transition-colors">Release</button>
                                     </form>
                                     </div>
                                 </td>

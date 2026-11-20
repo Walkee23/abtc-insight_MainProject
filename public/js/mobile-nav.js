@@ -5,7 +5,6 @@
  *    the dark overlay, a link, or pressing Escape closes it
  *  - the desktop "collapsed sidebar" memory (sidebar-toggle.js) is paused while on a phone so the
  *    drawer always opens at full width, and comes back when the window is wide again
- *  - the logout form is copied into the drawer
  *  - tables that are not already inside a scrolling box get one, so wide tables scroll sideways
  *    inside the card instead of stretching the page
  */
@@ -69,24 +68,6 @@
         }
     }
 
-    function addLogoutToDrawer() {
-        if (aside.querySelector('form[action*="logout"]')) return;
-        var src = document.querySelector('form[action*="logout"]');
-        if (!src) return;
-        var form = src.cloneNode(false);
-        form.innerHTML = '';
-        var token = src.querySelector('input[name="_token"]');
-        if (token) form.appendChild(token.cloneNode());
-        var btn = document.createElement('button');
-        btn.type = 'submit';
-        btn.innerHTML = '<span style="font-size:1.1rem">&#x238B;</span> Log Out';
-        form.appendChild(btn);
-        var foot = document.createElement('div');
-        foot.className = 'mn-drawer-foot';
-        foot.appendChild(form);
-        aside.appendChild(foot);
-    }
-
     // Desktop "collapsed" memory must not shrink the drawer
     function syncCollapsed() {
         var saved = false;
@@ -144,7 +125,6 @@
             document.body.appendChild(overlay);
 
             addHamburger();
-            addLogoutToDrawer();
 
             aside.addEventListener('click', function (e) {
                 if (e.target.closest && e.target.closest('a[href]')) setOpen(false);

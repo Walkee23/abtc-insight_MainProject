@@ -178,17 +178,7 @@
             </div>
             <!-- Right Side Actions (Notifications, Help, Vertical Divider, Profile) -->
             <div class="flex items-center gap-4">
-                <button
-                    class="relative w-9 h-9 flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all rounded-full">
-                    <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
-                    @if(count($reminders))
-                    <span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-slate-50"></span>
-                    @endif
-                </button>
-                <button
-                    class="w-9 h-9 flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all rounded-full">
-                    <span class="material-symbols-outlined" data-icon="help">help</span>
-                </button>
+
                 <div class="h-8 w-[1px] bg-slate-200 dark:bg-slate-800 mx-2"></div>
                 <div class="flex items-center gap-3 cursor-pointer group relative">
                     <div class="text-right hidden lg:block">

@@ -87,6 +87,8 @@
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
     </style>
+    <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
+    <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
 </head>
 
 <body class="bg-surface selection:bg-primary-container selection:text-on-primary-container">

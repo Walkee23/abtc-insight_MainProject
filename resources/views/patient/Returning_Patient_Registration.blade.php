@@ -107,6 +107,8 @@
     }
   </style>
     <script src="{{ asset('js/custom-select.js') }}" defer></script>
+    <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
+    <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
 </head>
 
 <body class="bg-surface text-on-surface min-h-screen flex flex-col">
@@ -140,9 +142,9 @@
     </div>
     <!-- Main Form Card -->
     <div class="w-full max-w-[680px] bg-surface-container-lowest rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.04)] overflow-hidden">
-      <div class="p-8 md:p-12">
+      <div class="p-5 sm:p-8 md:p-12">
         <!-- Header -->
-        <div class="flex justify-between items-start mb-10">
+        <div class="flex flex-wrap justify-between items-start gap-3 mb-10">
           <div>
             <h1 class="text-3xl font-extrabold tracking-tight text-on-surface">Returning Patient</h1>
             <p class="text-on-surface-variant mt-2 text-lg">Check in for your next anti-rabies vaccine dose</p>

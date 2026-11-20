@@ -89,6 +89,8 @@
       }
     }
   </script>
+    <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
+    <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
 </head>
 
 <body class="bg-surface text-on-surface selection:bg-primary-fixed">
@@ -122,7 +124,7 @@
     </div>
     <!-- Registration Form Card -->
     <div
-      class="w-full max-w-[680px] bg-surface-container-lowest rounded-xl shadow-xl border border-outline-variant/30 p-10 overflow-hidden">
+      class="w-full max-w-[680px] bg-surface-container-lowest rounded-xl shadow-xl border border-outline-variant/30 p-5 sm:p-10 overflow-hidden">
       <!-- Card Header -->
       <div class="flex flex-col gap-1 mb-8">
         <div class="flex items-center justify-between">
@@ -139,7 +141,7 @@
           <div
             class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold shadow-lg shadow-primary/20 transition-all"
             id="stepCircle-1">1</div>
-          <span class="text-[10px] uppercase font-bold tracking-tighter text-primary transition-colors"
+          <span class="text-[10px] uppercase font-bold tracking-tighter text-center leading-tight min-h-[25px] sm:min-h-0 max-w-[4.25rem] sm:max-w-none text-primary transition-colors"
             id="stepLabel-1">Priority Status</span>
         </div>
         <div class="flex-1 h-[2px] bg-surface-container-high mx-1 -mt-6 transition-colors" id="stepLine-1"></div>
@@ -147,7 +149,7 @@
           <div
             class="w-8 h-8 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center text-xs font-bold transition-all"
             id="stepCircle-2">2</div>
-          <span class="text-[10px] uppercase font-bold tracking-tighter text-on-surface-variant transition-colors"
+          <span class="text-[10px] uppercase font-bold tracking-tighter text-center leading-tight min-h-[25px] sm:min-h-0 max-w-[4.25rem] sm:max-w-none text-on-surface-variant transition-colors"
             id="stepLabel-2">Personal Info</span>
         </div>
         <div class="flex-1 h-[2px] bg-surface-container-high mx-1 -mt-6 transition-colors" id="stepLine-2"></div>
@@ -155,7 +157,7 @@
           <div
             class="w-8 h-8 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center text-xs font-bold transition-all"
             id="stepCircle-3">3</div>
-          <span class="text-[10px] uppercase font-bold tracking-tighter text-on-surface-variant transition-colors"
+          <span class="text-[10px] uppercase font-bold tracking-tighter text-center leading-tight min-h-[25px] sm:min-h-0 max-w-[4.25rem] sm:max-w-none text-on-surface-variant transition-colors"
             id="stepLabel-3">PhilHealth</span>
         </div>
         <div class="flex-1 h-[2px] bg-surface-container-high mx-1 -mt-6 transition-colors" id="stepLine-3"></div>
@@ -163,7 +165,7 @@
           <div
             class="w-8 h-8 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center text-xs font-bold transition-all"
             id="stepCircle-4">4</div>
-          <span class="text-[10px] uppercase font-bold tracking-tighter text-on-surface-variant transition-colors"
+          <span class="text-[10px] uppercase font-bold tracking-tighter text-center leading-tight min-h-[25px] sm:min-h-0 max-w-[4.25rem] sm:max-w-none text-on-surface-variant transition-colors"
             id="stepLabel-4">Medical History</span>
         </div>
       </div>

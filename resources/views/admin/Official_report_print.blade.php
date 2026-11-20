@@ -3,6 +3,8 @@
 <head>
     <meta charset="utf-8">
     <title>ABTC Comprehensive Official Report</title>
+    <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
+    <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
 </head>
 <body style="font-family: Arial, sans-serif; color: #191c1e; padding: 20px;">
 

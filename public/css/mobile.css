@@ -1,0 +1,169 @@
+/*
+ * ABTC-Insight: phone and tablet layout, shared by every page.
+ *
+ * Pages are written desktop-first with a fixed 16rem sidebar (w-64) and a content margin
+ * (ml-64 / ml-72 / pl-72). Below the lg breakpoint (1024px) this file turns the sidebar into a
+ * slide-in drawer (opened by the hamburger that mobile-nav.js adds), removes the content margin,
+ * tightens padding, and lets wide tables scroll inside their own box instead of the whole page.
+ * Nothing here applies on desktop.
+ */
+
+.mn-toggle,
+.mn-fab,
+.mn-overlay,
+.mn-drawer-foot { display: none; }
+
+@media (max-width: 1023.98px) {
+
+  /* never let one wide element make the whole page scroll sideways */
+  html, body { overflow-x: clip; }
+
+  /* ---- sidebar becomes an off-canvas drawer ------------------------------------------- */
+  aside.fixed.left-0 {
+    width: 17rem !important;
+    max-width: 85vw;
+    height: 100vh;
+    height: 100dvh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    transform: translateX(-100%);
+    transition: transform .25s ease, box-shadow .25s ease;
+    z-index: 80 !important;
+    box-shadow: none;
+  }
+  body.mn-open aside.fixed.left-0 {
+    transform: translateX(0);
+    box-shadow: 0 0 48px rgba(15, 23, 42, .35);
+  }
+  /* the desktop collapse button has no job here: the drawer opens and closes instead */
+  aside .sb-toggle { display: none !important; }
+
+  .mn-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, .45);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s ease;
+    z-index: 70;
+  }
+  body.mn-open .mn-overlay { opacity: 1; pointer-events: auto; }
+  body.mn-open { overflow: hidden; }
+
+  /* ---- hamburger buttons -------------------------------------------------------------- */
+  .mn-toggle {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    margin-right: .5rem;
+    border: 0;
+    border-radius: .625rem;
+    background: transparent;
+    color: #475569;
+    cursor: pointer;
+  }
+  .mn-toggle:hover, .mn-toggle:active { background: rgba(148, 163, 184, .25); color: #004a93; }
+  .mn-toggle svg { width: 1.5rem; height: 1.5rem; }
+
+  /* pages with no top bar get a floating button instead */
+  .mn-fab {
+    display: inline-flex;
+    position: fixed;
+    top: .75rem;
+    left: .75rem;
+    z-index: 60;
+    margin: 0;
+    background: #fff;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, .18);
+  }
+  body.mn-has-fab main { padding-top: 3.75rem; }
+
+  /* logout lives in the drawer, because the header's hover menu is awkward to open on touch */
+  aside .mn-drawer-foot {
+    display: block;
+    margin-top: auto;
+    padding: 1rem 1.5rem 1.5rem;
+    border-top: 1px solid rgba(148, 163, 184, .3);
+  }
+  aside .mn-drawer-foot button {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    width: 100%;
+    padding: .75rem 1rem;
+    border: 0;
+    border-radius: .75rem;
+    background: transparent;
+    color: #dc2626;
+    font-size: .875rem;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+  }
+  aside .mn-drawer-foot button:hover { background: rgba(220, 38, 38, .08); }
+
+  /* ---- content area: no sidebar margin ------------------------------------------------ */
+  [class*="ml-64"], [class*="ml-72"] { margin-left: 0 !important; }
+  [class*="pl-72"] { padding-left: 0 !important; }
+
+  /* the BHW header is sized to "everything right of the sidebar" */
+  header.fixed.right-0 { left: 0 !important; width: 100% !important; }
+
+  /* ---- tables scroll inside their own box --------------------------------------------- */
+  .mn-table-scroll {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .mn-table-scroll > table { min-width: 36rem; }
+
+  /* images, svgs and charts never push the page wider than the screen */
+  main img, main canvas { max-width: 100%; height: auto; }
+}
+
+/* ---- phones --------------------------------------------------------------------------- */
+@media (max-width: 767.98px) {
+
+  /* roomy desktop paddings shrink to a phone gutter (16px) */
+  main[class*="px-"], main[class*="p-8"], main[class*="p-10"], main[class*="p-12"] {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+  header[class*="px-8"], header[class*="px-10"], header[class*="px-12"],
+  header > div[class*="px-8"], header > div[class*="px-10"], header > div[class*="px-12"] {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+  main[class*="pb-12"], main[class*="pb-20"] { padding-bottom: 2rem !important; }
+
+  /* 12-column desktop grids stack, 3-6 column ones become 2 */
+  .grid.grid-cols-12 > * { grid-column: 1 / -1 !important; }
+  .grid.grid-cols-3, .grid.grid-cols-4, .grid.grid-cols-5, .grid.grid-cols-6 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* headline sizes */
+  main h1[class*="text-4xl"], main h1[class*="text-5xl"], main h2[class*="text-4xl"] { font-size: 1.75rem; line-height: 2rem; }
+  main h1[class*="text-3xl"], main h2[class*="text-3xl"] { font-size: 1.5rem; line-height: 2rem; }
+
+  /* fixed-width search boxes and filters fit the screen */
+  header [class*="w-96"], header [class*="w-80"], header [class*="max-w-xl"] { max-width: 100%; }
+  header form[class*="w-"], header .relative[class*="w-"] { min-width: 0; }
+
+  /* the header's text blocks give way before the buttons do */
+  header .truncate, header p { min-width: 0; }
+
+  /* modals and floating panels stay inside the screen */
+  [class*="fixed"][class*="inset-0"] > div[class*="max-w-"] { max-width: calc(100vw - 1.5rem); }
+
+  /* toasts sit above the bottom edge but never wider than the screen */
+  #statusToast, #claimErrorToast { left: 1rem; right: 1rem; max-width: none; }
+
+  /* touch-sized controls */
+  main button, main select, main input:not([type="checkbox"]):not([type="radio"]) { min-height: 2.5rem; }
+}

@@ -97,6 +97,8 @@
             shadow: 0 24px 48px -12px rgba(25, 28, 30, 0.04);
         }
     </style>
+    <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
+    <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
 </head>
 
 <body class="bg-surface selection:bg-primary-container selection:text-on-primary-container">

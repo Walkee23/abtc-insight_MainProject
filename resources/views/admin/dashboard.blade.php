@@ -119,6 +119,8 @@
     </style>
     <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
     <script src="{{ asset('js/custom-select.js') }}" defer></script>
+    <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
+    <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
 </head>
 
 <body class="bg-surface text-on-surface flex min-h-screen">

@@ -55,6 +55,8 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
+    <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
 </head>
 
 <body class="text-slate-900 font-sans antialiased">

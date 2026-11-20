@@ -87,6 +87,8 @@
         }
     </style>
     <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
+    <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
+    <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
 </head>
 <body class="text-on-surface antialiased">
 <!-- SideNavBar -->

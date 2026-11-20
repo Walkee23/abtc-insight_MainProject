@@ -496,17 +496,6 @@
 
                             </section>
 
-                            <section class="space-y-3">
-                                <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Assign to Healthworker <span class="text-error">*</span></label>
-                                <select name="assigned_health_worker_id" class="w-full md:w-1/2 bg-surface-container-highest border-none rounded-lg text-sm px-4 py-2.5 focus:ring-2 focus:ring-primary/20">
-                                    <option value="" selected disabled hidden>--</option>
-                                    @foreach($healthworkers as $hw)
-                                    <option value="{{ $hw->user_id }}">{{ $hw->full_name }}</option>
-                                    @endforeach
-                                </select>
-                                <p class="text-[10px] text-on-surface-variant italic">Required when you click Complete Encoding.</p>
-                            </section>
-
                             <!-- Form Submission -->
                             <div class="pt-8 border-t border-surface-container-high flex justify-end gap-4">
                                 <button type="button" class="px-8 py-3 text-sm font-bold text-secondary bg-surface-container-low rounded-full hover:bg-surface-container-high transition-all">Cancel Entry</button>

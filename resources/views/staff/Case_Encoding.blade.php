@@ -640,9 +640,8 @@
             if (othersChecked) animalOtherInput.required = true;
         });
     </script>
-</body>
 
-                    <!-- My Profile Modal -->
+             <!-- My Profile Modal -->
                 @php
                     $user = Auth::user();
 
@@ -765,5 +764,8 @@
                         if (e.key === 'Escape') closeProfileModal();
                     });
                 </script>
+
+                @include('partials.idle-timeout')
+    </body>
 
 </html>

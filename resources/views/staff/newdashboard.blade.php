@@ -528,5 +528,6 @@
         if (e.key === 'Escape') closeProfileModal();
     });
 </script>
+@include('partials.idle-timeout')
 </body>
 </html>

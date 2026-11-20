@@ -586,6 +586,8 @@
             });
         </script>
 
-</body>
+        @include('partials.idle-timeout')
+
+    </body>
 
 </html>

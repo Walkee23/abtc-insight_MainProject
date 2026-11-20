@@ -130,13 +130,7 @@
         </nav>
     </aside>
 
-    <div class="mt-auto px-4 pb-4">
-        <a href="{{ route('bhw.dashboard') }}" class="w-full py-4 bg-primary text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:bg-primary-container transition-all">
-            <span class="material-symbols-outlined">arrow_back</span>
-            <span class="text-sm">Back to Referrals</span>
-        </a>
-    </div>
-    </aside>
+    
 
     <!-- Top App Bar -->
     <header class="fixed top-0 right-0 w-[calc(100%-16rem)] z-40 bg-surface-bright/85 backdrop-blur-xl flex justify-end items-center h-20 px-8 border-b border-outline-variant/10 shadow-sm">

@@ -244,10 +244,10 @@
                         <div class="md:col-span-3">
                             <label class="block text-xs font-bold uppercase text-on-surface-variant/60 tracking-widest mb-2">Period Grouping</label>
                             @php $currentGroup = request('group'); @endphp
-                            <div id="periodGroup" class="flex h-9 bg-surface-container-highest p-1 rounded-lg" role="group" aria-label="Period grouping">
+                            <div id="periodGroup" class="flex flex-wrap sm:flex-nowrap gap-1 sm:gap-0 sm:h-9 bg-surface-container-highest p-1 rounded-lg" role="group" aria-label="Period grouping">
                                 @foreach (['daily' => 'Daily', 'weekly' => 'Weekly', 'monthly' => 'Monthly', 'quarterly' => 'Quarterly', 'yearly' => 'Yearly'] as $groupValue => $groupText)
                                     <button type="button" data-group="{{ $groupValue }}" aria-pressed="{{ $currentGroup == $groupValue ? 'true' : 'false' }}"
-                                        class="flex-1 py-1.5 text-xs font-semibold rounded-md transition-all {{ $currentGroup == $groupValue ? 'bg-white shadow-sm text-primary font-bold' : 'text-on-surface-variant hover:text-primary' }}">{{ $groupText }}</button>
+                                        class="flex-1 basis-[30%] sm:basis-0 px-3 py-2 sm:px-2 sm:py-1.5 text-xs font-semibold rounded-md transition-all {{ $currentGroup == $groupValue ? 'bg-white shadow-sm text-primary font-bold' : 'text-on-surface-variant hover:text-primary' }}">{{ $groupText }}</button>
                                 @endforeach
                             </div>
                             <input type="hidden" name="group" id="groupInput" value="{{ $currentGroup }}" @if(!$currentGroup) disabled @endif />
@@ -262,9 +262,10 @@
                             $activePanel = in_array($currentGroup, ['daily', 'weekly', 'monthly', 'quarterly', 'yearly'], true) ? $currentGroup : 'none';
                             $yearsList = $analyticsYears ?? [date('Y')];
                             $yearsAsc = array_reverse($yearsList);
-                            $panelAttr = fn ($name) => 'data-range="' . $name . '" class="grid grid-cols-2 gap-6' . ($activePanel === $name ? '' : ' hidden') . '"';
+                            $panelAttr = fn ($name) => 'data-range="' . $name . '" class="grid grid-cols-2 gap-4 sm:gap-6' . ($activePanel === $name ? '' : ' hidden') . '"';
                             $off = fn ($name) => $activePanel === $name ? '' : 'disabled';
                         @endphp
+                        <style>[data-range] > div { display: flex; flex-direction: column; justify-content: flex-end; }</style>
                         <div class="md:col-span-3">
                             <div {!! $panelAttr('none') !!}>
                                 <div>

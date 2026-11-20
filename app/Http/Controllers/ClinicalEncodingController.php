@@ -507,13 +507,18 @@ class ClinicalEncodingController extends Controller
             ->get();
 
         // Unclaimed pool: handed-off cases nobody owns yet (Category III first, longest-waiting first)
-        $unclaimed = $this->unclaimed(DB::table('bite_cases as bc'))
+        $unclaimedQuery = fn () => $this->unclaimed(DB::table('bite_cases as bc'))
             ->join('patients as p', 'p.patient_id', '=', 'bc.patient_id')
             ->leftJoin('inflow_general_particulars as ig', 'ig.inflow_record_id', '=', 'bc.inflow_record_id')
             ->orderByRaw("CASE WHEN bc.category = 'III' THEN 0 ELSE 1 END")
-            ->orderByRaw('COALESCE(bc.returned_at, bc.date_verified)')
-            ->limit(50)
-            ->get(['bc.bite_case_id', 'bc.case_number', 'bc.category', 'bc.date_verified', 'bc.return_dose_day', 'bc.returned_at', 'p.patient_id', 'p.patient_name', 'ig.queue_id']);
+            ->orderByRaw('COALESCE(bc.returned_at, bc.date_verified)');
+        // 5 per page; a page past the end (e.g. the last case on it was just claimed) falls back to the last page
+        $unclaimedPages = max(1, (int) ceil($unclaimedQuery()->count() / 5));
+        $unclaimedPage = min(max(1, (int) request('unclaimed_page', 1)), $unclaimedPages);
+        $unclaimed = $unclaimedQuery()
+            ->paginate(5, ['bc.bite_case_id', 'bc.case_number', 'bc.category', 'bc.date_verified', 'bc.return_dose_day', 'bc.returned_at', 'p.patient_id', 'p.patient_name', 'ig.queue_id'], 'unclaimed_page', $unclaimedPage)
+            ->fragment('unclaimed')
+            ->withQueryString();
 
         // Reminders: PEP doses that are due or overdue, worked out from the Day 0 date
         // (Primary: Day 3 / 7 / 28, Booster: Day 3), skipping doses already recorded

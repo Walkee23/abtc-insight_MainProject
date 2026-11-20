@@ -436,7 +436,7 @@
                 @endif
             </section>
             <!-- Unclaimed Cases: cases nobody owns yet; claiming one locks it to this account -->
-            <section class="col-span-12 xl:col-span-8 bg-surface-container-lowest rounded-xl p-8 overflow-hidden">
+            <section id="unclaimed" class="col-span-12 xl:col-span-8 bg-surface-container-lowest rounded-xl p-8 overflow-hidden">
                 <div class="mb-6">
                     <h2 class="text-xl font-bold tracking-tight text-on-surface">Unclaimed Cases</h2>
                     <p class="text-sm text-on-surface-variant">Pick a case to work on. Once you claim it, no other Health Worker can open or change it.</p>
@@ -477,6 +477,24 @@
                     <p class="text-sm text-on-surface-variant text-center py-10">No unclaimed cases right now.</p>
                     @endif
                 </div>
+                @if($unclaimed->hasPages())
+                <div class="mt-6 flex items-center justify-between border-t border-surface-container-low pt-4">
+                    <p class="text-xs text-on-surface-variant">Showing {{ $unclaimed->firstItem() }}–{{ $unclaimed->lastItem() }} of {{ $unclaimed->total() }} cases</p>
+                    <div class="flex items-center gap-2">
+                        @if($unclaimed->onFirstPage())
+                        <span class="px-3 py-1.5 text-xs font-bold text-slate-300 rounded-lg cursor-not-allowed">Previous</span>
+                        @else
+                        <a href="{{ $unclaimed->previousPageUrl() }}" class="px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/5 rounded-lg transition-colors">Previous</a>
+                        @endif
+                        <span class="text-xs font-semibold text-on-surface-variant">Page {{ $unclaimed->currentPage() }} of {{ $unclaimed->lastPage() }}</span>
+                        @if($unclaimed->hasMorePages())
+                        <a href="{{ $unclaimed->nextPageUrl() }}" class="px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/5 rounded-lg transition-colors">Next</a>
+                        @else
+                        <span class="px-3 py-1.5 text-xs font-bold text-slate-300 rounded-lg cursor-not-allowed">Next</span>
+                        @endif
+                    </div>
+                </div>
+                @endif
             </section>
             <!-- Sidebar Analytics/Reminders -->
             <section class="col-span-12 xl:col-span-4 xl:col-start-9 xl:row-start-1 xl:row-span-2 space-y-8">

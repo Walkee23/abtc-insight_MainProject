@@ -162,16 +162,7 @@
                 <h1 class="text-blue-900 dark:text-blue-50 font-bold text-sm tracking-tight leading-none">ABTC-Insight
                 </h1>
             </div>
-            <!-- Search Bar -->
-            <div class="flex items-center flex-1 max-w-md ml-12">
-                <div class="relative w-full group">
-                    <span
-                        class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm group-focus-within:text-blue-700 transition-colors">search</span>
-                    <input
-                        class="w-full bg-slate-100 dark:bg-slate-800/50 border-none rounded-full py-2 pl-9 pr-4 text-xs focus:ring-2 focus:ring-blue-700/20 placeholder:text-slate-400 font-['Inter']"
-                        placeholder="Search records..." type="text" />
-                </div>
-            </div>
+            
             <!-- Right Side Actions (Notifications, Help, Vertical Divider, Profile) -->
             <div class="flex items-center gap-4">
                 <button

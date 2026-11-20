@@ -18,17 +18,23 @@ use App\Http\Controllers\ItDashboardController;
 use App\Http\Controllers\GisMapController;
 use Illuminate\Http\Request;
 
-
 Route::get('/', function () {
     return view('welcome_portal');
 });
 
-Route::get('/cchd-secure-portal', function () {
-    return view('auth.login');
-})->name('login');
+// Hidden Login Portal (Blocked for already logged-in users)
+Route::middleware('guest')->group(function () {
+    Route::get('/cchd-secure-portal', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
+});
 
-Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::post('/logout', [AuthController::class, 'logout'])
+    ->middleware('auth')
+    ->name('logout');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/keep-alive', fn () => response()->noContent())->name('keep-alive');
+});
 
 // Role Dashboards
 // Everything under /admin needs a logged-in Admin (see App\Http\Middleware\EnsureAdmin)
@@ -41,10 +47,10 @@ Route::prefix('admin')->middleware('admin')->group(function () {
     Route::get('/analytics', [visualAnalyticsController::class, 'visualAnalytics'])->name('admin.analytics');
 
     Route::get('/export/monthly-csv', [visualAnalyticsController::class, 'exportMonthlyCsv'])
-    ->name('admin.export.monthly');
+        ->name('admin.export.monthly');
 
     Route::get('/export/annual-report', [visualAnalyticsController::class, 'exportAnnualReport'])
-    ->name('admin.export.annual');
+        ->name('admin.export.annual');
 
     Route::get('/admin/generate-report', [visualAnalyticsController::class, 'generateReport'])->name('admin.generate.report');
     // Para sa pag-export sa CSV file
@@ -99,8 +105,7 @@ Route::prefix('admin')->middleware('admin')->group(function () {
 });
 
 // Staff Routes
-Route::prefix('staff')->group(function () {
-    // ---  Route now directs to StaffController@dashboard instead of inline view ---
+Route::prefix('staff')->middleware(['auth', 'role:Staff'])->group(function () {
     Route::get('/dashboard', [StaffController::class, 'newDashboard'])->name('staff.newdashboard');
     Route::get('/queue', [StaffController::class, 'dashboard'])->name('staff.dashboard');
     Route::post('/staff/call-patient/{inflowRecordId}', [App\Http\Controllers\StaffController::class, 'callPatient'])
@@ -117,7 +122,7 @@ Route::prefix('staff')->group(function () {
 });
 
 // Healthworker Routes
-Route::prefix('healthworker')->group(function () {
+Route::prefix('healthworker')->middleware(['auth', 'role:Health Worker'])->group(function () {
     Route::get('/dashboard', [ClinicalEncodingController::class, 'dashboard'])->name('healthworker.dashboard');
 
     // Clinical Encoding (Sections VI-IX), connected to the real bite_cases queue
@@ -146,15 +151,25 @@ Route::prefix('healthworker')->group(function () {
 });
 
 // BHW Routes (referral dashboard, referral form, submission, print)
-Route::get('/bhw/dashboard', [BhwController::class, 'dashboard'])->name('bhw.dashboard');
+Route::prefix('bhw')->middleware(['auth', 'role:BHW'])->group(function () {
+    Route::get('/dashboard', [BhwController::class, 'dashboard'])->name('bhw.dashboard');
 
-Route::get('/bhw/referral', function () {
-    return view('bhw.referral_form');
-})->name('bhw.referral');
+    Route::get('/referral', function () {
+        return view('bhw.referral_form');
+    })->name('bhw.referral');
 
-Route::post('/bhw/referral/store', [BhwController::class, 'storeReferral'])->name('bhw.store');
+    Route::post('/referral/store', [BhwController::class, 'storeReferral'])->name('bhw.store');
 
-Route::get('/bhw/referral/{id}/print', [BhwController::class, 'printReferral'])->name('bhw.print');
+    Route::get('/referral/{id}/print', [BhwController::class, 'printReferral'])->name('bhw.print');
+});
+
+// IT Routes
+Route::prefix('it')->middleware(['auth', 'role:IT'])->group(function () {
+    Route::get('/dashboard', [ItDashboardController::class, 'index'])->name('it.dashboard');
+    Route::post('/sms/test', [ItDashboardController::class, 'sendTest'])->name('it.sms.test');
+    Route::post('/sms/run', [ItDashboardController::class, 'runNow'])->name('it.sms.run');
+    Route::post('/sms/{smsId}/retry', [ItDashboardController::class, 'retry'])->name('it.sms.retry');
+});
 
 // Public Patient-Facing Pages
 Route::get('/patient/register', function () {
@@ -174,6 +189,9 @@ Route::get('/patient/Returning_Patient', function () {
 Route::get('/patient/tracking-portal', function () {
     return view('patient.Tracking_Portal');
 })->name('patient.tracking.portal');
+
+// Public map data (counts per barangay only, no patient details)
+Route::get('/public/gis-data', [GisMapController::class, 'data'])->name('public.gis_data');
 
 Route::get('/patient/queue/normal', function () {
     return view('patient.NQ_confirmation');
@@ -262,10 +280,3 @@ Route::post('/patient/submit-registration-returning', [PatientController::class,
 
 // New Patient (via BHW referral) — handle the form submission using the controller
 Route::post('/patient/submit-registration', [PatientController::class, 'registerPatient'])->name('patient.submit');
-
-Route::prefix('it')->group(function () {
-    Route::get('/dashboard', [ItDashboardController::class, 'index'])->name('it.dashboard');
-    Route::post('/sms/test', [ItDashboardController::class, 'sendTest'])->name('it.sms.test');
-    Route::post('/sms/run', [ItDashboardController::class, 'runNow'])->name('it.sms.run');
-    Route::post('/sms/{smsId}/retry', [ItDashboardController::class, 'retry'])->name('it.sms.retry');
-});

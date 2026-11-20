@@ -60,11 +60,32 @@ class visualAnalyticsController extends Controller
     $catAnimalCount = (int) ($animals->cats ?? 0);
     $otherAnimalCount = max(0, (int) ($animals->known ?? 0) - $dogCount - $catAnimalCount);
 
+    // pet / stray: from animal_ownership of each case's exposure record (cases without a value are left out)
+    $ownRows = (clone $query)
+        ->join('bite_section3_exposure as ow', 'ow.bite_case_id', '=', 'bite_cases.bite_case_id')
+        ->whereIn('ow.animal_ownership', ['Pet', 'Stray'])
+        ->selectRaw("UPPER(TRIM(ow.animal_type)) as animal, ow.animal_ownership as ownership, COUNT(*) as total")
+        ->groupBy('animal', 'ownership')
+        ->get();
+
+    $own = [
+        'dog'   => ['Pet' => 0, 'Stray' => 0],
+        'cat'   => ['Pet' => 0, 'Stray' => 0],
+        'other' => ['Pet' => 0, 'Stray' => 0],
+    ];
+    foreach ($ownRows as $r) {
+        $key = $r->animal === 'DOG' ? 'dog' : ($r->animal === 'CAT' ? 'cat' : 'other');
+        $own[$key][$r->ownership] += (int) $r->total;
+    }
+    $petCount   = $own['dog']['Pet']   + $own['cat']['Pet']   + $own['other']['Pet'];
+    $strayCount = $own['dog']['Stray'] + $own['cat']['Stray'] + $own['other']['Stray'];
+
     // colours are used for the legend dot AND the slice, so they always match
     $breakdowns = [
         'exposure' => $this->donut([['Category III', $cat3, '#002d6b'], ['Category II', $cat2, '#0b61bb'], ['Category I', $cat1, '#49607f']]),
         'sex' => $this->donut([['Male', $maleCount, '#3b82f6'], ['Female', $femaleCount, '#f472b6']]),
         'animal' => $this->donut([['Dogs', $dogCount, '#004a93'], ['Cats', $catAnimalCount, '#D4AF37'], ['Others', $otherAnimalCount, '#8b95a5']]),
+        'ownership' => $this->donut([['Pet', $petCount, '#059669'], ['Stray', $strayCount, '#fb923c']]),
     ];
     // --- AGE GROUP DISTRIBUTION ---
     // One count per group; shares are of the cases that HAVE an age, and add up to exactly 100.
@@ -173,7 +194,9 @@ class visualAnalyticsController extends Controller
         'rangeTo',
         'barangayChart',
         'ageChart',
-        'breakdowns'
+        'breakdowns',
+        'breakdowns',
+        'own'
     ));
 }
 
@@ -332,13 +355,26 @@ public function generateReport(Request $request)
     $age60_up = $byPatient->filter(fn($r) => $r->age !== null && $r->age >= 60)->count();
 
     $caseIds = $records->pluck('bite_case_id')->filter()->unique()->values();
-    $animalTypes = $caseIds->isEmpty()
+    $animalRows = $caseIds->isEmpty()
         ? collect()
         : DB::table('bite_section3_exposure')
             ->whereIn('bite_case_id', $caseIds)
-            ->select('animal_type', DB::raw('count(*) as total'))
-            ->groupBy('animal_type')
+            ->select('animal_type', 'animal_ownership', DB::raw('count(*) as total'))
+            ->groupBy('animal_type', 'animal_ownership')
             ->get();
+
+    // Dogs, Cats, Others (everything that is not a dog or a cat), each split into Pet / Stray
+    $animalBreakdown = [
+        'Dogs'   => ['Pet' => 0, 'Stray' => 0, 'Not recorded' => 0],
+        'Cats'   => ['Pet' => 0, 'Stray' => 0, 'Not recorded' => 0],
+        'Others' => ['Pet' => 0, 'Stray' => 0, 'Not recorded' => 0],
+    ];
+    foreach ($animalRows as $r) {
+        $type = strtoupper(trim((string) $r->animal_type));
+        $group = $type === 'DOG' ? 'Dogs' : ($type === 'CAT' ? 'Cats' : 'Others');
+        $own = in_array($r->animal_ownership, ['Pet', 'Stray'], true) ? $r->animal_ownership : 'Not recorded';
+        $animalBreakdown[$group][$own] += (int) $r->total;
+    }
 
     $hotspots = $byPatient
         ->groupBy('barangay')
@@ -351,10 +387,10 @@ public function generateReport(Request $request)
     $dataTo   = $records->max('queue_date');
 
     $view = view('admin.official_report_print', compact(
-        'filter', 'records', 'totalBites', 'uniquePatients', 'cat3Pct', 'avgAge', 'pepRate',
-        'maleCount', 'femaleCount', 'malePct', 'femalePct',
-        'age0_12', 'age13_19', 'age20_39', 'age40_59', 'age60_up',
-        'animalTypes', 'hotspots', 'appliedFilters', 'dataFrom', 'dataTo'
+    'filter', 'records', 'totalBites', 'uniquePatients', 'cat3Pct', 'avgAge', 'pepRate',
+    'maleCount', 'femaleCount', 'malePct', 'femalePct',
+    'age0_12', 'age13_19', 'age20_39', 'age40_59', 'age60_up',
+    'animalBreakdown', 'hotspots', 'appliedFilters', 'dataFrom', 'dataTo'
     ))->render();
 
     $filename = 'ABTC_Comprehensive_Report_' . strtoupper($filter) . '_' . date('Y-m-d') . '.doc';

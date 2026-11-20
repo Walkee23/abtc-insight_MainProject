@@ -53,7 +53,6 @@
             <td style="background-color: #f2f4f6; padding: 10px; border: 1px solid #c1c7d3; text-align: center;"><strong style="font-size: 13pt; color: #004A93;">{{ $totalBites ?? 0 }}</strong><br><span style="font-size: 8pt;">Total Bite Cases</span></td>
             <td style="background-color: #f2f4f6; padding: 10px; border: 1px solid #c1c7d3; text-align: center;"><strong style="font-size: 13pt; color: #004A93;">{{ $uniquePatients ?? 0 }}</strong><br><span style="font-size: 8pt;">Unique Patients</span></td>
             <td style="background-color: #f2f4f6; padding: 10px; border: 1px solid #c1c7d3; text-align: center;"><strong style="font-size: 13pt; color: #004A93;">{{ $avgAge ?? 0 }}</strong><br><span style="font-size: 8pt;">Average Age</span></td>
-            <td style="background-color: #f2f4f6; padding: 10px; border: 1px solid #c1c7d3; text-align: center;"><strong style="font-size: 13pt; color: #004A93;">{{ $pepRate ?? $pepCompletion ?? 0 }}%</strong><br><span style="font-size: 8pt;">PEP Completion</span></td>
         </tr>
     </table>
 
@@ -111,16 +110,42 @@
     </table>
 
     <!-- SECTION 3: Animal Types -->
-    <h3 style="color: #004A93; border-bottom: 2px solid #e0e3e5; padding-bottom: 5px; margin-top: 25px;">3. Biting Animal Types</h3>
-    <ul>
-        @if(isset($animalTypes) && count($animalTypes) > 0)
-            @foreach ($animalTypes as $animal)
-                <li>{{ $animal->animal_type ?? 'Unknown' }}: <strong>{{ $animal->total }}</strong> cases</li>
+    <h3 style="color: #004A93; border-bottom: 2px solid #e0e3e5; padding-bottom: 5px; margin-top: 25px;">3. Biting Animal Types (Pet / Stray)</h3>
+    @php
+        $animalBreakdown = $animalBreakdown ?? [];
+        $grandAnimals = collect($animalBreakdown)->flatten()->sum();
+    @endphp
+    <table border="1" cellspacing="0" cellpadding="6" style="width: 100%; border-collapse: collapse; font-size: 10pt;">
+        <tr style="background-color: #004A93; color: #ffffff;">
+            <th style="text-align: left;">Animal</th>
+            <th>Pet</th>
+            <th>Stray</th>
+            <th>Not recorded</th>
+            <th>Total</th>
+        </tr>
+        @if ($grandAnimals > 0)
+            @foreach ($animalBreakdown as $name => $c)
+                <tr>
+                    <td><strong>{{ $name }}</strong></td>
+                    <td style="text-align: center;">{{ $c['Pet'] }}</td>
+                    <td style="text-align: center;">{{ $c['Stray'] }}</td>
+                    <td style="text-align: center;">{{ $c['Not recorded'] }}</td>
+                    <td style="text-align: center;"><strong>{{ array_sum($c) }}</strong></td>
+                </tr>
             @endforeach
+            <tr style="background-color: #f2f4f6;">
+                <td><strong>TOTAL</strong></td>
+                <td style="text-align: center;"><strong>{{ collect($animalBreakdown)->sum('Pet') }}</strong></td>
+                <td style="text-align: center;"><strong>{{ collect($animalBreakdown)->sum('Stray') }}</strong></td>
+                <td style="text-align: center;"><strong>{{ collect($animalBreakdown)->sum('Not recorded') }}</strong></td>
+                <td style="text-align: center;"><strong>{{ $grandAnimals }}</strong></td>
+            </tr>
         @else
-            <li>No animal records found for this filter.</li>
+            <tr>
+                <td colspan="5" style="text-align: center; color: #717782;">No animal records found for this filter.</td>
+            </tr>
         @endif
-    </ul>
+    </table>
 
     <!-- SECTION 4: Top 15 Barangays by Incidence -->
     <h3 style="color: #004A93; border-bottom: 2px solid #e0e3e5; padding-bottom: 5px; margin-top: 25px;">4. Top 15 Barangays by Incidence</h3>

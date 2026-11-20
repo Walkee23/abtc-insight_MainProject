@@ -156,18 +156,10 @@
         <!-- TopAppBar -->
         <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-md px-8 py-3 flex justify-between items-center border-b border-slate-100">
             <div class="flex items-center gap-6 flex-1">
-                <div class="relative w-full max-w-md group">
-                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
-                    <input class="w-full pl-10 pr-4 py-2 bg-slate-100 border-none rounded-full text-sm focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-400" placeholder="Search logs..." type="text" />
-                </div>
+            
             </div>
             <div class="flex items-center gap-2">
-                <button class="p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors active:scale-95 duration-200">
-                    <span class="material-symbols-outlined text-xl">notifications</span>
-                </button>
-                <button class="p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors active:scale-95 duration-200 mr-2">
-                    <span class="material-symbols-outlined text-xl">help</span>
-                </button>
+                
                 <!-- User Profile Section with Dropdown -->
                 <div class="relative group cursor-pointer pl-4 border-l border-slate-200">
                     <div class="flex items-center gap-3">
@@ -184,10 +176,11 @@
                     <div class="absolute right-0 top-full pt-2 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                         <div class="bg-white rounded-xl shadow-lg border border-slate-100">
                         <div class="p-2">
-                            <a href="#" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary rounded-lg transition-colors">
+                            <button type="button" onclick="openProfileModal()" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary rounded-lg transition-colors text-left cursor-pointer">
                                 <span class="material-symbols-outlined text-[18px]">person</span>
                                 My Profile
-                            </a>
+                            </button>
+
                             <div class="h-px bg-slate-100 my-1"></div>
 
                             <!-- Secure Logout Form -->
@@ -522,6 +515,131 @@
             </div>
         </div>
     </main>
+            @php
+            $user = Auth::user();
+
+            // Job description per role (edit these)
+            $roleDescriptions = [
+                'Admin'         => 'Manages user accounts and system settings, oversees records and reports, monitors activity logs, and makes sure the system runs smoothly for all users.',
+                'Staff'         => 'Handles administrative and clerical tasks, manages records and documents, assists clients, and supports the daily operations of the center.',
+                'Health Worker' => 'Provides frontline health services, records and updates patient information, conducts health monitoring, and supports community health programs.',
+                'BHW'           => 'Serves as the barangay-level health worker, refers patients to the center, and helps monitor the health of residents in the community.',
+                'IT'            => 'Maintains the system and its database, manages technical issues and backups, and provides technical support to all users.',
+            ];
+
+            // Optional: custom description for a specific person, keyed by username
+            $userDescriptions = [
+                'thelmaeleccion' => 'Attending physician. Examines and treats patients, oversees health programs, and guides the health workers on patient care.',
+                // 'adminusername' => 'Custom description here.',
+            ];
+
+            $jobDescription = $userDescriptions[$user->username]
+                ?? $roleDescriptions[$user->role]
+                ?? 'No job description available.';
+
+            // Badge color per role
+            $badgeClasses = match ($user->role) {
+                'Admin'         => 'bg-violet-50 text-violet-700 ring-violet-200',
+                'Staff'         => 'bg-sky-50 text-sky-700 ring-sky-200',
+                'Health Worker' => 'bg-emerald-50 text-emerald-700 ring-emerald-200',
+                'BHW'           => 'bg-amber-50 text-amber-700 ring-amber-200',
+                'IT'            => 'bg-slate-100 text-slate-700 ring-slate-300',
+                default         => 'bg-slate-100 text-slate-700 ring-slate-300',
+            };
+        @endphp
+
+        <div id="profileModal"
+            class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 opacity-0 transition-opacity duration-200"
+            onclick="if(event.target === this) closeProfileModal()">
+
+            <div id="profileCard"
+                class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden scale-95 translate-y-2 transition-all duration-200">
+
+                <!-- Header -->
+                <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                    <h3 class="text-lg font-bold text-slate-800">My Profile</h3>
+                    <button type="button" onclick="closeProfileModal()"
+                            class="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors cursor-pointer">
+                        <span class="material-symbols-outlined text-[20px]">close</span>
+                    </button>
+                </div>
+
+                <!-- Details -->
+                <div class="p-6 space-y-3">
+
+                    <div class="flex items-start gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                        <div class="w-10 h-10 shrink-0 rounded-lg bg-white shadow-sm flex items-center justify-center text-primary">
+                            <span class="material-symbols-outlined text-[22px]">person</span>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Account Name</p>
+                            <p class="text-sm font-semibold text-slate-800 break-words">{{ $user->full_name }}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                        <div class="w-10 h-10 shrink-0 rounded-lg bg-white shadow-sm flex items-center justify-center text-primary">
+                            <span class="material-symbols-outlined text-[22px]">admin_panel_settings</span>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Role in the System</p>
+                            <span class="mt-1 inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold ring-1 {{ $badgeClasses }}">
+                                {{ $user->role }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                        <div class="w-10 h-10 shrink-0 rounded-lg bg-white shadow-sm flex items-center justify-center text-primary">
+                            <span class="material-symbols-outlined text-[22px]">work</span>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Job Description</p>
+                            <p class="text-sm text-slate-600 leading-relaxed">{{ $jobDescription }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+                    <button type="button" onclick="closeProfileModal()"
+                            class="px-5 py-2 rounded-lg bg-primary text-white text-sm font-semibold hover:opacity-90 transition-opacity cursor-pointer">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function openProfileModal() {
+                const modal = document.getElementById('profileModal');
+                const card = document.getElementById('profileCard');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                requestAnimationFrame(() => {
+                    modal.classList.remove('opacity-0');
+                    card.classList.remove('scale-95', 'translate-y-2');
+                });
+            }
+
+            function closeProfileModal() {
+                const modal = document.getElementById('profileModal');
+                const card = document.getElementById('profileCard');
+                modal.classList.add('opacity-0');
+                card.classList.add('scale-95', 'translate-y-2');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                }, 200);
+            }
+
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Escape') closeProfileModal();
+            });
+        </script>
+
+        @include('partials.idle-timeout')
+
 </body>
 
 </html>

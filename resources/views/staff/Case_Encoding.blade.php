@@ -334,10 +334,10 @@
                                         <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Pet or Stray <span class="text-error">*</label>
                                         <div class="flex gap-4">
                                             <label class="flex items-center gap-2 text-sm cursor-pointer">
-                                                <input class="text-primary focus:ring-primary" name="pet_status" value="Pet" type="radio" /> Pet
+                                                <input class="text-primary focus:ring-primary" name="pet_status" value="Pet" type="radio" {{ ($s3->pet_status ?? '') === 'Pet' ? 'checked' : '' }} /> Pet
                                             </label>
                                             <label class="flex items-center gap-2 text-sm cursor-pointer">
-                                                <input class="text-primary focus:ring-primary" name="pet_status" value="Stray" type="radio" /> Stray
+                                                <input class="text-primary focus:ring-primary" name="pet_status" value="Stray" type="radio" {{ ($s3->pet_status ?? '') === 'Stray' ? 'checked' : '' }} /> Stray
                                             </label>
                                         </div>
                                     </div>

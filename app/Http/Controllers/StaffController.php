@@ -261,6 +261,7 @@ class StaffController extends Controller
                     // A draft can still be missing these, so blank is stored as NULL (never a made-up value)
                     'animal_type'       => $request->input('animal_type') ?: null,
                     'animal_type_other' => $request->input('animal_type_other'),
+                    'pet_status'        => in_array($request->input('pet_status'), ['Pet', 'Stray'], true) ? $request->input('pet_status') : null,
                     'bite_date_time'    => $request->filled('bite_date')
                         ? $request->input('bite_date') . ($request->input('bite_time') ? ' ' . $request->input('bite_time') : ' 00:00:00')
                         : null,

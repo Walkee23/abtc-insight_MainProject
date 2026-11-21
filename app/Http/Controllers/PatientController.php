@@ -75,7 +75,7 @@ class PatientController extends Controller
     }
 
     /** Dose visits a returning patient can check in for (Day 0 was given at the first visit). */
-    private const PRIMARY_DAYS = [3, 7, 14, 28];
+    private const PRIMARY_DAYS = [3, 7, 28];
     private const BOOSTER_DAYS = [3];
 
     /**
@@ -119,7 +119,7 @@ class PatientController extends Controller
             ->whereNotNull('s7.day0_date')
             ->orderByDesc('bc.case_number')
             ->get(['bc.bite_case_id', 'bc.case_number', 'bc.category', 'bc.return_dose_day',
-                's7.dose_type', 's7.day0_date', 's7.day3_date', 's7.day7_date', 's7.day14_date', 's7.day28_date'])
+                's7.dose_type', 's7.day0_date', 's7.day3_date', 's7.day7_date', 's7.day28_date'])
             ->map(fn ($c) => [
                 'bite_case_id'   => $c->bite_case_id,
                 'case_number'    => $c->case_number,
@@ -130,7 +130,6 @@ class PatientController extends Controller
                     0  => $c->day0_date,
                     3  => $c->day3_date,
                     7  => $c->day7_date,
-                    14 => $c->day14_date,
                     28 => $c->day28_date,
                 ],
                 'checked_in_for' => $c->return_dose_day,

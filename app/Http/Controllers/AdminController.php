@@ -179,9 +179,26 @@ class AdminController extends Controller
 
    public function compliance()
     {
-        // 1. PEP Completion Rate gikan sa inflow_general_particulars
-        $totalCourses = DB::table('inflow_general_particulars')->count();
-        $completedCourses = DB::table('inflow_general_particulars')->where('status', 'Completed')->count();
+        // 1. PEP Completion Rate: every PEP course on record (Day 0 given) is scanned in the database.
+        // A course is completed when ALL of its scheduled doses have a recorded date:
+        //   Primary (normal schedule): Day 0, Day 3, Day 7 and Day 28  (4 dates)
+        //   Booster:                   Day 0 and Day 3                 (2 dates)
+        $complete = "CASE WHEN s7.dose_type = 'Booster'
+                          THEN s7.day3_date IS NOT NULL
+                          ELSE (s7.day3_date IS NOT NULL AND s7.day7_date IS NOT NULL AND s7.day28_date IS NOT NULL) END";
+        $pep = DB::table('bite_cases as bc')
+            ->join('bite_section7_immunization as s7', 's7.bite_case_id', '=', 'bc.bite_case_id')
+            ->whereNotNull('s7.day0_date')
+            ->selectRaw("COUNT(*) as courses,
+                         COALESCE(SUM(({$complete})), 0) as completed,
+                         COALESCE(SUM(s7.dose_type = 'Booster' AND ({$complete})), 0) as completed_booster,
+                         COUNT(DISTINCT CASE WHEN ({$complete}) THEN bc.patient_id END) as completed_patients")
+            ->first();
+        $totalCourses = (int) $pep->courses;
+        $completedCourses = (int) $pep->completed;
+        $completedBooster = (int) $pep->completed_booster;
+        $completedPrimary = $completedCourses - $completedBooster;
+        $completedPatients = (int) $pep->completed_patients;
         $pepCompletionRate = $totalCourses > 0 ? round(($completedCourses / $totalCourses) * 100, 1) : 0.0;
 
         // 2. SMS Success Rate gikan sa 'sms' table (Base sa status = 'Sent' o 'Delivered' batok sa total)
@@ -199,6 +216,11 @@ class AdminController extends Controller
 
         return view('admin.pep_comp', compact(
             'pepCompletionRate',
+            'totalCourses',
+            'completedCourses',
+            'completedPrimary',
+            'completedBooster',
+            'completedPatients',
             'smsSuccessRate',
             'pendingReminders',
             'lateFollowUps'

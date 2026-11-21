@@ -228,6 +228,13 @@
                     </div>
                     <h3 class="text-3xl font-extrabold text-on-surface mb-1">{{ $pepCompletionRate }}%</h3>
                     <p class="text-xs uppercase font-bold text-on-surface-variant tracking-widest">PEP Completion Rate</p>
+                    <p class="mt-3 text-xs font-semibold text-on-surface-variant">
+                        {{ number_format($completedCourses) }} of {{ number_format($totalCourses) }} courses completed
+                        ({{ number_format($completedPatients) }} patients)
+                    </p>
+                    <p class="text-[11px] text-on-surface-variant/70">
+                        Primary (Day 0, 3, 7, 28): {{ number_format($completedPrimary) }} &middot; Booster (Day 0, 3): {{ number_format($completedBooster) }}
+                    </p>
                 </div>
 
                 <!-- Stat Card 2: SMS Success Rate -->

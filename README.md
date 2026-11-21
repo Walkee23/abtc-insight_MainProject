@@ -7,6 +7,59 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## ABTC-Insight: Forecasting (Python) setup
+
+The Admin **Forecasting** page runs its numbers in Python (`python/forecast.py`, Holt-Winters from `statsmodels`).
+The code comes with the repository, but **Python and its packages are installed on each computer**, so every
+developer does this once after pulling.
+
+1. Install **Python 3.9 or newer** from python.org and tick **"Add Python to PATH"** in the installer.
+2. From the project folder, install the packages:
+
+   ```
+   python -m pip install -r python\requirements.txt
+   ```
+
+3. Check that it works. The result should be one line starting with `{"ok": true`.
+
+   Command Prompt (`cmd`):
+
+   ```
+   python python\forecast.py < python\sample_input.json
+   ```
+
+   PowerShell:
+
+   ```powershell
+   Get-Content python/sample_input.json | python python/forecast.py
+   ```
+
+   (`Get-Content` only exists in PowerShell; in Command Prompt use the `<` form. `python/sample_input.json` is
+   part of the repository, so pull the latest branch first if the file is missing.)
+
+4. **If the site runs under XAMPP / Apache**, Apache usually does not see your PATH. Put the full path of
+   your Python in your own `.env` (the `.env` file is not committed, so each developer sets it) and clear the
+   config cache:
+
+   ```
+   PYTHON_BIN=C:\Users\<your-name>\AppData\Local\Programs\Python\Python313\python.exe
+   ```
+
+   ```
+   php artisan config:clear
+   ```
+
+   `where python` shows the path to use. With `php artisan serve` this is usually not needed.
+
+### How to tell whether Python is being used
+
+- On the Forecasting page, an amber line **"PHP built-in fallback (Python was not available)"** means the page is
+  using the PHP copy of the model instead of Python. The page still works, but it is not the Python result.
+- The reason is written to `storage/logs/laravel.log` as `Forecasting: the Python engine could not be used...`.
+- Common causes: Python not installed or not on PATH, the Windows Store `python` shortcut opening instead of real
+  Python, packages not installed (`ModuleNotFoundError`), or `PYTHON_BIN` not set under Apache.
+- A failed run is not remembered, so once Python works the next page load uses it.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

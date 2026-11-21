@@ -195,12 +195,12 @@
 
         <div class="p-8">
         <!-- Header Section -->
-        <header class="flex justify-between items-center mb-8">
+        <header class="flex flex-col items-start gap-3 sm:flex-row sm:justify-between sm:items-center mb-8">
             <div>
                 <h1 class="text-3xl font-black text-on-surface tracking-tight">Clinic Operational Dashboard</h1>
                 <p class="text-xs text-on-surface-variant mt-1 font-medium">Real-time walk-in volume, verification throughput, and rabies clinical protocols.</p>
             </div>
-            <div class="px-4 py-2 bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm text-xs font-bold text-secondary flex items-center gap-2">
+            <div class="shrink-0 whitespace-nowrap px-4 py-2 bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm text-xs font-bold text-secondary flex items-center gap-2">
                 <span class="material-symbols-outlined text-[16px] text-primary">calendar_today</span>
                 <span>{{ now()->format('F d, Y') }}</span>
             </div>

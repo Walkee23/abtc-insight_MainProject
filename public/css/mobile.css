@@ -213,6 +213,10 @@
   main .mn-page-desc { margin-top: .625rem !important; font-size: .9375rem; line-height: 1.5rem; }
   .mn-page-head { flex-direction: column !important; align-items: flex-start !important; flex-wrap: nowrap !important; gap: 1rem !important; }
   .mn-page-head > * { max-width: 100%; }
+  /* breathing room at the sides of the title block (title, description and what sits under them), so the text does not
+     run flush with the card edges below it */
+  main .mn-page-head { padding-left: .5rem; padding-right: .5rem; }
+  main .mn-page-title:not(.mn-page-head *), main .mn-page-desc:not(.mn-page-head *) { padding-left: .5rem; padding-right: .5rem; }
 
   /* fixed-width search boxes and filters fit the screen */
   header [class*="w-96"], header [class*="w-80"], header [class*="max-w-xl"] { max-width: 100%; }

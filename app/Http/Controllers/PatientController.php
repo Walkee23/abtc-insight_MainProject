@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\PepSchedule;
 use Illuminate\Http\Request;
 use App\Support\Audit;
 use Illuminate\Support\Facades\DB;
@@ -74,9 +75,8 @@ class PatientController extends Controller
         ]);
     }
 
-    /** Dose visits a returning patient can check in for (Day 0 was given at the first visit). */
-    private const PRIMARY_DAYS = [3, 7, 28];
-    private const BOOSTER_DAYS = [3];
+    // The dose visits a returning patient can check in for (Day 0 was given at the first visit) come from
+    // App\Support\PepSchedule: Primary IM 3 / 7 / 14, Primary ID 3 / 7 / 28, Booster 3.
 
     /**
      * Returning Patient: find a patient by full name AND exact date of birth, then list the
@@ -119,17 +119,18 @@ class PatientController extends Controller
             ->whereNotNull('s7.day0_date')
             ->orderByDesc('bc.case_number')
             ->get(['bc.bite_case_id', 'bc.case_number', 'bc.category', 'bc.return_dose_day',
-                's7.dose_type', 's7.day0_date', 's7.day3_date', 's7.day7_date', 's7.day28_date'])
+                's7.dose_type', 's7.route', 's7.day0_date', 's7.day3_date', 's7.day7_date', 's7.day14_date', 's7.day28_date'])
             ->map(fn ($c) => [
                 'bite_case_id'   => $c->bite_case_id,
                 'case_number'    => $c->case_number,
                 'category'       => $c->category,
                 'dose_type'      => $c->dose_type ?: 'Primary',
-                'days'           => $c->dose_type === 'Booster' ? self::BOOSTER_DAYS : self::PRIMARY_DAYS,
+                'days'           => PepSchedule::followUpDays($c->dose_type, $c->route),
                 'dates'          => [
                     0  => $c->day0_date,
                     3  => $c->day3_date,
                     7  => $c->day7_date,
+                    14 => $c->day14_date,
                     28 => $c->day28_date,
                 ],
                 'checked_in_for' => $c->return_dose_day,
@@ -186,7 +187,7 @@ class PatientController extends Controller
 
             $s7 = $case ? DB::table('bite_section7_immunization')->where('bite_case_id', $case->bite_case_id)->first() : null;
 
-            $allowed = $s7 && $s7->dose_type === 'Booster' ? self::BOOSTER_DAYS : self::PRIMARY_DAYS;
+            $allowed = $s7 ? PepSchedule::followUpDays($s7->dose_type, $s7->route) : [];
 
             if (!$case || !$s7 || !$s7->day0_date || !in_array($day, $allowed, true)) {
                 return redirect()->route('patient.returning-patient')

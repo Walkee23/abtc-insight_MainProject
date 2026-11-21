@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Support\Audit;
+use App\Support\PepSchedule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use chillerlan\QRCode\QRCode;
@@ -309,6 +310,7 @@ class ClinicalEncodingController extends Controller
             'day0_date' => $required . '|date|before_or_equal:today',
             'day3_date' => 'nullable|date|before_or_equal:today',
             'day7_date' => 'nullable|date|before_or_equal:today',
+            'day14_date' => 'nullable|date|before_or_equal:today',
             'day28_date' => 'nullable|date|before_or_equal:today',
             'passive_given' => 'nullable|boolean',
             'passive_type' => 'nullable|string|max:50',
@@ -338,10 +340,13 @@ class ClinicalEncodingController extends Controller
         // as '' (shows as "Select" again) rather than a made-up default
         $validated['dose_type'] = $validated['dose_type'] ?? '';
 
-        // Primary course = Day 0, 3, 7 and 28. Booster = Day 0 and 3 only: no later dose dates are kept.
-        if ($validated['dose_type'] === 'Booster') {
-            $validated['day7_date'] = null;
-            $validated['day28_date'] = null;
+        // The dose dates follow the dose type and route (App\Support\PepSchedule): Primary IM = Day 0, 3, 7, 14;
+        // Primary ID = Day 0, 3, 7, 28; Booster = Day 0, 3. A date that is not part of the course is never kept.
+        $courseDays = PepSchedule::days($validated['dose_type'], $validated['route'] ?? null);
+        foreach ([3, 7, 14, 28] as $day) {
+            if (!in_array($day, $courseDays, true)) {
+                $validated['day' . $day . '_date'] = null;
+            }
         }
 
         DB::table('bite_section7_immunization')->updateOrInsert(
@@ -594,9 +599,9 @@ class ClinicalEncodingController extends Controller
         $doses = $this->handedOff(DB::table('bite_section7_immunization as s7')
             ->join('bite_cases as bc', 'bc.bite_case_id', '=', 's7.bite_case_id'))
             ->join('patients as p', 'p.patient_id', '=', 'bc.patient_id')
-            ->get(['p.patient_name', 's7.day0_date', 's7.day3_date', 's7.day7_date', 's7.day28_date']);
+            ->get(['p.patient_name', 's7.day0_date', 's7.day3_date', 's7.day7_date', 's7.day14_date', 's7.day28_date']);
         foreach ($doses as $d) {
-            foreach ([0, 3, 7, 28] as $day) {
+            foreach ([0, 3, 7, 14, 28] as $day) {
                 $date = $d->{'day' . $day . '_date'};
                 if ($date) {
                     $activity[] = (object) [

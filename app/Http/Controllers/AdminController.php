@@ -180,12 +180,11 @@ class AdminController extends Controller
    public function compliance()
     {
         // 1. PEP Completion Rate: every PEP course on record (Day 0 given) is scanned in the database.
-        // A course is completed when ALL of its scheduled doses have a recorded date:
-        //   Primary (normal schedule): Day 0, Day 3, Day 7 and Day 28  (4 dates)
-        //   Booster:                   Day 0 and Day 3                 (2 dates)
-        $complete = "CASE WHEN s7.dose_type = 'Booster'
-                          THEN s7.day3_date IS NOT NULL
-                          ELSE (s7.day3_date IS NOT NULL AND s7.day7_date IS NOT NULL AND s7.day28_date IS NOT NULL) END";
+        // A course is completed when ALL of its scheduled doses have a recorded date (App\Support\PepSchedule):
+        //   Primary, IM route:  Day 0, Day 3, Day 7 and Day 14  (4 dates)
+        //   Primary, ID route:  Day 0, Day 3, Day 7 and Day 28  (4 dates; also records with no route, e.g. imports)
+        //   Booster:            Day 0 and Day 3                 (2 dates)
+        $complete = \App\Support\PepSchedule::completeSql('s7');
         $pep = DB::table('bite_cases as bc')
             ->join('bite_section7_immunization as s7', 's7.bite_case_id', '=', 'bc.bite_case_id')
             ->whereNotNull('s7.day0_date')

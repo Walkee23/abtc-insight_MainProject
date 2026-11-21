@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\PepSchedule;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -96,11 +97,11 @@ class TreatmentTrackerController extends Controller
             ->get([
                 'bc.bite_case_id', 'bc.case_number', 'bc.category', 'bc.barangay',
                 'p.patient_id', 'p.patient_name', 'p.contact_num',
-                's7.dose_type', 's7.day0_date', 's7.day3_date', 's7.day7_date', 's7.day28_date',
+                's7.dose_type', 's7.route', 's7.day0_date', 's7.day3_date', 's7.day7_date', 's7.day14_date', 's7.day28_date',
             ]);
 
         return $cases->map(function ($c) use ($today) {
-            $schedule = $c->dose_type === 'Booster' ? [0, 3] : [0, 3, 7, 28];
+            $schedule = PepSchedule::days($c->dose_type, $c->route);
             $day0 = Carbon::parse($c->day0_date)->startOfDay();
 
             $doses = [];

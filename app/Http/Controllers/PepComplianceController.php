@@ -152,8 +152,8 @@ class PepComplianceController extends Controller
      * dose's scheduled date, actual date and status worked out in SQL:
      * Completed On Time / Completed Late / Missed / Pending.
      *
-     * Schedule: Primary D0/D3/D7/D28 (4 doses), Booster D0/D3 (2 doses). Dose numbers follow
-     * that order. $mine limits it to the cases assigned to the logged-in health worker.
+     * Schedule (App\Support\PepSchedule): Primary IM D0/D3/D7/D14, Primary ID D0/D3/D7/D28 (4 doses each),
+     * Booster D0/D3 (2 doses). Dose numbers follow that order. $mine limits it to the cases assigned to the logged-in health worker.
      */
     private function doses(bool $mine)
     {
@@ -181,7 +181,8 @@ class PepComplianceController extends Controller
         $union = $slot(0, '1')
             ->unionAll($slot(3, '2'))
             ->unionAll($slot(7, '3', $primary))
-            ->unionAll($slot(28, '4', $primary));
+            ->unionAll($slot(14, '4', $primary . " AND s7.route = 'IM'"))
+            ->unionAll($slot(28, '4', $primary . " AND COALESCE(s7.route, '') <> 'IM'"));
 
         $today = DB::getPdo()->quote($this->today()->toDateString());
         $scheduled = 'DATE(DATE_ADD(d.day0, INTERVAL d.day_no DAY))';

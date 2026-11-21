@@ -333,18 +333,18 @@
                 </div>
             </div>
             <!-- Contextual Help / Status Legend -->
-            <div class="mt-8 flex gap-8">
-                <div class="flex items-center gap-2">
-                    <div class="w-2 h-2 rounded-full bg-tertiary"></div>
-                    <span class="text-[11px] font-bold text-on-surface-variant uppercase">Pending: Waiting for health center assessment</span>
+            <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-x-8 sm:gap-y-3">
+                <div class="flex items-start sm:items-center gap-2.5">
+                    <div class="w-2 h-2 mt-1 sm:mt-0 shrink-0 rounded-full bg-tertiary"></div>
+                    <span class="text-[11px] leading-4 font-bold text-on-surface-variant uppercase">Pending: Waiting for health center assessment</span>
                 </div>
-                <div class="flex items-center gap-2">
-                    <div class="w-2 h-2 rounded-full bg-secondary"></div>
-                    <span class="text-[11px] font-bold text-on-surface-variant uppercase">Received: Patient has arrived at ABTC</span>
+                <div class="flex items-start sm:items-center gap-2.5">
+                    <div class="w-2 h-2 mt-1 sm:mt-0 shrink-0 rounded-full bg-secondary"></div>
+                    <span class="text-[11px] leading-4 font-bold text-on-surface-variant uppercase">Received: Patient has arrived at ABTC</span>
                 </div>
-                <div class="flex items-center gap-2">
-                    <div class="w-2 h-2 rounded-full bg-green-600"></div>
-                    <span class="text-[11px] font-bold text-on-surface-variant uppercase">Completed: Full vaccination series recorded</span>
+                <div class="flex items-start sm:items-center gap-2.5">
+                    <div class="w-2 h-2 mt-1 sm:mt-0 shrink-0 rounded-full bg-green-600"></div>
+                    <span class="text-[11px] leading-4 font-bold text-on-surface-variant uppercase">Completed: Full vaccination series recorded</span>
                 </div>
             </div>
         </div>

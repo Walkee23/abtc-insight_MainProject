@@ -12,7 +12,8 @@
 .mn-fab,
 .mn-overlay,
 .mn-chart-hint,
-.mn-swipe-hint { display: none; }
+.mn-swipe-hint,
+.mn-search-close { display: none; }   /* the search close button only exists on phones, while the search is open */
 
 @media (max-width: 1023.98px) {
 

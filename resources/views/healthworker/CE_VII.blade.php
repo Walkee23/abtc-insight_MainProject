@@ -294,7 +294,7 @@
                                     <span class="text-[10px] font-bold text-outline mt-2 absolute -bottom-6 w-max">Wound
                                         Desc.</span>
                                 </div>
-                                <div class="flex-1 h-0.5 bg-primary/40 -mt-4"></div>
+                                <div class="flex-1 h-0.5 bg-primary/40"></div>
                                 <div class="flex flex-col items-center flex-1 relative group">
                                     <div
                                         class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold z-10 shadow-lg shadow-primary/20">
@@ -302,7 +302,7 @@
                                     <span
                                         class="text-[10px] font-bold text-primary mt-2 absolute -bottom-6 w-max">Immunization</span>
                                 </div>
-                                <div class="flex-1 h-0.5 bg-slate-200 -mt-4"></div>
+                                <div class="flex-1 h-0.5 bg-slate-200"></div>
                                 <div class="flex flex-col items-center flex-1 relative group">
                                     <div
                                         class="w-8 h-8 rounded-full bg-white border-2 border-outline-variant/50 text-outline flex items-center justify-center text-xs font-bold z-10">
@@ -310,7 +310,7 @@
                                     <span
                                         class="text-[10px] font-bold text-outline mt-2 absolute -bottom-6 w-max opacity-0">Remarks</span>
                                 </div>
-                                <div class="flex-1 h-0.5 bg-slate-200 -mt-4"></div>
+                                <div class="flex-1 h-0.5 bg-slate-200"></div>
                                 <div class="flex flex-col items-center flex-1 relative group">
                                     <div
                                         class="w-8 h-8 rounded-full bg-white border-2 border-outline-variant/50 text-outline flex items-center justify-center text-xs font-bold z-10">

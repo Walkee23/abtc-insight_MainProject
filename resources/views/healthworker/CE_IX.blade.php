@@ -294,7 +294,7 @@
                                     <span class="text-[10px] font-bold text-outline mt-2 absolute -bottom-6 w-max">Wound
                                         Desc.</span>
                                 </div>
-                                <div class="flex-1 h-0.5 bg-primary/40 -mt-4"></div>
+                                <div class="flex-1 h-0.5 bg-primary/40"></div>
                                 <!-- Step 2 (Completed) -->
                                 <div class="flex flex-col items-center flex-1 relative group">
                                     <div
@@ -305,7 +305,7 @@
                                     <span
                                         class="text-[10px] font-bold text-outline mt-2 absolute -bottom-6 w-max">Immunization</span>
                                 </div>
-                                <div class="flex-1 h-0.5 bg-primary/40 -mt-4"></div>
+                                <div class="flex-1 h-0.5 bg-primary/40"></div>
                                 <!-- Step 3 (Completed) -->
                                 <div class="flex flex-col items-center flex-1 relative group">
                                     <div
@@ -316,7 +316,7 @@
                                     <span
                                         class="text-[10px] font-bold text-outline mt-2 absolute -bottom-6 w-max">Remarks</span>
                                 </div>
-                                <div class="flex-1 h-0.5 bg-primary -mt-4"></div>
+                                <div class="flex-1 h-0.5 bg-primary"></div>
                                 <!-- Step 4 (IX) -->
                                 <div class="flex flex-col items-center flex-1 relative group">
                                     <div

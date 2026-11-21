@@ -123,6 +123,7 @@
     <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
     <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
     <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
+    <script src="{{ asset('js/soft-nav.js') }}" defer></script>
 </head>
 
 <body class="bg-surface text-on-surface selection:bg-primary-container selection:text-on-primary-container">
@@ -220,6 +221,7 @@
                 </button>
             </div>
             @endif
+            <div data-soft-region="forecast" data-soft-scripts class="space-y-10">
             <!-- Section 1: Patient Volume Forecasting -->
             <section class="space-y-6">
                 <div class="flex justify-between items-end">
@@ -244,7 +246,7 @@
                         @endforeach
                         <p class="text-[10px] font-bold text-outline uppercase tracking-wider">Forecast As Of</p>
                         <input type="date" name="asof" value="{{ $asOf->toDateString() }}" max="{{ $today->toDateString() }}"
-                            onchange="this.form.submit()" title="The model learns from the {{ $trainWeeks }} weeks before this date"
+                            onchange="this.form.requestSubmit()" title="The model learns from the {{ $trainWeeks }} weeks before this date"
                             class="bg-surface-container-low border-none rounded-lg px-3 py-1.5 text-xs font-semibold focus:ring-2 focus:ring-primary/20" />
                     </form>
                     <div class="flex flex-col items-end gap-2">
@@ -488,8 +490,6 @@
                     </div>
                 </div>
             </section>
-        </div>
-    </main>
     <script>
         (function () {
             // Slider labels follow the slider; the forecast is recalculated once it is released
@@ -497,7 +497,7 @@
             form.querySelectorAll('input[type="range"]').forEach((slider) => {
                 const label = form.querySelector('[data-value-for="' + slider.name + '"]');
                 slider.addEventListener('input', () => { label.textContent = Number(slider.value).toFixed(2); });
-                slider.addEventListener('change', () => form.submit());
+                slider.addEventListener('change', () => form.requestSubmit());
             });
 
             // Priority alerts <-> all barangays with cases
@@ -725,7 +725,9 @@
             }
         })();
     </script>
-
+            </div>
+        </div>
+    </main>
             @php
             $user = Auth::user();
 

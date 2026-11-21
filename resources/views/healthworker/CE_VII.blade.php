@@ -387,7 +387,7 @@
                                         {!! $dropdown('dose_type', ['Primary' => 'Primary', 'Booster' => 'Booster'], 'bg-surface-container-low', true) !!}
                                     </div>
                                 </div>
-                                <div class="grid grid-cols-2 gap-6 mb-8">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
                                     <div>
                                         <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Patient Weight (kg)</label>
                                         {{-- Always from the BHW referral and never editable, like Administered By --}}

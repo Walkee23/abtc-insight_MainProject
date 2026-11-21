@@ -108,6 +108,7 @@
     <script src="{{ asset('js/custom-select.js') }}" defer></script>
     <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
     <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
+    <script src="{{ asset('js/soft-nav.js') }}" defer></script>
 </head>
 
 <body class="text-on-surface flex min-h-screen bg-surface">
@@ -200,8 +201,8 @@
                     <h2 class="text-3xl font-extrabold text-on-surface tracking-tight leading-none mb-2">Visual Analytics</h2>
                     <p class="text-on-surface-variant text-lg font-medium opacity-70">Query and visualize bite case data across all dimensions.</p>
                 </div>
+                <div data-soft-region="actions" class="flex gap-3">
                 @if(request()->hasAny(['group', 'year', 'date_from', 'date_to', 'week_from', 'week_to', 'month_from', 'month_to', 'quarter_from', 'quarter_to', 'health_area', 'barangay', 'sex', 'age_min', 'age_max']))
-                <div class="flex gap-3">
                     <form action="{{ route('admin.generate.report') }}" method="GET" target="_blank">
                         <!-- I-pasa ang tanang kasamtangang request parameters (apil ang barangay, sex, etc.) ngadto sa report -->
                         @foreach(request()->all() as $key => $value)
@@ -221,13 +222,13 @@
                     <a href="{{ route('report.export.csv', request()->all()) }}" class="flex items-center px-6 py-3 bg-[#D4AF37] text-white rounded-xl font-semibold shadow-xl shadow-yellow-700/10 hover:opacity-90 transition-all cursor-pointer">
                         Export Filtered Results
                     </a>
-                </div>
                 @endif
+                </div>
             </div>
     
             <!-- SECTION 2 — REAL LIVE FILTER BAR -->
             <section class="bg-surface-container-lowest rounded-xl p-6 shadow-sm space-y-6 border border-outline-variant/10">
-                <form method="GET" action="{{ route('admin.analytics') }}">
+                <form method="GET" action="{{ route('admin.analytics') }}" data-soft data-soft-scroll="results">
                     <div class="grid grid-cols-1 md:grid-cols-6 gap-6">
                         
     
@@ -342,9 +343,11 @@
                                 </div>
                             </div>
 
+                            <div data-soft-region="notice">
                             @if (!empty($rangeNotice))
                                 <p class="text-[11px] font-semibold text-amber-700 mt-2">{{ $rangeNotice }}</p>
                             @endif
+                            </div>
                         </div>
                     </div>
                     <script>
@@ -420,7 +423,7 @@
                     <div class="flex items-center justify-between pt-6 border-t border-outline-variant/10">
                         <div class="flex items-center gap-2 text-sm text-on-surface-variant">
                             <span class="material-symbols-outlined text-primary text-lg shrink-0">info</span>
-                            <span>Showing <strong class="text-on-surface">{{ number_format($totalBites ?? 0) }} bite cases</strong> matching current filters
+                            <span data-soft-region="count">Showing <strong class="text-on-surface">{{ number_format($totalBites ?? 0) }} bite cases</strong> matching current filters
                             <span class="mx-1 text-outline">•</span> {{ number_format($uniquePatients ?? 0) }} unique patients</span>
                         </div>
                         <div class="flex gap-3">
@@ -431,6 +434,7 @@
                 </form>
             </section>
 
+            <div data-soft-region="results" data-soft-scripts class="space-y-8">
             @if(request()->hasAny(['group', 'year', 'date_from', 'date_to', 'week_from', 'week_to', 'month_from', 'month_to', 'quarter_from', 'quarter_to', 'health_area', 'barangay', 'sex', 'age_min', 'age_max']))
 
             <!-- SECTION 3 — REAL LIVE KPI CARDS -->
@@ -759,6 +763,7 @@
                     <script>
                         (function () {
                             // One dark tooltip for all three charts: any element with data-tip-title / data-tip-lines ("a|b|c").
+                            if (window.__vizTipCleanup) window.__vizTipCleanup();   // this script runs again after every in-place update
                             const tip = document.createElement('div');
                             tip.className = 'viz-tip bg-slate-900/95 text-white rounded-lg px-3 py-2 shadow-xl text-xs leading-snug whitespace-nowrap';
                             document.body.appendChild(tip);
@@ -796,7 +801,7 @@
                                 });
                             }
 
-                            document.addEventListener('pointerover', (e) => {
+                            const onOver = (e) => {
                                 const el = e.target.closest ? e.target.closest('[data-tip-title]') : null;
                                 if (el === current) return;
                                 current = el;
@@ -805,10 +810,20 @@
                                 tip.classList.add('show');
                                 place(e);
                                 setActive(el.dataset.donut || null, el.dataset.idx);
-                            });
-                            document.addEventListener('pointermove', (e) => { if (current) place(e); });
+                            };
+                            const onMove = (e) => { if (current) place(e); };
+                            const onOut = (e) => { if (!e.relatedTarget) hide(); };
+                            document.addEventListener('pointerover', onOver);
+                            document.addEventListener('pointermove', onMove);
                             window.addEventListener('scroll', hide, true);
-                            document.addEventListener('pointerout', (e) => { if (!e.relatedTarget) hide(); });
+                            document.addEventListener('pointerout', onOut);
+                            window.__vizTipCleanup = () => {
+                                document.removeEventListener('pointerover', onOver);
+                                document.removeEventListener('pointermove', onMove);
+                                window.removeEventListener('scroll', hide, true);
+                                document.removeEventListener('pointerout', onOut);
+                                tip.remove();
+                            };
                         })();
                     </script>
 
@@ -870,6 +885,21 @@
     </div>
 </div>
             </div>
+            <script>
+                // the year chosen for the annual exports goes into both download links (and the chip on each card)
+                (function () {
+                    const select = document.getElementById('exportYear');
+                    if (!select) return;
+                    const sync = () => {
+                        document.querySelectorAll('[data-export-link]').forEach((a) => {
+                            a.href = a.dataset.base + '?year=' + encodeURIComponent(select.value);
+                        });
+                        document.querySelectorAll('[data-export-year]').forEach((s) => { s.textContent = select.value; });
+                    };
+                    select.addEventListener('change', sync);
+                    sync();
+                })();
+            </script>
 
             @else
                 <!-- 👉 KINI ANG MOGAWAS KUNG WALA PA NAKA-APPLY SA FILTERS (BLANK / PLACEHOLDER STATE) -->
@@ -883,22 +913,8 @@
                     </p>
                 </div>
             @endif
+            </div>
 
-            <script>
-                // the year chosen for the annual exports goes into both download links (and the chip on each card)
-                document.addEventListener('DOMContentLoaded', function () {
-                    const select = document.getElementById('exportYear');
-                    if (!select) return;
-                    const sync = () => {
-                        document.querySelectorAll('[data-export-link]').forEach((a) => {
-                            a.href = a.dataset.base + '?year=' + encodeURIComponent(select.value);
-                        });
-                        document.querySelectorAll('[data-export-year]').forEach((s) => { s.textContent = select.value; });
-                    };
-                    select.addEventListener('change', sync);
-                    sync();
-                });
-            </script>
             <script>
                 function toggleAccordion() {
                     const content = document.getElementById('accordion-content');

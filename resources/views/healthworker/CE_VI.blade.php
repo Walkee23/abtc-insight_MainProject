@@ -346,8 +346,8 @@
                                 <h3 class="text-sm font-extrabold uppercase tracking-widest text-on-surface-variant">
                                     Wound Description &amp; Category</h3>
                             </div>
-                            <div class="grid grid-cols-2 gap-8">
-                                <div class="col-span-2">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
+                                <div class="col-span-1 sm:col-span-2">
                                     <label
                                         class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Site
                                         of Bite / Exposure <span class="text-error">*</span></label>
@@ -420,7 +420,7 @@
                                         </label>
                                     </div>
                                 </div>
-                                <div class="col-span-2">
+                                <div class="col-span-1 sm:col-span-2">
                                     @php
                                         $selectedTypes = old('wound_types', array_map('trim', explode(',', $section->wound_description ?? '')));
                                     @endphp

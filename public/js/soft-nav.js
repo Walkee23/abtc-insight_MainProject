@@ -12,8 +12,11 @@
  * and so does any problem (offline, expired session, a page that lacks the regions): the
  * browser simply loads the page the old way, so nothing is ever lost.
  *
- * Rules for regions: keep <script> tags outside them, and use delegated event listeners
- * (on document) for anything inside them, because a region is replaced as a whole.
+ * Rules for regions: a region is replaced as a whole, so event listeners inside it must be
+ * delegated (on document) or set up by a script that lives INSIDE the region and is written to
+ * run again. Mark such a region data-soft-scripts and its inline <script>s are re-run after
+ * every swap (a script must clean up anything it attached to document / window / body itself).
+ * data-soft-scroll="name" on a link or form scrolls that region into view after the update.
  */
 (function () {
     'use strict';
@@ -39,12 +42,25 @@
         return Array.prototype.slice.call(root.querySelectorAll('[data-soft-region]'));
     }
 
+    // inline scripts inside a swapped-in region do not run by themselves: run them again
+    function runScripts(root) {
+        Array.prototype.slice.call(root.querySelectorAll('script')).forEach(function (old) {
+            var type = (old.getAttribute('type') || '').toLowerCase();
+            if (type && type !== 'text/javascript' && type !== 'application/javascript') return;   // data blocks stay data
+            var fresh = document.createElement('script');
+            Array.prototype.forEach.call(old.attributes, function (a) { fresh.setAttribute(a.name, a.value); });
+            fresh.text = old.textContent;
+            old.parentNode.replaceChild(fresh, old);
+        });
+    }
+
     function inSoftScope(el) {
         return !!(el.closest('[data-soft-region]') || el.closest('[data-soft]'));
     }
 
     // ---- the swap ---------------------------------------------------------------------
-    function go(url, push, scrollToTop) {
+    // scroll: true = bring the first region's top into view if it scrolled away; "name" = that region, always
+    function go(url, push, scroll) {
         if (controller) controller.abort();
         controller = new AbortController();
         var mine = controller;
@@ -75,19 +91,26 @@
             }
             if (doc.title) document.title = doc.title;
 
-            var first = null;
+            var first = null, named = null;
             live.forEach(function (r) {
-                var node = document.importNode(fresh[r.getAttribute('data-soft-region')], true);
+                var name = r.getAttribute('data-soft-region');
+                var node = document.importNode(fresh[name], true);
                 node.classList.remove('soft-loading');
                 node.classList.add('soft-in');
                 r.replaceWith(node);
+                if (node.hasAttribute('data-soft-scripts')) {
+                    try { runScripts(node); } catch (err) { if (window.console) console.error(err); }
+                }
                 if (!first) first = node;
+                if (typeof scroll === 'string' && name === scroll) named = node;
             });
 
-            // after a page change, bring the top of the list back into view if it has scrolled away
-            if (scrollToTop && first) {
-                var top = first.getBoundingClientRect().top;
-                if (top < 80) window.scrollTo({ top: Math.max(0, window.pageYOffset + top - 96), behavior: 'smooth' });
+            // bring the updated list / results into view if they have scrolled away (or sit below the fold)
+            var target = typeof scroll === 'string' ? named : (scroll ? first : null);
+            if (target) {
+                var top = target.getBoundingClientRect().top;
+                var must = typeof scroll === 'string' ? (top < 80 || top > window.innerHeight * 0.45) : top < 80;
+                if (must) window.scrollTo({ top: Math.max(0, window.pageYOffset + top - 96), behavior: 'smooth' });
             }
             document.dispatchEvent(new CustomEvent('soft:updated'));
         }).catch(function (err) {
@@ -113,7 +136,7 @@
             && /(^|[?&])[a-z_]*page=/.test(url.search);
 
         e.preventDefault();
-        go(url, true, pageChanged);
+        go(url, true, a.getAttribute('data-soft-scroll') || pageChanged);
     });
 
     // ---- GET forms --------------------------------------------------------------------
@@ -136,7 +159,7 @@
         url.search = params.toString();
 
         e.preventDefault();
-        go(url, true, false);
+        go(url, true, form.getAttribute('data-soft-scroll') || false);
     });
 
     // ---- Back / Forward ---------------------------------------------------------------

@@ -138,61 +138,54 @@
             </a>
         </nav>
 </aside>
-<main class="flex-1 flex flex-col ml-72">
+<main class="flex-1 min-w-0 flex flex-col ml-64">
 <!-- TopNavBar -->
-<header class="flex justify-between items-center w-full h-16 px-8 sticky top-0 z-30 bg-white/85 dark:bg-slate-950/85 backdrop-blur-md z-30 shadow-sm shadow-slate-200/50 dark:shadow-none border-b border-slate-100/50">
-<div class="flex items-center gap-8">
-<div class="relative group">
-<span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 text-lg">search</span>
-<input class="pl-10 pr-4 py-1.5 bg-surface-container-low rounded-full text-sm focus:ring-2 focus:ring-primary/20 border-none outline-none w-72 transition-all" placeholder="Search analytics or case IDs..." type="text"/>
-</div>
-</div>
-<div class="flex items-center gap-4">
-<div class="hidden lg:flex items-center gap-2 px-3 py-1 bg-green-50 text-green-700 rounded-full text-[10px] font-bold uppercase tracking-wider">
-<span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
-                     Registered
+    <header class="flex justify-between items-center w-full h-16 px-8 sticky top-0 z-40 bg-slate-50/85 dark:bg-slate-900/85 backdrop-blur-md shadow-sm shadow-blue-900/5">
+        <div class="flex items-center gap-8">
+
+        </div>
+            <div class="flex items-center gap-4">
+                <div class="hidden lg:flex items-center gap-2 px-3 py-1 bg-green-50 text-green-700 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                    <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                        Registered
                 </div>
-<div class="flex items-center gap-1 border-r border-outline-variant/20 pr-4">
-<button class="p-2 text-slate-500 hover:bg-surface-container-high rounded-full transition-colors relative">
-<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
-<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-white"></span>
-</button>
-<button class="p-2 text-slate-500 hover:bg-surface-container-high rounded-full transition-colors">
-<span class="material-symbols-outlined" data-icon="help">help</span>
-</button>
-</div>
-<div class="relative group cursor-pointer pl-2">
-<div class="flex items-center gap-3">
-<div class="text-right hidden sm:block">
-<p class="text-xs font-bold text-on-surface leading-tight">{{ Auth::user()->full_name ?? 'Staff' }}</p>
-<p class="text-[10px] text-on-surface-variant leading-tight">ABTC Staff</p>
-</div>
-<div class="w-9 h-9 rounded-full overflow-hidden ring-2 ring-slate-100 border border-slate-200">
-<img alt="Staff Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCG2nKFZGyYwHKRYoCQT3e-DFv4lhmbOaefZN_pNQ6HkWmU6VSYzY9h1P_RiS1yqN4hdqhLCiP4K6Ea7gARSWG6HK0qt5boVFtv4S1YiWv2O1vutB_s88IrPG_wB7x02LuJj9pA0d9mKcPXNHWbCr_BIg-CKtC_tZCmVz1DmJURoecp6Re7uXEhv9FI1dvVxhWIOr9RdMIXbtQRUjsSOkEc-i5gI18j8iBFPISCiDNXnFP_TQidoFnFp1cFnCO6SpZTN3UK4BIZ1wd1" />
-<div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
-</div>
-</div>
-<!-- Hover Dropdown Menu -->
-<div class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-<div class="p-2">
-<a href="#" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary rounded-lg transition-colors">
-<span class="material-symbols-outlined text-[18px]">person</span>
-My Profile
-</a>
-<div class="h-px bg-slate-100 my-1"></div>
-<form method="POST" action="{{ route('logout') }}">
-@csrf
-<button type="submit" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors text-left cursor-pointer">
-<span class="material-symbols-outlined text-[18px]">logout</span>
-Log Out
-</button>
-</form>
-</div>
-</div>
-</div>
+            <div class="flex items-center gap-1 border-r border-outline-variant/20 pr-4">
+        </div>
+        
+                <div class="relative group cursor-pointer pl-2">
+                    <div class="flex items-center gap-3">
+                        <div class="text-right hidden sm:block">
+                            <p class="text-xs font-bold text-on-surface leading-tight">{{ Auth::user()->full_name }}</p>
+                            <p class="text-[10px] text-on-surface-variant leading-tight">{{ Auth::user()->role }}</p>
+                        </div>
+                        <div class="relative w-9 h-9">
+                            <div class="w-9 h-9 rounded-full overflow-hidden ring-2 ring-slate-100 border border-slate-200">
+                                <img alt="{{ Auth::user()->full_name }}" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCG2nKFZGyYwHKRYoCQT3e-DFv4lhmbOaefZN_pNQ6HkWmU6VSYzY9h1P_RiS1yqN4hdqhLCiP4K6Ea7gARSWG6HK0qt5boVFtv4S1YiWv2O1vutB_s88IrPG_wB7x02LuJj9pA0d9mKcPXNHWbCr_BIg-CKtC_tZCmVz1DmJURoecp6Re7uXEhv9FI1dvVxhWIOr9RdMIXbtQRUjsSOkEc-i5gI18j8iBFPISCiDNXnFP_TQidoFnFp1cFnCO6SpZTN3UK4BIZ1wd1" />
+                            </div>
+                            <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                        </div>
+                    </div>
+                    <!-- Hover Dropdown Menu -->
+                    <div class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                        <div class="p-2">
+                            <button type="button" onclick="openProfileModal()" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary rounded-lg transition-colors text-left cursor-pointer">  
+                                <span class="material-symbols-outlined text-[18px]">person</span>
+                                My Profile
+                            </button>
+                            <div class="h-px bg-slate-100 my-1"></div>
+                            <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                <button type="submit" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors text-left cursor-pointer">
+                                    <span class="material-symbols-outlined text-[18px]">logout</span>
+                                    Log Out
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
 </header>
 <!-- Main Content -->
-<div class="p-8 max-w-7xl mx-auto w-full space-y-8">
+<div class="p-8 w-full space-y-8">
 <!-- Header Section -->
 <section>
 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -232,12 +225,7 @@ Log Out
                         Search Results
                     </h3>
 <div class="flex gap-2">
-<button class="p-2 hover:bg-surface-container-low rounded-lg transition-colors">
-<span class="material-symbols-outlined text-on-surface-variant" data-icon="filter_list">filter_list</span>
-</button>
-<button class="p-2 hover:bg-surface-container-low rounded-lg transition-colors">
-<span class="material-symbols-outlined text-on-surface-variant" data-icon="download">download</span>
-</button>
+
 </div>
 </div>
 <div class="overflow-x-auto">
@@ -489,4 +477,130 @@ Log Out
 </section>
 </div>
 </main>
-</body></html>
+
+            <!-- My Profile Modal -->
+@php
+    $user = Auth::user();
+
+    // Shared placeholder descriptions (edit these)
+    $hwText = 'Provides frontline health services, records and updates patient information, conducts health monitoring, and supports community health programs.';
+    $staffText = 'Handles administrative and clerical tasks, manages records and documents, assists clients, and supports the daily operations of the center.';
+
+    // Per-user job descriptions, keyed by username
+    $jobDescriptions = [
+        'thelmaeleccion'        => 'Attending physician. Examines and treats patients, oversees health programs, and guides the health workers on patient care.',
+        'otreborenriquez'       => $hwText,
+        'annemarielascuna'      => $hwText,
+        'brenalleeracaza'       => $hwText,
+        'richardninopangilinan' => $hwText,
+        'loretaallera'          => $staffText,
+        'genevevecugay'         => $staffText,
+        'donalizanavarro'       => $staffText,
+        'liecelberdera'         => $staffText,
+        'ginaoporto'            => $staffText,
+        'rolandnabua'           => $staffText,
+        'queenieeslabon'        => $staffText,
+        'merlizacarunggay'      => $staffText,
+    ];
+
+    $jobDescription = $jobDescriptions[$user->username]
+        ?? ($user->role === 'Health Worker' ? $hwText : $staffText);
+
+    $isHW = $user->role === 'Health Worker';
+    $badgeClasses = $isHW
+        ? 'bg-emerald-50 text-emerald-700 ring-emerald-200'
+        : 'bg-sky-50 text-sky-700 ring-sky-200';
+@endphp
+
+<div id="profileModal"
+     class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 opacity-0 transition-opacity duration-200"
+     onclick="if(event.target === this) closeProfileModal()">
+
+    <div id="profileCard"
+         class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden scale-95 translate-y-2 transition-all duration-200">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+            <h3 class="text-lg font-bold text-slate-800">My Profile</h3>
+            <button type="button" onclick="closeProfileModal()"
+                    class="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors cursor-pointer">
+                <span class="material-symbols-outlined text-[20px]">close</span>
+            </button>
+        </div>
+
+        <!-- Details -->
+        <div class="p-6 space-y-3">
+
+            <div class="flex items-start gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                <div class="w-10 h-10 shrink-0 rounded-lg bg-white shadow-sm flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined text-[22px]">person</span>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Account Name</p>
+                    <p class="text-sm font-semibold text-slate-800 break-words">{{ $user->full_name }}</p>
+                </div>
+            </div>
+
+            <div class="flex items-start gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                <div class="w-10 h-10 shrink-0 rounded-lg bg-white shadow-sm flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined text-[22px]">admin_panel_settings</span>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Role in the System</p>
+                    <span class="mt-1 inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold ring-1 {{ $badgeClasses }}">
+                        {{ $user->role }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="flex items-start gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                <div class="w-10 h-10 shrink-0 rounded-lg bg-white shadow-sm flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined text-[22px]">work</span>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Job Description</p>
+                    <p class="text-sm text-slate-600 leading-relaxed">{{ $jobDescription }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+            <button type="button" onclick="closeProfileModal()"
+                    class="px-5 py-2 rounded-lg bg-primary text-white text-sm font-semibold hover:opacity-90 transition-opacity cursor-pointer">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openProfileModal() {
+        const modal = document.getElementById('profileModal');
+        const card = document.getElementById('profileCard');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        requestAnimationFrame(() => {
+            modal.classList.remove('opacity-0');
+            card.classList.remove('scale-95', 'translate-y-2');
+        });
+    }
+
+    function closeProfileModal() {
+        const modal = document.getElementById('profileModal');
+        const card = document.getElementById('profileCard');
+        modal.classList.add('opacity-0');
+        card.classList.add('scale-95', 'translate-y-2');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }, 200);
+    }
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') closeProfileModal();
+    });
+</script>
+    @include('partials.idle-timeout')
+</body>
+</html>

@@ -7,19 +7,29 @@ use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        web: __DIR__.'/../routes/web.php',
-        commands: __DIR__.'/../routes/console.php',
+        web: __DIR__ . '/../routes/web.php',
+        commands: __DIR__ . '/../routes/console.php',
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureAdmin::class,
+            'role'  => \App\Http\Middleware\EnsureRole::class,
         ]);
+
+        $middleware->redirectUsersTo(function (Request $request) {
+            return match ($request->user()?->role) {
+                'Admin'         => '/admin/dashboard',
+                'Staff'         => '/staff/dashboard',
+                'Health Worker' => '/healthworker/dashboard',
+                'BHW'           => '/bhw/dashboard',
+                'IT'            => '/it/dashboard',
+                default         => '/',
+            };
+        });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        // JSON errors for the API, and for background (fetch) requests made by the admin pages,
-        // so a failure shows a readable message instead of an HTML error page
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => $request->is('api/*') || ($request->is('admin/*') && $request->expectsJson()),
+            fn(Request $request) => $request->is('api/*') || ($request->is('admin/*') && $request->expectsJson()),
         );
     })->create();

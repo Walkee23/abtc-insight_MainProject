@@ -149,38 +149,34 @@
     <!-- Main Content Area -->
     <main class="flex-1 flex flex-col ml-64">
                 <!-- TopNavBar -->
-        <div class="flex justify-end items-center w-full h-16 px-8 sticky top-0 z-30 bg-white/85 dark:bg-slate-950/85 backdrop-blur-md shadow-sm shadow-slate-200/50 dark:shadow-none border-b border-slate-100/50">
+            <div class="flex justify-end items-center w-full h-16 px-8 sticky top-0 z-40 bg-slate-50/85 dark:bg-slate-900/85 backdrop-blur-md shadow-sm shadow-blue-900/5">
             <div class="flex items-center gap-4">
                 <div class="flex items-center gap-1 border-r border-outline-variant/20 pr-4">
-                    <button class="p-2 text-slate-500 hover:bg-surface-container-high rounded-full transition-colors relative">
-                        <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
-                        <span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-white"></span>
-                    </button>
-                    <button class="p-2 text-slate-500 hover:bg-surface-container-high rounded-full transition-colors">
-                        <span class="material-symbols-outlined" data-icon="help">help</span>
-                    </button>
                 </div>
+
+                <!-- Name of the User -->
 
                 <div class="relative group cursor-pointer pl-2">
                     <div class="flex items-center gap-3">
                         <div class="text-right hidden sm:block">
-                            <p class="text-xs font-bold text-on-surface leading-tight">{{ Auth::user()->full_name ?? 'Staff' }}</p>
-                            <p class="text-[10px] text-on-surface-variant leading-tight">ABTC Staff</p>
+                            <p class="text-xs font-bold text-on-surface leading-tight">{{ Auth::user()->full_name }}</p>
+                            <p class="text-[10px] text-on-surface-variant leading-tight">{{ Auth::user()->role }}</p>
                         </div>
                         <div class="relative w-9 h-9">
                             <div class="w-9 h-9 rounded-full overflow-hidden ring-2 ring-slate-100 border border-slate-200">
-                                <img alt="Staff Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCG2nKFZGyYwHKRYoCQT3e-DFv4lhmbOaefZN_pNQ6HkWmU6VSYzY9h1P_RiS1yqN4hdqhLCiP4K6Ea7gARSWG6HK0qt5boVFtv4S1YiWv2O1vutB_s88IrPG_wB7x02LuJj9pA0d9mKcPXNHWbCr_BIg-CKtC_tZCmVz1DmJURoecp6Re7uXEhv9FI1dvVxhWIOr9RdMIXbtQRUjsSOkEc-i5gI18j8iBFPISCiDNXnFP_TQidoFnFp1cFnCO6SpZTN3UK4BIZ1wd1" />
+                                <img alt="{{ Auth::user()->full_name }}" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCG2nKFZGyYwHKRYoCQT3e-DFv4lhmbOaefZN_pNQ6HkWmU6VSYzY9h1P_RiS1yqN4hdqhLCiP4K6Ea7gARSWG6HK0qt5boVFtv4S1YiWv2O1vutB_s88IrPG_wB7x02LuJj9pA0d9mKcPXNHWbCr_BIg-CKtC_tZCmVz1DmJURoecp6Re7uXEhv9FI1dvVxhWIOr9RdMIXbtQRUjsSOkEc-i5gI18j8iBFPISCiDNXnFP_TQidoFnFp1cFnCO6SpZTN3UK4BIZ1wd1" />
                             </div>
                             <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
                         </div>
                     </div>
                     <!-- Hover Dropdown Menu -->
+
                     <div class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                         <div class="p-2">
-                            <a href="#" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary rounded-lg transition-colors">
+                            <button type="button" onclick="openProfileModal()" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary rounded-lg transition-colors text-left cursor-pointer">
                                 <span class="material-symbols-outlined text-[18px]">person</span>
                                 My Profile
-                            </a>
+                            </button>
                             <div class="h-px bg-slate-100 my-1"></div>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
@@ -291,126 +287,249 @@
             </div>
 
             <!-- Expected Follow-up Visits Card & Scrollable Name List -->
-<div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/20 shadow-sm">
-    <div class="flex justify-between items-center mb-4">
-        <h3 class="font-bold text-sm text-on-surface flex items-center gap-2">
-            <span class="material-symbols-outlined text-emerald-600 text-[18px]">event_repeat</span>
-            Scheduled Follow-Up Inflow (Due Today) — <span class="text-xs text-slate-500 font-normal">Click a card to view names</span>
-        </h3>
-        <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">DOH Schedule</span>
+            <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/20 shadow-sm">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-sm text-on-surface flex items-center gap-2">
+                        <span class="material-symbols-outlined text-emerald-600 text-[18px]">event_repeat</span>
+                        Scheduled Follow-Up Inflow (Due Today) — <span class="text-xs text-slate-500 font-normal">Click a card to view names</span>
+                    </h3>
+                    <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">DOH Schedule</span>
+                </div>
+
+                <!-- Clickable Cards -->
+                <div class="grid grid-cols-3 gap-3 text-center mb-4">
+                    <div id="cardDay3" onclick="switchPatientTab('day3')" class="p-3 bg-surface-container-low rounded-xl border-2 border-outline-variant/10 cursor-pointer hover:bg-blue-50 transition-all shadow-sm group">
+                        <span class="text-[10px] font-bold text-on-surface-variant block uppercase group-hover:text-blue-700">Day 3 (Dose 2)</span>
+                        <span class="text-xl font-black text-on-surface mt-1 block group-hover:text-blue-800">{{ $dueDay3Count ?? 0 }}</span>
+                        <span class="text-[10px] text-primary font-semibold underline">View Names</span>
+                    </div>
+                    <div id="cardDay7" onclick="switchPatientTab('day7')" class="p-3 bg-surface-container-low rounded-xl border-2 border-outline-variant/10 cursor-pointer hover:bg-purple-50 transition-all shadow-sm group">
+                        <span class="text-[10px] font-bold text-on-surface-variant block uppercase group-hover:text-purple-700">Day 7 (Dose 3)</span>
+                        <span class="text-xl font-black text-on-surface mt-1 block group-hover:text-purple-800">{{ $dueDay7Count ?? 0 }}</span>
+                        <span class="text-[10px] text-purple-700 font-semibold underline">View Names</span>
+                    </div>
+                    <div id="cardDay28" onclick="switchPatientTab('day28')" class="p-3 bg-surface-container-low rounded-xl border-2 border-outline-variant/10 cursor-pointer hover:bg-emerald-50 transition-all shadow-sm group">
+                        <span class="text-[10px] font-bold text-on-surface-variant block uppercase group-hover:text-emerald-700">Day 28 (Dose 4)</span>
+                        <span class="text-xl font-black text-on-surface mt-1 block group-hover:text-emerald-800">{{ $dueDay28Count ?? 0 }}</span>
+                        <span class="text-[10px] text-emerald-700 font-semibold underline">View Names</span>
+                    </div>
+                </div>
+
+                <!-- Scrollable Name List Area at the Bottom -->
+                <div id="patientListContainer" class="border-t border-outline-variant/10 pt-4 mt-4 hidden">
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 id="listTitle" class="text-xs font-bold uppercase tracking-wider text-slate-700">Returning Patient Names</h4>
+                        <button onclick="closePatientList()" class="text-xs text-red-600 font-bold hover:underline">Close List</button>
+                    </div>
+
+                    <div class="max-h-56 overflow-y-auto pr-2 border border-slate-200 rounded-xl bg-white shadow-inner p-3">
+                        
+                    <!-- Day 3 List -->
+                    <div id="content_day3" class="patient-tab-content hidden space-y-2">
+                        <p class="text-[11px] font-bold text-blue-800 uppercase tracking-wide mb-2">Day 3 (Dose 2) Patients:</p>
+                        @if(count($patientsDay3 ?? []) > 0)
+                            <ul class="divide-y divide-slate-100">
+                                @foreach($patientsDay3 as $p)
+                                    <li class="py-2 px-3 hover:bg-slate-50 rounded-lg flex justify-between items-center text-xs">
+                                        <span class="font-bold text-slate-950">• {{ $p->patient_name }}</span>
+                                        <span class="text-[10px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">{{ $p->queue_id ?? 'N/A' }}</span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        @else
+                            <p class="py-4 text-center text-slate-400 text-xs">No patients found for Day 3.</p>
+                        @endif
+                    </div>
+
+                    <!-- Day 7 List -->
+                    <div id="content_day7" class="patient-tab-content hidden space-y-2">
+                        <p class="text-[11px] font-bold text-purple-800 uppercase tracking-wide mb-2">Day 7 (Dose 3) Patients:</p>
+                        @if(count($patientsDay7 ?? []) > 0)
+                            <ul class="divide-y divide-slate-100">
+                                @foreach($patientsDay7 as $p)
+                                    <li class="py-2 px-3 hover:bg-slate-50 rounded-lg flex justify-between items-center text-xs">
+                                        <span class="font-bold text-slate-950">• {{ $p->patient_name }}</span>
+                                        <span class="text-[10px] font-semibold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">{{ $p->queue_id ?? 'N/A' }}</span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        @else
+                            <p class="py-4 text-center text-slate-400 text-xs">No patients found for Day 7.</p>
+                        @endif
+                    </div>
+
+                    <!-- Day 28 List -->
+                    <div id="content_day28" class="patient-tab-content hidden space-y-2">
+                        <p class="text-[11px] font-bold text-emerald-800 uppercase tracking-wide mb-2">Day 28 (Dose 4) Patients:</p>
+                        @if(count($patientsDay28 ?? []) > 0)
+                            <ul class="divide-y divide-slate-100">
+                                @foreach($patientsDay28 as $p)
+                                    <li class="py-2 px-3 hover:bg-slate-50 rounded-lg flex justify-between items-center text-xs">
+                                        <span class="font-bold text-slate-950">• {{ $p->patient_name }}</span>
+                                        <span class="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">{{ $p->queue_id ?? 'N/A' }}</span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        @else
+                            <p class="py-4 text-center text-slate-400 text-xs">No patients found for Day 28.</p>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            <!-- JavaScript Toggle Handler -->
+            <script>
+            function switchPatientTab(dayKey) {
+                const container = document.getElementById('patientListContainer');
+                container.classList.remove('hidden');
+
+                document.querySelectorAll('.patient-tab-content').forEach(el => el.classList.add('hidden'));
+                document.getElementById('content_' + dayKey).classList.remove('hidden');
+
+                ['day3', 'day7', 'day28'].forEach(k => {
+                    const card = document.getElementById('card' + k.charAt(0).toUpperCase() + k.slice(1));
+                    card.classList.remove('border-blue-500', 'border-purple-500', 'border-emerald-500', 'bg-slate-100');
+                });
+
+                const activeCard = document.getElementById('card' + dayKey.charAt(0).toUpperCase() + dayKey.slice(1));
+                if(dayKey === 'day3') activeCard.classList.add('border-blue-500', 'bg-blue-50/50');
+                if(dayKey === 'day7') activeCard.classList.add('border-purple-500', 'bg-purple-50/50');
+                if(dayKey === 'day28') activeCard.classList.add('border-emerald-500', 'bg-emerald-50/50');
+
+                container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+
+            function closePatientList() {
+                document.getElementById('patientListContainer').classList.add('hidden');
+                ['day3', 'day7', 'day28'].forEach(k => {
+                    const card = document.getElementById('card' + k.charAt(0).toUpperCase() + k.slice(1));
+                    card.classList.remove('border-blue-500', 'border-purple-500', 'border-emerald-500', 'bg-blue-50/50', 'bg-purple-50/50', 'bg-emerald-50/50');
+                });
+            }
+            </script>
+        </main>
+                    <!-- My Profile Modal -->
+@php
+    $user = Auth::user();
+
+    // Shared placeholder descriptions (edit these)
+    $hwText = 'Provides frontline health services, records and updates patient information, conducts health monitoring, and supports community health programs.';
+    $staffText = 'Handles administrative and clerical tasks, manages records and documents, assists clients, and supports the daily operations of the center.';
+
+    // Per-user job descriptions, keyed by username
+    $jobDescriptions = [
+        'thelmaeleccion'        => 'Attending physician. Examines and treats patients, oversees health programs, and guides the health workers on patient care.',
+        'otreborenriquez'       => $hwText,
+        'annemarielascuna'      => $hwText,
+        'brenalleeracaza'       => $hwText,
+        'richardninopangilinan' => $hwText,
+        'loretaallera'          => $staffText,
+        'genevevecugay'         => $staffText,
+        'donalizanavarro'       => $staffText,
+        'liecelberdera'         => $staffText,
+        'ginaoporto'            => $staffText,
+        'rolandnabua'           => $staffText,
+        'queenieeslabon'        => $staffText,
+        'merlizacarunggay'      => $staffText,
+    ];
+
+    $jobDescription = $jobDescriptions[$user->username]
+        ?? ($user->role === 'Health Worker' ? $hwText : $staffText);
+
+    $isHW = $user->role === 'Health Worker';
+    $badgeClasses = $isHW
+        ? 'bg-emerald-50 text-emerald-700 ring-emerald-200'
+        : 'bg-sky-50 text-sky-700 ring-sky-200';
+@endphp
+
+<div id="profileModal"
+     class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 opacity-0 transition-opacity duration-200"
+     onclick="if(event.target === this) closeProfileModal()">
+
+    <div id="profileCard"
+         class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden scale-95 translate-y-2 transition-all duration-200">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+            <h3 class="text-lg font-bold text-slate-800">My Profile</h3>
+            <button type="button" onclick="closeProfileModal()"
+                    class="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors cursor-pointer">
+                <span class="material-symbols-outlined text-[20px]">close</span>
+            </button>
+        </div>
+
+        <!-- Details -->
+        <div class="p-6 space-y-3">
+
+            <div class="flex items-start gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                <div class="w-10 h-10 shrink-0 rounded-lg bg-white shadow-sm flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined text-[22px]">person</span>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Account Name</p>
+                    <p class="text-sm font-semibold text-slate-800 break-words">{{ $user->full_name }}</p>
+                </div>
+            </div>
+
+            <div class="flex items-start gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                <div class="w-10 h-10 shrink-0 rounded-lg bg-white shadow-sm flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined text-[22px]">admin_panel_settings</span>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Role in the System</p>
+                    <span class="mt-1 inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold ring-1 {{ $badgeClasses }}">
+                        {{ $user->role }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="flex items-start gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                <div class="w-10 h-10 shrink-0 rounded-lg bg-white shadow-sm flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined text-[22px]">work</span>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Job Description</p>
+                    <p class="text-sm text-slate-600 leading-relaxed">{{ $jobDescription }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+            <button type="button" onclick="closeProfileModal()"
+                    class="px-5 py-2 rounded-lg bg-primary text-white text-sm font-semibold hover:opacity-90 transition-opacity cursor-pointer">
+                Close
+            </button>
+        </div>
     </div>
+</div>
 
-    <!-- Clickable Cards -->
-    <div class="grid grid-cols-3 gap-3 text-center mb-4">
-        <div id="cardDay3" onclick="switchPatientTab('day3')" class="p-3 bg-surface-container-low rounded-xl border-2 border-outline-variant/10 cursor-pointer hover:bg-blue-50 transition-all shadow-sm group">
-            <span class="text-[10px] font-bold text-on-surface-variant block uppercase group-hover:text-blue-700">Day 3 (Dose 2)</span>
-            <span class="text-xl font-black text-on-surface mt-1 block group-hover:text-blue-800">{{ $dueDay3Count ?? 0 }}</span>
-            <span class="text-[10px] text-primary font-semibold underline">View Names</span>
-        </div>
-        <div id="cardDay7" onclick="switchPatientTab('day7')" class="p-3 bg-surface-container-low rounded-xl border-2 border-outline-variant/10 cursor-pointer hover:bg-purple-50 transition-all shadow-sm group">
-            <span class="text-[10px] font-bold text-on-surface-variant block uppercase group-hover:text-purple-700">Day 7 (Dose 3)</span>
-            <span class="text-xl font-black text-on-surface mt-1 block group-hover:text-purple-800">{{ $dueDay7Count ?? 0 }}</span>
-            <span class="text-[10px] text-purple-700 font-semibold underline">View Names</span>
-        </div>
-        <div id="cardDay28" onclick="switchPatientTab('day28')" class="p-3 bg-surface-container-low rounded-xl border-2 border-outline-variant/10 cursor-pointer hover:bg-emerald-50 transition-all shadow-sm group">
-            <span class="text-[10px] font-bold text-on-surface-variant block uppercase group-hover:text-emerald-700">Day 28 (Dose 4)</span>
-            <span class="text-xl font-black text-on-surface mt-1 block group-hover:text-emerald-800">{{ $dueDay28Count ?? 0 }}</span>
-            <span class="text-[10px] text-emerald-700 font-semibold underline">View Names</span>
-        </div>
-    </div>
-
-    <!-- Scrollable Name List Area at the Bottom -->
-    <div id="patientListContainer" class="border-t border-outline-variant/10 pt-4 mt-4 hidden">
-        <div class="flex justify-between items-center mb-3">
-            <h4 id="listTitle" class="text-xs font-bold uppercase tracking-wider text-slate-700">Returning Patient Names</h4>
-            <button onclick="closePatientList()" class="text-xs text-red-600 font-bold hover:underline">Close List</button>
-        </div>
-
-        <div class="max-h-56 overflow-y-auto pr-2 border border-slate-200 rounded-xl bg-white shadow-inner p-3">
-            
-            <!-- Day 3 List -->
-            <div id="content_day3" class="patient-tab-content hidden space-y-2">
-                <p class="text-[11px] font-bold text-blue-800 uppercase tracking-wide mb-2">Day 3 (Dose 2) Patients:</p>
-                @if(count($patientsDay3 ?? []) > 0)
-                    <ul class="divide-y divide-slate-100">
-                        @foreach($patientsDay3 as $p)
-                            <li class="py-2 px-3 hover:bg-slate-50 rounded-lg flex justify-between items-center text-xs">
-                                <span class="font-bold text-slate-950">• {{ $p->patient_name }}</span>
-                                <span class="text-[10px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">{{ $p->queue_id ?? 'N/A' }}</span>
-                            </li>
-                        @endforeach
-                    </ul>
-                @else
-                    <p class="py-4 text-center text-slate-400 text-xs">No patients found for Day 3.</p>
-                @endif
-            </div>
-
-            <!-- Day 7 List -->
-            <div id="content_day7" class="patient-tab-content hidden space-y-2">
-                <p class="text-[11px] font-bold text-purple-800 uppercase tracking-wide mb-2">Day 7 (Dose 3) Patients:</p>
-                @if(count($patientsDay7 ?? []) > 0)
-                    <ul class="divide-y divide-slate-100">
-                        @foreach($patientsDay7 as $p)
-                            <li class="py-2 px-3 hover:bg-slate-50 rounded-lg flex justify-between items-center text-xs">
-                                <span class="font-bold text-slate-950">• {{ $p->patient_name }}</span>
-                                <span class="text-[10px] font-semibold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">{{ $p->queue_id ?? 'N/A' }}</span>
-                            </li>
-                        @endforeach
-                    </ul>
-                @else
-                    <p class="py-4 text-center text-slate-400 text-xs">No patients found for Day 7.</p>
-                @endif
-            </div>
-
-            <!-- Day 28 List -->
-            <div id="content_day28" class="patient-tab-content hidden space-y-2">
-                <p class="text-[11px] font-bold text-emerald-800 uppercase tracking-wide mb-2">Day 28 (Dose 4) Patients:</p>
-                @if(count($patientsDay28 ?? []) > 0)
-                    <ul class="divide-y divide-slate-100">
-                        @foreach($patientsDay28 as $p)
-                            <li class="py-2 px-3 hover:bg-slate-50 rounded-lg flex justify-between items-center text-xs">
-                                <span class="font-bold text-slate-950">• {{ $p->patient_name }}</span>
-                                <span class="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">{{ $p->queue_id ?? 'N/A' }}</span>
-                            </li>
-                        @endforeach
-                    </ul>
-                @else
-                    <p class="py-4 text-center text-slate-400 text-xs">No patients found for Day 28.</p>
-                @endif
-            </div>
-
-        </div>
-       <!-- JavaScript Toggle Handler -->
 <script>
-function switchPatientTab(dayKey) {
-    const container = document.getElementById('patientListContainer');
-    container.classList.remove('hidden');
+    function openProfileModal() {
+        const modal = document.getElementById('profileModal');
+        const card = document.getElementById('profileCard');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        requestAnimationFrame(() => {
+            modal.classList.remove('opacity-0');
+            card.classList.remove('scale-95', 'translate-y-2');
+        });
+    }
 
-    document.querySelectorAll('.patient-tab-content').forEach(el => el.classList.add('hidden'));
-    document.getElementById('content_' + dayKey).classList.remove('hidden');
+    function closeProfileModal() {
+        const modal = document.getElementById('profileModal');
+        const card = document.getElementById('profileCard');
+        modal.classList.add('opacity-0');
+        card.classList.add('scale-95', 'translate-y-2');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }, 200);
+    }
 
-    ['day3', 'day7', 'day28'].forEach(k => {
-        const card = document.getElementById('card' + k.charAt(0).toUpperCase() + k.slice(1));
-        card.classList.remove('border-blue-500', 'border-purple-500', 'border-emerald-500', 'bg-slate-100');
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') closeProfileModal();
     });
-
-    const activeCard = document.getElementById('card' + dayKey.charAt(0).toUpperCase() + dayKey.slice(1));
-    if(dayKey === 'day3') activeCard.classList.add('border-blue-500', 'bg-blue-50/50');
-    if(dayKey === 'day7') activeCard.classList.add('border-purple-500', 'bg-purple-50/50');
-    if(dayKey === 'day28') activeCard.classList.add('border-emerald-500', 'bg-emerald-50/50');
-
-    container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-function closePatientList() {
-    document.getElementById('patientListContainer').classList.add('hidden');
-    ['day3', 'day7', 'day28'].forEach(k => {
-        const card = document.getElementById('card' + k.charAt(0).toUpperCase() + k.slice(1));
-        card.classList.remove('border-blue-500', 'border-purple-500', 'border-emerald-500', 'bg-blue-50/50', 'bg-purple-50/50', 'bg-emerald-50/50');
-    });
-}
 </script>
-
-    </main>
+@include('partials.idle-timeout')
 </body>
 </html>

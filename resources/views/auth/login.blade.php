@@ -157,6 +157,13 @@
                         </div>
                     </div>
 
+                    @if(request('timeout'))
+                    <div class="flex items-center gap-2 text-amber-700 bg-amber-50 border border-amber-200 text-sm font-semibold px-3 py-2 rounded-lg">
+                        <span class="material-symbols-outlined text-[18px]">schedule</span>
+                        You were logged out due to inactivity. Please sign in again.
+                    </div>
+                    @endif
+
                     @if($errors->any())
                     <div class="text-red-500 text-sm font-semibold px-2">
                         {{ $errors->first() }}
@@ -176,10 +183,21 @@
                     </div>
 
                     <div class="text-center pt-2">
-                        <a class="text-sm font-medium text-primary hover:text-primary-container transition-colors inline-flex items-center gap-1 group" href="#">
-                            Forgot Password?
-                            <span class="material-symbols-outlined text-[16px] group-hover:translate-x-0.5 transition-transform">chevron_right</span>
-                        </a>
+                        <div class="relative inline-block group">
+                            <a class="text-sm font-medium text-primary hover:text-primary-container transition-colors inline-flex items-center gap-1"
+                            href="#" onclick="return false;" tabindex="0" aria-describedby="forgot-tip">
+                                Forgot Password?
+                                <span class="material-symbols-outlined text-[16px] group-hover:translate-x-0.5 transition-transform">chevron_right</span>
+                            </a>
+
+                            <!-- Hover / focus tooltip -->
+                            <div id="forgot-tip" role="tooltip"
+                                class="pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white shadow-xl
+                                        opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-all duration-150">
+                                Please visit or contact the System Administrator to reset your password.
+                                <span class="absolute left-1/2 -translate-x-1/2 top-full border-4 border-transparent border-t-slate-900"></span>
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>

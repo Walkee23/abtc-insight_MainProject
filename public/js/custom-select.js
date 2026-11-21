@@ -8,7 +8,7 @@
  *
  * Add to a page:  <script src="{{ asset('js/custom-select.js') }}" defer></script>
  * Opt a select out:  <select data-native> ... </select>
- * Touch screens keep the phone's own picker, which is nicer to use there.
+ * Phones and tablets get the same styled menu (a tap opens it), so every page looks alike on every screen.
  */
 (function () {
     'use strict';
@@ -42,6 +42,7 @@
         '.cs-opt{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:9px 10px;margin:1px 0;',
         'border-radius:9px;cursor:pointer;font-weight:500;user-select:none;-webkit-user-select:none;transition:background-color .08s ease}',
         '.cs-opt .cs-txt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+        '@media (pointer:coarse){.cs-opt{padding:13px 12px}.cs-menu{border-radius:16px}}',
         '.cs-opt.cs-active{background:#f1f5f9;color:#0f172a}',
         '.cs-opt[aria-selected="true"]{background:#eff6ff;color:#004a93;font-weight:700}',
         '.cs-opt[aria-selected="true"].cs-active{background:#dbeafe}',
@@ -62,14 +63,9 @@
     style.textContent = CSS;
     (document.head || document.documentElement).appendChild(style);
 
-    // phones and tablets: leave the native picker alone
-    function coarse() {
-        return window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
-    }
-
     function eligible(s) {
         return !!s && s.tagName === 'SELECT' && !s.multiple && !s.disabled && (!s.size || s.size <= 1)
-            && !s.hasAttribute('data-native') && !(s.closest && s.closest('[data-native-select]')) && !coarse();
+            && !s.hasAttribute('data-native') && !(s.closest && s.closest('[data-native-select]'));
     }
 
     var state = null;          // { select, menu, items: [{opt, el, disabled}], active }
@@ -240,6 +236,32 @@
         }
         if (state) close(false);
     }, true);
+
+    // Touch: a tap on a select must not raise the phone's own picker. touchstart is cancelled (that also stops the
+    // follow-up mouse events) and the styled menu opens when the finger lifts, unless the finger moved (a scroll).
+    var touchSelect = null, touchX = 0, touchY = 0, touchMoved = false;
+    document.addEventListener('touchstart', function (e) {
+        var t = e.target, s = t && t.closest ? t.closest('select') : null;
+        touchSelect = null;
+        if (state && state.menu.contains(t)) return;            // the menu's own rows are ordinary taps
+        if (!eligible(s) || e.touches.length !== 1) return;
+        touchSelect = s;
+        touchMoved = false;
+        touchX = e.touches[0].clientX;
+        touchY = e.touches[0].clientY;
+        e.preventDefault();
+    }, { capture: true, passive: false });
+    document.addEventListener('touchmove', function (e) {
+        if (!touchSelect || !e.touches.length) return;
+        if (Math.abs(e.touches[0].clientX - touchX) > 8 || Math.abs(e.touches[0].clientY - touchY) > 8) touchMoved = true;
+    }, { capture: true, passive: true });
+    document.addEventListener('touchend', function (e) {
+        var s = touchSelect;
+        touchSelect = null;
+        if (!s || touchMoved) return;
+        e.preventDefault();
+        if (state && state.select === s) close(false); else open(s);
+    }, { capture: true, passive: false });
 
     document.addEventListener('click', function (e) {
         if (!state || !state.menu.contains(e.target)) return;

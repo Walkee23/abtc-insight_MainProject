@@ -423,7 +423,7 @@
                             late), by barangay, across all health workers</p>
                     </div>
                     <a href="{{ route('healthworker.compliance.export', $scope === 'all' ? ['scope' => 'all'] : []) }}"
-                        class="px-6 py-3 bg-primary text-on-primary rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-primary/20 active:scale-95 transition-all whitespace-nowrap">
+                        class="w-full md:w-auto justify-center text-center px-6 py-3 bg-primary text-on-primary rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-primary/20 active:scale-95 transition-all md:whitespace-nowrap">
                         Download {{ $scope === 'all' ? 'Facility' : 'My' }} Compliance Report
                         <span class="material-symbols-outlined text-sm">download</span>
                     </a>

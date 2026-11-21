@@ -124,8 +124,11 @@
     // A box that really overflows sideways is marked (slim visible scrollbar, see mobile.css) and, when its
     // content is laid out as a block (a table), gets a small "swipe sideways" line that stays put while scrolling.
     function markScrollable() {
-        document.querySelectorAll('.overflow-x-auto, .mn-table-scroll, .mn-chart-scroll').forEach(function (el) {
+        // a box that scrolls up/down (overflow-y-auto) scrolls sideways too when its content is wider, so it is included
+        document.querySelectorAll('.overflow-x-auto, .overflow-y-auto, .overflow-auto, .overflow-x-scroll, .overflow-scroll, .mn-table-scroll, .mn-chart-scroll').forEach(function (el) {
             if (el.closest('aside')) return;
+            var ox = getComputedStyle(el).overflowX;
+            if (ox !== 'auto' && ox !== 'scroll') return;
             var hint = null;
             for (var i = 0; i < el.children.length; i++) {
                 if (el.children[i].classList.contains('mn-swipe-hint')) { hint = el.children[i]; break; }

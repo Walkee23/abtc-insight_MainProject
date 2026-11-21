@@ -91,6 +91,7 @@
     <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
     <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
     <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
+    <script src="{{ asset('js/soft-nav.js') }}" defer></script>
 </head>
 <body class="bg-surface text-on-surface flex min-h-screen">
 
@@ -199,7 +200,7 @@
 </div>
 </section>
 <!-- Search Area -->
-<section class="bg-surface-container-lowest p-8 rounded-xl tonal-elevation ghost-border">
+<section data-soft-region="search" class="bg-surface-container-lowest p-8 rounded-xl tonal-elevation ghost-border">
     <form action="{{ route('staff.patient-lookup') }}" method="GET" class="flex flex-col md:flex-row gap-4 items-center">
         <div class="relative flex-1 w-full">
             <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
@@ -218,7 +219,7 @@
     </form>
 </section>
 <!-- Results Table -->
-<section class="bg-surface-container-lowest rounded-xl tonal-elevation ghost-border overflow-hidden">
+<section data-soft-region="results" class="bg-surface-container-lowest rounded-xl tonal-elevation ghost-border overflow-hidden">
 <div class="px-8 py-6 border-b border-outline-variant/10 flex justify-between items-center">
 <h3 class="font-bold text-on-surface flex items-center gap-2">
 <span class="material-symbols-outlined text-primary" data-icon="list_alt">list_alt</span>

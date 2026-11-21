@@ -95,6 +95,7 @@
     <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
     <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
     <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
+    <script src="{{ asset('js/soft-nav.js') }}" defer></script>
 </head>
 
 <body class="bg-surface text-on-surface antialiased">
@@ -217,6 +218,7 @@
           health records, rabies treatment progress, and clinical history within the Cebu City Health Center network.
         </p>
       </div>
+      <div data-soft-region="patients">
       <!-- Search & Filter -->
       <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
         <form method="GET" action="{{ route('healthworker.patient-database') }}" class="flex-1 min-w-[260px] max-w-md">
@@ -356,6 +358,7 @@
           @endif
         </div>
       </div>
+      </div>
       <!-- Contextual Hint -->
       <div class="mt-8 p-4 bg-primary/5 rounded-xl border border-primary/10 flex gap-4 items-start">
         <span class="material-symbols-outlined text-primary" data-icon="info">info</span>
@@ -479,22 +482,26 @@
         document.body.classList.remove('overflow-hidden');
       }
 
-      document.querySelectorAll('[data-view-record]').forEach((btn) =>
-        btn.addEventListener('click', () => openRecord(btn.dataset.viewRecord)));
+      // delegated: the patient list is replaced as a whole when it is searched or paged
+      document.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-view-record]');
+        if (btn) openRecord(btn.dataset.viewRecord);
+      });
       document.getElementById('recordClose').addEventListener('click', closeRecord);
       document.getElementById('recordBackdrop').addEventListener('click', closeRecord);
       document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeRecord(); });
 
       // The header search box searches the patient database too (Enter to search)
       const headerSearch = document.querySelector('header input[type="text"]');
-      const pageSearch = document.getElementById('patientSearchInput');
-      if (headerSearch && pageSearch) {
-        headerSearch.value = pageSearch.value;
+      const pageSearch = () => document.getElementById('patientSearchInput');
+      if (headerSearch && pageSearch()) {
+        headerSearch.value = pageSearch().value;
         headerSearch.addEventListener('keydown', (e) => {
-          if (e.key !== 'Enter') return;
-          pageSearch.value = headerSearch.value;
-          pageSearch.form.requestSubmit();
+          if (e.key !== 'Enter' || !pageSearch()) return;
+          pageSearch().value = headerSearch.value;
+          pageSearch().form.requestSubmit();
         });
+        document.addEventListener('soft:updated', () => { if (pageSearch()) headerSearch.value = pageSearch().value; });
       }
     })();
   </script>

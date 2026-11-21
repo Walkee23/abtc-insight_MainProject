@@ -89,6 +89,7 @@
     <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
     <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
     <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
+    <script src="{{ asset('js/soft-nav.js') }}" defer></script>
 </head>
 <body class="text-on-surface antialiased">
 <!-- SideNavBar -->
@@ -203,7 +204,7 @@
 </div>
 </section>
 <!-- Global Search Bar Section -->
-<section class="bg-surface-container-low p-6 rounded-lg ghost-border">
+<section data-soft-region="search" class="bg-surface-container-low p-6 rounded-lg ghost-border">
 <form action="{{ route('staff.patient-verification') }}" method="GET" class="flex gap-4">
 <div class="relative flex-1">
 <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary">person_search</span>
@@ -216,7 +217,7 @@
 </form>
 </section>
     <!-- BHW Referrals Section -->
-<section class="bg-surface-container-lowest rounded-lg ghost-border overflow-hidden shadow-sm">
+<section data-soft-region="bhw" class="bg-surface-container-lowest rounded-lg ghost-border overflow-hidden shadow-sm">
 <div class="p-5 flex items-center justify-between border-b border-slate-50">
 <div class="flex items-center gap-3">
 <div class="w-2 h-2 rounded-full bg-amber-500"></div>
@@ -263,7 +264,7 @@
 </div>
 </section>
 <!-- Priority Queue Section -->
-<section class="bg-surface-container-lowest rounded-lg ghost-border overflow-hidden shadow-sm">
+<section data-soft-region="priority" class="bg-surface-container-lowest rounded-lg ghost-border overflow-hidden shadow-sm">
 <div class="p-5 flex items-center justify-between border-b border-slate-50">
 <div class="flex items-center gap-3">
 <div class="w-2 h-2 rounded-full bg-green-500"></div>
@@ -308,7 +309,7 @@
 </div>
 </section>
 <!-- Normal Queue Section -->
-<section class="bg-surface-container-lowest rounded-lg ghost-border overflow-hidden shadow-sm">
+<section data-soft-region="normal" class="bg-surface-container-lowest rounded-lg ghost-border overflow-hidden shadow-sm">
 <div class="p-5 flex items-center justify-between border-b border-slate-50">
 <h2 class="text-lg font-bold text-on-surface tracking-tight">Normal Verification Queue (N-Series)</h2>
 <span class="text-xs font-medium text-on-surface-variant bg-surface-container px-3 py-1 rounded-full uppercase tracking-wider">{{ $normalQueue->total() }} Pending</span>

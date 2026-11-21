@@ -96,6 +96,7 @@
     <script src="{{ asset('js/custom-select.js') }}" defer></script>
     <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
     <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
+    <script src="{{ asset('js/soft-nav.js') }}" defer></script>
 </head>
 
 <body class="bg-surface text-on-surface">
@@ -428,7 +429,7 @@
                 @endif
             </section>
             <!-- Unclaimed Cases: cases nobody owns yet; claiming one locks it to this account -->
-            <section id="unclaimed" class="col-span-12 xl:col-span-8 bg-surface-container-lowest rounded-xl p-8 overflow-hidden">
+            <section id="unclaimed" data-soft-region="unclaimed" class="col-span-12 xl:col-span-8 bg-surface-container-lowest rounded-xl p-8 overflow-hidden">
                 @php $uActive = $uFilter['q'] !== '' || $uFilter['cat'] !== '' || $uFilter['type'] !== ''; @endphp
                 <div class="flex items-start justify-between gap-4 mb-6">
                     <div>
@@ -465,11 +466,6 @@
                         <button type="submit" class="px-4 py-2 text-xs font-bold text-white bg-primary hover:bg-primary-container rounded-lg transition-colors">Apply</button>
                     </div>
                 </form>
-                <script>
-                    document.getElementById('unclaimedFilterToggle').addEventListener('click', function () {
-                        document.getElementById('unclaimedFilterForm').classList.toggle('hidden');
-                    });
-                </script>
                 <div class="overflow-x-auto no-scrollbar">
                     <table class="w-full sm:min-w-[520px] text-left">
                         <thead>
@@ -525,6 +521,13 @@
                 </div>
                 @endif
             </section>
+            {{-- delegated, because the Unclaimed Cases card is replaced as a whole when it is filtered --}}
+            <script>
+                document.addEventListener('click', function (e) {
+                    if (!e.target.closest('#unclaimedFilterToggle')) return;
+                    document.getElementById('unclaimedFilterForm').classList.toggle('hidden');
+                });
+            </script>
             <!-- Sidebar Analytics/Reminders -->
             <section class="col-span-12 xl:col-span-4 xl:col-start-9 xl:row-start-1 xl:row-span-2 space-y-8">
                 <!-- Clinical Reminders -->

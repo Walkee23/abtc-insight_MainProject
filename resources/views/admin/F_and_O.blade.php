@@ -598,6 +598,23 @@
                     return el;
                 };
 
+                // Chart labels sit right of their marker; when there is no room left of the chart's edge they flip to the
+                // marker's left side (or slide left) instead of being cut off by the SVG border.
+                function edgeLabel(xPos, yPos, label, flipTo) {
+                    const el = add('text', { x: xPos, y: yPos, 'font-size': 10, 'font-weight': 700, fill: '#717782' }, label);
+                    const w = el.getComputedTextLength();
+                    const limit = W - 6;
+                    if (xPos + w > limit) {
+                        if (flipTo !== undefined && flipTo - w >= left) {
+                            el.setAttribute('x', flipTo);
+                            el.setAttribute('text-anchor', 'end');
+                        } else {
+                            el.setAttribute('x', Math.max(left + 2, limit - w));
+                        }
+                    }
+                    return el;
+                }
+
                 function render() {
                     svg.replaceChildren();
                     tip.classList.add('hidden');
@@ -643,13 +660,13 @@
                         const i0 = hist.findIndex((p) => p.date >= windowStart);
                         if (i0 >= 0) {
                             add('rect', { x: x(i0), y: top, width: Math.max(3, x(h - 1) - x(i0)), height: H - top - bottom, fill: '#004a93', 'fill-opacity': 0.05 });
-                            add('text', { x: x(i0) + 6, y: top + 24, 'font-size': 10, 'font-weight': 700, fill: '#717782' }, 'TRAINING WINDOW');
+                            edgeLabel(x(i0) + 6, top + 24, 'TRAINING WINDOW');
                         }
                     }
                     if (fut.length) {
                         const dx = (x(h - 1) + x(h)) / 2;
                         add('line', { x1: dx, x2: dx, y1: top, y2: H - bottom, stroke: '#c1c7d3', 'stroke-dasharray': '4,4' });
-                        add('text', { x: dx + 6, y: top + 10, 'font-size': 10, 'font-weight': 700, fill: '#717782' }, 'FORECAST');
+                        edgeLabel(dx + 6, top + 10, 'FORECAST', dx - 6);
 
                         const upper = [[x(h - 1), y(hist[h - 1].value)]].concat(fut.map((p, k) => [x(h + k), y(p.upper)]));
                         const lower = [[x(h - 1), y(hist[h - 1].value)]].concat(fut.map((p, k) => [x(h + k), y(p.lower)])).reverse();

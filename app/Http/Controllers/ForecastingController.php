@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\Process;
 
 class ForecastingController extends Controller
 {
+    /** Why the Python engine could not be used on this request (shown beside the PHP fallback notice and logged). */
+    private ?string $pythonProblem = null;
+
     /** Damping of the trend: far-off days drift back towards the weekly pattern instead of climbing forever. */
     private const PHI = 0.95;
 
@@ -166,7 +169,7 @@ class ForecastingController extends Controller
         // The numbers come from the Python engine (python/forecast.py, statsmodels Holt-Winters).
         // If Python cannot run, the page falls back to the same model written in PHP and says so.
         $python = $this->pythonForecast($y, $trainStart, $params);
-        $engine = 'PHP built-in fallback (Python was not available)';
+        $engine = 'PHP built-in fallback (Python was not available' . ($this->pythonProblem ? ': ' . $this->pythonProblem : '') . ')';
         $pythonOk = $python !== null;
 
         // daily forecasts from the as-of day; the trend is damped so far-off days stay realistic
@@ -302,26 +305,46 @@ class ForecastingController extends Controller
                 // PYTHON_BIN in .env wins; otherwise the usual names are tried in turn
                 $candidates = $configured ? [[$configured]] : [['python'], ['python3'], ['py', '-3']];
 
+                $tried = [];
+                $short = [];   // the same list without folder paths, for the notice on the page
                 foreach ($candidates as $command) {
-                    $result = Process::path(base_path())
-                        ->env(['PYTHONIOENCODING' => 'utf-8'])
-                        ->timeout(60)
-                        ->input($input)
-                        ->run([...$command, $script]);
+                    $name = implode(' ', $command);
+                    $label = basename(str_replace('\\', '/', $command[0])) . (isset($command[1]) ? ' ' . $command[1] : '');
+                    try {
+                        $result = Process::path(base_path())
+                            ->env(['PYTHONIOENCODING' => 'utf-8'])
+                            ->timeout(60)
+                            ->input($input)
+                            ->run([...$command, $script]);
+                    } catch (\Throwable $e) {
+                        $tried[] = "{$name}: " . $e->getMessage();
+                        $short[] = "{$label}: " . mb_strimwidth($e->getMessage(), 0, 90, '...');
+                        continue;
+                    }
 
                     $data = json_decode($result->output(), true);
                     if (!is_array($data)) {
-                        continue;   // this name is not a working Python (or statsmodels is missing): try the next
+                        // this name is not a working Python (or a package such as statsmodels is missing): try the next
+                        // a Python error ends with its message (e.g. "ModuleNotFoundError: No module named 'statsmodels'")
+                        $lines = array_values(array_filter(array_map('trim', preg_split('/\R/', (string) ($result->errorOutput() ?: $result->output())))));
+                        $said = $lines ? end($lines) : '';
+                        $detail = 'exit code ' . $result->exitCode() . ($said !== '' ? ', ' . $said : ', no output');
+                        $tried[] = "{$name}: {$detail}";
+                        $short[] = "{$label}: " . mb_strimwidth($detail, 0, 110, '...');
+                        continue;
                     }
                     if (empty($data['ok'])) {
                         throw new \RuntimeException($data['error'] ?? 'The Python script reported an error.');
                     }
                     return $data;
                 }
-                throw new \RuntimeException('No working Python with statsmodels was found. Set PYTHON_BIN in .env.');
+                $this->pythonProblem = implode(' | ', $short);
+                throw new \RuntimeException('No working Python with statsmodels was found (set PYTHON_BIN in .env). Tried - ' . implode(' | ', $tried));
             });
         } catch (\Throwable $e) {
             Log::warning('Forecasting: the Python engine could not be used, falling back to PHP - ' . $e->getMessage());
+            // the notice on the page gets the short reason (set above when no Python could be run, otherwise the error text)
+            $this->pythonProblem = $this->pythonProblem ?: mb_strimwidth(trim(preg_split('/\R/', $e->getMessage())[0] ?? ''), 0, 220, '...');
             return null;
         }
     }

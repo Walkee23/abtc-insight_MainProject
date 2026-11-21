@@ -55,7 +55,9 @@ developer does this once after pulling.
 
 - On the Forecasting page, an amber line **"PHP built-in fallback (Python was not available)"** means the page is
   using the PHP copy of the model instead of Python. The page still works, but it is not the Python result.
-- The reason is written to `storage/logs/laravel.log` as `Forecasting: the Python engine could not be used...`.
+  The notice ends with the reason, for example `python.exe: exit code 1, The system cannot find the path specified.`
+  or `ModuleNotFoundError: No module named 'statsmodels'`.
+- The full reason is also written to `storage/logs/laravel.log` as `Forecasting: the Python engine could not be used...`.
 - Common causes: Python not installed or not on PATH, the Windows Store `python` shortcut opening instead of real
   Python, packages not installed (`ModuleNotFoundError`), or `PYTHON_BIN` not set under Apache.
 - A failed run is not remembered, so once Python works the next page load uses it.

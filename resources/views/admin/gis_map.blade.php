@@ -272,8 +272,16 @@
         let timer, lastAgg = {}, selectedKey = null;
         const BUBBLE_RADIUS = 8;
         const AREA_KEY = { central: 'CENTRAL HEALTH AREA', east: 'EAST HEALTH AREA', north: 'NORTH HEALTH AREA', south: 'SOUTH HEALTH AREA', west: 'WEST HEALTH AREA' };
+
+        const AREAS = {
+        'CENTRAL HEALTH AREA': { color: '#3b82f6', barangays: ['Babag','Bo.Luz','Busay','Capitol','Carreta','Hipodromo','Kalunasan','Kamputhaw','Lahug','Malubog','Pung-ol','Sapangdaku'] },
+        'EAST HEALTH AREA':    { color: '#ef4444', barangays: ['Cogon Ramos','Day-as','Ermita','Kalubihan','Kamagayan','Lorega','Pahina Central','Pari-an','Pasil','Sambag I','Sambag II','San Antonio','San Roque','Sta. Cruz','Sto. Niño','Suba','T.Padilla','Tejero','Tinago','Zapatera'] },
+        'NORTH HEALTH AREA':   { color: '#eab308', barangays: ['Adlaon','Agsungot','Apas','Bacayan','Banilad','Binaliw','Budlaan','Cambinocot','Guba','Kasambagan','Lusaran','Mabini','Mabolo','Paril','Pit-os','Pulangbato','San Jose','Sirao','Tabunan','Tagbao','Talamban','TapTap'] },
+        'SOUTH HEALTH AREA':   { color: '#a855f7', barangays: ['Basak Pardo','Basak San Nicolas','Bonbon','Buhisan','Bulacao','Bout-Taup','Cogon Pardo','Inayawan','Kinasang-an','Mambaling','Pamutan','Pardo','Quiot','Sinsin','Sudlon I','Sudlon II','Toong'] },
+        'WEST HEALTH AREA':    { color: '#f97316', barangays: ['Calamba','Duljo','Guadalupe','Banawa','Labangon','Punta Princesa','San Nicolas Proper','San Nicolas Pahina','Sawang Calero','Tisa'] }
+        };
         const areaByKey = {};
-        Object.entries(window.HEALTH_AREAS || {}).forEach(([name, a]) => a.barangays.forEach(b => { areaByKey[norm(b)] = { name, color: a.color }; }));
+        Object.entries(AREAS).forEach(([name, a]) => a.barangays.forEach(b => { areaByKey[norm(b)] = { name, color: a.color }; }));
 
         const legend = L.control({ position: 'bottomright' });
         legend.onAdd = () => { const d = L.DomUtil.create('div', 'bg-white/90 rounded-lg shadow p-3 text-xs'); d.id = 'legend'; return d; };

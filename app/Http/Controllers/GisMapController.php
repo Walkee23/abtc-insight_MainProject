@@ -50,7 +50,7 @@ class GisMapController extends Controller
         if ($r->ownership === 'stray') $q->where('e.animal_ownership', 'like', 'Stray%');
 
         if ($r->filled('health_area')) {
-            $area = config('health_areas.areas.' . strtoupper($r->health_area) . ' HEALTH AREA');
+            $area = config('barangays.areas.' . strtoupper($r->health_area) . ' HEALTH AREA');
             $q->whereIn('bc.barangay', $area['barangays'] ?? []);
         }
 

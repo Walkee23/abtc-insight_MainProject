@@ -148,24 +148,27 @@
     function markTitle() {
         var main = document.querySelector('main');
         if (!main) return;
-        var title = null, heads = main.querySelectorAll('h1, h2');
+        var titles = [], heads = main.querySelectorAll('h1, h2');
         for (var i = 0; i < heads.length; i++) {
             var h = heads[i];
             if (h.closest('aside, .fixed') || !h.offsetParent) continue;
-            if (h.classList.contains('mn-page-title') || /(^|\s)text-[345]xl(\s|$)/.test(h.className)) { title = h; break; }
+            if (h.classList.contains('mn-page-title')) { titles.push(h); continue; }
+            // the first big heading of a page is the page title even when it was not marked by hand
+            if (!titles.length && /(^|\s)text-[345]xl(\s|$)/.test(h.className)) titles.push(h);
         }
-        if (!title) return;
-        title.classList.add('mn-page-title');
-        var desc = title.nextElementSibling;
-        if (desc && desc.tagName === 'P') desc.classList.add('mn-page-desc');
-        // the row that puts the title block beside something else
-        var rows = [title.parentElement, title.parentElement && title.parentElement.parentElement];
-        for (var j = 0; j < rows.length; j++) {
-            var row = rows[j];
-            if (!row || row === main || row.children.length < 2) continue;
-            var cs = getComputedStyle(row);
-            if (cs.display.indexOf('flex') !== -1 && cs.flexDirection.indexOf('row') === 0) { row.classList.add('mn-page-head'); break; }
-        }
+        titles.forEach(function (title) {
+            title.classList.add('mn-page-title');
+            var desc = title.nextElementSibling;
+            if (desc && desc.tagName === 'P') desc.classList.add('mn-page-desc');
+            // the row that puts the title block beside something else
+            var rows = [title.parentElement, title.parentElement && title.parentElement.parentElement];
+            for (var j = 0; j < rows.length; j++) {
+                var row = rows[j];
+                if (!row || row === main || row.children.length < 2) continue;
+                var cs = getComputedStyle(row);
+                if (cs.display.indexOf('flex') !== -1 && cs.flexDirection.indexOf('row') === 0) { row.classList.add('mn-page-head'); break; }
+            }
+        });
     }
 
     // A "label on the left, small value / button / chevron on the right" row is wrapped by the phone layout when its
@@ -385,7 +388,10 @@
         markEmptyTables();
         markGutters(); markTitle(); markRows();
         markScrollable();
-        window.addEventListener('load', function () { markScrollable(); setTimeout(markScrollable, 400); });
+        window.addEventListener('load', function () {
+            markScrollable(); markRows(); markTitle();   // web fonts change how text wraps, so measure again once everything has loaded
+            setTimeout(function () { markScrollable(); markRows(); }, 400);
+        });
         window.addEventListener('resize', scheduleWrap);
         document.addEventListener('soft:updated', scheduleWrap);
 

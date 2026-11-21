@@ -421,7 +421,7 @@
                         <p class="text-on-surface-variant text-sm mt-1">Last 7 days ({{ $outbreak['from'] }} – {{ $outbreak['to'] }}) vs. each barangay's usual week</p>
                     </div>
                     <button type="button" id="toggleAllBarangays"
-                        class="flex items-center gap-2 px-4 py-2 text-primary font-bold text-sm hover:bg-primary/5 rounded-lg transition-colors">
+                        class="flex items-center gap-2 px-0 md:px-4 py-2 text-primary font-bold text-sm hover:bg-primary/5 rounded-lg transition-colors">
                         <span id="toggleAllLabel">View All Barangays</span>
                         <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
                     </button>
@@ -602,7 +602,8 @@
                 // marker's left side (or slide left) instead of being cut off by the SVG border.
                 function edgeLabel(xPos, yPos, label, flipTo) {
                     const el = add('text', { x: xPos, y: yPos, 'font-size': 10, 'font-weight': 700, fill: '#717782' }, label);
-                    const w = el.getComputedTextLength();
+                    let w = 0;
+                    try { w = el.getComputedTextLength(); } catch (err) { w = label.length * 6.4; }   // a browser that cannot measure: estimate
                     const limit = W - 6;
                     if (xPos + w > limit) {
                         if (flipTo !== undefined && flipTo - w >= left) {

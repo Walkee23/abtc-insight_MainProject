@@ -465,27 +465,7 @@
                         </div>
                     </div>
                 </div>
-                <!-- Wizard Footer Actions -->
-                <div
-                    class="p-6 bg-surface-container-low border-t border-outline-variant/20 flex justify-between items-center px-8">
-                    <button type="submit" form="section6Form" id="draftBtn" {{ $case ? '' : 'disabled' }}
-                        class="px-6 py-2.5 text-sm font-bold text-outline hover:text-on-surface transition-all flex items-center gap-2 {{ $case ? '' : 'opacity-40 cursor-not-allowed' }}">
-                        Save as Draft
-                    </button>
-                    <div class="flex gap-4">
-                        <button
-                            class="px-6 py-2.5 text-sm font-bold text-outline hover:bg-slate-200/50 rounded-lg transition-all hidden"
-                            id="backBtn">
-                            Back
-                        </button>
-                        <button {{ $case ? '' : 'disabled' }}
-                            class="px-8 py-2.5 bg-primary text-on-primary text-sm font-bold rounded-lg shadow-md shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-2 {{ $case ? '' : 'opacity-40 cursor-not-allowed' }}"
-                            id="nextBtn">
-                            Next Step
-                            <span class="material-symbols-outlined text-[18px]">chevron_right</span>
-                        </button>
-                    </div>
-                </div>
+               
                 @endif
             </section>
         </div>

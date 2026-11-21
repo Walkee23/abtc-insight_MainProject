@@ -179,6 +179,35 @@
      (the top bar and the sidebar keep their single line, and so do rows of equal-width columns such as bar charts) */
   .flex.justify-between:not(.flex-col):not(.flex-nowrap):not(:has(> .w-full)):not(header):not(header *):not(aside *) { flex-wrap: wrap; row-gap: .75rem; }
 
+  /* ---- one spacing rhythm on phones ------------------------------------------------------------------
+     page gutter 16px, cards 20px inside, 20-24px between sections, compact table rows --------------------- */
+  .mn-gutter { padding-left: 1rem !important; padding-right: 1rem !important; }
+  body.mn-sticky-header main .pt-24, body.mn-sticky-header main .pt-20 { padding-top: 1.25rem !important; }
+
+  .space-y-8 > :not([hidden]) ~ :not([hidden]),
+  .space-y-10 > :not([hidden]) ~ :not([hidden]),
+  .space-y-12 > :not([hidden]) ~ :not([hidden]) { margin-top: 1.25rem !important; }
+  .space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: 1rem !important; }
+  .gap-8:not(aside *), .gap-10:not(aside *), .gap-12:not(aside *) { gap: 1.25rem !important; }
+  .mb-12 { margin-bottom: 1.75rem !important; }
+  .mb-10 { margin-bottom: 1.5rem !important; }
+  .mb-8  { margin-bottom: 1.25rem !important; }
+  .mt-12 { margin-top: 1.75rem !important; }
+  .mt-10 { margin-top: 1.5rem !important; }
+  .p-6:not(aside *) { padding: 1.25rem !important; }
+
+  /* table rows: tighter cells, and ids / reference numbers stay on one line instead of breaking into pieces */
+  main table td[class*="py-"], main table th[class*="py-"] { padding-top: .75rem !important; padding-bottom: .75rem !important; }
+  main table td[class*="px-6"], main table th[class*="px-6"] { padding-left: .875rem !important; padding-right: .875rem !important; }
+  main table .font-mono, main table code { white-space: nowrap; }
+  main table th { white-space: nowrap; }
+  main table td span[class*="rounded"] { white-space: nowrap; }   /* badges and id pills never break in the middle */
+
+  /* a table with only its "nothing to show" row is just a short message, not a wide table */
+  table.mn-empty-table { min-width: 0 !important; width: 100% !important; }
+  table.mn-empty-table thead { display: none; }
+  table.mn-empty-table td { white-space: normal !important; text-align: center !important; padding: 1.5rem 1rem !important; }
+
   /* 12-column desktop grids stack, 3-6 column ones become 2 */
   .grid.grid-cols-12 > * { grid-column: 1 / -1 !important; }
   .grid.grid-cols-3, .grid.grid-cols-4, .grid.grid-cols-5, .grid.grid-cols-6 {

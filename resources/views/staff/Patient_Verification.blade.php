@@ -205,12 +205,12 @@
 </section>
 <!-- Global Search Bar Section -->
 <section data-soft-region="search" class="bg-surface-container-low p-6 rounded-lg ghost-border">
-<form action="{{ route('staff.patient-verification') }}" method="GET" class="flex gap-4">
+<form action="{{ route('staff.patient-verification') }}" method="GET" class="flex flex-col sm:flex-row gap-3 sm:gap-4">
 <div class="relative flex-1">
 <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary">person_search</span>
 <input name="search" value="{{ $search ?? '' }}" class="w-full h-14 pl-12 pr-4 bg-surface-container-lowest border-none rounded-lg text-lg placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 transition-all shadow-sm" placeholder="Search by name, tracking ID, or queue number..." type="text"/>
 </div>
-<button type="submit" class="px-8 h-14 bg-primary text-white font-bold rounded-lg flex items-center gap-2 hover:bg-primary-container transition-colors shadow-lg shadow-blue-900/10 active:scale-95">
+<button type="submit" class="px-8 h-14 w-full sm:w-auto justify-center bg-primary text-white font-bold rounded-lg flex items-center gap-2 hover:bg-primary-container transition-colors shadow-lg shadow-blue-900/10 active:scale-95">
 <span class="material-symbols-outlined">search</span>
                         Search Records
                     </button>

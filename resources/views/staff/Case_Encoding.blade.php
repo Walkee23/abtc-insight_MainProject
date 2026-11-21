@@ -219,7 +219,7 @@
             <!-- Main Two-Column Layout -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                 <!-- Left Column: Patient List -->
-                <div class="lg:col-span-3 space-y-4 h-[calc(100vh-280px)] flex flex-col">
+                <div class="lg:col-span-3 space-y-4 h-auto max-h-[22rem] lg:max-h-none lg:h-[calc(100vh-280px)] flex flex-col">
                     <div class="flex items-center justify-between px-2">
                         <h4 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Verified Queue</h4>
                         <span class="text-[10px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full">{{ $verifiedQueue->count() }} Awaiting</span>

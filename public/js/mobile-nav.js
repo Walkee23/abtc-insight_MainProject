@@ -60,6 +60,8 @@
         });
         var bar = findTopBar();
         if (bar) bar.style.viewTransitionName = 'mn-top';
+        // a top bar that takes its own space (sticky) must not also be allowed for in the page's top padding
+        if (bar && getComputedStyle(bar).position === 'sticky') document.body.classList.add('mn-sticky-header');
         if (!bar) {
             document.body.classList.add('mn-has-fab');
             document.body.appendChild(makeButton('mn-fab'));
@@ -120,6 +122,28 @@
         });
     }
 
+    // ---- phone spacing helpers ---------------------------------------------------------
+    // Tables whose only row is a "nothing to show" message become a plain message (see mobile.css).
+    function markEmptyTables() {
+        document.querySelectorAll('table').forEach(function (t) {
+            if (t.closest('aside')) return;
+            var rows = t.tBodies.length ? t.tBodies[0].rows : [];
+            var empty = MOBILE.matches && rows.length === 1 && rows[0].cells.length === 1 && rows[0].cells[0].colSpan > 1;
+            t.classList.toggle('mn-empty-table', empty);
+        });
+    }
+
+    // The full-width wrapper(s) of a page's content get the same 16px gutter on every page.
+    function markGutters() {
+        var W = window.innerWidth;
+        document.querySelectorAll('main, main > div, main > div > div, main > section').forEach(function (el) {
+            if (!MOBILE.matches) { el.classList.remove('mn-gutter'); return; }
+            var r = el.getBoundingClientRect();
+            var pl = parseFloat(getComputedStyle(el).paddingLeft) || 0;
+            if (pl >= 16 && pl <= 24 && r.width >= W - 8) el.classList.add('mn-gutter');
+        });
+    }
+
     // ---- sideways-scrolling boxes ------------------------------------------------------
     // A box that really overflows sideways is marked (slim visible scrollbar, see mobile.css) and, when its
     // content is laid out as a block (a table), gets a small "swipe sideways" line that stays put while scrolling.
@@ -151,7 +175,7 @@
     var pending = null;
     function scheduleWrap() {
         if (pending) return;
-        pending = setTimeout(function () { pending = null; wrapTables(); wrapCharts(); markScrollable(); }, 120);
+        pending = setTimeout(function () { pending = null; wrapTables(); wrapCharts(); markEmptyTables(); markGutters(); markScrollable(); }, 120);
     }
 
     // ---- keep the scroll position when a click reloads the same page -------------------
@@ -240,12 +264,14 @@
         syncCollapsed();
         wrapTables();
         wrapCharts();
+        markEmptyTables();
+        markGutters();
         markScrollable();
         window.addEventListener('load', function () { markScrollable(); setTimeout(markScrollable, 400); });
         window.addEventListener('resize', scheduleWrap);
         document.addEventListener('soft:updated', scheduleWrap);
 
-        var onChange = function () { syncCollapsed(); wrapTables(); wrapCharts(); markScrollable(); };
+        var onChange = function () { syncCollapsed(); wrapTables(); wrapCharts(); markEmptyTables(); markGutters(); markScrollable(); };
         if (MOBILE.addEventListener) MOBILE.addEventListener('change', onChange);
         else if (MOBILE.addListener) MOBILE.addListener(onChange);
 

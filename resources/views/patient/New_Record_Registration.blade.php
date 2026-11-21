@@ -254,22 +254,22 @@
               <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5 ml-1">BHW Referral ID
                 <span class="text-error">*</span></label>
 
-              <div class="flex gap-2">
+              <div class="flex flex-wrap gap-2">
                 <input
-                  class="w-full bg-surface-container-highest border-none rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all @error('bhw_referral_id') ring-2 ring-error @enderror"
+                  class="w-full basis-full sm:basis-0 sm:flex-1 bg-surface-container-highest border-none rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all @error('bhw_referral_id') ring-2 ring-error @enderror"
                   name="bhw_referral_id" id="bhwReferralInput" value="{{ old('bhw_referral_id') }}"
                   pattern="BRY-\d{3}-\d{8}-\d{4}"
                   placeholder="e.g., BRY-001-20260501-0023" required=""
                   type="text" />
 
                 <button type="button" id="scanQrBtn" title="Scan Referral QR Code"
-                  class="bg-secondary-container text-on-secondary-container px-4 py-3 rounded-lg text-sm font-bold hover:opacity-90 transition-opacity flex items-center gap-1.5 whitespace-nowrap">
+                  class="flex-1 sm:flex-none justify-center bg-secondary-container text-on-secondary-container px-4 py-3 rounded-lg text-sm font-bold hover:opacity-90 transition-opacity flex items-center gap-1.5 whitespace-nowrap">
                   <span class="material-symbols-outlined text-[18px]">qr_code_scanner</span>
                   <span>Scan</span>
                 </button>
 
                 <button type="button" id="autofillBtn"
-                  class="bg-primary-container text-white px-5 py-3 rounded-lg text-sm font-bold hover:opacity-90 transition-opacity whitespace-nowrap">
+                  class="flex-1 sm:flex-none bg-primary-container text-white px-5 py-3 rounded-lg text-sm font-bold hover:opacity-90 transition-opacity whitespace-nowrap">
                   Autofill
                 </button>
               </div>
@@ -280,7 +280,7 @@
               <p class="mt-1.5 ml-1 text-[11px] text-error font-semibold">{{ $message }}</p>
               @enderror
             </div>
-            <div class="col-span-2 grid grid-cols-[1fr_1fr_70px] gap-3">
+            <div class="col-span-2 grid grid-cols-1 sm:grid-cols-[1fr_1fr_70px] gap-3">
               <div>
                 <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5 ml-1">Surname</label>
                 <input

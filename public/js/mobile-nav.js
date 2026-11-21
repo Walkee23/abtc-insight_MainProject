@@ -52,6 +52,12 @@
         document.querySelectorAll('header h1').forEach(function (h) {
             if (!aside.contains(h) && /ABTC/i.test(h.textContent)) h.classList.add('mn-hide-sm');
         });
+        // ...and so is the ABTC logo square beside it
+        document.querySelectorAll('header .material-symbols-outlined').forEach(function (icon) {
+            if (!aside.contains(icon) && icon.textContent.trim() === 'health_and_safety' && icon.parentElement) {
+                icon.parentElement.classList.add('mn-hide-sm');
+            }
+        });
         var bar = findTopBar();
         if (bar) bar.style.viewTransitionName = 'mn-top';
         if (!bar) {

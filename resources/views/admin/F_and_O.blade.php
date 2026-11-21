@@ -224,8 +224,8 @@
             <div data-soft-region="forecast" data-soft-scripts class="space-y-10">
             <!-- Section 1: Patient Volume Forecasting -->
             <section class="space-y-6">
-                <div class="flex justify-between items-end">
-                    <div>
+                <div class="flex flex-col lg:flex-row lg:justify-between lg:items-end gap-4 lg:gap-8">
+                    <div class="min-w-0">
                         <h2 class="mn-page-title text-2xl font-bold text-on-surface tracking-tight">Patient Volume Forecasting</h2>
                         <p class="text-on-surface-variant text-sm mt-1">
                             {{ $forecast['status'] === 'ok' ? $forecast['method'] : 'Exponential Smoothing' }} · trained on the {{ $trainWeeks }} weeks before {{ $asOf->format('M d, Y') }}, recent days weighted most · patients per {{ $periods[$period]['unit'] }}
@@ -238,8 +238,8 @@
                         </p>
                         @endif
                     </div>
-                    <div class="flex flex-wrap items-end gap-4 md:gap-6">
-                    <form method="GET" action="{{ route('admin.forecasting') }}" class="flex flex-col items-end gap-2">
+                    <div class="flex flex-wrap items-end gap-4 md:gap-6 px-2 lg:px-0 lg:shrink-0">
+                    <form method="GET" action="{{ route('admin.forecasting') }}" class="flex flex-col items-start gap-2">
                         <input type="hidden" name="period" value="{{ $period }}" />
                         @foreach(array_filter($params, fn ($v, $k) => $v !== $defaults[$k], ARRAY_FILTER_USE_BOTH) as $paramKey => $paramValue)
                         <input type="hidden" name="{{ $paramKey }}" value="{{ $paramValue }}" />
@@ -247,14 +247,14 @@
                         <p class="text-[10px] font-bold text-outline uppercase tracking-wider">Forecast As Of</p>
                         <input type="date" name="asof" value="{{ $asOf->toDateString() }}" max="{{ $today->toDateString() }}"
                             onchange="this.form.requestSubmit()" title="The model learns from the {{ $trainWeeks }} weeks before this date"
-                            class="bg-surface-container-low border-none rounded-lg px-3 py-1.5 text-xs font-semibold focus:ring-2 focus:ring-primary/20" />
+                            class="h-9 bg-surface-container-low border-none rounded-lg px-3 text-xs font-semibold focus:ring-2 focus:ring-primary/20" />
                     </form>
-                    <div class="flex flex-col items-end gap-2">
+                    <div class="flex flex-col items-start gap-2">
                         <p class="text-[10px] font-bold text-outline uppercase tracking-wider">View &amp; Forecast Interval</p>
-                        <div class="bg-surface-container-low p-1 rounded-lg flex gap-1">
+                        <div class="h-9 bg-surface-container-low p-1 rounded-lg flex items-center gap-1">
                             @foreach($periods as $key => $cfg)
                             <a href="{{ route('admin.forecasting', ['period' => $key] + array_filter($params, fn ($v, $k) => $v !== $defaults[$k], ARRAY_FILTER_USE_BOTH) + ($asOf->isSameDay($today) ? [] : ['asof' => $asOf->toDateString()])) }}"
-                                class="px-4 py-1.5 text-xs font-semibold rounded-md transition-all {{ $period === $key ? 'bg-surface-container-lowest text-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-high' }}">{{ $cfg['label'] }}</a>
+                                class="px-4 py-1.5 text-xs font-semibold rounded-md whitespace-nowrap transition-all {{ $period === $key ? 'bg-surface-container-lowest text-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-high' }}">{{ $cfg['label'] }}</a>
                             @endforeach
                         </div>
                     </div>

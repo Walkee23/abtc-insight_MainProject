@@ -242,8 +242,43 @@
   header .text-right > * { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   header [class*="flex-1"] { min-width: 0; }
 
+  /* the avatar is never squeezed away by a long name or search box */
+  header img, header .relative:has(> img) { flex-shrink: 0; }
+  header img[class*="rounded-full"] { min-width: 2.25rem; }
+
   /* the header's text blocks give way before the buttons do */
   header .truncate, header p { min-width: 0; }
+
+  /* ---- top bar search: a round button that opens a full-width bar (see mobile-nav.js) ---------------- */
+  .mn-search {
+    position: relative;
+    flex: none !important;
+    width: 2.5rem !important;
+    min-width: 2.5rem !important;
+    max-width: 2.5rem !important;
+    height: 2.5rem;
+    margin: 0 !important;
+    padding: 0 !important;
+    gap: 0 !important;
+    border-radius: 9999px;
+    overflow: hidden;
+    cursor: pointer;
+    background: rgba(148, 163, 184, .2) !important;
+  }
+  .mn-search input { position: absolute; inset: 0; width: 100% !important; opacity: 0; pointer-events: none; }
+  .mn-search .mn-search-ico { position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; margin: 0 !important; font-size: 22px !important; color: #475569; }
+  .mn-search.mn-search-has-value::after { content: ""; position: absolute; top: .5rem; right: .5rem; width: .5rem; height: .5rem; border-radius: 50%; background: #004a93; }
+  .mn-search-close { display: none; }
+
+  /* open: the search takes the whole top bar, everything else in it steps aside */
+  header.mn-searching .mn-so { display: none !important; }
+  header.mn-searching .mn-sp { flex: 1 1 auto !important; min-width: 0 !important; width: 100% !important; max-width: none !important; margin: 0 !important; }
+  header.mn-searching .mn-search { height: 2.75rem; overflow: visible; cursor: text; background: #fff !important; box-shadow: 0 0 0 2px rgba(0, 74, 147, .25), 0 2px 8px rgba(15, 23, 42, .1); }
+  header.mn-searching .mn-search::after { display: none; }
+  header.mn-searching .mn-search input { position: static; opacity: 1; pointer-events: auto; height: 100%; padding: 0 2.75rem 0 2.75rem !important; font-size: 16px; background: transparent !important; border: 0; box-shadow: none; }
+  header.mn-searching .mn-search .mn-search-ico { left: 1rem !important; transform: translateY(-50%) !important; }
+  header.mn-searching .mn-search-close { display: flex; position: absolute; right: .375rem; top: 50%; transform: translateY(-50%); width: 2rem; height: 2rem; align-items: center; justify-content: center; border: 0; border-radius: 50%; background: transparent; color: #475569; cursor: pointer; }
+  header.mn-searching .mn-search-close:active { background: rgba(148, 163, 184, .3); }
 
   /* modals and floating panels stay inside the screen */
   [class*="fixed"][class*="inset-0"] > div[class*="max-w-"] { max-width: calc(100vw - 1.5rem); }

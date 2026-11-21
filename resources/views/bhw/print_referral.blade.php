@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>BHW Referral - {{ $referral->reference_no }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -26,6 +27,13 @@
                 background: #ffffff;
                 box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
             }
+        }
+
+        /* phones: the slip fills the screen instead of a fixed 8.5in sheet shrunk to fit (print keeps the real paper size) */
+        @media screen and (max-width: 820px) {
+            body { padding: 12px 0; }
+            .no-print { padding: 0 12px; gap: .5rem; flex-wrap: wrap; }
+            .bond-paper { width: auto; max-width: 100%; min-height: 0; margin: 0 12px; padding: 1.25rem 1rem; border-radius: .75rem; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12); }
         }
 
         @media print {
@@ -62,7 +70,7 @@
 <body class="text-slate-900 font-sans antialiased">
 
     {{-- Screen-only Action Bar --}}
-    <div class="no-print max-w-[8.5in] mx-auto mb-4 flex justify-between items-center">
+    <div class="no-print max-w-[8.5in] mx-auto mb-4 flex flex-nowrap justify-between items-center gap-2">
         <a href="{{ route('bhw.dashboard') }}" class="px-4 py-2 bg-slate-600 text-white text-sm font-semibold rounded-lg shadow hover:bg-slate-700">
             &larr; Back to Dashboard
         </a>
@@ -75,47 +83,47 @@
     <div class="bond-paper">
 
         {{-- Header with Top-Left Cebu City Seal & Top-Right CHD Logo --}}
-        <div class="flex items-center justify-between border-b-2 border-slate-900 pb-4 mb-5">
+        <div class="flex flex-nowrap items-center justify-between gap-2 border-b-2 border-slate-900 pb-4 mb-5">
             <img src="{{ asset('images/cebu_city_seal.jpg') }}"
                 alt="Official Seal City of Cebu"
-                class="w-20 h-20 object-contain shrink-0">
+                class="w-12 h-12 sm:w-20 sm:h-20 object-contain shrink-0">
 
-            <div class="text-center px-4">
-                <p class="text-xs uppercase tracking-widest text-slate-600 font-semibold">Republic of the Philippines</p>
-                <p class="text-sm uppercase font-bold text-slate-800">City Government of Cebu</p>
-                <h1 class="text-xl font-extrabold uppercase tracking-tight text-slate-900 mt-0.5">
+            <div class="text-center px-1 sm:px-4 min-w-0">
+                <p class="text-[10px] sm:text-xs uppercase tracking-wide sm:tracking-widest text-slate-600 font-semibold">Republic of the Philippines</p>
+                <p class="text-xs sm:text-sm uppercase font-bold text-slate-800">City Government of Cebu</p>
+                <h1 class="text-base sm:text-xl font-extrabold uppercase tracking-tight text-slate-900 mt-0.5">
                     Cebu City Health Department
                 </h1>
-                <p class="text-sm font-semibold text-blue-800">Animal Bite Treatment Center (ABTC)</p>
+                <p class="text-xs sm:text-sm font-semibold text-blue-800">Animal Bite Treatment Center (ABTC)</p>
                 <p class="text-xs text-slate-500 mt-1">BARANGAY HEALTH WORKER REFERRAL SLIP</p>
             </div>
 
             <img src="{{ asset('images/chd_logo.jpg') }}"
                 alt="City Health Department Logo"
-                class="w-20 h-20 object-contain shrink-0">
+                class="w-12 h-12 sm:w-20 sm:h-20 object-contain shrink-0">
         </div>
 
         {{-- Referral ID & Chillerlan QR Code Box --}}
-        <div class="flex items-center justify-between border border-slate-300 rounded-xl p-4 mb-6 bg-slate-50">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-slate-300 rounded-xl p-4 mb-6 bg-slate-50">
             <div>
                 <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-500">Referral ID</span>
-                <span class="text-2xl font-extrabold tracking-wide text-blue-700">
+                <span class="text-xl sm:text-2xl font-extrabold tracking-wide text-blue-700 break-all">
                     {{ $referral->reference_no }}
                 </span>
                 <p class="text-xs text-slate-500 mt-1">Present this slip or scan the QR code upon arrival at ABTC.</p>
             </div>
 
-            <div class="flex flex-col items-center bg-white p-2 border border-slate-200 rounded-lg">
+            <div class="flex flex-col items-center self-center sm:self-auto bg-white p-2 border border-slate-200 rounded-lg">
                 <img src="{{ $qrCode }}" alt="Referral QR Code" class="w-24 h-24">
                 <span class="text-[9px] font-mono text-slate-500 mt-1">{{ $referral->reference_no }}</span>
             </div>
         </div>
 
         {{-- Patient Details Grid --}}
-        <div class="grid grid-cols-2 gap-y-4 gap-x-8 mb-6 text-sm">
-            <div class="col-span-2 border-b border-slate-200 pb-2">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8 mb-6 text-sm">
+            <div class="sm:col-span-2 border-b border-slate-200 pb-2">
                 <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Patient Name</span>
-                <span class="text-lg font-bold text-slate-900">
+                <span class="text-lg font-bold text-slate-900 break-words">
                     {{ $referral->patient_name }}
                 </span>
             </div>
@@ -142,12 +150,12 @@
         </div>
 
         {{-- Clinical Assessment Box --}}
-        <div class="border border-slate-300 rounded-xl p-5 mb-10">
+        <div class="border border-slate-300 rounded-xl p-4 sm:p-5 mb-8 sm:mb-10">
             <h2 class="text-xs font-extrabold uppercase tracking-wider text-slate-700 border-b border-slate-200 pb-2 mb-4">
                 Clinical Assessment
             </h2>
 
-            <div class="grid grid-cols-3 gap-4 mb-4 text-sm">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4 text-sm">
                 <div>
                     <span class="block text-[10px] font-bold uppercase text-slate-500">T (&deg;C) / BP</span>
                     <span class="font-semibold">{{ $referral->temperature ?? '-' }} / {{ $referral->blood_pressure ?? '-' }}</span>
@@ -162,7 +170,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 text-sm">
                 <div>
                     <span class="block text-[10px] font-bold uppercase text-slate-500">Exposure Type</span>
                     <span class="font-bold text-red-600">{{ $referral->exposure_type }}</span>
@@ -192,12 +200,12 @@
         </div>
 
         {{-- Footer & Signature Line --}}
-        <div class="flex items-end justify-between pt-8 border-t border-slate-300 mt-12">
+        <div class="flex flex-col-reverse sm:flex-row items-start sm:items-end justify-between gap-6 pt-6 sm:pt-8 border-t border-slate-300 mt-8 sm:mt-12">
             <div class="text-xs text-slate-500">
                 System Status: <span class="font-bold text-amber-600">{{ ucfirst($referral->status ?? 'Pending') }}</span>
             </div>
 
-            <div class="text-center w-64">
+            <div class="text-center w-full sm:w-64">
                 <p class="font-bold text-sm text-slate-900 pb-1 border-b border-slate-900">
                     {{ $referral->referred_by }}
                 </p>

@@ -655,9 +655,6 @@
                 }
             });
 
-            exposureTypeRadios.forEach(r => r.addEventListener('change', applyCategoryRule));
-            applyCategoryRule();
-
             // 4. Preview Button Alert
             document.getElementById('previewBtn').addEventListener('click', function() {
                 alert("Preview functionality: This will open a popup showing how the printed form looks before saving. We can add a Bootstrap/Tailwind Modal here next!");

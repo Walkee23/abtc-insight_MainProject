@@ -285,6 +285,80 @@
     window.addEventListener('pagehide', rememberScroll);
     window.addEventListener('beforeunload', rememberScroll);
 
+    // ---- top bar search on phones ----------------------------------------------------
+    // A search box squeezed between the menu button and the profile shows only "Sear..." on a phone. Below 768px it
+    // folds into a round search button; tapping it opens a full-width search bar over the top bar (the rest of the bar
+    // steps aside) with a close button. It is the same input and form as before, so typing, Enter, and the page's own
+    // search scripts work exactly as on desktop.
+    var PHONE = window.matchMedia('(max-width: 767.98px)');
+
+    function closeSearch(box) {
+        var header = box.closest('header');
+        if (!header) return;
+        header.classList.remove('mn-searching');
+        box.classList.remove('mn-search-open');
+        header.querySelectorAll('.mn-sp').forEach(function (e) { e.classList.remove('mn-sp'); });
+        header.querySelectorAll('.mn-so').forEach(function (e) { e.classList.remove('mn-so'); });
+        var input = box.querySelector('input');
+        if (input) { input.blur(); box.classList.toggle('mn-search-has-value', !!input.value); }
+    }
+
+    function openSearch(box) {
+        var header = box.closest('header'), input = box.querySelector('input');
+        if (!header || !input) return;
+        // everything on the path from the bar down to the search box grows; everything beside that path hides
+        for (var el = box; el && el !== header; el = el.parentElement) {
+            el.classList.add('mn-sp');
+            if (el.parentElement) {
+                Array.prototype.forEach.call(el.parentElement.children, function (sib) {
+                    if (sib !== el && !sib.classList.contains('mn-overlay')) sib.classList.add('mn-so');
+                });
+            }
+        }
+        header.classList.add('mn-searching');
+        box.classList.add('mn-search-open');
+        input.focus();
+    }
+
+    function setupHeaderSearch() {
+        document.querySelectorAll('header input[type="text"], header input[type="search"]').forEach(function (input) {
+            if (input.dataset.mnSearch || !/search/i.test(input.placeholder || '') || input.closest('aside')) return;
+            input.dataset.mnSearch = '1';
+            var header = input.closest('header');
+            var form = input.closest('form');
+            var box = form && header.contains(form) ? form : input.parentElement;
+            box.classList.add('mn-search');
+            box.setAttribute('role', 'search');
+            var icon = box.querySelector('.material-symbols-outlined');
+            if (icon) icon.classList.add('mn-search-ico');
+
+            var close = document.createElement('button');
+            close.type = 'button';
+            close.className = 'mn-search-close';
+            close.setAttribute('aria-label', 'Close search');
+            close.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+            box.appendChild(close);
+            close.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); closeSearch(box); });
+
+            // a tap on the folded button opens the bar
+            box.addEventListener('click', function (e) {
+                if (!PHONE.matches || box.classList.contains('mn-search-open')) return;
+                e.preventDefault();
+                openSearch(box);
+            });
+            input.addEventListener('keydown', function (e) { if (e.key === 'Escape' && box.classList.contains('mn-search-open')) closeSearch(box); });
+            // a tap anywhere else closes it
+            document.addEventListener('click', function (e) {
+                if (box.classList.contains('mn-search-open') && !box.contains(e.target)) closeSearch(box);
+            });
+            box.classList.toggle('mn-search-has-value', !!input.value);
+        });
+        // leaving the phone width puts every bar back as it was
+        if (!PHONE.matches) {
+            document.querySelectorAll('.mn-search-open').forEach(closeSearch);
+        }
+    }
+
     // ---- start ------------------------------------------------------------------------
     function init() {
         restoreOnce();
@@ -303,6 +377,8 @@
             document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setOpen(false); });
         }
 
+        setupHeaderSearch();
+        if (PHONE.addEventListener) PHONE.addEventListener('change', setupHeaderSearch);
         syncCollapsed();
         wrapTables();
         wrapCharts();

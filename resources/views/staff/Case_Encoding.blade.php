@@ -144,7 +144,7 @@
     <!-- Main Content Area -->
     <main class="ml-64 flex-1 flex flex-col min-h-screen">
         <!-- TopAppBar -->
-        <header class="flex justify-end items-center w-full h-16 px-8 sticky top-0 z-30 bg-white/85 dark:bg-slate-950/85 backdrop-blur-md shadow-sm shadow-slate-200/50 dark:shadow-none border-b border-slate-100/50">
+        
         <header class="flex justify-between items-center w-full h-16 px-8 sticky top-0 z-40 bg-slate-50/85 dark:bg-slate-900/85 backdrop-blur-md shadow-sm shadow-blue-900/5">
             <div class="flex items-center gap-8">
             </div>

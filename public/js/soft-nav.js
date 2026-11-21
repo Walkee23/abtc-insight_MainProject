@@ -162,6 +162,15 @@
         go(url, true, form.getAttribute('data-soft-scroll') || false);
     });
 
+    // For scripts that used to do  location.href = url  after an option was picked: update the page in place
+    // when it is the same page and has regions, otherwise navigate as before.
+    window.softNavigate = function (href, scrollRegion) {
+        var url;
+        try { url = new URL(href, location.href); } catch (err) { location.href = href; return; }
+        if (!samePage(url) || !document.querySelector('[data-soft-region]')) { location.href = url.href; return; }
+        go(url, true, scrollRegion || false);
+    };
+
     // ---- Back / Forward ---------------------------------------------------------------
     window.addEventListener('popstate', function (e) {
         if (e.state && e.state.soft) go(new URL(location.href), false, false);

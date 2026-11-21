@@ -424,17 +424,17 @@
                                                 <div class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden text-left">
 
                                                     <!-- Header -->
-                                                    <div class="bg-gradient-to-r from-primary to-primary-container p-6 text-white flex justify-between items-start">
-                                                        <div class="flex items-center gap-3">
+                                                    <div class="bg-gradient-to-r from-primary to-primary-container p-6 text-white flex flex-nowrap gap-3 justify-between items-start">
+                                                        <div class="flex items-center gap-3 min-w-0">
                                                             <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white font-bold text-lg">
                                                                 {{ $patient->queue_id }}
                                                             </div>
-                                                            <div>
+                                                            <div class="min-w-0">
                                                                 <span class="text-[11px] font-bold tracking-wider uppercase opacity-80">Call to Counter</span>
                                                                 <h3 class="text-xl font-bold leading-tight">{{ $patient->patient_name }}</h3>
                                                             </div>
                                                         </div>
-                                                        <a href="#" class="text-white/70 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10">
+                                                        <a href="#" class="shrink-0 text-white/70 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10">
                                                             <span class="material-symbols-outlined text-[20px]">close</span>
                                                         </a>
                                                     </div>

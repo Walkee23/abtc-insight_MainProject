@@ -207,6 +207,9 @@
   main h1[class*="text-4xl"], main h1[class*="text-5xl"], main h2[class*="text-4xl"] { font-size: 1.75rem; line-height: 2rem; }
   main h1[class*="text-3xl"], main h2[class*="text-3xl"] { font-size: 1.5rem; line-height: 2rem; }
 
+  /* a page title marked mn-page-title is larger on a phone and wraps onto a second line instead of shrinking */
+  main h1.mn-page-title { font-size: 2rem; line-height: 2.25rem; letter-spacing: -.02em; }
+
   /* fixed-width search boxes and filters fit the screen */
   header [class*="w-96"], header [class*="w-80"], header [class*="max-w-xl"] { max-width: 100%; }
   header form[class*="w-"], header .relative[class*="w-"] { min-width: 0; }

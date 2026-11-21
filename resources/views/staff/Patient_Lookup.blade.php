@@ -246,7 +246,7 @@
     @if(isset($patients) && $patients->count() > 0)
         @foreach($patients as $patient)
             <tr class="hover:bg-surface-bright transition-colors group">
-                <td class="px-8 py-5">
+                <td class="px-8 py-5 min-w-[12rem]">
                     <div class="flex items-center gap-3">
                         <div class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold text-xs">
                             {{ strtoupper(substr($patient->patient_name ?? 'P', 0, 2)) }}
@@ -291,13 +291,13 @@
                             <div class="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden text-left max-h-[90vh] flex flex-col">
                                 
                                 <!-- Modal Header -->
-                                <div class="bg-gradient-to-r from-primary to-primary-container p-6 text-white flex justify-between items-start shrink-0">
-                                    <div class="flex items-center gap-4">
+                                <div class="bg-gradient-to-r from-primary to-primary-container p-6 text-white flex flex-nowrap gap-3 justify-between items-start shrink-0">
+                                    <div class="flex items-center gap-4 min-w-0">
                                         <div class="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white font-extrabold text-base shadow-inner">
                                             {{ strtoupper(substr($patient->patient_name ?? 'P', 0, 2)) }}
                                         </div>
-                                        <div>
-                                            <div class="flex items-center gap-2">
+                                        <div class="min-w-0">
+                                            <div class="flex flex-wrap items-center gap-2">
                                                 <span class="text-[10px] font-mono tracking-wider px-2 py-0.5 bg-white/20 rounded font-bold uppercase">{{ $patient->patient_id }}</span>
                                                 <span class="text-[10px] font-bold px-2 py-0.5 rounded-full {{ $patient->pep_badge ?? 'bg-white/30 text-white' }}">
                                                     {{ $patient->pep_status }}
@@ -307,7 +307,7 @@
                                         </div>
                                     </div>
                                     <!-- Close button papuntang '#' -->
-                                    <a href="#" class="text-white/70 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10">
+                                    <a href="#" class="shrink-0 text-white/70 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10">
                                         <span class="material-symbols-outlined text-[22px]">close</span>
                                     </a>
                                 </div>

@@ -197,7 +197,7 @@
         <!-- Header Section -->
         <header class="flex flex-col items-start gap-3 sm:flex-row sm:justify-between sm:items-center mb-8">
             <div>
-                <h1 class="text-3xl font-black text-on-surface tracking-tight">Clinic Operational Dashboard</h1>
+                <h1 class="mn-page-title text-3xl font-black text-on-surface tracking-tight">Clinic Operational Dashboard</h1>
                 <p class="text-xs text-on-surface-variant mt-1 font-medium">Real-time walk-in volume, verification throughput, and rabies clinical protocols.</p>
             </div>
             <div class="shrink-0 whitespace-nowrap px-4 py-2 bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm text-xs font-bold text-secondary flex items-center gap-2">
@@ -293,7 +293,7 @@
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="font-bold text-sm text-on-surface flex items-center gap-2">
                         <span class="material-symbols-outlined text-emerald-600 text-[18px]">event_repeat</span>
-                        Scheduled Follow-Up Inflow (Due Today) — <span class="text-xs text-slate-500 font-normal">Click a card to view names</span>
+                        <span>Scheduled Follow-Up Inflow (Due Today)<span class="hidden sm:inline"> — </span><span class="block sm:inline text-xs text-slate-500 font-normal">Click a card to view names</span></span>
                     </h3>
                     <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">DOH Schedule</span>
                 </div>

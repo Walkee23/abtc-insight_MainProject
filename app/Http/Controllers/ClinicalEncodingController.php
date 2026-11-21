@@ -13,6 +13,9 @@ use chillerlan\QRCode\Output\QRMarkupSVG;
 
 class ClinicalEncodingController extends Controller
 {
+    /** The vaccine brands a dose can be given with (stored with these exact names). */
+    public const VACCINE_BRANDS = ['VERORAB (PVRV)', 'SPEEDA (PVRV)', 'VAXIRAB (PCEC)', 'ABHAYRAB (PVRV)'];
+
     /** Wound types the health worker can pick in Section VI (stored comma-separated in wound_description). */
     public const WOUND_TYPES = ['Punctured', 'Lacerated', 'Avulsion', 'Abrasion'];
 
@@ -304,7 +307,12 @@ class ClinicalEncodingController extends Controller
             'tetanus_details' => 'exclude_unless:tetanus_given,true,1|' . $required . '|string|max:200',
             'tig_given' => 'nullable|boolean',
             'tig_details' => 'exclude_unless:tig_given,true,1|' . $required . '|string|max:200',
-            'vaccine_brand' => $required . '|string|max:100',
+            // the brand is chosen per dose: Day 0 always, the other days only when that dose has a date
+            'day0_brand' => [$isDraft ? 'nullable' : 'required', \Illuminate\Validation\Rule::in(self::VACCINE_BRANDS)],
+            'day3_brand' => [$isDraft ? 'nullable' : 'required_with:day3_date', 'nullable', \Illuminate\Validation\Rule::in(self::VACCINE_BRANDS)],
+            'day7_brand' => [$isDraft ? 'nullable' : 'required_with:day7_date', 'nullable', \Illuminate\Validation\Rule::in(self::VACCINE_BRANDS)],
+            'day14_brand' => [$isDraft ? 'nullable' : 'required_with:day14_date', 'nullable', \Illuminate\Validation\Rule::in(self::VACCINE_BRANDS)],
+            'day28_brand' => [$isDraft ? 'nullable' : 'required_with:day28_date', 'nullable', \Illuminate\Validation\Rule::in(self::VACCINE_BRANDS)],
             'route' => $required . '|in:ID,IM',
             'dose_type' => $required . '|in:Primary,Booster',
             'day0_date' => $required . '|date|before_or_equal:today',
@@ -324,12 +332,6 @@ class ClinicalEncodingController extends Controller
             $validated['patient_weight'] = $bhwWeight;
         }
 
-        // Administered by is always the logged-in health worker: never taken from the form
-        // (a guest session leaves whatever was saved before untouched)
-        if ($name = Auth::user()->full_name ?? null) {
-            $validated['administered_by'] = $name;
-        }
-
         // "Given at the barangay (by the BHW)" counts as given
         $validated['tetanus_by_barangay'] = $request->boolean('tetanus_by_barangay');
         $validated['tig_by_barangay'] = $request->boolean('tig_by_barangay');
@@ -341,13 +343,38 @@ class ClinicalEncodingController extends Controller
         $validated['dose_type'] = $validated['dose_type'] ?? '';
 
         // The dose dates follow the dose type and route (App\Support\PepSchedule): Primary IM = Day 0, 3, 7, 14, 28;
-        // Primary ID = Day 0, 3, 7, 28; Booster = Day 0, 3. A date that is not part of the course is never kept.
+        // Primary ID = Day 0, 3, 7, 28; Booster = Day 0, 3. A dose that is not part of the course keeps nothing:
+        // no date, no brand, no "administered by".
         $courseDays = PepSchedule::days($validated['dose_type'], $validated['route'] ?? null);
-        foreach ([3, 7, 14, 28] as $day) {
+        $existing = DB::table('bite_section7_immunization')->where('bite_case_id', $biteCaseId)->first();
+        $me = Auth::user()->full_name ?? null;   // a guest session leaves whatever was saved before untouched
+
+        foreach ([0, 3, 7, 14, 28] as $day) {
+            $date = 'day' . $day . '_date';
+            $brand = 'day' . $day . '_brand';
+            $by = 'day' . $day . '_administered_by';
+
             if (!in_array($day, $courseDays, true)) {
-                $validated['day' . $day . '_date'] = null;
+                $validated[$date] = null;
+                $validated[$brand] = null;
+                $validated[$by] = null;
+                continue;
             }
+            if (empty($validated[$date])) {
+                $validated[$by] = null;   // no date, so nobody gave this dose yet
+                continue;
+            }
+            // Each dose is given by whoever recorded it: saving another visit never changes it. Only a dose that is newly
+            // recorded (or whose date was changed) belongs to the person saving now.
+            $wasDate = $existing->{$date} ?? null;
+            $wasBy = $existing->{$by} ?? null;
+            $unchanged = $wasBy && $wasDate && substr((string) $wasDate, 0, 10) === substr((string) $validated[$date], 0, 10);
+            $validated[$by] = $unchanged ? $wasBy : ($me ?: $wasBy);
         }
+
+        // the older single columns mirror the Day 0 dose (nothing reads them any more, but old exports may)
+        $validated['vaccine_brand'] = array_key_exists('day0_brand', $validated) ? $validated['day0_brand'] : ($existing->vaccine_brand ?? null);
+        $validated['administered_by'] = $validated['day0_administered_by'] ?? ($existing->administered_by ?? null);
 
         DB::table('bite_section7_immunization')->updateOrInsert(
             ['bite_case_id' => $biteCaseId],

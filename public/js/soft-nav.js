@@ -125,6 +125,7 @@
         var a = e.target.closest && e.target.closest('a[href]');
         if (!a || !inSoftScope(a)) return;
         if ((a.target && a.target !== '_self') || a.hasAttribute('download')) return;
+        if ((a.getAttribute('href') || '').charAt(0) === '#') return;   // in-page anchor / modal open-close: let the browser handle it, instantly
 
         var url;
         try { url = new URL(a.href, location.href); } catch (err) { return; }

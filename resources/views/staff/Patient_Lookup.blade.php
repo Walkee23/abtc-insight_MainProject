@@ -307,7 +307,7 @@
                                         </div>
                                     </div>
                                     <!-- Close button papuntang '#' -->
-                                    <a href="#" class="shrink-0 text-white/70 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10">
+                                    <a href="#modal-closed" class="shrink-0 text-white/70 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10">
                                         <span class="material-symbols-outlined text-[22px]">close</span>
                                     </a>
                                 </div>
@@ -406,7 +406,7 @@
 
                                 <!-- Modal Footer -->
                                 <div class="p-5 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center shrink-0">
-                                    <a href="#" class="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-colors">
+                                    <a href="#modal-closed" class="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-colors">
                                         Close Preview
                                     </a>
 

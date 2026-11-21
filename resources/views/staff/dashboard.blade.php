@@ -300,7 +300,7 @@
                                                         </div>
                                                     </div>
                                                     <!-- Close Button (Href to #) -->
-                                                    <a href="#" class="text-white/70 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10">
+                                                    <a href="#modal-closed" class="text-white/70 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10">
                                                         <span class="material-symbols-outlined text-[20px]">close</span>
                                                     </a>
                                                 </div>
@@ -335,7 +335,7 @@
                                                 <!-- Modal Footer Actions -->
                                                 <div class="p-6 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3 items-center">
                                                     <!-- Cancel Link -->
-                                                    <a href="#" class="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-colors inline-flex items-center">
+                                                    <a href="#modal-closed" class="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-colors inline-flex items-center">
                                                         Cancel
                                                     </a>
 
@@ -434,7 +434,7 @@
                                                                 <h3 class="text-xl font-bold leading-tight">{{ $patient->patient_name }}</h3>
                                                             </div>
                                                         </div>
-                                                        <a href="#" class="shrink-0 text-white/70 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10">
+                                                        <a href="#modal-closed" class="shrink-0 text-white/70 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10">
                                                             <span class="material-symbols-outlined text-[20px]">close</span>
                                                         </a>
                                                     </div>
@@ -468,7 +468,7 @@
 
                                                     <!-- Footer Actions -->
                                                     <div class="p-6 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
-                                                        <a href="#" class="px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-colors inline-flex items-center">
+                                                        <a href="#modal-closed" class="px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-colors inline-flex items-center">
                                                             Cancel
                                                         </a>
 

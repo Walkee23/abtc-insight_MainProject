@@ -221,7 +221,7 @@
                 </button>
             </div>
             @endif
-            <div data-soft-region="forecast" data-soft-scripts class="space-y-10">
+            <div data-soft-region="forecast" data-soft-scripts data-soft-quiet class="space-y-10">
             <!-- Section 1: Patient Volume Forecasting -->
             <section class="space-y-6">
                 <div class="flex flex-col lg:flex-row lg:justify-between lg:items-end gap-4 lg:gap-8">
@@ -254,7 +254,7 @@
                         <div class="h-9 bg-surface-container-low p-1 rounded-lg flex items-center gap-1">
                             @foreach($periods as $key => $cfg)
                             <a href="{{ route('admin.forecasting', ['period' => $key] + array_filter($params, fn ($v, $k) => $v !== $defaults[$k], ARRAY_FILTER_USE_BOTH) + ($asOf->isSameDay($today) ? [] : ['asof' => $asOf->toDateString()])) }}"
-                                class="px-4 py-1.5 text-xs font-semibold rounded-md whitespace-nowrap transition-all {{ $period === $key ? 'bg-surface-container-lowest text-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-high' }}">{{ $cfg['label'] }}</a>
+                                data-period-pill class="px-4 py-1.5 text-xs font-semibold rounded-md whitespace-nowrap transition-all {{ $period === $key ? 'bg-surface-container-lowest text-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-high' }}">{{ $cfg['label'] }}</a>
                             @endforeach
                         </div>
                     </div>
@@ -753,6 +753,20 @@
             </div>
         </div>
     </main>
+    <script>
+        // Daily / Weekly / Monthly: the highlight moves the moment a button is pressed, while the page updates in place
+        document.addEventListener('click', function (e) {
+            var pill = e.target.closest && e.target.closest('a[data-period-pill]');
+            if (!pill || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+            var on = ['bg-surface-container-lowest', 'text-primary', 'shadow-sm'];
+            var off = ['text-on-surface-variant', 'hover:bg-surface-container-high'];
+            Array.prototype.forEach.call(pill.parentElement.querySelectorAll('a[data-period-pill]'), function (a) {
+                var active = a === pill;
+                on.forEach(function (c) { a.classList.toggle(c, active); });
+                off.forEach(function (c) { a.classList.toggle(c, !active); });
+            });
+        });
+    </script>
             @php
             $user = Auth::user();
 

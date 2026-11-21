@@ -17,6 +17,9 @@
  * run again. Mark such a region data-soft-scripts and its inline <script>s are re-run after
  * every swap (a script must clean up anything it attached to document / window / body itself).
  * data-soft-scroll="name" on a link or form scrolls that region into view after the update.
+ * data-soft-quiet on a region: no dimming and no fade-in while it updates (the old content simply stays until the
+ * new content is ready, with a thin progress bar along the top of the screen), for pages where the update should
+ * not look like a reload.
  */
 (function () {
     'use strict';
@@ -28,8 +31,24 @@
         '[data-soft-region]{transition:opacity .15s ease}' +
         '[data-soft-region].soft-loading{opacity:.55;pointer-events:none}' +
         '@keyframes soft-in{from{opacity:.4}to{opacity:1}}' +
-        '[data-soft-region].soft-in{animation:soft-in .22s ease-out}';
+        '[data-soft-region].soft-in{animation:soft-in .22s ease-out}' +
+        '#soft-bar{position:fixed;top:0;left:0;height:3px;width:0;background:#004a93;z-index:9999;opacity:0;pointer-events:none;' +
+        'transition:width .9s cubic-bezier(.1,.7,.2,1),opacity .25s ease}' +
+        '#soft-bar.on{opacity:1;width:78%}#soft-bar.done{opacity:0;width:100%;transition:width .15s ease,opacity .35s ease .1s}';
     document.head.appendChild(style);
+
+    // thin progress bar for quiet regions
+    var barEl = null;
+    function bar(state) {
+        if (!barEl) { barEl = document.createElement('div'); barEl.id = 'soft-bar'; document.body.appendChild(barEl); }
+        if (state === 'start') {
+            barEl.className = '';
+            void barEl.offsetWidth;   // restart the transition
+            barEl.className = 'on';
+        } else if (state === 'end') {
+            barEl.className = 'done';
+        }
+    }
 
     var controller = null;
     var marked = false;
@@ -66,7 +85,9 @@
         var mine = controller;
 
         var live = regionNodes(document);
-        live.forEach(function (r) { r.classList.add('soft-loading'); });
+        var quiet = live.some(function (r) { return r.hasAttribute('data-soft-quiet'); });
+        if (quiet) bar('start');
+        live.forEach(function (r) { if (!r.hasAttribute('data-soft-quiet')) r.classList.add('soft-loading'); });
 
         var hard = function () { var e = new Error('hard'); e.hard = true; return e; };
 
@@ -96,7 +117,7 @@
                 var name = r.getAttribute('data-soft-region');
                 var node = document.importNode(fresh[name], true);
                 node.classList.remove('soft-loading');
-                node.classList.add('soft-in');
+                if (!node.hasAttribute('data-soft-quiet')) node.classList.add('soft-in');
                 r.replaceWith(node);
                 if (node.hasAttribute('data-soft-scripts')) {
                     try { runScripts(node); } catch (err) { if (window.console) console.error(err); }
@@ -112,9 +133,11 @@
                 var must = typeof scroll === 'string' ? (top < 80 || top > window.innerHeight * 0.45) : top < 80;
                 if (must) window.scrollTo({ top: Math.max(0, window.pageYOffset + top - 96), behavior: 'smooth' });
             }
+            if (quiet) bar('end');
             document.dispatchEvent(new CustomEvent('soft:updated'));
         }).catch(function (err) {
             if (err && err.name === 'AbortError') return;
+            if (quiet) bar('end');
             location.href = url.href;   // anything unexpected: load the page the normal way
         });
     }

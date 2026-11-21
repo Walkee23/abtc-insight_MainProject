@@ -104,7 +104,7 @@ class ForecastingController extends Controller
     /** Only the sliders that moved away from their defaults, for tidy URLs. */
     private function paramQuery(array $params): array
     {
-        return array_filter($params, fn ($v, $k) => $v !== self::DEFAULTS[$k], ARRAY_FILTER_USE_BOTH);
+        return array_filter($params, fn($v, $k) => $v !== self::DEFAULTS[$k], ARRAY_FILTER_USE_BOTH);
     }
 
     private function today(): Carbon
@@ -131,7 +131,7 @@ class ForecastingController extends Controller
     }
 
     /**
-     * Patient volume forecast. Volume = walk-in registrations (inflow_general_particulars.queue_date).
+     * Patient volume forecast. Volume = daily inflow summaries (daily_inflow_summary) + today's live registrations.
      *
      * The model learns only from the 6 weeks (42 days) of daily counts before the as-of date, so
      * the most recent days carry the weight: Holt-Winters exponential smoothing with a weekly
@@ -141,15 +141,14 @@ class ForecastingController extends Controller
     private function forecast(string $period, array $params, Carbon $asOf): array
     {
         $cfg = self::PERIODS[$period];
-        $first = DB::table('inflow_general_particulars')->min('queue_date');
+        $daily = $this->dailyCounts();
 
         $base = ['status' => 'empty', 'period' => $period, 'cfg' => $cfg, 'as_of' => $asOf];
-        if (!$first) {
+        if (empty($daily)) {
             return $base;
         }
 
-        $firstDate = Carbon::parse($first, 'Asia/Manila')->startOfDay();
-        $daily = $this->dailyCounts();
+        $firstDate = Carbon::parse(min(array_keys($daily)), 'Asia/Manila')->startOfDay();
 
         // training window: the 6 weeks before the as-of date (less if the data starts later)
         $trainStart = $firstDate->gt($asOf->copy()->subDays(self::TRAIN_DAYS)) ? $firstDate->copy() : $asOf->copy()->subDays(self::TRAIN_DAYS);
@@ -245,7 +244,11 @@ class ForecastingController extends Controller
             'mape_label' => $mapeLabel,
             'history' => $history,
             // how many chart periods the training window covers (none for months: 6 weeks is under 2 months)
-            'window' => match ($period) { 'daily' => $n, 'weekly' => intdiv($n, 7), default => 0 },
+            'window' => match ($period) {
+                'daily' => $n,
+                'weekly' => intdiv($n, 7),
+                default => 0
+            },
             'window_start' => $trainStart->toDateString(),
             'future' => $future,
             'next_value' => $future[0]['value'],
@@ -382,7 +385,7 @@ class ForecastingController extends Controller
             'trend' => $trend,
             'season' => $season,
             'seasonal' => $seasonal,
-            'sigma' => count($errors) > 1 ? sqrt(array_sum(array_map(fn ($e) => $e * $e, $errors)) / count($errors)) : 0.0,
+            'sigma' => count($errors) > 1 ? sqrt(array_sum(array_map(fn($e) => $e * $e, $errors)) / count($errors)) : 0.0,
             // weighted absolute % error: total miss / total actual. A plain MAPE explodes on the
             // near-empty weekend days, where one patient off is a huge percentage.
             'mape' => $actualSum > 0 ? $absError / $actualSum * 100 : null,
@@ -415,7 +418,25 @@ class ForecastingController extends Controller
     /** Registrations per day (Y-m-d => count). */
     private function dailyCounts(): array
     {
-        return DB::table('inflow_general_particulars')->selectRaw('queue_date as d, count(*) as c')->groupBy('queue_date')->pluck('c', 'd')->all();
+        $today = Carbon::today('Asia/Manila')->toDateString();
+
+        // 1. Completed days from daily_inflow_summary
+        $counts = DB::table('daily_inflow_summary')
+            ->where('inflow_date', '<', $today)
+            ->pluck('total_patients', 'inflow_date') // or 'total_verified' if you only want verified patients
+            ->map(fn($v) => (int) $v)
+            ->all();
+
+        // 2. Live count for today (not yet snapshotted at midnight)
+        $todayCount = DB::table('inflow_general_particulars')
+            ->whereDate('queue_date', $today)
+            ->count();
+
+        if ($todayCount > 0) {
+            $counts[$today] = $todayCount;
+        }
+
+        return $counts;
     }
 
     // -------------------------------------------------------------- outbreak
@@ -435,6 +456,7 @@ class ForecastingController extends Controller
         $baselineFrom = $today->copy()->subDays(34);
 
         $rows = DB::table('inflow_general_particulars')
+            ->whereIn('status', ['Verified', 'Encoded'])
             ->whereBetween('queue_date', [$baselineFrom->toDateString(), $today->toDateString()])
             ->get(['barangay', 'queue_date']);
 
@@ -454,7 +476,7 @@ class ForecastingController extends Controller
                 $past[] = $windows[$w] ?? 0;
             }
             $baseline = array_sum($past) / 4;
-            $std = sqrt(array_sum(array_map(fn ($v) => ($v - $baseline) ** 2, $past)) / 4);
+            $std = sqrt(array_sum(array_map(fn($v) => ($v - $baseline) ** 2, $past)) / 4);
 
             if ($current >= 3 && ($baseline == 0 || ($current > 2 * $baseline && $current > $baseline + 2 * $std))) {
                 $level = 'spike';
@@ -473,14 +495,14 @@ class ForecastingController extends Controller
             ];
         }
 
-        usort($list, fn ($a, $b) => [['spike' => 0, 'watch' => 1, 'normal' => 2][$a->level], -$a->current]
+        usort($list, fn($a, $b) => [['spike' => 0, 'watch' => 1, 'normal' => 2][$a->level], -$a->current]
             <=> [['spike' => 0, 'watch' => 1, 'normal' => 2][$b->level], -$b->current]);
 
         return [
             'monitored' => $this->barangayCount(),
             'with_cases' => count($list),
-            'spikes' => count(array_filter($list, fn ($b) => $b->level === 'spike')),
-            'watch' => count(array_filter($list, fn ($b) => $b->level === 'watch')),
+            'spikes' => count(array_filter($list, fn($b) => $b->level === 'spike')),
+            'watch' => count(array_filter($list, fn($b) => $b->level === 'watch')),
             'list' => $list,
             'from' => $currentFrom->format('M d'),
             'to' => $today->format('M d'),

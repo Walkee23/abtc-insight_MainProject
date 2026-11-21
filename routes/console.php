@@ -19,3 +19,7 @@ Schedule::command('backup:database --auto')->everyMinute()->withoutOverlapping()
 Schedule::call(function () {
     app(SmsService::class)->queueDueReminders(today()->addDay());
 })->name('sms-reminders')->dailyAt('13:55')->timezone('Asia/Manila')->withoutOverlapping();
+
+Schedule::command('inflow:summarize')
+    ->dailyAt('00:05')
+    ->timezone('Asia/Manila');

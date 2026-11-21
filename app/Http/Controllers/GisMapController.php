@@ -9,7 +9,7 @@ class GisMapController extends Controller
 {
     public function index()
     {
-        return view('admin.gis_map');
+        return view('admin.gis_map', ['healthAreas' => config('health_areas.areas')]);
     }
 
     /** Filtered case counts: one row per barangay + category + animal. The map page does the rest. */
@@ -20,12 +20,17 @@ class GisMapController extends Controller
             'to'       => 'nullable|date',
             'category' => 'nullable|in:I,II,III',
             'animal'   => 'nullable|in:dog,cat,others',
+            'ownership'   => 'nullable|in:pet,stray',
+            'health_area' => 'nullable|in:central,east,north,south,west',
         ]);
 
         $q = DB::table('bite_cases as bc')
             ->leftJoin('bite_section3_exposure as e', 'e.bite_case_id', '=', 'bc.bite_case_id')
-            ->selectRaw("bc.barangay, bc.category, COALESCE(e.animal_type, 'Unrecorded') as animal, COUNT(DISTINCT bc.bite_case_id) as n")
-            ->groupBy('bc.barangay', 'bc.category', 'animal');
+            ->selectRaw("bc.barangay, bc.category,
+             COALESCE(e.animal_type, 'Unrecorded') as animal,
+             COALESCE(e.animal_ownership, 'Unrecorded') as ownership,
+             COUNT(DISTINCT bc.bite_case_id) as n")
+            ->groupBy('bc.barangay', 'bc.category', 'animal', 'ownership');
 
         // Date = bite date if encoded, otherwise the date the case was verified
         $date = 'DATE(COALESCE(e.bite_date_time, bc.date_verified))';
@@ -40,6 +45,14 @@ class GisMapController extends Controller
         if ($r->animal === 'others') $q->whereNotNull('e.animal_type')
                                         ->where('e.animal_type', 'not like', 'Dog%')
                                         ->where('e.animal_type', 'not like', 'Cat%');
+
+        if ($r->ownership === 'pet')   $q->where('e.animal_ownership', 'like', 'Pet%');
+        if ($r->ownership === 'stray') $q->where('e.animal_ownership', 'like', 'Stray%');
+
+        if ($r->filled('health_area')) {
+            $area = config('health_areas.areas.' . strtoupper($r->health_area) . ' HEALTH AREA');
+            $q->whereIn('bc.barangay', $area['barangays'] ?? []);
+        }
 
         return response()->json($q->get());
     }

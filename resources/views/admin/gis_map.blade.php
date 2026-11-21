@@ -142,7 +142,7 @@
             <!-- Filters -->
             <form id="filters" class="bg-white rounded-xl border border-outline-variant/30 p-4 text-sm" onsubmit="return false">
                 <input type="hidden" name="from"><input type="hidden" name="to">
-                <div class="grid gap-3 grid-cols-2 md:grid-cols-4 items-end">
+                <div class="grid gap-3 grid-cols-2 md:grid-cols-5 items-end">
                     <label class="block">Category
                         <select name="category" class="mt-1 w-full rounded-lg border-slate-300 text-sm">
                             <option value="">All</option><option>I</option><option>II</option><option>III</option>
@@ -151,7 +151,18 @@
                         <select name="animal" class="mt-1 w-full rounded-lg border-slate-300 text-sm">
                             <option value="">All</option><option value="dog">Dogs</option><option value="cat">Cats</option><option value="others">Others</option>
                         </select></label>
-                    <label class="block md:col-span-2">Find barangay
+                        <label class="block">Ownership
+                            <select name="ownership" class="mt-1 w-full rounded-lg border-slate-300 text-sm">
+                                <option value="">All</option><option value="pet">Pet</option><option value="stray">Stray</option>
+                            </select></label>
+                        <label class="block">Health area
+                            <select name="health_area" id="healthArea" class="mt-1 w-full rounded-lg border-slate-300 text-sm">
+                                <option value="">All</option>
+                                <option value="central">Central</option><option value="east">East</option>
+                                <option value="north">North</option><option value="south">South</option>
+                                <option value="west">West</option>
+                            </select></label>
+                    <label class="block">Find barangay
                         <select id="brgySelect" class="mt-1 w-full rounded-lg border-slate-300 text-sm"><option value="">Whole city</option></select></label>
                 </div>
 
@@ -194,16 +205,48 @@
                 <div class="bg-white rounded-xl border border-outline-variant/30 p-4"><p class="text-xs uppercase text-slate-500">Category III</p><p id="sCat3" class="text-2xl font-extrabold text-red-700">0</p></div>
             </div>
 
+            <div id="areaLegend" class="hidden flex flex-wrap items-center gap-4 text-xs text-slate-600">
+                <span class="font-semibold">Health areas:</span>
+                <span class="flex items-center gap-1"><i class="inline-block w-3 h-3 rounded-sm" style="background:#3b82f6;opacity:.4"></i>Central</span>
+                <span class="flex items-center gap-1"><i class="inline-block w-3 h-3 rounded-sm" style="background:#ef4444;opacity:.4"></i>East</span>
+                <span class="flex items-center gap-1"><i class="inline-block w-3 h-3 rounded-sm" style="background:#eab308;opacity:.4"></i>North</span>
+                <span class="flex items-center gap-1"><i class="inline-block w-3 h-3 rounded-sm" style="background:#a855f7;opacity:.4"></i>South</span>
+                <span class="flex items-center gap-1"><i class="inline-block w-3 h-3 rounded-sm" style="background:#f97316;opacity:.4"></i>West</span>
+            </div>
+
             <div id="unmapped" class="hidden rounded-lg bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 text-sm"></div>
 
             <div class="grid lg:grid-cols-[1fr_300px] gap-5">
                 <div class="bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/10 p-4">
                     <div id="gisMap" class="w-full h-[640px] rounded-lg z-10 border border-outline-variant/20"></div>
                 </div>
-                <div class="bg-white rounded-xl border border-outline-variant/30 p-4 h-fit">
-                    <h3 class="font-bold mb-2">Top barangays</h3>
-                    <ol id="topList" class="text-sm space-y-1"></ol>
-                </div>
+                       <div class="flex flex-col gap-5">
+
+                            <!-- Top barangays (stays on top) -->
+                            <div class="bg-white rounded-xl border border-outline-variant/30 p-4 h-fit">
+                                <h3 class="font-bold mb-2">Top barangays</h3>
+                                <ol id="topList" class="text-sm space-y-1"></ol>
+                            </div>
+
+                            <!-- NEW: detail card, bottom right (hidden until a barangay is clicked) -->
+                            <div id="brgyDetail" class="hidden bg-white rounded-xl border border-outline-variant/30 p-4 h-fit">
+                                <div class="flex items-start justify-between gap-2">
+                                    <div>
+                                        <h3 id="bdName" class="font-bold">Barangay</h3>
+                                        <p id="bdArea" class="text-xs text-slate-500"></p>
+                                    </div>
+                                    <button type="button" id="bdClose" class="text-slate-400 hover:text-slate-700 text-lg leading-none" aria-label="Close">&times;</button>
+                                </div>
+                                <p class="mt-3 text-xs uppercase text-slate-500">Total cases</p>
+                                <p id="bdTotal" class="text-2xl font-extrabold text-primary">0</p>
+                                <p class="mt-3 text-xs uppercase text-slate-500">Incidents by animal ownership</p>
+                                <div class="mt-1 grid grid-cols-2 gap-2">
+                                    <div class="rounded-lg bg-slate-50 p-2"><p class="text-xs text-slate-500">Pets</p><p id="bdPet" class="text-xl font-bold">0</p></div>
+                                    <div class="rounded-lg bg-slate-50 p-2"><p class="text-xs text-slate-500">Strays</p><p id="bdStray" class="text-xl font-bold">0</p></div>
+                                </div>
+                            </div>
+
+                        </div>
             </div>
         </div>
     </div>
@@ -226,7 +269,11 @@
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(map);
         const bubbles = L.layerGroup().addTo(map);
         const layers = {};   // normalized name -> { name, layer }
-        let timer, lastAgg = {};
+        let timer, lastAgg = {}, selectedKey = null;
+        const BUBBLE_RADIUS = 8;
+        const AREA_KEY = { central: 'CENTRAL HEALTH AREA', east: 'EAST HEALTH AREA', north: 'NORTH HEALTH AREA', south: 'SOUTH HEALTH AREA', west: 'WEST HEALTH AREA' };
+        const areaByKey = {};
+        Object.entries(window.HEALTH_AREAS || {}).forEach(([name, a]) => a.barangays.forEach(b => { areaByKey[norm(b)] = { name, color: a.color }; }));
 
         const legend = L.control({ position: 'bottomright' });
         legend.onAdd = () => { const d = L.DomUtil.create('div', 'bg-white/90 rounded-lg shadow p-3 text-xs'); d.id = 'legend'; return d; };
@@ -235,7 +282,11 @@
         fetch(GEO_URL).then(r => r.json()).then(geo => {
             L.geoJSON(geo, {
                 style: { color: '#0b61bb', weight: 1, fillOpacity: 0.03 },
-                onEachFeature: (f, layer) => { const n = f.properties.BGY_NAME || 'Unknown'; layers[norm(n)] = { name: n, layer }; }
+                onEachFeature: (f, layer) => {
+                    const n = f.properties.BGY_NAME || 'Unknown';
+                    layers[norm(n)] = { name: n, layer };
+                    layer.on('click', () => showBarangay(norm(n)));
+                }
             }).addTo(map);
             Object.values(layers).map(l => l.name).sort().forEach(n => $('brgySelect').add(new Option(n, norm(n))));
             load();
@@ -257,7 +308,21 @@
         function popup(name, a) {
             if (!a) return '<b>' + esc(name) + '</b><br>No cases for the current filters.';
             const list = o => Object.entries(o).sort((x, y) => y[1] - x[1]).map(([k, v]) => esc(k) + ': ' + v).join('<br>');
-            return '<b>' + esc(name) + '</b><br>Cases: <b>' + a.total + '</b><hr class="my-1">Category<br>' + list(a.cat) + '<hr class="my-1">Animal<br>' + list(a.animal);
+            return '<b>' + esc(name) + '</b><br>Cases: <b>' + a.total + '</b><hr class="my-1">Category<br>' + list(a.cat) + '<hr class="my-1">Animal<br>' + list(a.animal) + '<hr class="my-1">Ownership<br>' + list(a.own);
+        }
+
+        function showBarangay(key) {
+            const l = layers[key]; if (!l) return;
+            selectedKey = key;
+            const a = lastAgg[key], own = a ? a.own : {};
+            const count = re => Object.entries(own).filter(([k]) => re.test(k)).reduce((s, [, v]) => s + v, 0);
+            const area = areaByKey[key];
+            $('bdName').textContent  = l.name;
+            $('bdArea').textContent  = area ? area.name : '';
+            $('bdTotal').textContent = a ? a.total : 0;
+            $('bdPet').textContent   = count(/^pet/i);
+            $('bdStray').textContent = count(/^stray/i);
+            $('brgyDetail').classList.remove('hidden');
         }
 
         function focusBrgy(key) {
@@ -271,8 +336,9 @@
             rows.forEach(r => {
                 const k = norm(r.barangay), n = +r.n;
                 if (!layers[k]) { unmapped[r.barangay] = (unmapped[r.barangay] || 0) + n; return; }
-                const a = agg[k] || (agg[k] = { total: 0, cat: {}, animal: {} });
+                const a = agg[k] || (agg[k] = { total: 0, cat: {}, animal: {}, own: {} });
                 a.total += n;
+                a.own[r.ownership] = (a.own[r.ownership] || 0) + n;
                 a.cat[r.category] = (a.cat[r.category] || 0) + n;
                 a.animal[r.animal] = (a.animal[r.animal] || 0) + n;
             });
@@ -282,16 +348,24 @@
             const tier = n => { const q = n / max; return q > 0.75 ? 3 : q > 0.5 ? 2 : q > 0.25 ? 1 : 0; };
             bubbles.clearLayers();
 
+            const sel = $('healthArea').value;
+            $('areaLegend').classList.toggle('hidden', !sel);
+
             Object.entries(layers).forEach(([k, { name, layer }]) => {
                 const a = agg[k];
-                layer.setStyle(a ? { fillColor: COLORS[tier(a.total)], fillOpacity: 0.2 } : { fillOpacity: 0.03 });
+                const ar = areaByKey[k];
+                const inArea = sel && ar && ar.name === AREA_KEY[sel];
+                layer.setStyle(inArea ? { fillColor: ar.color, fillOpacity: 0.3 }
+                            : a ? { fillColor: COLORS[tier(a.total)], fillOpacity: 0.2 } : { fillOpacity: 0.03 });
                 layer.bindPopup(popup(name, a));
                 if (!a) return;
                 L.circleMarker(layer.getBounds().getCenter(), {
-                    radius: 6 + 26 * Math.sqrt(a.total / max),   // area grows with case count
+                    radius: BUBBLE_RADIUS,
                     fillColor: COLORS[tier(a.total)], color: '#7f1d1d', weight: 1, fillOpacity: 0.65
-                }).addTo(bubbles).bindTooltip(esc(name) + ': ' + a.total).bindPopup(popup(name, a));
-            });
+                    }).addTo(bubbles).bindTooltip(esc(name) + ': ' + a.total).bindPopup(popup(name, a))
+                    .on('click', () => showBarangay(k));
+                    });
+                    if (selectedKey) showBarangay(selectedKey);
 
             // Summary cards
             const sorted = Object.entries(agg).sort((x, y) => y[1].total - x[1].total);
@@ -315,7 +389,7 @@
                 '<div class="flex items-center gap-2 mt-1"><span style="background:' + COLORS[i] + '" class="inline-block w-3 h-3 rounded-full"></span>' + (i ? step([0.25, 0.5, 0.75][i - 1]) + 1 : 1) + ' - ' + step(f) + '</div>').join('');
         }
 
-        $('topList').addEventListener('click', e => { const b = e.target.closest('button[data-k]'); if (b) focusBrgy(b.dataset.k); });
+        $('bdClose').addEventListener('click', () => { selectedKey = null; $('brgyDetail').classList.add('hidden'); });
         $('brgySelect').addEventListener('change', e => e.target.value ? focusBrgy(e.target.value) : map.setView([10.3157, 123.8854], 12));
         // ---- Period filter: Daily / Weekly / Monthly / Yearly turn into a from-to date range ----
         let period = 'all';

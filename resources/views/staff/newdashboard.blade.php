@@ -149,7 +149,9 @@
     <!-- Main Content Area -->
     <main class="flex-1 flex flex-col ml-64">
                 <!-- TopNavBar -->
-            <div class="flex justify-end items-center w-full h-16 px-8 sticky top-0 z-40 bg-slate-50/85 dark:bg-slate-900/85 backdrop-blur-md shadow-sm shadow-blue-900/5">
+            <header class="flex justify-between items-center w-full h-16 px-8 sticky top-0 z-40 bg-slate-50/85 dark:bg-slate-900/85 backdrop-blur-md shadow-sm shadow-blue-900/5">
+            <div class="flex items-center gap-8">
+            </div>
             <div class="flex items-center gap-4">
                 <div class="flex items-center gap-1 border-r border-outline-variant/20 pr-4">
                 </div>
@@ -189,7 +191,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </header>
 
         <div class="p-8">
         <!-- Header Section -->

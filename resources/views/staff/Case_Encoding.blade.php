@@ -260,10 +260,10 @@
                 <!-- Right Column: Encoding Form -->
                 <div class="lg:col-span-9">
                     <div class="bg-surface-container-lowest rounded-lg shadow-sm border border-outline-variant/10">
-                        <div class="p-6 border-b border-surface-container-high flex items-center justify-between bg-primary/5 lg:sticky lg:top-16 z-20 backdrop-blur-sm">
-                            <div>
-                                <h3 class="text-lg font-bold text-primary">Animal Bite Case Encoding Form</h3>
-                                <p class="text-xs text-on-surface-variant">
+                        <div class="mn-sticky-actions p-6 border-b border-surface-container-high flex items-center justify-between gap-3 bg-primary/5 sticky top-16 z-20 backdrop-blur-sm">
+                            <div class="min-w-0">
+                                <h3 class="text-lg font-bold text-primary"><span class="hidden md:inline">Animal Bite </span>Case Encoding<span class="hidden md:inline"> Form</span></h3>
+                                <p class="text-xs text-on-surface-variant truncate">
                                     @if(isset($selectedPatient) && $selectedPatient)
                                     Currently encoding: <span class="font-bold text-on-surface">{{ $selectedPatient->patient_name }} (#{{ $selectedPatient->inflow_record_id }})</span>
                                     @else
@@ -271,7 +271,7 @@
                                     @endif
                                 </p>
                             </div>
-                            <div class="flex gap-2">
+                            <div class="flex gap-2 shrink-0">
                                 <button type="button" onclick="discardChanges()" class="px-4 py-2 text-xs font-bold text-secondary bg-surface-container-high rounded-full hover:bg-surface-container-highest transition-colors">Discard</button>
                                 <button type="submit" form="caseEncodingForm" name="action" value="draft" formnovalidate class="px-4 py-2 text-xs font-bold text-white bg-primary rounded-full hover:bg-primary-container transition-all shadow-md active:scale-95">Save Progress</button>
                             </div>

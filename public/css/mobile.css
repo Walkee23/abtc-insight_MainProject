@@ -232,6 +232,16 @@
   /* modals and floating panels stay inside the screen */
   [class*="fixed"][class*="inset-0"] > div[class*="max-w-"] { max-width: calc(100vw - 1.5rem); }
 
+  /* a form's Discard / Save Progress bar follows the scroll just under the top bar: compact, and solid so the form
+     does not show through it */
+  .mn-sticky-actions { padding: .625rem .75rem !important; gap: .5rem !important; background: #eef3fa !important; box-shadow: 0 2px 8px rgba(15, 23, 42, .08); }
+  .mn-sticky-actions { flex-wrap: nowrap !important; }   /* title on the left (cut with ...), buttons stay on the same row */
+  .mn-sticky-actions h3 { font-size: .8125rem; line-height: 1.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mn-sticky-actions p { max-width: 100%; }
+  .mn-sticky-actions p { font-size: 11px; }
+  .mn-sticky-actions .flex.shrink-0 { gap: .375rem; }
+  .mn-sticky-actions button { padding: .5rem .625rem !important; white-space: nowrap; }
+
   /* toasts sit above the bottom edge but never wider than the screen */
   #statusToast, #claimErrorToast { left: 1rem; right: 1rem; max-width: none; }
 

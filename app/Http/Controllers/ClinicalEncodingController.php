@@ -578,18 +578,19 @@ class ClinicalEncodingController extends Controller
             ->fragment('unclaimed')
             ->withQueryString();
 
-        // Reminders: PEP doses that are due or overdue, worked out from the Day 0 date
-        // (Primary: Day 3 / 7 / 28, Booster: Day 3), skipping doses already recorded
+        // Reminders: PEP doses that are due or overdue, worked out from the Day 0 date and the case's route
+        // (App\Support\PepSchedule: Primary IM Day 3 / 7 / 14 / 28, Primary ID Day 3 / 7 / 28, Booster Day 3),
+        // skipping doses already recorded
         $reminders = [];
         $immunizations = $unfinished()
             ->join('patients as p', 'p.patient_id', '=', 'bc.patient_id')
             ->join('bite_section7_immunization as s7', 's7.bite_case_id', '=', 'bc.bite_case_id')
             ->whereNotNull('s7.day0_date')
-            ->select('bc.bite_case_id', 'p.patient_name', 's7.dose_type', 's7.day0_date', 's7.day3_date', 's7.day7_date', 's7.day28_date')
+            ->select('bc.bite_case_id', 'p.patient_name', 's7.dose_type', 's7.route', 's7.day0_date', 's7.day3_date', 's7.day7_date', 's7.day14_date', 's7.day28_date')
             ->get();
 
         foreach ($immunizations as $row) {
-            $days = $row->dose_type === 'Booster' ? [3] : [3, 7, 28];
+            $days = PepSchedule::followUpDays($row->dose_type, $row->route);
             foreach ($days as $day) {
                 $due = \Carbon\Carbon::parse($row->day0_date)->addDays($day)->startOfDay();
                 // Already given, or not due yet

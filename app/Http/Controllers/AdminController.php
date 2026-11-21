@@ -71,12 +71,13 @@ class AdminController extends Controller
         ->whereNotNull('s7.day0_date')
         ->count();
 
-    // 3. Completed PEP Today: cases finalized as Completed whose last recorded dose is dated today.
+    // 3. Completed PEP Today: courses whose every dose is recorded (the schedule depends on the route: IM Day 0, 3, 7, 14,
+    // 28; ID Day 0, 3, 7, 28; Booster Day 0, 3) and whose last dose, Day 28 (Day 3 for a Booster), is dated today.
     // (There is no "completed at" column, so the last dose date is the closest signal.)
     $completedToday = DB::table('bite_cases as bc')
         ->join('bite_section7_immunization as s7', 's7.bite_case_id', '=', 'bc.bite_case_id')
-        ->where('bc.outcome', 'Completed')
-        ->whereRaw('COALESCE(s7.day28_date, s7.day7_date, s7.day3_date, s7.day0_date) = ?', [today()->toDateString()])
+        ->whereRaw('(' . \App\Support\PepSchedule::completeSql('s7') . ')')
+        ->whereRaw("DATE(CASE WHEN s7.dose_type = 'Booster' THEN s7.day3_date ELSE s7.day28_date END) = ?", [today()->toDateString()])
         ->count();
 
     // 4. Top Incident Hotspots (30 o 90 ka adlaw)

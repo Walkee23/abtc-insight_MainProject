@@ -13,7 +13,7 @@ class TreatmentTrackerController extends Controller
 {
     /**
      * Treatment Tracker: one row per PEP course (a handed-off bite case with a Day 0 date
-     * in Section VII). Schedule: Primary D0/D3/D7/D28, Booster D0/D3; each recorded day
+     * in Section VII). Schedule (App\Support\PepSchedule): Primary IM D0/D3/D7/D14/D28, Primary ID D0/D3/D7/D28, Booster D0/D3; each recorded day
      * date is a dose that was given.
      */
     public function index(Request $request)

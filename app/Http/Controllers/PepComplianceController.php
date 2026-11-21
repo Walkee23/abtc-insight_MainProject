@@ -15,7 +15,7 @@ class PepComplianceController extends Controller
      * PEP Compliance.
      *
      * Doses are worked out from Section VII (bite_section7_immunization): the Day 0 date
-     * sets the schedule (Primary: D0/D3/D7/D28, Booster: D0/D3) and each recorded day date
+     * sets the schedule (by dose type and route, see App\Support\PepSchedule: Primary IM D0/D3/D7/D14/D28, Primary ID D0/D3/D7/D28, Booster D0/D3) and each recorded day date
      * is the actual dose.
      */
     public function index(Request $request)

@@ -234,7 +234,7 @@
             <!-- Content Grid: Priority and Normal Queue -->
             <div class="grid grid-cols-12 gap-8 items-start">
                 <!-- Section 2: Priority Queue -->
-                <div class="col-span-12 xl:col-span-5 bg-surface-container-low rounded-lg p-6">
+                <div class="col-span-12 xl:col-span-6 bg-surface-container-low rounded-lg p-6">
                     <!-- Dynamic Count -->
                     <div class="flex justify-between items-center mb-6">
                         <div class="flex items-center gap-3">
@@ -247,32 +247,37 @@
                     </div>
 
                     <!-- [UPDATED]: Vertical scroll only, strictly disable horizontal scroll -->
-                    <div class="max-h-[380px] overflow-y-auto overflow-x-hidden rounded-xl border border-outline-variant/20 bg-white shadow-sm">
-                        <table class="w-full table-fixed text-left border-collapse">
-                            <!-- Sticky header stays fixed when scrolling -->
-                            <thead class="sticky top-0 z-10">
-                                <tr class="bg-surface-container-high border-b border-outline-variant/10 shadow-sm">
-                                    <th class="w-2/12 px-3 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest bg-slate-50">Queue No</th>
-                                    <th class="w-5/12 px-3 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest bg-slate-50">Patient Name</th>
-                                    <th class="w-3/12 px-3 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest bg-slate-50">Barangay</th>
-                                    <th class="w-2/12 px-3 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest text-right bg-slate-50">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-outline-variant/10">
-                                @forelse($priorityQueue as $patient)
-                                <tr class="hover:bg-surface-container-low transition-colors">
-                                    <td class="px-3 py-4 font-black text-primary truncate">{{ $patient->queue_id }}</td>
-                                    <td class="px-3 py-4">
-                                        <div class="text-sm font-semibold truncate">{{ $patient->patient_name }}</div>
-                                        <div class="text-[10px] text-on-surface-variant truncate">Age: {{ $patient->age }} • {{ $patient->sex }}</div>
+                    <!-- Scrollable Wrapper Container -->
+                    <div class="overflow-hidden rounded-xl border border-outline-variant/20 bg-white shadow-sm">
+                        <div class="max-h-[400px] overflow-y-auto relative">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="sticky top-0 z-10 bg-surface-container-high shadow-sm">
+                                    <tr class="border-b border-outline-variant/10">
+                                        <th class="px-4 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest bg-surface-container-high">Queue No</th>
+                                        <th class="px-4 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest bg-surface-container-high">Patient</th>
+                                        <th class="px-4 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest bg-surface-container-high">Barangay</th>
+                                        <th class="px-4 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest text-right bg-surface-container-high">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-outline-variant/10">
+                                    @forelse($priorityQueue as $patient)
+                                    <tr class="hover:bg-primary/5 transition-colors group">
+                                     <td class="px-4 py-4 font-black text-primary">{{ $patient->queue_id }}</td>
+
+                                    <td class="px-4 py-4">
+                                        <p class="text-sm font-bold">{{ $patient->patient_name }}</p>
+                                        <p class="text-[10px] text-on-surface-variant">
+                                            ID: {{ $patient->id_number ?? 'No ID' }} •
+                                            <span class="text-primary font-bold">Age: {{ $patient->age }}</span>
+                                        </p>
                                     </td>
                                     <td class="px-4 py-4 text-xs font-semibold text-on-surface-variant">
                                         {{ $patient->barangay ?? 'N/A' }}
                                     </td>
-                                    <td class="px-3 py-4 text-right">
-                                        <!-- Trigger Button para sa Priority Modal -->
+                                    <td class="px-4 py-4 text-right">
+                                       <!-- Trigger Button para sa Priority Modal -->
                                         <a href="#call-priority-modal-{{ $patient->inflow_record_id }}"
-                                            class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-500/10 hover:bg-green-600 text-green-700 hover:text-white text-xs font-bold rounded-lg border border-green-500/20 transition-all shadow-sm">
+                                            class="inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 bg-green-500/10 hover:bg-green-600 text-green-700 hover:text-white text-xs font-bold rounded-full border border-green-500/20 transition-all">
                                             <span class="material-symbols-outlined text-[15px]">campaign</span>
                                             <span>Call &amp; Verify</span>
                                         </a>
@@ -326,16 +331,27 @@
 
                                                     <div class="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-900/50 flex items-start gap-2.5 text-xs text-emerald-900 dark:text-emerald-200">
                                                         <span class="material-symbols-outlined text-emerald-600 text-[18px] shrink-0">verified</span>
-                                                        <p>Priority lane patient. Proceeding will load their profile in the <strong>Patient Verification</strong> screen for document checking.</p>
+                                                       <p><strong>Priority Lane</strong> patient (Senior Citizen / PWD). Please check their priority ID before proceeding.</p>
                                                     </div>
                                                 </div>
 
                                                 <!-- Modal Footer Actions -->
                                                 <div class="p-6 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3 items-center">
-                                                    <!-- Cancel Link -->
-                                                    <a href="#" class="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-colors inline-flex items-center">
-                                                        Cancel
-                                                    </a>
+                                                    <form method="POST"
+                                                        action="{{ route('staff.remove-from-queue', $patient->inflow_record_id) }}"
+                                                        onsubmit="return confirm('Patient not present? This will remove them from the queue.');"
+                                                        class="mr-auto">
+                                                        @csrf
+                                                        <button type="submit"
+                                                                class="group/remove px-4 py-2 text-xs font-bold text-red-600 border border-transparent rounded-xl inline-flex items-center gap-1.5 cursor-pointer
+                                                                    transition-all duration-200 ease-out
+                                                                    hover:bg-red-50 hover:text-red-700 hover:border-red-200 hover:shadow-md hover:shadow-red-500/10 hover:-translate-y-0.5
+                                                                    active:translate-y-0 active:scale-95
+                                                                    focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300">
+                                                            <span class="material-symbols-outlined text-[16px] transition-transform duration-200 group-hover/remove:scale-110 group-hover/remove:-rotate-12">person_off</span>
+                                                            Patient Not Present
+                                                        </button>
+                                                    </form>
 
                                                     <!-- Proceed Form -> Calls staff.call-patient without modifying status -->
                                                     <form method="POST" action="{{ route('staff.call-patient', $patient->inflow_record_id) }}">
@@ -362,10 +378,12 @@
                             </tbody>
                         </table>
                     </div>
+
+                    </div>
                 </div>
 
                 <!-- Section 3: Normal Queue -->
-                <div class="col-span-12 xl:col-span-7 bg-surface-container-low rounded-lg p-6">
+                <div class="col-span-12 xl:col-span-6 bg-surface-container-low rounded-lg p-6">
                     <div class="flex justify-between items-center mb-6">
                         <div class="flex items-center gap-3">
                             <div class="w-2 h-8 bg-primary rounded-full"></div>

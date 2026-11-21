@@ -90,6 +90,9 @@
   /* the content column of a side-by-side page may shrink below its widest child instead of widening the page */
   main { min-width: 0; max-width: 100%; }
 
+  /* every role shows the signed-in name and role beside the avatar, like the Admin top bar (some pages hid it on small screens) */
+  header div.text-right[class*="hidden"] { display: block !important; }
+
   /* bars pinned to the screen edge were offset by the sidebar width */
   [class*="left-72"], [class*="left-64"] { left: 0 !important; }
 
@@ -219,7 +222,7 @@
   header input[class*="w-72"], header input[class*="w-64"], header input[class*="w-80"], header input[class*="w-96"] { width: 100% !important; min-width: 0; }
 
   /* the profile name/role beside the avatar stays on one line (cut with ...) so the avatar is never pushed off */
-  header .text-right { max-width: 5.5rem; min-width: 0; }
+  header .text-right { max-width: 7.5rem; min-width: 0; flex-shrink: 0; }   /* the search box gives way, never the name */
   header .text-right > * { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   header [class*="flex-1"] { min-width: 0; }
 

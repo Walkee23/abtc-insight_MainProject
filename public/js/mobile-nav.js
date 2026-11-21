@@ -115,8 +115,51 @@
         pending = setTimeout(function () { pending = null; wrapTables(); wrapCharts(); }, 120);
     }
 
+    // ---- keep the scroll position when a click reloads the same page -------------------
+    // Filters, pagination links and saved forms reload the page; on a phone that used to throw
+    // the reader back to the top. The position is remembered when the page is left and put back
+    // when the same page (same path) opens again straight after it. A link with a #fragment
+    // keeps scrolling to its own anchor instead.
+    var SCROLL_KEY = 'mnScroll';
+
+    function rememberScroll() {
+        if (!MOBILE.matches) return;
+        try {
+            sessionStorage.setItem(SCROLL_KEY, JSON.stringify({ p: location.pathname, y: Math.round(window.pageYOffset), t: Date.now() }));
+        } catch (e) { /* private mode */ }
+    }
+
+    function restoreScroll() {
+        if (!MOBILE.matches || location.hash) return;
+        var saved;
+        try {
+            saved = JSON.parse(sessionStorage.getItem(SCROLL_KEY) || 'null');
+            sessionStorage.removeItem(SCROLL_KEY);
+        } catch (e) { return; }
+        if (!saved || saved.p !== location.pathname || Date.now() - saved.t > 15000 || saved.y < 5) return;
+        // only when we came from this same page (a click on it), not from somewhere else
+        try {
+            if (document.referrer && new URL(document.referrer).pathname !== location.pathname) return;
+        } catch (e) { return; }
+
+        var target = saved.y, tries = 0, userMoved = false;
+        var stop = function () { userMoved = true; };
+        window.addEventListener('touchstart', stop, { once: true, passive: true });
+        window.addEventListener('wheel', stop, { once: true, passive: true });
+        // the page may still be growing (charts, images): keep trying for a moment
+        (function attempt() {
+            if (userMoved) return;
+            window.scrollTo(0, target);
+            if (Math.abs(window.pageYOffset - target) > 2 && tries++ < 15) setTimeout(attempt, 100);
+        })();
+    }
+
+    window.addEventListener('pagehide', rememberScroll);
+    window.addEventListener('beforeunload', rememberScroll);
+
     // ---- start ------------------------------------------------------------------------
     function init() {
+        restoreScroll();
         aside = document.querySelector('aside.fixed.left-0');
         if (aside) {
             overlay = document.createElement('div');

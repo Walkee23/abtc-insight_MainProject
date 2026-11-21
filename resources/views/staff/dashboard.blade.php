@@ -326,16 +326,27 @@
 
                                                     <div class="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-900/50 flex items-start gap-2.5 text-xs text-emerald-900 dark:text-emerald-200">
                                                         <span class="material-symbols-outlined text-emerald-600 text-[18px] shrink-0">verified</span>
-                                                        <p>Priority lane patient. Proceeding will load their profile in the <strong>Patient Verification</strong> screen for document checking.</p>
+                                                       <p><strong>Priority Lane</strong> patient (Senior Citizen / PWD). Please check their priority ID before proceeding.</p>
                                                     </div>
                                                 </div>
 
                                                 <!-- Modal Footer Actions -->
                                                 <div class="p-6 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3 items-center">
-                                                    <!-- Cancel Link -->
-                                                    <a href="#" class="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-colors inline-flex items-center">
-                                                        Cancel
-                                                    </a>
+                                                    <form method="POST"
+                                                        action="{{ route('staff.remove-from-queue', $patient->inflow_record_id) }}"
+                                                        onsubmit="return confirm('Patient not present? This will remove them from the queue.');"
+                                                        class="mr-auto">
+                                                        @csrf
+                                                        <button type="submit"
+                                                                class="group/remove px-4 py-2 text-xs font-bold text-red-600 border border-transparent rounded-xl inline-flex items-center gap-1.5 cursor-pointer
+                                                                    transition-all duration-200 ease-out
+                                                                    hover:bg-red-50 hover:text-red-700 hover:border-red-200 hover:shadow-md hover:shadow-red-500/10 hover:-translate-y-0.5
+                                                                    active:translate-y-0 active:scale-95
+                                                                    focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300">
+                                                            <span class="material-symbols-outlined text-[16px] transition-transform duration-200 group-hover/remove:scale-110 group-hover/remove:-rotate-12">person_off</span>
+                                                            Patient Not Present
+                                                        </button>
+                                                    </form>
 
                                                     <!-- Proceed Form -> Calls staff.call-patient without modifying status -->
                                                     <form method="POST" action="{{ route('staff.call-patient', $patient->inflow_record_id) }}">
@@ -466,9 +477,22 @@
 
                                                     <!-- Footer Actions -->
                                                     <div class="p-6 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
-                                                        <a href="#" class="px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-colors inline-flex items-center">
-                                                            Cancel
-                                                        </a>
+                                                        
+                                                        <form method="POST"
+                                                            action="{{ route('staff.remove-from-queue', $patient->inflow_record_id) }}"
+                                                            onsubmit="return confirm('Patient not present? This will remove them from the queue.');"
+                                                            class="mr-auto">
+                                                            @csrf
+                                                            <button type="submit"
+                                                                    class="group/remove px-4 py-2.5 text-xs font-bold text-red-600 border border-transparent rounded-xl inline-flex items-center gap-1.5 cursor-pointer
+                                                                        transition-all duration-200 ease-out
+                                                                        hover:bg-red-50 hover:text-red-700 hover:border-red-200 hover:shadow-md hover:shadow-red-500/10 hover:-translate-y-0.5
+                                                                        active:translate-y-0 active:scale-95
+                                                                        focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300">
+                                                                <span class="material-symbols-outlined text-[16px] transition-transform duration-200 group-hover/remove:scale-110 group-hover/remove:-rotate-12">person_off</span>
+                                                                Patient Not Present
+                                                            </button>
+                                                        </form>
 
                                                         <form method="POST" action="{{ route('staff.call-patient', $patient->inflow_record_id) }}">
                                                             @csrf

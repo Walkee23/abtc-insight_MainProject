@@ -144,6 +144,7 @@
     <!-- Main Content Area -->
     <main class="ml-64 flex-1 flex flex-col min-h-screen">
         <!-- TopAppBar -->
+        
         <header class="flex justify-between items-center w-full h-16 px-8 sticky top-0 z-40 bg-slate-50/85 dark:bg-slate-900/85 backdrop-blur-md shadow-sm shadow-blue-900/5">
             <div class="flex items-center gap-8">
             </div>
@@ -313,7 +314,7 @@
                                     </div>
 
                                     <div class="space-y-4">
-                                        <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Pet or Stray <span class="text-error">*</label>
+                                        <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Pet or Stray <span class="text-error"></label>
                                         <div class="flex gap-4">
                                             <label class="flex items-center gap-2 text-sm cursor-pointer">
                                                 <input class="text-primary focus:ring-primary" name="pet_status" value="Pet" type="radio" /> Pet
@@ -492,17 +493,6 @@
                                     <p class="text-xs text-on-tertiary-fixed-variant font-medium">Check with ABTC health worker for history or record patient's claims if medical documentation is unavailable. Incomplete history may lead to dosage errors.</p>
                                 </div>
 
-                            </section>
-
-                            <section class="space-y-3">
-                                <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Assign to Healthworker <span class="text-error">*</span></label>
-                                <select name="assigned_health_worker_id" class="w-full md:w-1/2 bg-surface-container-highest border-none rounded-lg text-sm px-4 py-2.5 focus:ring-2 focus:ring-primary/20">
-                                    <option value="" selected disabled hidden>--</option>
-                                    @foreach($healthworkers as $hw)
-                                    <option value="{{ $hw->user_id }}">{{ $hw->full_name }}</option>
-                                    @endforeach
-                                </select>
-                                <p class="text-[10px] text-on-surface-variant italic">Required when you click Complete Encoding.</p>
                             </section>
 
                             <!-- Form Submission -->

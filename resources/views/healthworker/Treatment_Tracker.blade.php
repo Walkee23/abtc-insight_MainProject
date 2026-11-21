@@ -96,6 +96,7 @@
     <script src="{{ asset('js/custom-select.js') }}" defer></script>
     <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
     <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
+    <script src="{{ asset('js/soft-nav.js') }}" defer></script>
 </head>
 
 <body class="bg-surface text-on-surface">
@@ -277,15 +278,15 @@
                     </div>
                 </div>
             </div>
-            <!-- FILTERS & TABLE SECTION -->
-            <div class="bg-surface-container-lowest rounded-2xl shadow-sm overflow-hidden">
+            <!-- FILTERS & TABLE SECTION (updated in place when filtered or paged) -->
+            <div data-soft-region="tracker" class="bg-surface-container-lowest rounded-2xl shadow-sm overflow-hidden">
                 <!-- Filter Row -->
                 <form id="trackerFilters" method="GET" action="{{ route('healthworker.treatment-tracker') }}"
                     class="p-6 bg-surface-container-low flex flex-wrap gap-4 items-center justify-between">
                     <input type="hidden" name="q" id="trackerSearch" value="{{ $search }}" />
                     <div class="flex flex-wrap gap-4 items-center">
                         <div class="relative min-w-[200px]">
-                            <select name="barangay" onchange="this.form.submit()"
+                            <select name="barangay" onchange="this.form.requestSubmit()"
                                 class="appearance-none w-full bg-white border-none rounded-lg px-4 py-2 pr-10 text-sm font-semibold text-slate-600 focus:ring-2 focus:ring-blue-500/10 shadow-sm cursor-pointer">
                                 <option value="">Filter by Barangay</option>
                                 @foreach($barangays as $b)
@@ -294,7 +295,7 @@
                             </select>
                         </div>
                         <div class="relative min-w-[200px]">
-                            <select name="status" onchange="this.form.submit()"
+                            <select name="status" onchange="this.form.requestSubmit()"
                                 class="appearance-none w-full bg-white border-none rounded-lg px-4 py-2 pr-10 text-sm font-semibold text-slate-600 focus:ring-2 focus:ring-blue-500/10 shadow-sm cursor-pointer">
                                 <option value="all" {{ $status === 'all' ? 'selected' : '' }}>Dose Status: All</option>
                                 <option value="active" {{ $status === 'active' ? 'selected' : '' }}>Active (On Track)</option>
@@ -571,42 +572,44 @@
             const menu = document.getElementById('rowMenu');
             const close = () => menu.classList.add('hidden');
 
-            document.querySelectorAll('.row-menu').forEach((btn) => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    if (!menu.classList.contains('hidden') && menu.dataset.owner === btn.dataset.case) return close();
-                    menu.dataset.owner = btn.dataset.case;
-                    document.getElementById('rowMenuCase').href = btn.dataset.case;
-                    document.getElementById('rowMenuRecord').href = btn.dataset.record;
-                    const tel = document.getElementById('rowMenuTel');
-                    const number = btn.dataset.tel || '';
-                    tel.classList.toggle('hidden', !number);
-                    tel.href = 'tel:' + number.replace(/[^\d+]/g, '');
-                    document.getElementById('rowMenuTelText').textContent = 'Call ' + number;
+            // delegated: the table rows are replaced whenever the list is filtered or paged
+            document.addEventListener('click', (e) => {
+                const btn = e.target.closest ? e.target.closest('.row-menu') : null;
+                if (!btn) { if (!menu.contains(e.target)) close(); return; }
+                if (!menu.classList.contains('hidden') && menu.dataset.owner === btn.dataset.case) return close();
+                menu.dataset.owner = btn.dataset.case;
+                document.getElementById('rowMenuCase').href = btn.dataset.case;
+                document.getElementById('rowMenuRecord').href = btn.dataset.record;
+                const tel = document.getElementById('rowMenuTel');
+                const number = btn.dataset.tel || '';
+                tel.classList.toggle('hidden', !number);
+                tel.href = 'tel:' + number.replace(/[^\d+]/g, '');
+                document.getElementById('rowMenuTelText').textContent = 'Call ' + number;
 
-                    menu.classList.remove('hidden');
-                    const r = btn.getBoundingClientRect();
-                    const h = menu.offsetHeight;
-                    const top = r.bottom + 6 + h > window.innerHeight ? r.top - h - 6 : r.bottom + 6;
-                    menu.style.top = Math.max(8, top) + 'px';
-                    menu.style.left = Math.max(8, r.right - menu.offsetWidth) + 'px';
-                });
+                menu.classList.remove('hidden');
+                const r = btn.getBoundingClientRect();
+                const h = menu.offsetHeight;
+                const top = r.bottom + 6 + h > window.innerHeight ? r.top - h - 6 : r.bottom + 6;
+                menu.style.top = Math.max(8, top) + 'px';
+                menu.style.left = Math.max(8, r.right - menu.offsetWidth) + 'px';
             });
-            document.addEventListener('click', (e) => { if (!menu.contains(e.target)) close(); });
+            // an in-place update replaces the rows the open menu belonged to
+            document.addEventListener('soft:updated', close);
             document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
             window.addEventListener('scroll', close, true);
             window.addEventListener('resize', close);
 
             // The header search box searches the tracker too (Enter to search)
             const headerSearch = document.querySelector('header input[type="text"]');
-            const hidden = document.getElementById('trackerSearch');
-            if (headerSearch && hidden) {
-                headerSearch.value = hidden.value;
+            const hidden = () => document.getElementById('trackerSearch');
+            if (headerSearch && hidden()) {
+                headerSearch.value = hidden().value;
                 headerSearch.addEventListener('keydown', (e) => {
-                    if (e.key !== 'Enter') return;
-                    hidden.value = headerSearch.value;
-                    hidden.form.requestSubmit();
+                    if (e.key !== 'Enter' || !hidden()) return;
+                    hidden().value = headerSearch.value;
+                    hidden().form.requestSubmit();
                 });
+                document.addEventListener('soft:updated', () => { if (hidden()) headerSearch.value = hidden().value; });
             }
         })();
     </script>

@@ -274,7 +274,7 @@
                                 <h2 class="text-2xl font-extrabold tracking-tight text-on-surface">{{ $case->patient_name ?? 'No case selected' }}</h2>
                             </div>
                             <div class="flex gap-4">
-                                <div class="text-right">
+                                <div class="text-left sm:text-right">
                                     <p class="text-[10px] font-semibold text-outline uppercase tracking-wider">Patient
                                         ID</p>
                                     <p class="text-sm font-bold">{{ $case->patient_id ?? '—' }}</p>

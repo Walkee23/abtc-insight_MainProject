@@ -304,14 +304,24 @@ class ForecastingController extends Controller
 
                 foreach ($candidates as $command) {
                     $result = Process::path(base_path())
-                        ->env(['PYTHONIOENCODING' => 'utf-8'])
+                        ->env([
+                            'PYTHONIOENCODING' => 'utf-8',
+                            'APPDATA' => getenv('APPDATA') ?: '',
+                            'USERPROFILE' => getenv('USERPROFILE') ?: '',
+                        ])
                         ->timeout(60)
                         ->input($input)
                         ->run([...$command, $script]);
 
                     $data = json_decode($result->output(), true);
                     if (!is_array($data)) {
-                        continue;   // this name is not a working Python (or statsmodels is missing): try the next
+                        Log::warning('Forecasting Python raw failure', [
+                            'cmd' => $command,
+                            'exit' => $result->exitCode(),
+                            'out' => $result->output(),
+                            'err' => $result->errorOutput(),
+                        ]);
+                        continue;
                     }
                     if (empty($data['ok'])) {
                         throw new \RuntimeException($data['error'] ?? 'The Python script reported an error.');

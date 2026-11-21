@@ -226,7 +226,7 @@
             <section class="space-y-6">
                 <div class="flex justify-between items-end">
                     <div>
-                        <h2 class="text-2xl font-bold text-on-surface tracking-tight">Patient Volume Forecasting</h2>
+                        <h2 class="mn-page-title text-2xl font-bold text-on-surface tracking-tight">Patient Volume Forecasting</h2>
                         <p class="text-on-surface-variant text-sm mt-1">
                             {{ $forecast['status'] === 'ok' ? $forecast['method'] : 'Exponential Smoothing' }} · trained on the {{ $trainWeeks }} weeks before {{ $asOf->format('M d, Y') }}, recent days weighted most · patients per {{ $periods[$period]['unit'] }}
                         </p>
@@ -417,7 +417,7 @@
             <section class="space-y-6">
                 <div class="flex justify-between items-end">
                     <div>
-                        <h2 class="text-2xl font-bold text-on-surface tracking-tight">Outbreak Detection &amp; Monitoring</h2>
+                        <h2 class="mn-page-title text-2xl font-bold text-on-surface tracking-tight">Outbreak Detection &amp; Monitoring</h2>
                         <p class="text-on-surface-variant text-sm mt-1">Last 7 days ({{ $outbreak['from'] }} – {{ $outbreak['to'] }}) vs. each barangay's usual week</p>
                     </div>
                     <button type="button" id="toggleAllBarangays"

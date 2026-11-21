@@ -207,8 +207,12 @@
   main h1[class*="text-4xl"], main h1[class*="text-5xl"], main h2[class*="text-4xl"] { font-size: 1.75rem; line-height: 2rem; }
   main h1[class*="text-3xl"], main h2[class*="text-3xl"] { font-size: 1.5rem; line-height: 2rem; }
 
-  /* a page title marked mn-page-title is larger on a phone and wraps onto a second line instead of shrinking */
-  main h1.mn-page-title { font-size: 2rem; line-height: 2.25rem; letter-spacing: -.02em; }
+  /* the page title (marked by mobile-nav.js): larger, wraps onto a second line instead of shrinking, with room before its
+     description and before whatever sits beside it on desktop (a date, a button), which moves underneath */
+  main h1.mn-page-title, main h2.mn-page-title { font-size: 2rem; line-height: 2.25rem; letter-spacing: -.02em; margin-bottom: 0 !important; overflow-wrap: anywhere; }
+  main .mn-page-desc { margin-top: .625rem !important; font-size: .9375rem; line-height: 1.5rem; }
+  .mn-page-head { flex-direction: column !important; align-items: flex-start !important; flex-wrap: nowrap !important; gap: 1rem !important; }
+  .mn-page-head > * { max-width: 100%; }
 
   /* fixed-width search boxes and filters fit the screen */
   header [class*="w-96"], header [class*="w-80"], header [class*="max-w-xl"] { max-width: 100%; }

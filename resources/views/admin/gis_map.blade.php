@@ -135,7 +135,7 @@
         <div class="max-w-[1600px] mx-auto space-y-5">
             <div class="flex items-end justify-between flex-wrap gap-2">
                 <div>
-                    <h2 class="text-2xl font-extrabold tracking-tight text-on-surface">Barangay Spatial Distribution</h2>
+                    <h2 class="mn-page-title text-2xl font-extrabold tracking-tight text-on-surface">Barangay Spatial Distribution</h2>
                     <p class="text-sm text-slate-500">Confirmed bite cases per barangay, Cebu City. Bubble size = number of cases.</p>
                 </div>
                 <span id="status" class="text-xs text-slate-500"></span>

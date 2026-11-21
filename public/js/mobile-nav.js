@@ -143,6 +143,31 @@
         });
     }
 
+    // The page title (the first big heading of the page) is marked so a phone can show it larger and wrap it, with
+    // room before its description and before whatever sits beside it (a date, a button).
+    function markTitle() {
+        var main = document.querySelector('main');
+        if (!main) return;
+        var title = null, heads = main.querySelectorAll('h1, h2');
+        for (var i = 0; i < heads.length; i++) {
+            var h = heads[i];
+            if (h.closest('aside, .fixed') || !h.offsetParent) continue;
+            if (h.classList.contains('mn-page-title') || /(^|\s)text-[345]xl(\s|$)/.test(h.className)) { title = h; break; }
+        }
+        if (!title) return;
+        title.classList.add('mn-page-title');
+        var desc = title.nextElementSibling;
+        if (desc && desc.tagName === 'P') desc.classList.add('mn-page-desc');
+        // the row that puts the title block beside something else
+        var rows = [title.parentElement, title.parentElement && title.parentElement.parentElement];
+        for (var j = 0; j < rows.length; j++) {
+            var row = rows[j];
+            if (!row || row === main || row.children.length < 2) continue;
+            var cs = getComputedStyle(row);
+            if (cs.display.indexOf('flex') !== -1 && cs.flexDirection.indexOf('row') === 0) { row.classList.add('mn-page-head'); break; }
+        }
+    }
+
     // ---- sideways-scrolling boxes ------------------------------------------------------
     // A box that really overflows sideways is marked (slim visible scrollbar, see mobile.css) and, when its
     // content is laid out as a block (a table), gets a small "swipe sideways" line that stays put while scrolling.
@@ -174,7 +199,7 @@
     var pending = null;
     function scheduleWrap() {
         if (pending) return;
-        pending = setTimeout(function () { pending = null; wrapTables(); wrapCharts(); markEmptyTables(); markGutters(); markScrollable(); }, 120);
+        pending = setTimeout(function () { pending = null; wrapTables(); wrapCharts(); markEmptyTables(); markGutters(); markTitle(); markScrollable(); }, 120);
     }
 
     // ---- keep the scroll position when a click reloads the same page -------------------
@@ -264,13 +289,13 @@
         wrapTables();
         wrapCharts();
         markEmptyTables();
-        markGutters();
+        markGutters(); markTitle();
         markScrollable();
         window.addEventListener('load', function () { markScrollable(); setTimeout(markScrollable, 400); });
         window.addEventListener('resize', scheduleWrap);
         document.addEventListener('soft:updated', scheduleWrap);
 
-        var onChange = function () { syncCollapsed(); wrapTables(); wrapCharts(); markEmptyTables(); markGutters(); markScrollable(); };
+        var onChange = function () { syncCollapsed(); wrapTables(); wrapCharts(); markEmptyTables(); markGutters(); markTitle(); markScrollable(); };
         if (MOBILE.addEventListener) MOBILE.addEventListener('change', onChange);
         else if (MOBILE.addListener) MOBILE.addListener(onChange);
 

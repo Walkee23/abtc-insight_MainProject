@@ -207,7 +207,7 @@
             <!-- Page Header & Search -->
             <section class="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h2 class="text-2xl font-extrabold text-blue-900 tracking-tight">Case Encoding</h2>
+                    <h2 class="mn-page-title text-2xl font-extrabold text-blue-900 tracking-tight">Case Encoding</h2>
                     <p class="text-on-surface-variant text-sm mt-1">Complete bite case incident data for verified patients (Sections 3-5)</p>
                 </div>
                 <form action="{{ route('staff.case-encoding') }}" method="GET" class="w-full md:w-1/2 relative">

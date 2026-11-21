@@ -162,6 +162,11 @@ class StaffController extends Controller
 
         $isComplete = $request->input('action') === 'complete';
 
+        
+        if ($isComplete && !in_array($request->input('pet_status'), ['Pet', 'Stray'], true)) {
+            return back()->withErrors(['error' => 'Please select if the animal is a Pet or Stray.'])->withInput();
+        }
+
         if ($isComplete && $request->input('prev_arv_given') === '1') {
             $hasDoseDate = $request->filled('dose1_date') || $request->filled('dose2_date') || $request->filled('dose3_date') || $request->filled('booster_date');
             if (!$hasDoseDate) {
@@ -229,6 +234,7 @@ class StaffController extends Controller
                     'animal_type'       => $request->input('animal_type'),
                     'animal_type_other' => $request->input('animal_type_other'),
                     'bite_date_time'    => $request->input('bite_date') . ($request->input('bite_time') ? ' ' . $request->input('bite_time') : ' 00:00:00'),
+                    'animal_ownership'  => $request->input('pet_status'),
                     'animal_vax_status' => $request->input('animal_vax_status'),
                     'animal_vax_date'   => $request->input('animal_vax_date') ?: null,
                     'animal_fate'       => $request->input('fate'),

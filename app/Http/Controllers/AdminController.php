@@ -24,7 +24,7 @@ class AdminController extends Controller
 
     // 1. Role-based User Counts
     $healthWorkersCount = DB::table('users')->where('role', 'Health Worker')->count();
-    $internsCount       = DB::table('users')->whereIn('role', ['OJT', 'Intern'])->count();
+    $bhwCount = DB::table('users')->where('role', 'BHW')->count();
     $staffCount         = DB::table('users')->where('role', 'Staff')->count();
 
     // 2. Users list
@@ -50,7 +50,7 @@ class AdminController extends Controller
 
     return view('admin.USM', compact(
         'healthWorkersCount',
-        'internsCount',
+        'bhwCount',   
         'staffCount',
         'users',
         'activeUsers',

@@ -202,8 +202,148 @@
                     </div>
                 </div>
 
+                <script>
+                    (function () {
+                        const slides = document.querySelectorAll('.carousel-slide');
+                        const dots   = document.querySelectorAll('.dot-indicator');
+                        const box    = document.getElementById('carouselSlides');
+                        const DELAY  = 4000;            // 4 ka segundo kada slide
+                        let index = 0, timer = null;
+
+                        function show(i) {
+                            index = (i + slides.length) % slides.length;
+                            slides.forEach((s, n) => {
+                                const on = n === index;
+                                s.classList.toggle('opacity-100', on);
+                                s.classList.toggle('opacity-0', !on);
+                                s.classList.toggle('pointer-events-none', !on);
+                            });
+                            dots.forEach((d, n) => {
+                                const on = n === index;
+                                d.classList.toggle('w-6', on);
+                                d.classList.toggle('bg-primary', on);
+                                d.classList.toggle('w-2', !on);
+                                d.classList.toggle('bg-slate-300', !on);
+                            });
+                        }
+
+                        function start() { stop(); timer = setInterval(() => show(index + 1), DELAY); }
+                        function stop()  { if (timer) clearInterval(timer); timer = null; }
+
+                        // gi-tawag sa imong onclick buttons
+                        window.nextSlide    = () => { show(index + 1); start(); };
+                        window.prevSlide    = () => { show(index - 1); start(); };
+                        window.currentSlide = (i) => { show(i); start(); };
+
+                        // hunong kung naa ang mouse sa ibabaw, padayon kung gawas na
+                        const card = box.closest('.relative');
+                        card.addEventListener('mouseenter', stop);
+                        card.addEventListener('mouseleave', start);
+
+                        show(0);
+                        start();
+                    })();
+                </script>
+
             </div>
         </section>
+
+        <!-- GIS BUbble Map -->
+
+       <section class="max-w-7xl mx-auto px-6 pt-0 pb-12">
+            <h2 class="text-2xl font-extrabold tracking-tight mb-1">Animal Bite Cases Across Cebu City</h2>
+            <p class="text-sm text-slate-500 mb-4">Bubble size shows the number of cases in each barangay. Hover a bubble or click a barangay in the list to highlight it.</p>
+
+            <div class="grid lg:grid-cols-[1fr_300px] gap-5">
+                <div id="publicMap" style="height:520px;border-radius:12px;position:relative;z-index:0"></div>
+
+                <div class="bg-white rounded-xl border border-slate-200 p-4 h-fit">
+                    <h3 class="font-bold mb-2">Top barangays</h3>
+                    <ol id="publicTop" class="text-sm space-y-1"></ol>
+                </div>
+            </div>
+        </section>
+
+
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const COLORS = ['#fbbf24', '#f97316', '#ef4444', '#991b1b'];
+            const norm = s => (s || '').toUpperCase().replace(/\(.*?\)/g, ' ').replace(/\bPOB\b\.?/g, ' ').replace(/[^A-Z0-9]+/g, ' ').trim();
+            const esc  = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+            const map = L.map('publicMap', { scrollWheelZoom: false }).setView([10.3157, 123.8854], 12);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(map);
+
+            const layers = {}, markers = {}, base = {};
+            const [geo, rows] = await Promise.all([
+                fetch("{{ asset('geojson/cebu_city_barangays.geojson') }}").then(r => r.json()),
+                fetch("{{ route('public.gis_data') }}", { headers: { 'Accept': 'application/json' } }).then(r => r.json()),
+            ]);
+
+            L.geoJSON(geo, {
+                style: { color: '#0b61bb', weight: 1, fillOpacity: 0.03 },
+                onEachFeature: (f, layer) => { const n = f.properties.BGY_NAME || 'Unknown'; layers[norm(n)] = { name: n, layer }; }
+            }).addTo(map);
+
+            const agg = {};
+            rows.forEach(r => { const k = norm(r.barangay); if (layers[k]) agg[k] = (agg[k] || 0) + (+r.n); });
+
+            const max = Math.max(1, ...Object.values(agg));
+            const tier = n => { const q = n / max; return q > 0.75 ? 3 : q > 0.5 ? 2 : q > 0.25 ? 1 : 0; };
+            const label = (name, n) => esc(name) + ': ' + n + (n === 1 ? ' case' : ' cases');
+
+            // highlight on/off for one barangay (used by both the bubble and the list)
+            function highlight(k, on) {
+                const m = markers[k], l = layers[k].layer;
+                if (!m) return;
+                if (on) {
+                    m.setStyle({ weight: 3, fillOpacity: 0.95 });
+                    m.setRadius(base[k].radius * 1.3);
+                    m.bringToFront();
+                    l.setStyle({ weight: 3, fillOpacity: 0.45 });
+                    m.openTooltip();
+                } else {
+                    m.setStyle({ weight: 1, fillOpacity: 0.65 });
+                    m.setRadius(base[k].radius);
+                    l.setStyle({ weight: 1, fillOpacity: 0.2 });
+                    m.closeTooltip();
+                }
+                document.querySelectorAll('#publicTop button').forEach(b =>
+                    b.classList.toggle('bg-amber-100', on && b.dataset.k === k));
+            }
+
+            Object.entries(agg).forEach(([k, n]) => {
+                const { name, layer } = layers[k];
+                layer.setStyle({ fillColor: COLORS[tier(n)], fillOpacity: 0.2 });
+                const radius = 6 + 26 * Math.sqrt(n / max);
+                base[k] = { radius };
+
+                const m = L.circleMarker(layer.getBounds().getCenter(), {
+                    radius, fillColor: COLORS[tier(n)], color: '#7f1d1d', weight: 1, fillOpacity: 0.65
+                }).addTo(map).bindTooltip(label(name, n), { direction: 'top' });
+
+                m.on('mouseover', () => highlight(k, true));
+                m.on('mouseout',  () => highlight(k, false));
+                m.on('click',     () => map.fitBounds(layer.getBounds().pad(0.6)));
+                markers[k] = m;
+            });
+
+            // Top barangays list
+            const sorted = Object.entries(agg).sort((a, b) => b[1] - a[1]).slice(0, 10);
+            document.getElementById('publicTop').innerHTML = sorted.length
+                ? sorted.map(([k, n], i) =>
+                    '<li><button data-k="' + esc(k) + '" class="w-full flex justify-between rounded px-2 py-1 text-left transition-colors hover:bg-amber-100">' +
+                    '<span>' + (i + 1) + '. ' + esc(layers[k].name) + '</span><b>' + n + '</b></button></li>').join('')
+                : '<li class="text-slate-500">No cases recorded yet.</li>';
+
+            const list = document.getElementById('publicTop');
+            list.addEventListener('mouseover', e => { const b = e.target.closest('button[data-k]'); if (b) highlight(b.dataset.k, true); });
+            list.addEventListener('mouseout',  e => { const b = e.target.closest('button[data-k]'); if (b) highlight(b.dataset.k, false); });
+            list.addEventListener('click',     e => { const b = e.target.closest('button[data-k]'); if (b) map.fitBounds(layers[b.dataset.k].layer.getBounds().pad(0.6)); });
+        });
+        </script>
 
         <!-- Call to Action Card Section -->
         <section class="py-12 bg-surface">
@@ -222,15 +362,10 @@
     <!-- Footer -->
     <footer class="bg-slate-100 w-full py-12 px-8 mt-12">
         <div class="flex flex-col md:flex-row justify-between items-center gap-8 max-w-7xl mx-auto">
-            <div class="text-lg font-black text-slate-900">
-                ABTC-Insight
-            </div>
             <div class="flex flex-wrap justify-center gap-8 font-sans text-xs uppercase tracking-widest font-semibold">
-                <a class="text-slate-500 hover:text-blue-500 transition-colors" href="#">Privacy Policy</a>
-                <a class="text-slate-500 hover:text-blue-500 transition-colors" href="#">Terms of Service</a>
-                <a class="text-slate-500 hover:text-blue-500 transition-colors" href="#">Emergency Contacts</a>
-                <a class="text-slate-500 hover:text-blue-500 transition-colors" href="#">Department of Health</a>
-            </div>
+            <a class="text-slate-500 hover:text-blue-500 transition-colors" href="https://cebucitytour.com/cebu-city-emergecy-hotline/" target="_blank" rel="noopener noreferrer">Emergency Contacts</a>
+            <a class="text-slate-500 hover:text-blue-500 transition-colors" href="https://doh.gov.ph/" target="_blank" rel="noopener noreferrer">Department of Health</a>
+        </div>
             <div class="text-slate-500 text-[10px] uppercase tracking-widest font-bold opacity-60">
                 © 2026 Cebu City Health Center. All rights reserved.
             </div>

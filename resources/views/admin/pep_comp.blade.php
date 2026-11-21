@@ -203,11 +203,11 @@
         <div class="p-8 max-w-[1600px] mx-auto space-y-8">
             <!-- Header & Filter Row -->
             <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
-                <div>
+                <div class="min-w-0">
                     <h1 class="text-3xl font-extrabold tracking-tight text-on-surface mb-2">PEP Compliance &amp; SMS Logs</h1>
                     <p class="text-on-surface-variant">Real-time monitoring of Post-Exposure Prophylaxis schedules and patient communication outreach.</p>
                 </div>
-                <div class="flex flex-wrap items-center gap-3">
+                <div class="flex flex-wrap items-center gap-3 lg:flex-nowrap lg:shrink-0">
                     <button class="bg-surface-container-low p-2.5 rounded-xl hover:bg-surface-container-high transition-colors">
                         <span class="material-symbols-outlined text-on-surface-variant" data-icon="calendar_month">calendar_month</span>
                     </button>
@@ -215,7 +215,7 @@
                 </div>
             </div>
             <!-- Compliance Overview Stat Cards (Bento Style) -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
    
     
                 <!-- Stat Card 1: PEP Completion Rate -->
@@ -288,76 +288,76 @@
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr class="bg-surface-container-low">
-                                    <th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-widest">Patient Name</th>
-                                    <th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-widest">Scheduled Dose</th>
-                                    <th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-widest">Label</th>
-                                    <th class="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-widest">Status</th>
+                                    <th class="px-4 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-widest">Patient Name</th>
+                                    <th class="px-4 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-widest">Scheduled Dose</th>
+                                    <th class="px-4 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-widest">Label</th>
+                                    <th class="px-4 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-widest">Status</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-outline-variant/10">
                                 <tr class="hover:bg-surface-bright transition-colors">
-                                    <td class="px-6 py-4">
+                                    <td class="px-4 py-4">
                                         <div class="flex flex-col">
                                             <span class="font-bold text-sm">Mariano, Roberto P.</span>
                                             <span class="text-xs text-on-surface-variant">Guadalupe, Cebu City</span>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 text-sm font-medium text-on-surface">Oct 24, 2023</td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-4 py-4 text-sm font-medium text-on-surface">Oct 24, 2023</td>
+                                    <td class="px-4 py-4">
                                         <span class="px-2.5 py-1 bg-surface-container-high rounded text-[10px] font-black">D7</span>
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-4 py-4">
                                         <span class="bg-tertiary-fixed text-on-tertiary-fixed-variant px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1">
                                             <span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span> Pending
                                         </span>
                                     </td>
                                 </tr>
                                 <tr class="hover:bg-surface-bright transition-colors">
-                                    <td class="px-6 py-4">
+                                    <td class="px-4 py-4">
                                         <div class="flex flex-col">
                                             <span class="font-bold text-sm">Gomez, Elena S.</span>
                                             <span class="text-xs text-on-surface-variant">Lahug, Cebu City</span>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 text-sm font-medium text-on-surface">Oct 22, 2023</td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-4 py-4 text-sm font-medium text-on-surface">Oct 22, 2023</td>
+                                    <td class="px-4 py-4">
                                         <span class="px-2.5 py-1 bg-surface-container-high rounded text-[10px] font-black">D3</span>
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-4 py-4">
                                         <span class="bg-primary-fixed text-on-primary-fixed-variant px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1">
                                             <span class="w-1.5 h-1.5 rounded-full bg-primary"></span> Completed On Time
                                         </span>
                                     </td>
                                 </tr>
                                 <tr class="hover:bg-surface-bright transition-colors">
-                                    <td class="px-6 py-4">
+                                    <td class="px-4 py-4">
                                         <div class="flex flex-col">
                                             <span class="font-bold text-sm">Santos, Danilo K.</span>
                                             <span class="text-xs text-on-surface-variant">Mabolo, Cebu City</span>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 text-sm font-medium text-on-surface">Oct 20, 2023</td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-4 py-4 text-sm font-medium text-on-surface">Oct 20, 2023</td>
+                                    <td class="px-4 py-4">
                                         <span class="px-2.5 py-1 bg-surface-container-high rounded text-[10px] font-black">D28</span>
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-4 py-4">
                                         <span class="bg-error-container text-on-error-container px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1">
                                             <span class="w-1.5 h-1.5 rounded-full bg-error"></span> Missed
                                         </span>
                                     </td>
                                 </tr>
                                 <tr class="hover:bg-surface-bright transition-colors">
-                                    <td class="px-6 py-4">
+                                    <td class="px-4 py-4">
                                         <div class="flex flex-col">
                                             <span class="font-bold text-sm">Bautista, Maria L.</span>
                                             <span class="text-xs text-on-surface-variant">Tisa, Cebu City</span>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 text-sm font-medium text-on-surface">Oct 21, 2023</td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-4 py-4 text-sm font-medium text-on-surface">Oct 21, 2023</td>
+                                    <td class="px-4 py-4">
                                         <span class="px-2.5 py-1 bg-surface-container-high rounded text-[10px] font-black">D0</span>
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-4 py-4">
                                         <span class="bg-secondary-fixed text-on-secondary-fixed-variant px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1">
                                             <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> Completed Late
                                         </span>

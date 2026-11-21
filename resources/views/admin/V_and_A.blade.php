@@ -627,7 +627,7 @@
                     <!-- 1. Tabbed Demographics Card (Exposure, Sex, Animal - 3 Colors na) -->
                     <div class="bg-surface-container-lowest p-8 rounded-xl border border-outline-variant/10 shadow-sm flex flex-col justify-between">
                         <div>
-                            <div class="flex items-center justify-between mb-6">
+                            <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 mb-6">
                                 <h4 class="text-lg font-bold text-on-surface">Demographic & Exposure Breakdown</h4>
                                 <div class="flex bg-surface-container-high p-1 rounded-lg">
                                     <button onclick="switchDemographicTab('exposure')" id="tab-exposure" class="px-3 py-1 text-xs font-bold rounded-md bg-primary text-white shadow-sm transition-all">Exposure</button>

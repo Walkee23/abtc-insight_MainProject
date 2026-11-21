@@ -445,7 +445,7 @@
 
                 <!-- Hotspots Card (updated in place when its range is changed) -->
                 <div data-soft-region="hotspots" class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/15 flex flex-col">
-                    <div class="flex items-center justify-between mb-8">
+                    <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 mb-8">
                         <div>
                             <h3 class="text-lg font-bold">Top Incident Hotspots (Last {{ $hotspotRange }} Days)</h3>
                             <p class="text-xs text-on-surface-variant mt-1">Top 5 barangays with the most bite incident records</p>

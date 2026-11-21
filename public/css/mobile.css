@@ -143,6 +143,9 @@
   main img, main canvas { max-width: 100%; height: auto; }
 }
 
+/* date / time boxes have a built-in minimum width: let them shrink to the space they are given, at every width */
+main input[type="date"], main input[type="time"], main input[type="datetime-local"], main input[type="month"] { min-width: 0; max-width: 100%; }
+
 /* ---- phones --------------------------------------------------------------------------- */
 @media (max-width: 767.98px) {
 

@@ -290,7 +290,7 @@
 
             <!-- Expected Follow-up Visits Card & Scrollable Name List -->
             <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/20 shadow-sm">
-                <div class="flex justify-between items-center mb-4">
+                <div class="flex flex-wrap justify-between items-center gap-x-4 gap-y-2 mb-4">
                     <h3 class="font-bold text-sm text-on-surface flex items-center gap-2">
                         <span class="material-symbols-outlined text-emerald-600 text-[18px]">event_repeat</span>
                         <span>Scheduled Follow-Up Inflow (Due Today)<span class="hidden sm:inline"> — </span><span class="block sm:inline text-xs text-slate-500 font-normal">Click a card to view names</span></span>

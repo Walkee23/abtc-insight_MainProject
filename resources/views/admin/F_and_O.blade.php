@@ -261,8 +261,8 @@
                     </div>
                 </div>
                 <div class="grid grid-cols-12 gap-6">
-                    <div class="col-span-12 lg:col-span-5 grid grid-cols-3 gap-4">
-                        <div class="bg-surface-container-lowest p-5 rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] flex flex-col justify-between">
+                    <div class="col-span-12 lg:col-span-5 grid grid-cols-2 gap-4 content-start">
+                        <div class="col-span-2 bg-surface-container-lowest p-5 rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] flex flex-col justify-between">
                             <p class="text-[10px] uppercase font-bold text-outline tracking-wider mb-1">Method</p>
                             <p class="text-sm font-bold text-primary leading-snug">{{ $forecast['status'] === 'ok' ? $forecast['method'] : '—' }}</p>
                             @if($forecast['status'] === 'ok' && !$forecast['seasonal'])
@@ -332,32 +332,32 @@
                             <span class="text-[10px] font-bold text-outline uppercase tracking-widest">
                                 Historical data
                             </span>
-                            <div class="flex items-center gap-4">
-                                <div class="flex items-center gap-2">
-                                    <div class="w-3 h-3 bg-primary rounded-full"></div>
+                            <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+                                <div class="flex items-center gap-2 whitespace-nowrap">
+                                    <div class="w-3 h-3 shrink-0 bg-primary rounded-full"></div>
                                     <span class="text-xs font-medium text-on-surface-variant">Actual Volume</span>
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    <div class="w-5 border-t-2 border-dashed border-primary/60"></div>
+                                <div class="flex items-center gap-2 whitespace-nowrap">
+                                    <div class="w-5 shrink-0 border-t-2 border-dashed border-primary/60"></div>
                                     <span class="text-xs font-medium text-on-surface-variant">Predicted Trend</span>
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    <div class="w-3 h-3 bg-primary/10 rounded-sm"></div>
+                                <div class="flex items-center gap-2 whitespace-nowrap">
+                                    <div class="w-3 h-3 shrink-0 bg-primary/10 rounded-sm"></div>
                                     <span class="text-xs font-medium text-on-surface-variant">95% Confidence Interval</span>
                                 </div>
                             </div>
                         </div>
-                        <div class="flex items-center gap-6">
+                        <div class="flex flex-wrap items-end md:items-center gap-x-8 gap-y-4 w-full md:w-auto">
                             @if($forecast['status'] === 'ok')
-                            <div class="text-right">
+                            <div class="text-left md:text-right">
                                 <p class="text-[10px] font-bold text-outline uppercase tracking-widest">Expected {{ $asOf->isSameDay($today) ? ($periods[$period]['unit'] === 'day' ? 'today' : 'this ' . $periods[$period]['unit']) : 'from ' . $asOf->format('M d') }}</p>
-                                <p class="text-xl font-black text-primary">{{ number_format($forecast['next_value']) }} <span class="text-xs font-semibold text-outline">patients</span></p>
+                                <p class="text-xl font-black text-primary whitespace-nowrap">{{ number_format($forecast['next_value']) }} <span class="text-xs font-semibold text-outline">patients</span></p>
                             </div>
-                            <div class="text-right">
+                            <div class="text-left md:text-right">
                                 <p class="text-[10px] font-bold text-outline uppercase tracking-widest">Next {{ $periods[$period]['horizon'] }} {{ $periods[$period]['unit'] }}s</p>
-                                <p class="text-xl font-black text-on-surface">{{ number_format($forecast['total_horizon']) }} <span class="text-xs font-semibold text-outline">patients</span></p>
+                                <p class="text-xl font-black text-on-surface whitespace-nowrap">{{ number_format($forecast['total_horizon']) }} <span class="text-xs font-semibold text-outline">patients</span></p>
                             </div>
-                            <form method="POST" action="{{ route('admin.forecasting.save') }}">
+                            <form method="POST" action="{{ route('admin.forecasting.save') }}" class="w-full md:w-auto">
                                 @csrf
                                 <input type="hidden" name="period" value="{{ $period }}" />
                                 @if(!$asOf->isSameDay($today))<input type="hidden" name="asof" value="{{ $asOf->toDateString() }}" />@endif
@@ -365,7 +365,7 @@
                                 <input type="hidden" name="{{ $key }}" value="{{ $value }}" />
                                 @endforeach
                                 <button type="submit"
-                                    class="px-4 py-2 bg-primary text-on-primary text-xs font-bold rounded-lg shadow-md shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-2">
+                                    class="w-full md:w-auto justify-center px-4 py-2 bg-primary text-on-primary text-xs font-bold rounded-lg shadow-md shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-2 whitespace-nowrap">
                                     <span class="material-symbols-outlined text-[16px]">save</span> Save Forecast
                                 </button>
                             </form>

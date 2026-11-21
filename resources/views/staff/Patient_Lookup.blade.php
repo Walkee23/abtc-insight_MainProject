@@ -233,20 +233,20 @@
 <table class="w-full text-left border-collapse">
 <thead>
 <tr class="bg-surface-container-low">
-<th class="px-8 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant">Patient Name</th>
-<th class="px-6 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant">Patient ID</th>
-<th class="px-6 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant">Age/Sex</th>
-<th class="px-6 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant">Barangay</th>
-<th class="px-6 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant">Last Visit</th>
-<th class="px-6 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant text-center">Active PEP</th>
-<th class="px-8 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant text-right">Action</th>
+<th class="px-5 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant">Patient Name</th>
+<th class="px-3 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant whitespace-nowrap">Patient ID</th>
+<th class="px-3 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant whitespace-nowrap">Age/Sex</th>
+<th class="px-3 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant whitespace-nowrap">Barangay</th>
+<th class="px-3 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant whitespace-nowrap">Last Visit</th>
+<th class="px-3 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant text-center whitespace-nowrap">Active PEP</th>
+<th class="px-5 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant text-right">Action</th>
 </tr>
 </thead>
 <tbody class="divide-y divide-outline-variant/10">
     @if(isset($patients) && $patients->count() > 0)
         @foreach($patients as $patient)
             <tr class="hover:bg-surface-bright transition-colors group">
-                <td class="px-8 py-5 min-w-[12rem]">
+                <td class="px-5 py-5 min-w-[12rem]">
                     <div class="flex items-center gap-3">
                         <div class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold text-xs">
                             {{ strtoupper(substr($patient->patient_name ?? 'P', 0, 2)) }}
@@ -257,25 +257,25 @@
                         </div>
                     </div>
                 </td>
-                <td class="px-6 py-5">
+                <td class="px-3 py-5">
                     <code class="text-xs font-mono text-primary bg-primary/5 px-2 py-1 rounded">{{ $patient->patient_id }}</code>
                 </td>
-                <td class="px-6 py-5 text-on-surface-variant font-medium">
+                <td class="px-3 py-5 text-on-surface-variant font-medium whitespace-nowrap">
                     {{ $patient->age }} / {{ substr($patient->sex ?? 'U', 0, 1) }}
                 </td>
-                <td class="px-6 py-5 text-on-surface-variant">
+                <td class="px-3 py-5 text-on-surface-variant">
                     {{ $patient->barangay ?? 'N/A' }}
                 </td>
-                <td class="px-6 py-5 text-on-surface-variant">
+                <td class="px-3 py-5 text-on-surface-variant whitespace-nowrap">
                     {{ $patient->date_registered ? \Carbon\Carbon::parse($patient->date_registered)->format('M d, Y') : 'N/A' }}
                 </td>
                 
-                <td class="px-6 py-5 text-center">
+                <td class="px-3 py-5 text-center">
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tight {{ $patient->pep_badge ?? 'bg-slate-100 text-slate-500' }}">
                         {{ $patient->pep_status ?? 'No Case' }}
                     </span>
                 </td>
-                <td class="px-8 py-5 text-right">
+                <td class="px-5 py-5 text-right whitespace-nowrap">
                     @if($patient->inflow_record_id)
                         <!-- Trigger Button ng CSS Modal -->
                         <a href="#case-modal-{{ $patient->inflow_record_id }}" 

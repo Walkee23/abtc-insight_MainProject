@@ -59,7 +59,6 @@
             }
         });
         var bar = findTopBar();
-        if (bar) bar.style.viewTransitionName = 'mn-top';
         // a top bar that takes its own space (sticky) must not also be allowed for in the page's top padding
         if (bar && getComputedStyle(bar).position === 'sticky') document.body.classList.add('mn-sticky-header');
         if (!bar) {
@@ -239,17 +238,6 @@
     function restoreOnce() { if (restored) return; restored = true; restoreScroll(); scrollToArrivalAnchor(); }
     // fires just before the new page is first shown (also when a view transition is about to start)
     window.addEventListener('pagereveal', restoreOnce);
-
-    // A reload of THIS page from a scrolled position (a filter, a saved form) would cross-fade the old page into the new
-    // one while the new one is still at the top: a ghosted flash of the page header. Skip the fade for those; the page
-    // simply swaps and the scroll position is put back.
-    window.addEventListener('pageswap', function (e) {
-        if (!e.viewTransition || !e.activation || !e.activation.entry) return;
-        try {
-            var to = new URL(e.activation.entry.url);
-            if (to.pathname === location.pathname && window.pageYOffset > 5) e.viewTransition.skipTransition();
-        } catch (err) { /* ignore */ }
-    });
 
     window.addEventListener('pagehide', rememberScroll);
     window.addEventListener('beforeunload', rememberScroll);

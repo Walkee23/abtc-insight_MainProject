@@ -14,23 +14,6 @@
 .mn-chart-hint,
 .mn-swipe-hint { display: none; }
 
-/*
- * Smooth page changes on phones. Filters, pagination links and Save buttons reload the page; instead of a
- * white flash, the old and the new page cross-fade (browsers with cross-document view transitions), and the
- * top bar stays where it is. Browsers without them get a short fade-in so the change is still gentle.
- */
-@media (max-width: 1023.98px) {
-  @view-transition { navigation: auto; }
-  ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .18s; animation-timing-function: ease-out; }
-  ::view-transition-group(mn-top) { animation-duration: 0s; }
-}
-@supports not (view-transition-name: none) {
-  @media (max-width: 1023.98px) {
-    body { animation: mn-fade-in .22s ease-out; }
-  }
-}
-@keyframes mn-fade-in { from { opacity: .55; } to { opacity: 1; } }
-
 @media (max-width: 1023.98px) {
 
   /* never let one wide element make the whole page scroll sideways */

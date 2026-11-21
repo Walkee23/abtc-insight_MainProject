@@ -155,8 +155,26 @@
         })();
     }
 
+    // ---- arriving from a sibling page: land on the part the reader came for -------------
+    // An element marked data-arrival-anchor="/some/path" is scrolled to (just under the top bar) when the
+    // reader arrives from another page under that path, e.g. "Next Section" in Clinical Encoding lands on
+    // the Active Encoding Session card instead of the top of the page, where the queue is stacked above it.
+    function scrollToArrivalAnchor() {
+        if (!MOBILE.matches || location.hash) return;
+        var anchor = document.querySelector('[data-arrival-anchor]');
+        if (!anchor || !document.referrer) return;
+        var ref;
+        try { ref = new URL(document.referrer); } catch (e) { return; }
+        if (ref.origin !== location.origin || ref.pathname === location.pathname) return;   // a reload of this page is handled above
+        var prefix = anchor.getAttribute('data-arrival-anchor');
+        if (prefix && ref.pathname.indexOf(prefix) !== 0) return;
+        var go = function () { window.scrollTo(0, Math.max(0, anchor.getBoundingClientRect().top + window.pageYOffset - 76)); };
+        go();
+        window.addEventListener('load', go, { once: true });   // once images and fonts have settled the layout
+    }
+
     var restored = false;
-    function restoreOnce() { if (restored) return; restored = true; restoreScroll(); }
+    function restoreOnce() { if (restored) return; restored = true; restoreScroll(); scrollToArrivalAnchor(); }
     // fires just before the new page is first shown (also when a view transition is about to start)
     window.addEventListener('pagereveal', restoreOnce);
 

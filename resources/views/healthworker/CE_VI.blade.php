@@ -263,7 +263,7 @@
                 @endif
                 @if($case)
                 <!-- Form Card -->
-                <div
+                <div data-arrival-anchor="/healthworker/clinical-encoding"
                     class="bg-surface-container-lowest rounded-xl shadow-lg shadow-blue-900/5 overflow-hidden border border-outline-variant/10 flex flex-col min-h-[14rem] h-auto lg:h-[calc(100vh-12rem)]">
                     <!-- Form Header & Step Indicator -->
                     <div class="bg-surface-container-low border-b border-outline-variant/20">

@@ -275,10 +275,10 @@
                                         {{ $patient->barangay ?? 'N/A' }}
                                     </td>
                                     <td class="px-4 py-4 text-right">
-                                        <!-- Trigger Button para sa Priority Modal -->
+                                       <!-- Trigger Button para sa Priority Modal -->
                                         <a href="#call-priority-modal-{{ $patient->inflow_record_id }}"
-                                            class="inline-flex items-center gap-1 whitespace-nowrap px-2.5 py-1 bg-green-500/10 hover:bg-green-600 text-green-700 hover:text-white text-[11px] font-bold rounded-md border border-green-500/20 transition-all">
-                                            <span class="material-symbols-outlined text-[13px]">campaign</span>
+                                            class="inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 bg-green-500/10 hover:bg-green-600 text-green-700 hover:text-white text-xs font-bold rounded-full border border-green-500/20 transition-all">
+                                            <span class="material-symbols-outlined text-[15px]">campaign</span>
                                             <span>Call &amp; Verify</span>
                                         </a>
 

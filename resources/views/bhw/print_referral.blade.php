@@ -36,6 +36,7 @@
         }
 
         @media screen and (max-width: 880px) {
+            html { overflow-x: hidden; }
             body { padding: 0 0 16px; }
             .no-print {
                 max-width: none;
@@ -46,7 +47,7 @@
                 backdrop-filter: blur(6px);
                 box-shadow: 0 1px 0 rgba(15, 23, 42, .1);
             }
-            .no-print a, .no-print button { white-space: nowrap; }
+            .no-print a, .no-print button { white-space: nowrap; min-width: 0; padding-left: .875rem; padding-right: .875rem; }
             .bond-paper { box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18); }
         }
 
@@ -91,10 +92,10 @@
     {{-- Screen-only Action Bar --}}
     <div class="no-print max-w-[8.5in] mx-auto mb-4 flex flex-nowrap justify-between items-center gap-2">
         <a href="{{ route('bhw.dashboard') }}" class="px-4 py-2 bg-slate-600 text-white text-sm font-semibold rounded-lg shadow hover:bg-slate-700">
-            &larr; Back to Dashboard
+            &larr; Back<span class="hidden sm:inline">&nbsp;to Dashboard</span>
         </a>
         <button onclick="window.print()" class="px-4 py-2 bg-blue-700 text-white text-sm font-semibold rounded-lg shadow hover:bg-blue-800">
-            Print Referral
+            Print<span class="hidden sm:inline">&nbsp;Referral</span>
         </button>
     </div>
 
@@ -246,7 +247,9 @@
             function fit() {
                 var margin = window.innerWidth <= 880 ? 12 : 0;
                 var w = paper.offsetWidth, h = paper.offsetHeight;
-                var avail = document.documentElement.clientWidth - margin * 2;
+                var vv = window.visualViewport;
+                var screenW = Math.min(document.documentElement.clientWidth, window.innerWidth, vv ? vv.width * vv.scale : Infinity);
+                var avail = screenW - margin * 2;
                 var scale = Math.min(1, avail / w);
                 paper.style.transform = scale < 1 ? 'scale(' + scale + ')' : '';
                 wrap.style.width = Math.round(w * scale) + 'px';

@@ -181,7 +181,7 @@ class AdminController extends Controller
     {
         // 1. PEP Completion Rate: every PEP course on record (Day 0 given) is scanned in the database.
         // A course is completed when ALL of its scheduled doses have a recorded date (App\Support\PepSchedule):
-        //   Primary, IM route:  Day 0, Day 3, Day 7 and Day 14  (4 dates)
+        //   Primary, IM route:  Day 0, Day 3, Day 7, Day 14 and Day 28  (5 dates)
         //   Primary, ID route:  Day 0, Day 3, Day 7 and Day 28  (4 dates; also records with no route, e.g. imports)
         //   Booster:            Day 0 and Day 3                 (2 dates)
         $complete = \App\Support\PepSchedule::completeSql('s7');

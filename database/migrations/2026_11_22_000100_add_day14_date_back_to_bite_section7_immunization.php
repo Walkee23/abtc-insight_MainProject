@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Schema;
 
 /**
  * Day 14 is part of the schedule again, for the IM (intramuscular) route only:
- *   Primary IM -> Day 0, 3, 7, 14      Primary ID -> Day 0, 3, 7, 28      Booster -> Day 0, 3
+ *   Primary IM -> Day 0, 3, 7, 14, 28   Primary ID -> Day 0, 3, 7, 28   Booster -> Day 0, 3
  * (the earlier migration 2026_11_22_000000 dropped the column when Day 14 was removed from every schedule).
  * The column comes back empty: the old values were the imported "4th dose" dates, which are Day 28 dates
  * and already live in day28_date.

@@ -76,7 +76,7 @@ class PatientController extends Controller
     }
 
     // The dose visits a returning patient can check in for (Day 0 was given at the first visit) come from
-    // App\Support\PepSchedule: Primary IM 3 / 7 / 14, Primary ID 3 / 7 / 28, Booster 3.
+    // App\Support\PepSchedule: Primary IM 3 / 7 / 14 / 28, Primary ID 3 / 7 / 28, Booster 3.
 
     /**
      * Returning Patient: find a patient by full name AND exact date of birth, then list the

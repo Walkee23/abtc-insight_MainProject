@@ -340,7 +340,7 @@ class ClinicalEncodingController extends Controller
         // as '' (shows as "Select" again) rather than a made-up default
         $validated['dose_type'] = $validated['dose_type'] ?? '';
 
-        // The dose dates follow the dose type and route (App\Support\PepSchedule): Primary IM = Day 0, 3, 7, 14;
+        // The dose dates follow the dose type and route (App\Support\PepSchedule): Primary IM = Day 0, 3, 7, 14, 28;
         // Primary ID = Day 0, 3, 7, 28; Booster = Day 0, 3. A date that is not part of the course is never kept.
         $courseDays = PepSchedule::days($validated['dose_type'], $validated['route'] ?? null);
         foreach ([3, 7, 14, 28] as $day) {

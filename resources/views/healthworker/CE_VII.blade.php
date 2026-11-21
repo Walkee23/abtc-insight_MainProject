@@ -485,8 +485,17 @@
                                 <div class="bg-surface-container-low rounded-xl p-6">
                                     <p class="text-xs font-extrabold text-outline uppercase tracking-widest mb-1">Dose
                                         Tracking Grid</p>
-                                    <p class="text-[11px] text-outline mb-4">Primary: Day 0, 3, 7 and Day 14 (IM route) or Day 28 (ID route). Booster: Day 0 and 3.</p>
-                                    <div id="doseGrid" class="grid grid-cols-4 gap-3">
+                                    <p class="text-[11px] text-outline mb-4">Primary IM route: Day 0, 3, 7, 14 and 28. Primary ID route: Day 0, 3, 7 and 28. Booster: Day 0 and 3.</p>
+                                    <style>
+                                        @media (min-width: 768px) {
+                                            #doseGrid[data-cols="5"] { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+                                            #doseGrid[data-cols="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+                                        }
+                                        @media (max-width: 767.98px) {
+                                            #doseGrid[data-cols="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+                                        }
+                                    </style>
+                                    <div id="doseGrid" data-cols="4" class="grid grid-cols-4 gap-3">
                                         <div data-field-wrap="day0_date" class="bg-white p-3 rounded-lg border border-primary/20 ring-1 ring-transparent">
                                             <p class="text-[10px] font-bold text-primary uppercase mb-1">Day 0 <span class="text-error">*</span></p>
                                             <input name="day0_date" data-field="day0_date" type="date" max="{{ now()->toDateString() }}" value="{{ $val('day0_date') }}"
@@ -712,13 +721,13 @@
             }
 
             // Dose dates follow the dose type and the route:
-            //   Primary + IM = Day 0, 3, 7, 14   Primary + ID (or no route yet) = Day 0, 3, 7, 28   Booster = Day 0, 3
+            //   Primary + IM = Day 0, 3, 7, 14, 28   Primary + ID (or no route yet) = Day 0, 3, 7, 28   Booster = Day 0, 3
             const doseTypeInput = form.querySelector('[data-field="dose_type"]');
             const routeInput = form.querySelector('[data-field="route"]');
             const doseGrid = document.getElementById('doseGrid');
             function courseDays() {
                 if (doseTypeInput.value === 'Booster') return [0, 3];
-                return routeInput.value === 'IM' ? [0, 3, 7, 14] : [0, 3, 7, 28];
+                return routeInput.value === 'IM' ? [0, 3, 7, 14, 28] : [0, 3, 7, 28];
             }
             function applySchedule() {
                 const days = courseDays();
@@ -732,7 +741,7 @@
                         setError(input.dataset.field, '');
                     }
                 });
-                doseGrid.style.gridTemplateColumns = days.length === 2 ? 'repeat(2, minmax(0, 1fr))' : '';
+                doseGrid.dataset.cols = String(days.length); // 2, 4 or 5 boxes: the columns follow (see the style rule above the grid)
             }
             applySchedule();
 

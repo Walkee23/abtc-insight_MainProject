@@ -26,14 +26,28 @@
                 margin: 0 auto;
                 background: #ffffff;
                 box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+                transform-origin: top left;
             }
+
+            /* The sheet is shown like a PDF page: the whole 8.5in page scaled down to the screen width (see the script
+               at the bottom), with the toolbar kept at normal size and pinned to the top. Pinch to zoom in. */
+            .paper-fit { margin: 0 auto; overflow: hidden; }
+            .no-print { position: sticky; top: 0; z-index: 10; }
         }
 
-        /* phones: the slip fills the screen instead of a fixed 8.5in sheet shrunk to fit (print keeps the real paper size) */
-        @media screen and (max-width: 820px) {
-            body { padding: 12px 0; }
-            .no-print { padding: 0 12px; gap: .5rem; flex-wrap: wrap; }
-            .bond-paper { width: auto; max-width: 100%; min-height: 0; margin: 0 12px; padding: 1.25rem 1rem; border-radius: .75rem; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12); }
+        @media screen and (max-width: 880px) {
+            body { padding: 0 0 16px; }
+            .no-print {
+                max-width: none;
+                margin-bottom: 12px;
+                padding: 10px 12px;
+                gap: .5rem;
+                background: rgba(226, 232, 240, .95);
+                backdrop-filter: blur(6px);
+                box-shadow: 0 1px 0 rgba(15, 23, 42, .1);
+            }
+            .no-print a, .no-print button { white-space: nowrap; }
+            .bond-paper { box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18); }
         }
 
         @media print {
@@ -49,7 +63,14 @@
                 print-color-adjust: exact;
             }
 
+            .paper-fit {
+                width: auto !important;
+                height: auto !important;
+                overflow: visible !important;
+            }
+
             .bond-paper {
+                transform: none !important;
                 width: 100% !important;
                 max-width: 100% !important;
                 min-height: auto !important;
@@ -63,8 +84,6 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
-    <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
 </head>
 
 <body class="text-slate-900 font-sans antialiased">
@@ -79,51 +98,52 @@
         </button>
     </div>
 
-    {{-- Full-width Bond Paper Container --}}
+    {{-- Full-width Bond Paper Container (wrapped so the scaled sheet takes only the room it really uses) --}}
+    <div class="paper-fit">
     <div class="bond-paper">
 
         {{-- Header with Top-Left Cebu City Seal & Top-Right CHD Logo --}}
-        <div class="flex flex-nowrap items-center justify-between gap-2 border-b-2 border-slate-900 pb-4 mb-5">
+        <div class="flex items-center justify-between border-b-2 border-slate-900 pb-4 mb-5">
             <img src="{{ asset('images/cebu_city_seal.jpg') }}"
                 alt="Official Seal City of Cebu"
-                class="w-12 h-12 sm:w-20 sm:h-20 object-contain shrink-0">
+                class="w-20 h-20 object-contain shrink-0">
 
-            <div class="text-center px-1 sm:px-4 min-w-0">
-                <p class="text-[10px] sm:text-xs uppercase tracking-wide sm:tracking-widest text-slate-600 font-semibold">Republic of the Philippines</p>
-                <p class="text-xs sm:text-sm uppercase font-bold text-slate-800">City Government of Cebu</p>
-                <h1 class="text-base sm:text-xl font-extrabold uppercase tracking-tight text-slate-900 mt-0.5">
+            <div class="text-center px-4">
+                <p class="text-xs uppercase tracking-widest text-slate-600 font-semibold">Republic of the Philippines</p>
+                <p class="text-sm uppercase font-bold text-slate-800">City Government of Cebu</p>
+                <h1 class="text-xl font-extrabold uppercase tracking-tight text-slate-900 mt-0.5">
                     Cebu City Health Department
                 </h1>
-                <p class="text-xs sm:text-sm font-semibold text-blue-800">Animal Bite Treatment Center (ABTC)</p>
+                <p class="text-sm font-semibold text-blue-800">Animal Bite Treatment Center (ABTC)</p>
                 <p class="text-xs text-slate-500 mt-1">BARANGAY HEALTH WORKER REFERRAL SLIP</p>
             </div>
 
             <img src="{{ asset('images/chd_logo.jpg') }}"
                 alt="City Health Department Logo"
-                class="w-12 h-12 sm:w-20 sm:h-20 object-contain shrink-0">
+                class="w-20 h-20 object-contain shrink-0">
         </div>
 
         {{-- Referral ID & Chillerlan QR Code Box --}}
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-slate-300 rounded-xl p-4 mb-6 bg-slate-50">
+        <div class="flex items-center justify-between border border-slate-300 rounded-xl p-4 mb-6 bg-slate-50">
             <div>
                 <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-500">Referral ID</span>
-                <span class="text-xl sm:text-2xl font-extrabold tracking-wide text-blue-700 break-all">
+                <span class="text-2xl font-extrabold tracking-wide text-blue-700">
                     {{ $referral->reference_no }}
                 </span>
                 <p class="text-xs text-slate-500 mt-1">Present this slip or scan the QR code upon arrival at ABTC.</p>
             </div>
 
-            <div class="flex flex-col items-center self-center sm:self-auto bg-white p-2 border border-slate-200 rounded-lg">
+            <div class="flex flex-col items-center bg-white p-2 border border-slate-200 rounded-lg">
                 <img src="{{ $qrCode }}" alt="Referral QR Code" class="w-24 h-24">
                 <span class="text-[9px] font-mono text-slate-500 mt-1">{{ $referral->reference_no }}</span>
             </div>
         </div>
 
         {{-- Patient Details Grid --}}
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8 mb-6 text-sm">
-            <div class="sm:col-span-2 border-b border-slate-200 pb-2">
+        <div class="grid grid-cols-2 gap-y-4 gap-x-8 mb-6 text-sm">
+            <div class="col-span-2 border-b border-slate-200 pb-2">
                 <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Patient Name</span>
-                <span class="text-lg font-bold text-slate-900 break-words">
+                <span class="text-lg font-bold text-slate-900">
                     {{ $referral->patient_name }}
                 </span>
             </div>
@@ -150,12 +170,12 @@
         </div>
 
         {{-- Clinical Assessment Box --}}
-        <div class="border border-slate-300 rounded-xl p-4 sm:p-5 mb-8 sm:mb-10">
+        <div class="border border-slate-300 rounded-xl p-5 mb-10">
             <h2 class="text-xs font-extrabold uppercase tracking-wider text-slate-700 border-b border-slate-200 pb-2 mb-4">
                 Clinical Assessment
             </h2>
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4 text-sm">
+            <div class="grid grid-cols-3 gap-4 mb-4 text-sm">
                 <div>
                     <span class="block text-[10px] font-bold uppercase text-slate-500">T (&deg;C) / BP</span>
                     <span class="font-semibold">{{ $referral->temperature ?? '-' }} / {{ $referral->blood_pressure ?? '-' }}</span>
@@ -170,7 +190,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 text-sm">
+            <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
                 <div>
                     <span class="block text-[10px] font-bold uppercase text-slate-500">Exposure Type</span>
                     <span class="font-bold text-red-600">{{ $referral->exposure_type }}</span>
@@ -200,12 +220,12 @@
         </div>
 
         {{-- Footer & Signature Line --}}
-        <div class="flex flex-col-reverse sm:flex-row items-start sm:items-end justify-between gap-6 pt-6 sm:pt-8 border-t border-slate-300 mt-8 sm:mt-12">
+        <div class="flex items-end justify-between pt-8 border-t border-slate-300 mt-12">
             <div class="text-xs text-slate-500">
                 System Status: <span class="font-bold text-amber-600">{{ ucfirst($referral->status ?? 'Pending') }}</span>
             </div>
 
-            <div class="text-center w-full sm:w-64">
+            <div class="text-center w-64">
                 <p class="font-bold text-sm text-slate-900 pb-1 border-b border-slate-900">
                     {{ $referral->referred_by }}
                 </p>
@@ -216,6 +236,28 @@
         </div>
 
     </div>
+    </div>
+
+    <script>
+        // Fit the whole sheet to the screen width (never enlarge past 100%), like a PDF viewer's "fit width".
+        (function () {
+            var wrap = document.querySelector('.paper-fit');
+            var paper = document.querySelector('.bond-paper');
+            function fit() {
+                var margin = window.innerWidth <= 880 ? 12 : 0;
+                var w = paper.offsetWidth, h = paper.offsetHeight;
+                var avail = document.documentElement.clientWidth - margin * 2;
+                var scale = Math.min(1, avail / w);
+                paper.style.transform = scale < 1 ? 'scale(' + scale + ')' : '';
+                wrap.style.width = Math.round(w * scale) + 'px';
+                wrap.style.height = Math.round(h * scale) + 'px';
+            }
+            fit();
+            window.addEventListener('load', fit);
+            window.addEventListener('resize', fit);
+            window.addEventListener('orientationchange', fit);
+        })();
+    </script>
 
 </body>
 

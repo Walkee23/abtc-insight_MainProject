@@ -575,19 +575,26 @@
                                 tip.style.left = Math.min(Math.max(8, cx - tw / 2), rect.width - tw - 8) + 'px';
                                 tip.style.top = (cy - th - 14 < 0 ? cy + 16 : cy - th - 14) + 'px';
                             }
-                            svg.addEventListener('pointermove', (e) => {
+                            const pick = (e) => {
                                 if (!n) return;
                                 const rect = svg.getBoundingClientRect();
                                 const vx = (e.clientX - rect.left) * (W / rect.width);
                                 let best = 0;
                                 for (let i = 1; i < n; i++) if (Math.abs(x(i) - vx) < Math.abs(x(best) - vx)) best = i;
                                 show(best, rect);
-                            });
-                            svg.addEventListener('pointerleave', () => {
+                            };
+                            const hideTip = () => {
                                 tip.classList.add('hidden');
                                 hoverLine.setAttribute('visibility', 'hidden');
                                 hoverRing.setAttribute('visibility', 'hidden');
-                            });
+                            };
+                            svg.addEventListener('pointermove', pick);
+                            svg.addEventListener('pointerdown', pick);   // a tap on a phone
+                            svg.addEventListener('pointerleave', (e) => { if (e.pointerType !== 'touch') hideTip(); });
+                            // on a touch screen the details stay until the next tap somewhere else
+                            if (window.__casesTapAway) document.removeEventListener('pointerdown', window.__casesTapAway);
+                            window.__casesTapAway = (e) => { if (!svg.contains(e.target)) hideTip(); };
+                            document.addEventListener('pointerdown', window.__casesTapAway);
                         })();
                     </script>
                 </div>
@@ -812,7 +819,7 @@
                                 setActive(el.dataset.donut || null, el.dataset.idx);
                             };
                             const onMove = (e) => { if (current) place(e); };
-                            const onOut = (e) => { if (!e.relatedTarget) hide(); };
+                            const onOut = (e) => { if (e.pointerType === 'touch') return; if (!e.relatedTarget) hide(); };
                             document.addEventListener('pointerover', onOver);
                             document.addEventListener('pointermove', onMove);
                             window.addEventListener('scroll', hide, true);

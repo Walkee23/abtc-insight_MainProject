@@ -700,18 +700,25 @@
                 }
 
                 // The nearest point to the pointer (anywhere along the chart) is highlighted
-                svg.addEventListener('pointermove', (e) => {
+                const pick = (e) => {
                     if (!plotted.length) return;
                     const rect = svg.getBoundingClientRect();
                     const vx = (e.clientX - rect.left) * (W / rect.width);
                     let best = plotted[0];
                     plotted.forEach((pt) => { if (Math.abs(pt.x - vx) < Math.abs(best.x - vx)) best = pt; });
                     showTip(best, rect);
-                });
-                svg.addEventListener('pointerleave', () => {
+                };
+                const hideTip = () => {
                     tip.classList.add('hidden');
                     if (hoverLine) { hoverLine.setAttribute('visibility', 'hidden'); hoverRing.setAttribute('visibility', 'hidden'); }
-                });
+                };
+                svg.addEventListener('pointermove', pick);
+                svg.addEventListener('pointerdown', pick);   // a tap on a phone
+                svg.addEventListener('pointerleave', (e) => { if (e.pointerType !== 'touch') hideTip(); });
+                // on a touch screen the details stay until the next tap somewhere else
+                if (window.__forecastTapAway) document.removeEventListener('pointerdown', window.__forecastTapAway);
+                window.__forecastTapAway = (e) => { if (!svg.contains(e.target)) hideTip(); };
+                document.addEventListener('pointerdown', window.__forecastTapAway);
 
                 render();
             }

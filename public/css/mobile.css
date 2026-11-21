@@ -10,7 +10,9 @@
 
 .mn-toggle,
 .mn-fab,
-.mn-overlay { display: none; }
+.mn-overlay,
+.mn-chart-hint,
+.mn-swipe-hint { display: none; }
 
 /*
  * Smooth page changes on phones. Filters, pagination links and Save buttons reload the page; instead of a
@@ -122,6 +124,30 @@
 
   .mn-chart-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .mn-chart-scroll > * { min-width: 640px; }
+  /* a finger may pan the chart sideways (the page's own sideways scroll too) and still tap a point for its details */
+  .mn-chart-scroll svg { touch-action: pan-x pan-y !important; }
+  .mn-chart-hint { display: flex; align-items: center; gap: .375rem; margin: .375rem 0 0; font-size: 11px; font-weight: 600; color: #717782; }
+  /* a box that really does scroll sideways (mobile-nav.js marks it) shows a slim scrollbar, even where the page
+     hid it with .no-scrollbar, plus a swipe hint, so nobody has to guess that more is off to the right */
+  .mn-scrollable { scrollbar-width: thin !important; scrollbar-color: #94a3b8 #e2e8f0; }
+  .mn-scrollable::-webkit-scrollbar { display: block !important; height: 6px; }
+  .mn-scrollable::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 3px; }
+  .mn-scrollable::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; }
+  .mn-swipe-hint {
+    display: flex;
+    align-items: center;
+    gap: .375rem;
+    position: sticky;
+    left: 0;
+    box-sizing: border-box;
+    padding: .375rem .75rem .25rem;
+    font-size: 11px;
+    font-weight: 600;
+    color: #717782;
+  }
+
+  /* every sideways-scrolling box lets a finger swipe it without dragging the whole page */
+  .overflow-x-auto, .mn-table-scroll, .mn-chart-scroll { touch-action: pan-x pan-y; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
 
   /* some top bars repeat the brand and are hidden under the desktop sidebar: show it on a phone */
   header [style*="visibility: hidden"] { visibility: visible !important; }
@@ -150,8 +176,8 @@
   .px-8:not(aside *), .px-10:not(aside *), .px-12:not(aside *) { padding-left: 1rem !important; padding-right: 1rem !important; }
 
   /* rows with something on the left and something on the right wrap instead of overflowing
-     (the top bar and the sidebar keep their single line) */
-  .flex.justify-between:not(.flex-col):not(.flex-nowrap):not(header):not(header *):not(aside *) { flex-wrap: wrap; row-gap: .75rem; }
+     (the top bar and the sidebar keep their single line, and so do rows of equal-width columns such as bar charts) */
+  .flex.justify-between:not(.flex-col):not(.flex-nowrap):not(:has(> .w-full)):not(header):not(header *):not(aside *) { flex-wrap: wrap; row-gap: .75rem; }
 
   /* 12-column desktop grids stack, 3-6 column ones become 2 */
   .grid.grid-cols-12 > * { grid-column: 1 / -1 !important; }

@@ -113,13 +113,42 @@
             wrap.className = 'mn-chart-scroll';
             p.insertBefore(wrap, c);
             wrap.appendChild(c);
+            var hint = document.createElement('p');
+            hint.className = 'mn-chart-hint';
+            hint.textContent = 'Swipe sideways to see more. Tap a point for its details.';
+            wrap.insertAdjacentElement('afterend', hint);
+        });
+    }
+
+    // ---- sideways-scrolling boxes ------------------------------------------------------
+    // A box that really overflows sideways is marked (slim visible scrollbar, see mobile.css) and, when its
+    // content is laid out as a block (a table), gets a small "swipe sideways" line that stays put while scrolling.
+    function markScrollable() {
+        document.querySelectorAll('.overflow-x-auto, .mn-table-scroll, .mn-chart-scroll').forEach(function (el) {
+            if (el.closest('aside')) return;
+            var hint = null;
+            for (var i = 0; i < el.children.length; i++) {
+                if (el.children[i].classList.contains('mn-swipe-hint')) { hint = el.children[i]; break; }
+            }
+            var can = MOBILE.matches && el.scrollWidth > el.clientWidth + 4;
+            el.classList.toggle('mn-scrollable', can);
+            if (!can) { if (hint) hint.remove(); return; }
+            var display = getComputedStyle(el).display;
+            if (el.classList.contains('mn-chart-scroll') || display === 'flex' || display === 'grid' || display === 'inline-flex') return;
+            if (!hint) {
+                hint = document.createElement('div');
+                hint.className = 'mn-swipe-hint';
+                hint.textContent = '\u2194 Swipe sideways to see more';
+                el.insertBefore(hint, el.firstChild);
+            }
+            hint.style.width = el.clientWidth + 'px';
         });
     }
 
     var pending = null;
     function scheduleWrap() {
         if (pending) return;
-        pending = setTimeout(function () { pending = null; wrapTables(); wrapCharts(); }, 120);
+        pending = setTimeout(function () { pending = null; wrapTables(); wrapCharts(); markScrollable(); }, 120);
     }
 
     // ---- keep the scroll position when a click reloads the same page -------------------
@@ -208,8 +237,12 @@
         syncCollapsed();
         wrapTables();
         wrapCharts();
+        markScrollable();
+        window.addEventListener('load', function () { markScrollable(); setTimeout(markScrollable, 400); });
+        window.addEventListener('resize', scheduleWrap);
+        document.addEventListener('soft:updated', scheduleWrap);
 
-        var onChange = function () { syncCollapsed(); wrapTables(); wrapCharts(); };
+        var onChange = function () { syncCollapsed(); wrapTables(); wrapCharts(); markScrollable(); };
         if (MOBILE.addEventListener) MOBILE.addEventListener('change', onChange);
         else if (MOBILE.addListener) MOBILE.addListener(onChange);
 

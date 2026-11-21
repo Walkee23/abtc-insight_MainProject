@@ -53,6 +53,7 @@
             if (!aside.contains(h) && /ABTC/i.test(h.textContent)) h.classList.add('mn-hide-sm');
         });
         var bar = findTopBar();
+        if (bar) bar.style.viewTransitionName = 'mn-top';
         if (!bar) {
             document.body.classList.add('mn-has-fab');
             document.body.appendChild(makeButton('mn-fab'));
@@ -154,12 +155,17 @@
         })();
     }
 
+    var restored = false;
+    function restoreOnce() { if (restored) return; restored = true; restoreScroll(); }
+    // fires just before the new page is first shown (also when a view transition is about to start)
+    window.addEventListener('pagereveal', restoreOnce);
+
     window.addEventListener('pagehide', rememberScroll);
     window.addEventListener('beforeunload', rememberScroll);
 
     // ---- start ------------------------------------------------------------------------
     function init() {
-        restoreScroll();
+        restoreOnce();
         aside = document.querySelector('aside.fixed.left-0');
         if (aside) {
             overlay = document.createElement('div');

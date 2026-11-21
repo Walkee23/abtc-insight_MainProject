@@ -93,6 +93,8 @@
         }
     </style>
     <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
+    <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
+    <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
 </head>
 
 <body class="bg-surface text-on-surface selection:bg-primary-container selection:text-on-primary-container">
@@ -207,10 +209,10 @@
         </div>
     </header>
     <main class="ml-64 pt-16 min-h-screen bg-surface">
-        <div class="max-w-[1600px] mx-auto p-8 flex gap-8">
-            <section class="w-1/3 flex flex-col gap-6">
-                <div class="bg-surface-container-low rounded-xl p-6 flex flex-col h-[calc(100vh-12rem)]">
-                    <div class="flex items-center justify-between mb-6">
+        <div class="max-w-[1600px] mx-auto p-8 flex flex-col xl:flex-row gap-8">
+            <section class="w-full xl:w-1/3 flex flex-col gap-6">
+                <div class="bg-surface-container-low rounded-xl p-6 flex flex-col h-80 xl:h-[calc(100vh-12rem)]">
+                    <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 mb-6">
                         <h2 class="text-lg font-bold tracking-tight text-on-surface leading-tight">Pending Encoding<br>Queue</h2>
                         <span class="px-2.5 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full whitespace-nowrap shrink-0">{{ $queue->count() }} Active</span>
                     </div>
@@ -248,7 +250,7 @@
                     </div>
                 </div>
             </section>
-            <section class="w-2/3 min-w-0 flex flex-col gap-6">
+            <section class="w-full xl:w-2/3 min-w-0 flex flex-col gap-6">
                 @if(session('status'))
                 {{-- Toast: fixed bottom-right (below the form card, so it never overlaps the footer buttons), auto-dismisses after 4s --}}
                 <div id="statusToast" role="status"
@@ -261,8 +263,8 @@
                     </button>
                 </div>
                 @endif
-                <div
-                    class="bg-surface-container-lowest rounded-xl shadow-lg shadow-blue-900/5 overflow-hidden border border-outline-variant/10 flex flex-col h-[calc(100vh-12rem)]">
+                <div data-arrival-anchor="/healthworker/clinical-encoding"
+                    class="bg-surface-container-lowest rounded-xl shadow-lg shadow-blue-900/5 overflow-hidden border border-outline-variant/10 flex flex-col min-h-[14rem] h-auto xl:h-[calc(100vh-12rem)]">
                     @if($case)
                     <!-- Form Header & Step Indicator -->
                     <div class="bg-surface-container-low border-b border-outline-variant/20">
@@ -273,7 +275,7 @@
                                 <h2 class="text-2xl font-extrabold tracking-tight text-on-surface">{{ $case->patient_name ?? 'No case selected' }}</h2>
                             </div>
                             <div class="flex gap-4">
-                                <div class="text-right">
+                                <div class="text-left sm:text-right">
                                     <p class="text-[10px] font-semibold text-outline uppercase tracking-wider">Patient
                                         ID</p>
                                     <p class="text-sm font-bold">{{ $case->patient_id ?? '—' }}</p>
@@ -292,7 +294,7 @@
                                     <span class="text-[10px] font-bold text-outline mt-2 absolute -bottom-6 w-max">Wound
                                         Desc.</span>
                                 </div>
-                                <div class="flex-1 h-0.5 bg-primary/40 -mt-4"></div>
+                                <div class="flex-1 h-0.5 bg-primary/40"></div>
                                 <div class="flex flex-col items-center flex-1 relative group">
                                     <div
                                         class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold z-10 shadow-lg shadow-primary/20">
@@ -300,7 +302,7 @@
                                     <span
                                         class="text-[10px] font-bold text-primary mt-2 absolute -bottom-6 w-max">Immunization</span>
                                 </div>
-                                <div class="flex-1 h-0.5 bg-slate-200 -mt-4"></div>
+                                <div class="flex-1 h-0.5 bg-slate-200"></div>
                                 <div class="flex flex-col items-center flex-1 relative group">
                                     <div
                                         class="w-8 h-8 rounded-full bg-white border-2 border-outline-variant/50 text-outline flex items-center justify-center text-xs font-bold z-10">
@@ -308,7 +310,7 @@
                                     <span
                                         class="text-[10px] font-bold text-outline mt-2 absolute -bottom-6 w-max opacity-0">Remarks</span>
                                 </div>
-                                <div class="flex-1 h-0.5 bg-slate-200 -mt-4"></div>
+                                <div class="flex-1 h-0.5 bg-slate-200"></div>
                                 <div class="flex flex-col items-center flex-1 relative group">
                                     <div
                                         class="w-8 h-8 rounded-full bg-white border-2 border-outline-variant/50 text-outline flex items-center justify-center text-xs font-bold z-10">
@@ -353,6 +355,7 @@
                                 . '<p data-error-for="' . e($name) . '" class="mt-1 ml-1 text-xs font-semibold text-error ' . ($fit ? 'w-0 min-w-full ' : '') . ($errors->has($name) ? '' : 'hidden') . '">' . e($errors->first($name)) . '</p>'
                                 . '</div>';
                             };
+                            $brandOptions = array_combine(\App\Http\Controllers\ClinicalEncodingController::VACCINE_BRANDS, \App\Http\Controllers\ClinicalEncodingController::VACCINE_BRANDS);
                             @endphp
                             {{-- Toast: fixed bottom-right, auto-dismisses after 4s (same look as the draft-saved toast) --}}
                             <div id="formErrorBanner" role="alert"
@@ -371,11 +374,7 @@
                                     <h3 class="text-sm font-extrabold uppercase tracking-widest text-on-surface-variant">
                                         Immunization Schedule</h3>
                                 </div>
-                                <div class="grid grid-cols-[1fr_auto_auto] gap-6 mb-8">
-                                    <div>
-                                        <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Vaccine Brand <span class="text-error">*</span></label>
-                                        {!! $dropdown('vaccine_brand', ['VERORAB' => 'VERORAB (PVRV)', 'SPEEDA' => 'SPEEDA (PVRV)', 'VAXIRAB' => 'VAXIRAB (PCEC)', 'ABHAYRAB' => 'ABHAYRAB (PVRV)']) !!}
-                                    </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-[auto_auto] sm:justify-start gap-6 mb-8">
                                     <div>
                                         <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Route <span class="text-error">*</span></label>
                                         {!! $dropdown('route', ['ID' => 'ID (Intradermal)', 'IM' => 'IM (Intramuscular)'], 'bg-surface-container-low', true) !!}
@@ -385,24 +384,17 @@
                                         {!! $dropdown('dose_type', ['Primary' => 'Primary', 'Booster' => 'Booster'], 'bg-surface-container-low', true) !!}
                                     </div>
                                 </div>
-                                <div class="grid grid-cols-2 gap-6 mb-8">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
                                     <div>
                                         <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Patient Weight (kg)</label>
-                                        {{-- Always from the BHW referral and never editable, like Administered By --}}
+                                        {{-- Always from the BHW referral and never editable --}}
                                         <input type="text" readonly tabindex="-1"
                                             value="{{ $bhwWeight ?? (isset($section->patient_weight) ? rtrim(rtrim(number_format((float) $section->patient_weight, 2, '.', ''), '0'), '.') : '') }}"
                                             class="w-full bg-surface-container-high border-none rounded-lg py-3 px-4 font-medium text-on-surface-variant cursor-not-allowed select-none focus:ring-0"
                                             placeholder="From the BHW referral" />
                                     </div>
-                                    <div>
-                                        <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Administered By</label>
-                                        <input type="text" readonly tabindex="-1"
-                                            value="{{ Auth::user()->full_name ?? ($section->administered_by ?? '') }}"
-                                            class="w-full bg-surface-container-high border-none rounded-lg py-3 px-4 font-medium text-on-surface-variant cursor-not-allowed select-none focus:ring-0"
-                                            placeholder="Logged-in health worker" />
-                                    </div>
                                 </div>
-                                <div class="grid grid-cols-2 gap-6 mb-8">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
                                     <div class="bg-surface-container-low rounded-xl p-5">
                                         <p class="text-xs font-extrabold text-outline uppercase tracking-widest mb-3">Tetanus
                                             Prophylaxis</p>
@@ -452,7 +444,7 @@
                                 <div class="bg-surface-container-low rounded-xl p-6 mb-8">
                                     <p class="text-xs font-extrabold text-outline uppercase tracking-widest mb-4">Passive
                                         Immunization (Rabies)</p>
-                                    <div class="grid grid-cols-2 gap-6">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                         <div>
                                             <label
                                                 class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Type</label>
@@ -481,39 +473,30 @@
                                 </div>
                                 @endif
                                 <div class="bg-surface-container-low rounded-xl p-6">
-                                    <p class="text-xs font-extrabold text-outline uppercase tracking-widest mb-4">Dose
+                                    <p class="text-xs font-extrabold text-outline uppercase tracking-widest mb-1">Dose
                                         Tracking Grid</p>
-                                    <div class="grid grid-cols-5 gap-3">
-                                        <div data-field-wrap="day0_date" class="bg-white p-3 rounded-lg border border-primary/20 ring-1 ring-transparent">
-                                            <p class="text-[10px] font-bold text-primary uppercase mb-1">Day 0 <span class="text-error">*</span></p>
-                                            <input name="day0_date" data-field="day0_date" type="date" max="{{ now()->toDateString() }}" value="{{ $val('day0_date') }}"
+                                    <p class="text-[11px] text-outline mb-4">Primary IM route: Day 0, 3, 7, 14 and 28. Primary ID route: Day 0, 3, 7 and 28. Booster: Day 0 and 3. Each dose has its own vaccine brand and is given by whoever recorded it.</p>
+                                    <style>
+                                        @media (min-width: 768px) {
+                                            #doseGrid[data-cols="5"] { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+                                            #doseGrid[data-cols="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+                                        }
+                                        @media (max-width: 767.98px) {
+                                            #doseGrid[data-cols="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+                                        }
+                                    </style>
+                                    <div id="doseGrid" data-cols="4" class="grid grid-cols-4 gap-3">
+                                        @foreach([0 => 'Day 0', 3 => 'Day 3', 7 => 'Day 7', 14 => 'Day 14', 28 => 'Day 28'] as $d => $dayLabel)
+                                        <div data-field-wrap="day{{ $d }}_date" data-day="{{ $d }}" class="bg-white p-3 rounded-lg border {{ $d === 0 ? 'border-primary/20' : 'border-outline-variant/30' }} ring-1 ring-transparent">
+                                            <p class="text-[10px] font-bold {{ $d === 0 ? 'text-primary' : 'text-outline' }} uppercase mb-1">{{ $dayLabel }} @if($d === 0)<span class="text-error">*</span>@endif</p>
+                                            <input name="day{{ $d }}_date" data-field="day{{ $d }}_date" type="date" max="{{ now()->toDateString() }}" value="{{ $val('day' . $d . '_date') }}"
                                                 class="w-full text-[10px] font-bold text-on-surface bg-transparent border-none p-0 focus:ring-0" />
-                                            <p data-error-for="day0_date" class="mt-1 text-xs font-semibold text-error {{ $errors->has('day0_date') ? '' : 'hidden' }}">{{ $errors->first('day0_date') }}</p>
+                                            <p data-error-for="day{{ $d }}_date" class="mt-1 text-xs font-semibold text-error {{ $errors->has('day' . $d . '_date') ? '' : 'hidden' }}">{{ $errors->first('day' . $d . '_date') }}</p>
+                                            <p class="text-[10px] font-bold text-outline uppercase mt-3 mb-1">Vaccine brand @if($d === 0)<span class="text-error">*</span>@endif</p>
+                                            {!! $dropdown('day' . $d . '_brand', $brandOptions, 'bg-surface-container-low !py-2 !px-2 text-xs') !!}
+                                            <p class="mt-2 text-[10px] text-outline">Given by: <span class="font-semibold text-on-surface-variant">{{ $section->{'day' . $d . '_administered_by'} ?? (Auth::user()->full_name ?? '') }}</span></p>
                                         </div>
-                                        <div data-field-wrap="day3_date" class="bg-white p-3 rounded-lg border border-outline-variant/30 ring-1 ring-transparent">
-                                            <p class="text-[10px] font-bold text-outline uppercase mb-1">Day 3</p>
-                                            <input name="day3_date" data-field="day3_date" type="date" max="{{ now()->toDateString() }}" value="{{ $val('day3_date') }}"
-                                                class="w-full text-[10px] font-bold text-on-surface bg-transparent border-none p-0 focus:ring-0" />
-                                            <p data-error-for="day3_date" class="mt-1 text-xs font-semibold text-error {{ $errors->has('day3_date') ? '' : 'hidden' }}">{{ $errors->first('day3_date') }}</p>
-                                        </div>
-                                        <div data-field-wrap="day7_date" class="bg-white p-3 rounded-lg border border-outline-variant/30 ring-1 ring-transparent">
-                                            <p class="text-[10px] font-bold text-outline uppercase mb-1">Day 7</p>
-                                            <input name="day7_date" data-field="day7_date" type="date" max="{{ now()->toDateString() }}" value="{{ $val('day7_date') }}"
-                                                class="w-full text-[10px] font-bold text-on-surface bg-transparent border-none p-0 focus:ring-0" />
-                                            <p data-error-for="day7_date" class="mt-1 text-xs font-semibold text-error {{ $errors->has('day7_date') ? '' : 'hidden' }}">{{ $errors->first('day7_date') }}</p>
-                                        </div>
-                                        <div data-field-wrap="day14_date" class="bg-white p-3 rounded-lg border border-outline-variant/30 ring-1 ring-transparent">
-                                            <p class="text-[10px] font-bold text-outline uppercase mb-1">Day 14</p>
-                                            <input name="day14_date" data-field="day14_date" type="date" max="{{ now()->toDateString() }}" value="{{ $val('day14_date') }}"
-                                                class="w-full text-[10px] font-bold text-on-surface bg-transparent border-none p-0 focus:ring-0" />
-                                            <p data-error-for="day14_date" class="mt-1 text-xs font-semibold text-error {{ $errors->has('day14_date') ? '' : 'hidden' }}">{{ $errors->first('day14_date') }}</p>
-                                        </div>
-                                        <div data-field-wrap="day28_date" class="bg-white p-3 rounded-lg border border-outline-variant/30 ring-1 ring-transparent">
-                                            <p class="text-[10px] font-bold text-outline uppercase mb-1">Day 28</p>
-                                            <input name="day28_date" data-field="day28_date" type="date" max="{{ now()->toDateString() }}" value="{{ $val('day28_date') }}"
-                                                class="w-full text-[10px] font-bold text-on-surface bg-transparent border-none p-0 focus:ring-0" />
-                                            <p data-error-for="day28_date" class="mt-1 text-xs font-semibold text-error {{ $errors->has('day28_date') ? '' : 'hidden' }}">{{ $errors->first('day28_date') }}</p>
-                                        </div>
+                                        @endforeach
                                     </div>
                                 </div>
                             </div>
@@ -586,13 +569,13 @@
 
             // Required to move on to Section VIII. Drafts skip these.
             const REQUIRED = {
-                vaccine_brand: 'Please select a vaccine brand.',
+                day0_brand: 'Please select the Day 0 vaccine brand.',
                 route: 'Please select a route.',
                 dose_type: 'Please select a dose type.',
                 day0_date: 'Please set the Day 0 date.',
             };
             const DATE_FIELDS = ['day0_date', 'day3_date', 'day7_date', 'day14_date', 'day28_date'];
-            const ALL_CHECKED = Object.keys(REQUIRED).concat(['passive_route', 'day3_date', 'day7_date', 'day14_date', 'day28_date', 'tetanus_details', 'tig_details']);
+            const ALL_CHECKED = Object.keys(REQUIRED).concat(['passive_route', 'day3_date', 'day7_date', 'day14_date', 'day28_date', 'day3_brand', 'day7_brand', 'day14_brand', 'day28_brand', 'tetanus_details', 'tig_details']);
 
             const field = (name) => form.querySelector(`[data-field="${name}"]`);
             const errorEl = (name) => form.querySelector(`[data-error-for="${name}"]`);
@@ -651,6 +634,12 @@
                             if (passive && !['', 'NO', '0'].includes(passive.value) && value === '') {
                                 message = 'Please select a route for the passive immunization.';
                             }
+                        } else if (/^day(3|7|14|28)_brand$/.test(name)) {
+                            // a dose that has a date needs its brand
+                            const doseDate = field(name.replace('_brand', '_date'));
+                            if (doseDate && !doseDate.disabled && doseDate.value !== '' && value === '') {
+                                message = 'Please select the brand used for this dose.';
+                            }
                         } else if (name === 'tetanus_details') {
                             const tetanus = document.getElementById('tetanus_given');
                             if (tetanus && tetanus.checked && value === '') {
@@ -708,6 +697,38 @@
                 });
             }
 
+            // Dose dates follow the dose type and the route:
+            //   Primary + IM = Day 0, 3, 7, 14, 28   Primary + ID (or no route yet) = Day 0, 3, 7, 28   Booster = Day 0, 3
+            const doseTypeInput = form.querySelector('[data-field="dose_type"]');
+            const routeInput = form.querySelector('[data-field="route"]');
+            const doseGrid = document.getElementById('doseGrid');
+            function courseDays() {
+                if (doseTypeInput.value === 'Booster') return [0, 3];
+                return routeInput.value === 'IM' ? [0, 3, 7, 14, 28] : [0, 3, 7, 28];
+            }
+            function applySchedule() {
+                const days = courseDays();
+                doseGrid.querySelectorAll('[data-day]').forEach((cell) => {
+                    const used = days.includes(Number(cell.dataset.day));
+                    cell.classList.toggle('hidden', !used);
+                    cell.querySelectorAll('input').forEach((input) => {
+                        input.disabled = !used; // not submitted, and not validated
+                        if (!used) {
+                            input.value = '';
+                            setError(input.dataset.field, '');
+                        }
+                    });
+                    const label = cell.querySelector('[data-dd-label]');
+                    if (!used && label) {
+                        label.textContent = 'Select';
+                        label.classList.add('text-outline');
+                        label.classList.remove('text-on-surface');
+                    }
+                });
+                doseGrid.dataset.cols = String(days.length); // 2, 4 or 5 boxes: the columns follow (see the style rule above the grid)
+            }
+            applySchedule();
+
             // Styled dropdowns
             const menus = form.querySelectorAll('[data-dd]');
             const closeAll = (except) => menus.forEach((dd) => {
@@ -747,6 +768,7 @@
                         menu.classList.add('hidden');
                         chevron.classList.remove('rotate-180');
                         clearIfFilled(input.dataset.field);
+                        if (input.dataset.field === 'dose_type' || input.dataset.field === 'route') applySchedule();
                     });
                 });
             });

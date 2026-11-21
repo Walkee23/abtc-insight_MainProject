@@ -102,6 +102,8 @@
             background: linear-gradient(135deg, #004a93 0%, #0b61bb 100%);
         }
     </style>
+    <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
+    <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
 </head>
 
 <body class="bg-surface text-on-surface min-h-screen flex flex-col items-center">

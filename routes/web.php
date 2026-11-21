@@ -124,6 +124,8 @@ Route::prefix('staff')->middleware(['auth', 'role:Staff'])->group(function () {
 // Healthworker Routes
 Route::prefix('healthworker')->middleware(['auth', 'role:Health Worker'])->group(function () {
     Route::get('/dashboard', [ClinicalEncodingController::class, 'dashboard'])->name('healthworker.dashboard');
+    Route::post('/cases/{bite_case_id}/claim', [ClinicalEncodingController::class, 'claim'])->name('healthworker.case.claim');
+    Route::post('/cases/{bite_case_id}/release', [ClinicalEncodingController::class, 'release'])->name('healthworker.case.release');
 
     // Clinical Encoding (Sections VI-IX), connected to the real bite_cases queue
     Route::get('/clinical-encoding/{bite_case_id?}', [ClinicalEncodingController::class, 'sectionVI'])
@@ -273,10 +275,10 @@ Route::post('/patient/new-submit', function (Request $request) {
 })->name('patient.new-submit');
 
 // Returning Patient — search for an existing patient record
-Route::get('/patient/search', [PatientController::class, 'search'])->name('patient.search');
+Route::get('/patient/search', [PatientController::class, 'search'])->middleware('throttle:15,1')->name('patient.search');
 
 // Returning Patient — handle the returning patient form submission
-Route::post('/patient/submit-registration-returning', [PatientController::class, 'storeReturning'])->name('patient.submit.returning');
+Route::post('/patient/submit-registration-returning', [PatientController::class, 'storeReturning'])->middleware('throttle:15,1')->name('patient.submit.returning');
 
 // New Patient (via BHW referral) — handle the form submission using the controller
 Route::post('/patient/submit-registration', [PatientController::class, 'registerPatient'])->name('patient.submit');

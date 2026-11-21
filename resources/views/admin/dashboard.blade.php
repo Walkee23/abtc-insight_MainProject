@@ -119,6 +119,9 @@
     </style>
     <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
     <script src="{{ asset('js/custom-select.js') }}" defer></script>
+    <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
+    <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
+    <script src="{{ asset('js/soft-nav.js') }}" defer></script>
 </head>
 
 <body class="bg-surface text-on-surface flex min-h-screen">
@@ -272,8 +275,8 @@
             <!-- BITE CATEGORIES + TOP HOTSPOTS (same row) -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
 
-                <!-- Bite Categories Donut Chart -->
-                <div class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/15 flex flex-col relative">
+                <!-- Bite Categories Donut Chart (updated in place when its period is changed) -->
+                <div data-soft-region="bite" data-soft-scripts class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/15 flex flex-col relative">
                     @php
                         $filter      = $filter ?? 'monthly';
                         $biteYear    = $biteYear ?? now()->year;
@@ -386,50 +389,7 @@
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Hotspots Card -->
-                <div class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/15 flex flex-col">
-                    <div class="flex items-center justify-between mb-8">
-                        <div>
-                            <h3 class="text-lg font-bold">Top Incident Hotspots (Last {{ $hotspotRange }} Days)</h3>
-                            <p class="text-xs text-on-surface-variant mt-1">Top 5 barangays with the most bite incident records</p>
-                        </div>
-                        <select id="hotspot-range" onchange="filterHotspots(this.value)" class="text-xs font-semibold bg-surface-container-low border-none rounded-lg py-1 px-3 focus:ring-0 cursor-pointer">
-                            <option value="30" {{ $hotspotRange == 30 ? 'selected' : '' }}>Last 30 Days</option>
-                            <option value="90" {{ $hotspotRange == 90 ? 'selected' : '' }}>Last 90 Days</option>
-                        </select>
-                    </div>
-
-                    <div class="space-y-6 flex-1">
-                        @forelse ($hotspots as $spot)
-                            @php
-                                $name  = trim($spot->barangay);
-                                $label = \Illuminate\Support\Str::startsWith(strtolower($name), 'barangay') ? $name : 'Barangay ' . $name;
-                                $width = round(($spot->total / $maxHotspot) * 100);
-                            @endphp
-                            <div class="space-y-2">
-                                <div class="flex justify-between text-xs font-bold">
-                                    <span>{{ $label }}</span>
-                                    <span class="text-primary">{{ number_format($spot->total) }} {{ $spot->total == 1 ? 'case' : 'cases' }}</span>
-                                </div>
-                                <div class="w-full h-3 bg-surface-container-low rounded-full overflow-hidden">
-                                    <div class="h-full bg-primary rounded-full transition-all duration-500" style="width: {{ $width }}%;"></div>
-                                </div>
-                            </div>
-                        @empty
-                            <p class="text-xs text-on-surface-variant text-center py-6">No bite incidents recorded in the last {{ $hotspotRange }} days.</p>
-                        @endforelse
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </main>
-    
-   <script>
-  
-
+                    <script>
     (function () {
         var wrap    = document.getElementById('donut-wrap');
         var tooltip = document.getElementById('chart-tooltip');
@@ -471,28 +431,74 @@
             }, { passive: true });
         });
  
-        document.addEventListener('touchstart', function (e) {
+        if (window.__donutTapAway) document.removeEventListener('touchstart', window.__donutTapAway);
+        window.__donutTapAway = function (e) {
             if (!wrap.contains(e.target)) {
                 segments.forEach(function (s) { s.classList.remove('is-active'); });
                 hideTooltip();
             }
-        }, { passive: true });
+        };
+        document.addEventListener('touchstart', window.__donutTapAway, { passive: true });
     })();
- 
-    // changes = { filter, period, year }; null removes a value so the server picks its default
+                    </script>
+                </div>
+
+                <!-- Hotspots Card (updated in place when its range is changed) -->
+                <div data-soft-region="hotspots" class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/15 flex flex-col">
+                    <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 mb-8">
+                        <div>
+                            <h3 class="text-lg font-bold">Top Incident Hotspots (Last {{ $hotspotRange }} Days)</h3>
+                            <p class="text-xs text-on-surface-variant mt-1">Top 5 barangays with the most bite incident records</p>
+                        </div>
+                        <select id="hotspot-range" onchange="filterHotspots(this.value)" class="text-xs font-semibold bg-surface-container-low border-none rounded-lg py-1 px-3 focus:ring-0 cursor-pointer">
+                            <option value="30" {{ $hotspotRange == 30 ? 'selected' : '' }}>Last 30 Days</option>
+                            <option value="90" {{ $hotspotRange == 90 ? 'selected' : '' }}>Last 90 Days</option>
+                        </select>
+                    </div>
+
+                    <div class="space-y-6 flex-1">
+                        @forelse ($hotspots as $spot)
+                            @php
+                                $name  = trim($spot->barangay);
+                                $label = \Illuminate\Support\Str::startsWith(strtolower($name), 'barangay') ? $name : 'Barangay ' . $name;
+                                $width = round(($spot->total / $maxHotspot) * 100);
+                            @endphp
+                            <div class="space-y-2">
+                                <div class="flex justify-between text-xs font-bold">
+                                    <span>{{ $label }}</span>
+                                    <span class="text-primary">{{ number_format($spot->total) }} {{ $spot->total == 1 ? 'case' : 'cases' }}</span>
+                                </div>
+                                <div class="w-full h-3 bg-surface-container-low rounded-full overflow-hidden">
+                                    <div class="h-full bg-primary rounded-full transition-all duration-500" style="width: {{ $width }}%;"></div>
+                                </div>
+                            </div>
+                        @empty
+                            <p class="text-xs text-on-surface-variant text-center py-6">No bite incidents recorded in the last {{ $hotspotRange }} days.</p>
+                        @endforelse
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+    
+   <script>
+  
+
+        // changes = { filter, period, year }; null removes a value so the server picks its default
     function biteNav(changes) {
         var url = new URL(window.location.href);
         Object.keys(changes).forEach(function (key) {
             if (changes[key] === null) url.searchParams.delete(key);
             else url.searchParams.set(key, changes[key]);
         });
-        window.location.href = url.toString();
+        softNavigate(url.toString());
     }
 
     function filterHotspots(value) {
         var url = new URL(window.location.href);
         url.searchParams.set('range', value);
-        window.location.href = url.toString();
+        softNavigate(url.toString());
     }
     </script>
 

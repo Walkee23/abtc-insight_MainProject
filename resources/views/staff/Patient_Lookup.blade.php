@@ -89,6 +89,9 @@
         }
     </style>
     <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
+    <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
+    <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
+    <script src="{{ asset('js/soft-nav.js') }}" defer></script>
 </head>
 <body class="bg-surface text-on-surface flex min-h-screen">
 
@@ -197,7 +200,7 @@
 </div>
 </section>
 <!-- Search Area -->
-<section class="bg-surface-container-lowest p-8 rounded-xl tonal-elevation ghost-border">
+<section data-soft-region="search" class="bg-surface-container-lowest p-8 rounded-xl tonal-elevation ghost-border">
     <form action="{{ route('staff.patient-lookup') }}" method="GET" class="flex flex-col md:flex-row gap-4 items-center">
         <div class="relative flex-1 w-full">
             <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
@@ -216,7 +219,7 @@
     </form>
 </section>
 <!-- Results Table -->
-<section class="bg-surface-container-lowest rounded-xl tonal-elevation ghost-border overflow-hidden">
+<section data-soft-region="results" class="bg-surface-container-lowest rounded-xl tonal-elevation ghost-border overflow-hidden">
 <div class="px-8 py-6 border-b border-outline-variant/10 flex justify-between items-center">
 <h3 class="font-bold text-on-surface flex items-center gap-2">
 <span class="material-symbols-outlined text-primary" data-icon="list_alt">list_alt</span>
@@ -230,20 +233,20 @@
 <table class="w-full text-left border-collapse">
 <thead>
 <tr class="bg-surface-container-low">
-<th class="px-8 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant">Patient Name</th>
-<th class="px-6 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant">Patient ID</th>
-<th class="px-6 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant">Age/Sex</th>
-<th class="px-6 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant">Barangay</th>
-<th class="px-6 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant">Last Visit</th>
-<th class="px-6 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant text-center">Active PEP</th>
-<th class="px-8 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant text-right">Action</th>
+<th class="px-5 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant">Patient Name</th>
+<th class="px-3 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant whitespace-nowrap">Patient ID</th>
+<th class="px-3 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant whitespace-nowrap">Age/Sex</th>
+<th class="px-3 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant whitespace-nowrap">Barangay</th>
+<th class="px-3 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant whitespace-nowrap">Last Visit</th>
+<th class="px-3 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant text-center whitespace-nowrap">Active PEP</th>
+<th class="px-5 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant text-right">Action</th>
 </tr>
 </thead>
 <tbody class="divide-y divide-outline-variant/10">
     @if(isset($patients) && $patients->count() > 0)
         @foreach($patients as $patient)
             <tr class="hover:bg-surface-bright transition-colors group">
-                <td class="px-8 py-5">
+                <td class="px-5 py-5 min-w-[12rem]">
                     <div class="flex items-center gap-3">
                         <div class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold text-xs">
                             {{ strtoupper(substr($patient->patient_name ?? 'P', 0, 2)) }}
@@ -254,25 +257,25 @@
                         </div>
                     </div>
                 </td>
-                <td class="px-6 py-5">
+                <td class="px-3 py-5">
                     <code class="text-xs font-mono text-primary bg-primary/5 px-2 py-1 rounded">{{ $patient->patient_id }}</code>
                 </td>
-                <td class="px-6 py-5 text-on-surface-variant font-medium">
+                <td class="px-3 py-5 text-on-surface-variant font-medium whitespace-nowrap">
                     {{ $patient->age }} / {{ substr($patient->sex ?? 'U', 0, 1) }}
                 </td>
-                <td class="px-6 py-5 text-on-surface-variant">
+                <td class="px-3 py-5 text-on-surface-variant">
                     {{ $patient->barangay ?? 'N/A' }}
                 </td>
-                <td class="px-6 py-5 text-on-surface-variant">
+                <td class="px-3 py-5 text-on-surface-variant whitespace-nowrap">
                     {{ $patient->date_registered ? \Carbon\Carbon::parse($patient->date_registered)->format('M d, Y') : 'N/A' }}
                 </td>
                 
-                <td class="px-6 py-5 text-center">
+                <td class="px-3 py-5 text-center">
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tight {{ $patient->pep_badge ?? 'bg-slate-100 text-slate-500' }}">
                         {{ $patient->pep_status ?? 'No Case' }}
                     </span>
                 </td>
-                <td class="px-8 py-5 text-right">
+                <td class="px-5 py-5 text-right whitespace-nowrap">
                     @if($patient->inflow_record_id)
                         <!-- Trigger Button ng CSS Modal -->
                         <a href="#case-modal-{{ $patient->inflow_record_id }}" 
@@ -288,13 +291,13 @@
                             <div class="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden text-left max-h-[90vh] flex flex-col">
                                 
                                 <!-- Modal Header -->
-                                <div class="bg-gradient-to-r from-primary to-primary-container p-6 text-white flex justify-between items-start shrink-0">
-                                    <div class="flex items-center gap-4">
+                                <div class="bg-gradient-to-r from-primary to-primary-container p-6 text-white flex flex-nowrap gap-3 justify-between items-start shrink-0">
+                                    <div class="flex items-center gap-4 min-w-0">
                                         <div class="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white font-extrabold text-base shadow-inner">
                                             {{ strtoupper(substr($patient->patient_name ?? 'P', 0, 2)) }}
                                         </div>
-                                        <div>
-                                            <div class="flex items-center gap-2">
+                                        <div class="min-w-0">
+                                            <div class="flex flex-wrap items-center gap-2">
                                                 <span class="text-[10px] font-mono tracking-wider px-2 py-0.5 bg-white/20 rounded font-bold uppercase">{{ $patient->patient_id }}</span>
                                                 <span class="text-[10px] font-bold px-2 py-0.5 rounded-full {{ $patient->pep_badge ?? 'bg-white/30 text-white' }}">
                                                     {{ $patient->pep_status }}
@@ -304,7 +307,7 @@
                                         </div>
                                     </div>
                                     <!-- Close button papuntang '#' -->
-                                    <a href="#" class="text-white/70 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10">
+                                    <a href="#modal-closed" class="shrink-0 text-white/70 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10">
                                         <span class="material-symbols-outlined text-[22px]">close</span>
                                     </a>
                                 </div>
@@ -403,7 +406,7 @@
 
                                 <!-- Modal Footer -->
                                 <div class="p-5 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center shrink-0">
-                                    <a href="#" class="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-colors">
+                                    <a href="#modal-closed" class="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-colors">
                                         Close Preview
                                     </a>
 

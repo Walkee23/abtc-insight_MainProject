@@ -106,6 +106,9 @@
     </style>
     <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
     <script src="{{ asset('js/custom-select.js') }}" defer></script>
+    <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
+    <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
+    <script src="{{ asset('js/soft-nav.js') }}" defer></script>
 </head>
 
 <body class="text-on-surface flex min-h-screen bg-surface">
@@ -198,8 +201,8 @@
                     <h2 class="text-3xl font-extrabold text-on-surface tracking-tight leading-none mb-2">Visual Analytics</h2>
                     <p class="text-on-surface-variant text-lg font-medium opacity-70">Query and visualize bite case data across all dimensions.</p>
                 </div>
+                <div data-soft-region="actions" class="flex gap-3">
                 @if(request()->hasAny(['group', 'year', 'date_from', 'date_to', 'week_from', 'week_to', 'month_from', 'month_to', 'quarter_from', 'quarter_to', 'health_area', 'barangay', 'sex', 'age_min', 'age_max']))
-                <div class="flex gap-3">
                     <form action="{{ route('admin.generate.report') }}" method="GET" target="_blank">
                         <!-- I-pasa ang tanang kasamtangang request parameters (apil ang barangay, sex, etc.) ngadto sa report -->
                         @foreach(request()->all() as $key => $value)
@@ -219,13 +222,13 @@
                     <a href="{{ route('report.export.csv', request()->all()) }}" class="flex items-center px-6 py-3 bg-[#D4AF37] text-white rounded-xl font-semibold shadow-xl shadow-yellow-700/10 hover:opacity-90 transition-all cursor-pointer">
                         Export Filtered Results
                     </a>
-                </div>
                 @endif
+                </div>
             </div>
     
             <!-- SECTION 2 — REAL LIVE FILTER BAR -->
             <section class="bg-surface-container-lowest rounded-xl p-6 shadow-sm space-y-6 border border-outline-variant/10">
-                <form method="GET" action="{{ route('admin.analytics') }}">
+                <form method="GET" action="{{ route('admin.analytics') }}" data-soft data-soft-scroll="results">
                     <div class="grid grid-cols-1 md:grid-cols-6 gap-6">
                         
     
@@ -233,10 +236,10 @@
                         <div class="md:col-span-3">
                             <label class="block text-xs font-bold uppercase text-on-surface-variant/60 tracking-widest mb-2">Period Grouping</label>
                             @php $currentGroup = request('group'); @endphp
-                            <div id="periodGroup" class="flex h-9 bg-surface-container-highest p-1 rounded-lg" role="group" aria-label="Period grouping">
+                            <div id="periodGroup" class="flex flex-wrap sm:flex-nowrap gap-1 sm:gap-0 sm:h-9 bg-surface-container-highest p-1 rounded-lg" role="group" aria-label="Period grouping">
                                 @foreach (['daily' => 'Daily', 'weekly' => 'Weekly', 'monthly' => 'Monthly', 'quarterly' => 'Quarterly', 'yearly' => 'Yearly'] as $groupValue => $groupText)
                                     <button type="button" data-group="{{ $groupValue }}" aria-pressed="{{ $currentGroup == $groupValue ? 'true' : 'false' }}"
-                                        class="flex-1 py-1.5 text-xs font-semibold rounded-md transition-all {{ $currentGroup == $groupValue ? 'bg-white shadow-sm text-primary font-bold' : 'text-on-surface-variant hover:text-primary' }}">{{ $groupText }}</button>
+                                        class="flex-1 basis-[30%] sm:basis-0 px-3 py-2 sm:px-2 sm:py-1.5 text-xs font-semibold rounded-md transition-all {{ $currentGroup == $groupValue ? 'bg-white shadow-sm text-primary font-bold' : 'text-on-surface-variant hover:text-primary' }}">{{ $groupText }}</button>
                                 @endforeach
                             </div>
                             <input type="hidden" name="group" id="groupInput" value="{{ $currentGroup }}" @if(!$currentGroup) disabled @endif />
@@ -251,9 +254,10 @@
                             $activePanel = in_array($currentGroup, ['daily', 'weekly', 'monthly', 'quarterly', 'yearly'], true) ? $currentGroup : 'none';
                             $yearsList = $analyticsYears ?? [date('Y')];
                             $yearsAsc = array_reverse($yearsList);
-                            $panelAttr = fn ($name) => 'data-range="' . $name . '" class="grid grid-cols-2 gap-6' . ($activePanel === $name ? '' : ' hidden') . '"';
+                            $panelAttr = fn ($name) => 'data-range="' . $name . '" class="grid grid-cols-2 gap-4 sm:gap-6' . ($activePanel === $name ? '' : ' hidden') . '"';
                             $off = fn ($name) => $activePanel === $name ? '' : 'disabled';
                         @endphp
+                        <style>[data-range] > div { display: flex; flex-direction: column; justify-content: flex-end; }</style>
                         <div class="md:col-span-3">
                             <div {!! $panelAttr('none') !!}>
                                 <div>
@@ -339,9 +343,11 @@
                                 </div>
                             </div>
 
+                            <div data-soft-region="notice">
                             @if (!empty($rangeNotice))
                                 <p class="text-[11px] font-semibold text-amber-700 mt-2">{{ $rangeNotice }}</p>
                             @endif
+                            </div>
                         </div>
                     </div>
                     <script>
@@ -416,9 +422,9 @@
 
                     <div class="flex items-center justify-between pt-6 border-t border-outline-variant/10">
                         <div class="flex items-center gap-2 text-sm text-on-surface-variant">
-                            <span class="material-symbols-outlined text-primary text-lg">info</span>
-                            Showing <strong class="text-on-surface">{{ number_format($totalBites ?? 0) }} bite cases</strong> matching current filters 
-                            <span class="mx-1 text-outline">•</span> {{ number_format($uniquePatients ?? 0) }} unique patients
+                            <span class="material-symbols-outlined text-primary text-lg shrink-0">info</span>
+                            <span data-soft-region="count">Showing <strong class="text-on-surface">{{ number_format($totalBites ?? 0) }} bite cases</strong> matching current filters
+                            <span class="mx-1 text-outline">•</span> {{ number_format($uniquePatients ?? 0) }} unique patients</span>
                         </div>
                         <div class="flex gap-3">
                             <a href="{{ route('admin.analytics') }}" class="px-6 py-2 border border-outline-variant text-on-surface-variant font-semibold rounded-lg hover:bg-surface-container-low transition-colors text-center">Reset All</a>
@@ -428,6 +434,7 @@
                 </form>
             </section>
 
+            <div data-soft-region="results" data-soft-scripts class="space-y-8">
             @if(request()->hasAny(['group', 'year', 'date_from', 'date_to', 'week_from', 'week_to', 'month_from', 'month_to', 'quarter_from', 'quarter_to', 'health_area', 'barangay', 'sex', 'age_min', 'age_max']))
 
             <!-- SECTION 3 — REAL LIVE KPI CARDS -->
@@ -568,19 +575,26 @@
                                 tip.style.left = Math.min(Math.max(8, cx - tw / 2), rect.width - tw - 8) + 'px';
                                 tip.style.top = (cy - th - 14 < 0 ? cy + 16 : cy - th - 14) + 'px';
                             }
-                            svg.addEventListener('pointermove', (e) => {
+                            const pick = (e) => {
                                 if (!n) return;
                                 const rect = svg.getBoundingClientRect();
                                 const vx = (e.clientX - rect.left) * (W / rect.width);
                                 let best = 0;
                                 for (let i = 1; i < n; i++) if (Math.abs(x(i) - vx) < Math.abs(x(best) - vx)) best = i;
                                 show(best, rect);
-                            });
-                            svg.addEventListener('pointerleave', () => {
+                            };
+                            const hideTip = () => {
                                 tip.classList.add('hidden');
                                 hoverLine.setAttribute('visibility', 'hidden');
                                 hoverRing.setAttribute('visibility', 'hidden');
-                            });
+                            };
+                            svg.addEventListener('pointermove', pick);
+                            svg.addEventListener('pointerdown', pick);   // a tap on a phone
+                            svg.addEventListener('pointerleave', (e) => { if (e.pointerType !== 'touch') hideTip(); });
+                            // on a touch screen the details stay until the next tap somewhere else
+                            if (window.__casesTapAway) document.removeEventListener('pointerdown', window.__casesTapAway);
+                            window.__casesTapAway = (e) => { if (!svg.contains(e.target)) hideTip(); };
+                            document.addEventListener('pointerdown', window.__casesTapAway);
                         })();
                     </script>
                 </div>
@@ -613,7 +627,7 @@
                     <!-- 1. Tabbed Demographics Card (Exposure, Sex, Animal - 3 Colors na) -->
                     <div class="bg-surface-container-lowest p-8 rounded-xl border border-outline-variant/10 shadow-sm flex flex-col justify-between">
                         <div>
-                            <div class="flex items-center justify-between mb-6">
+                            <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 mb-6">
                                 <h4 class="text-lg font-bold text-on-surface">Demographic & Exposure Breakdown</h4>
                                 <div class="flex bg-surface-container-high p-1 rounded-lg">
                                     <button onclick="switchDemographicTab('exposure')" id="tab-exposure" class="px-3 py-1 text-xs font-bold rounded-md bg-primary text-white shadow-sm transition-all">Exposure</button>
@@ -756,6 +770,7 @@
                     <script>
                         (function () {
                             // One dark tooltip for all three charts: any element with data-tip-title / data-tip-lines ("a|b|c").
+                            if (window.__vizTipCleanup) window.__vizTipCleanup();   // this script runs again after every in-place update
                             const tip = document.createElement('div');
                             tip.className = 'viz-tip bg-slate-900/95 text-white rounded-lg px-3 py-2 shadow-xl text-xs leading-snug whitespace-nowrap';
                             document.body.appendChild(tip);
@@ -793,7 +808,7 @@
                                 });
                             }
 
-                            document.addEventListener('pointerover', (e) => {
+                            const onOver = (e) => {
                                 const el = e.target.closest ? e.target.closest('[data-tip-title]') : null;
                                 if (el === current) return;
                                 current = el;
@@ -802,24 +817,34 @@
                                 tip.classList.add('show');
                                 place(e);
                                 setActive(el.dataset.donut || null, el.dataset.idx);
-                            });
-                            document.addEventListener('pointermove', (e) => { if (current) place(e); });
+                            };
+                            const onMove = (e) => { if (current) place(e); };
+                            const onOut = (e) => { if (e.pointerType === 'touch') return; if (!e.relatedTarget) hide(); };
+                            document.addEventListener('pointerover', onOver);
+                            document.addEventListener('pointermove', onMove);
                             window.addEventListener('scroll', hide, true);
-                            document.addEventListener('pointerout', (e) => { if (!e.relatedTarget) hide(); });
+                            document.addEventListener('pointerout', onOut);
+                            window.__vizTipCleanup = () => {
+                                document.removeEventListener('pointerover', onOver);
+                                document.removeEventListener('pointermove', onMove);
+                                window.removeEventListener('scroll', hide, true);
+                                document.removeEventListener('pointerout', onOut);
+                                tip.remove();
+                            };
                         })();
                     </script>
 
             <!-- COLLAPSIBLE ACCORDION FOR EXPORTS & ANNUAL MATRIX TABLE -->
             <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/10 shadow-sm overflow-hidden mb-8">
-                <button onclick="toggleAccordion()" class="w-full p-6 bg-surface-container-low flex justify-between items-center text-left hover:bg-surface-container transition-colors">
-                    <div class="flex items-center gap-3">
+                <button onclick="toggleAccordion()" class="w-full p-6 bg-surface-container-low flex justify-between items-center gap-3 text-left hover:bg-surface-container transition-colors">
+                    <div class="flex items-center gap-3 min-w-0">
                         <span class="material-symbols-outlined text-primary">table_chart</span>
                         <div>
                             <h4 class="text-base font-bold text-on-surface tracking-tight">Annual Matrix Summary & Data Exports</h4>
                             <p class="text-xs text-on-surface-variant">Click to expand detailed reports, exports, and historical matrix data.</p>
                         </div>
                     </div>
-                    <span id="accordion-icon" class="material-symbols-outlined transition-transform duration-300">expand_more</span>
+                    <span id="accordion-icon" class="material-symbols-outlined shrink-0 transition-transform duration-300">expand_more</span>
                 </button>
 @php
     // the two annual files cover one whole year; offer every year that has data, newest first
@@ -867,6 +892,21 @@
     </div>
 </div>
             </div>
+            <script>
+                // the year chosen for the annual exports goes into both download links (and the chip on each card)
+                (function () {
+                    const select = document.getElementById('exportYear');
+                    if (!select) return;
+                    const sync = () => {
+                        document.querySelectorAll('[data-export-link]').forEach((a) => {
+                            a.href = a.dataset.base + '?year=' + encodeURIComponent(select.value);
+                        });
+                        document.querySelectorAll('[data-export-year]').forEach((s) => { s.textContent = select.value; });
+                    };
+                    select.addEventListener('change', sync);
+                    sync();
+                })();
+            </script>
 
             @else
                 <!-- 👉 KINI ANG MOGAWAS KUNG WALA PA NAKA-APPLY SA FILTERS (BLANK / PLACEHOLDER STATE) -->
@@ -880,22 +920,8 @@
                     </p>
                 </div>
             @endif
+            </div>
 
-            <script>
-                // the year chosen for the annual exports goes into both download links (and the chip on each card)
-                document.addEventListener('DOMContentLoaded', function () {
-                    const select = document.getElementById('exportYear');
-                    if (!select) return;
-                    const sync = () => {
-                        document.querySelectorAll('[data-export-link]').forEach((a) => {
-                            a.href = a.dataset.base + '?year=' + encodeURIComponent(select.value);
-                        });
-                        document.querySelectorAll('[data-export-year]').forEach((s) => { s.textContent = select.value; });
-                    };
-                    select.addEventListener('change', sync);
-                    sync();
-                });
-            </script>
             <script>
                 function toggleAccordion() {
                     const content = document.getElementById('accordion-content');

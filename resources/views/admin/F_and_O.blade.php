@@ -121,6 +121,9 @@
         }
     </style>
     <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
+    <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
+    <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
+    <script src="{{ asset('js/soft-nav.js') }}" defer></script>
 </head>
 
 <body class="bg-surface text-on-surface selection:bg-primary-container selection:text-on-primary-container">
@@ -218,11 +221,12 @@
                 </button>
             </div>
             @endif
+            <div data-soft-region="forecast" data-soft-scripts data-soft-quiet class="space-y-10">
             <!-- Section 1: Patient Volume Forecasting -->
             <section class="space-y-6">
-                <div class="flex justify-between items-end">
-                    <div>
-                        <h2 class="text-2xl font-bold text-on-surface tracking-tight">Patient Volume Forecasting</h2>
+                <div class="flex flex-col lg:flex-row lg:justify-between lg:items-end gap-4 lg:gap-8">
+                    <div class="min-w-0">
+                        <h2 class="mn-page-title text-2xl font-bold text-on-surface tracking-tight">Patient Volume Forecasting</h2>
                         <p class="text-on-surface-variant text-sm mt-1">
                             {{ $forecast['status'] === 'ok' ? $forecast['method'] : 'Exponential Smoothing' }} · trained on the {{ $trainWeeks }} weeks before {{ $asOf->format('M d, Y') }}, recent days weighted most · patients per {{ $periods[$period]['unit'] }}
                         </p>
@@ -234,31 +238,31 @@
                         </p>
                         @endif
                     </div>
-                    <div class="flex items-end gap-6">
-                    <form method="GET" action="{{ route('admin.forecasting') }}" class="flex flex-col items-end gap-2">
+                    <div class="flex flex-wrap items-end gap-4 md:gap-6 px-2 lg:px-0 lg:shrink-0">
+                    <form method="GET" action="{{ route('admin.forecasting') }}" class="flex flex-col items-start gap-2">
                         <input type="hidden" name="period" value="{{ $period }}" />
                         @foreach(array_filter($params, fn ($v, $k) => $v !== $defaults[$k], ARRAY_FILTER_USE_BOTH) as $paramKey => $paramValue)
                         <input type="hidden" name="{{ $paramKey }}" value="{{ $paramValue }}" />
                         @endforeach
                         <p class="text-[10px] font-bold text-outline uppercase tracking-wider">Forecast As Of</p>
                         <input type="date" name="asof" value="{{ $asOf->toDateString() }}" max="{{ $today->toDateString() }}"
-                            onchange="this.form.submit()" title="The model learns from the {{ $trainWeeks }} weeks before this date"
-                            class="bg-surface-container-low border-none rounded-lg px-3 py-1.5 text-xs font-semibold focus:ring-2 focus:ring-primary/20" />
+                            onchange="this.form.requestSubmit()" title="The model learns from the {{ $trainWeeks }} weeks before this date"
+                            class="h-9 bg-surface-container-low border-none rounded-lg px-3 text-xs font-semibold focus:ring-2 focus:ring-primary/20" />
                     </form>
-                    <div class="flex flex-col items-end gap-2">
+                    <div class="flex flex-col items-start gap-2">
                         <p class="text-[10px] font-bold text-outline uppercase tracking-wider">View &amp; Forecast Interval</p>
-                        <div class="bg-surface-container-low p-1 rounded-lg flex gap-1">
+                        <div class="h-9 bg-surface-container-low p-1 rounded-lg flex items-center gap-1">
                             @foreach($periods as $key => $cfg)
                             <a href="{{ route('admin.forecasting', ['period' => $key] + array_filter($params, fn ($v, $k) => $v !== $defaults[$k], ARRAY_FILTER_USE_BOTH) + ($asOf->isSameDay($today) ? [] : ['asof' => $asOf->toDateString()])) }}"
-                                class="px-4 py-1.5 text-xs font-semibold rounded-md transition-all {{ $period === $key ? 'bg-surface-container-lowest text-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-high' }}">{{ $cfg['label'] }}</a>
+                                data-period-pill class="px-4 py-1.5 text-xs font-semibold rounded-md whitespace-nowrap transition-all {{ $period === $key ? 'bg-surface-container-lowest text-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-high' }}">{{ $cfg['label'] }}</a>
                             @endforeach
                         </div>
                     </div>
                     </div>
                 </div>
                 <div class="grid grid-cols-12 gap-6">
-                    <div class="col-span-12 lg:col-span-5 grid grid-cols-3 gap-4">
-                        <div class="bg-surface-container-lowest p-5 rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] flex flex-col justify-between">
+                    <div class="col-span-12 lg:col-span-5 grid grid-cols-2 gap-4 content-start">
+                        <div class="col-span-2 bg-surface-container-lowest p-5 rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] flex flex-col justify-between">
                             <p class="text-[10px] uppercase font-bold text-outline tracking-wider mb-1">Method</p>
                             <p class="text-sm font-bold text-primary leading-snug">{{ $forecast['status'] === 'ok' ? $forecast['method'] : '—' }}</p>
                             @if($forecast['status'] === 'ok' && !$forecast['seasonal'])
@@ -328,32 +332,32 @@
                             <span class="text-[10px] font-bold text-outline uppercase tracking-widest">
                                 Historical data
                             </span>
-                            <div class="flex items-center gap-4">
-                                <div class="flex items-center gap-2">
-                                    <div class="w-3 h-3 bg-primary rounded-full"></div>
+                            <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+                                <div class="flex items-center gap-2 whitespace-nowrap">
+                                    <div class="w-3 h-3 shrink-0 bg-primary rounded-full"></div>
                                     <span class="text-xs font-medium text-on-surface-variant">Actual Volume</span>
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    <div class="w-5 border-t-2 border-dashed border-primary/60"></div>
+                                <div class="flex items-center gap-2 whitespace-nowrap">
+                                    <div class="w-5 shrink-0 border-t-2 border-dashed border-primary/60"></div>
                                     <span class="text-xs font-medium text-on-surface-variant">Predicted Trend</span>
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    <div class="w-3 h-3 bg-primary/10 rounded-sm"></div>
+                                <div class="flex items-center gap-2 whitespace-nowrap">
+                                    <div class="w-3 h-3 shrink-0 bg-primary/10 rounded-sm"></div>
                                     <span class="text-xs font-medium text-on-surface-variant">95% Confidence Interval</span>
                                 </div>
                             </div>
                         </div>
-                        <div class="flex items-center gap-6">
+                        <div class="flex flex-wrap items-end md:items-center gap-x-8 gap-y-4 w-full md:w-auto">
                             @if($forecast['status'] === 'ok')
-                            <div class="text-right">
+                            <div class="text-left md:text-right">
                                 <p class="text-[10px] font-bold text-outline uppercase tracking-widest">Expected {{ $asOf->isSameDay($today) ? ($periods[$period]['unit'] === 'day' ? 'today' : 'this ' . $periods[$period]['unit']) : 'from ' . $asOf->format('M d') }}</p>
-                                <p class="text-xl font-black text-primary">{{ number_format($forecast['next_value']) }} <span class="text-xs font-semibold text-outline">patients</span></p>
+                                <p class="text-xl font-black text-primary whitespace-nowrap">{{ number_format($forecast['next_value']) }} <span class="text-xs font-semibold text-outline">patients</span></p>
                             </div>
-                            <div class="text-right">
+                            <div class="text-left md:text-right">
                                 <p class="text-[10px] font-bold text-outline uppercase tracking-widest">Next {{ $periods[$period]['horizon'] }} {{ $periods[$period]['unit'] }}s</p>
-                                <p class="text-xl font-black text-on-surface">{{ number_format($forecast['total_horizon']) }} <span class="text-xs font-semibold text-outline">patients</span></p>
+                                <p class="text-xl font-black text-on-surface whitespace-nowrap">{{ number_format($forecast['total_horizon']) }} <span class="text-xs font-semibold text-outline">patients</span></p>
                             </div>
-                            <form method="POST" action="{{ route('admin.forecasting.save') }}">
+                            <form method="POST" action="{{ route('admin.forecasting.save') }}" class="w-full md:w-auto">
                                 @csrf
                                 <input type="hidden" name="period" value="{{ $period }}" />
                                 @if(!$asOf->isSameDay($today))<input type="hidden" name="asof" value="{{ $asOf->toDateString() }}" />@endif
@@ -361,7 +365,7 @@
                                 <input type="hidden" name="{{ $key }}" value="{{ $value }}" />
                                 @endforeach
                                 <button type="submit"
-                                    class="px-4 py-2 bg-primary text-on-primary text-xs font-bold rounded-lg shadow-md shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-2">
+                                    class="w-full md:w-auto justify-center px-4 py-2 bg-primary text-on-primary text-xs font-bold rounded-lg shadow-md shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-2 whitespace-nowrap">
                                     <span class="material-symbols-outlined text-[16px]">save</span> Save Forecast
                                 </button>
                             </form>
@@ -413,11 +417,11 @@
             <section class="space-y-6">
                 <div class="flex justify-between items-end">
                     <div>
-                        <h2 class="text-2xl font-bold text-on-surface tracking-tight">Outbreak Detection &amp; Monitoring</h2>
+                        <h2 class="mn-page-title text-2xl font-bold text-on-surface tracking-tight">Outbreak Detection &amp; Monitoring</h2>
                         <p class="text-on-surface-variant text-sm mt-1">Last 7 days ({{ $outbreak['from'] }} – {{ $outbreak['to'] }}) vs. each barangay's usual week</p>
                     </div>
                     <button type="button" id="toggleAllBarangays"
-                        class="flex items-center gap-2 px-4 py-2 text-primary font-bold text-sm hover:bg-primary/5 rounded-lg transition-colors">
+                        class="flex items-center gap-2 px-0 md:px-4 py-2 text-primary font-bold text-sm hover:bg-primary/5 rounded-lg transition-colors">
                         <span id="toggleAllLabel">View All Barangays</span>
                         <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
                     </button>
@@ -486,8 +490,6 @@
                     </div>
                 </div>
             </section>
-        </div>
-    </main>
     <script>
         (function () {
             // Slider labels follow the slider; the forecast is recalculated once it is released
@@ -495,7 +497,7 @@
             form.querySelectorAll('input[type="range"]').forEach((slider) => {
                 const label = form.querySelector('[data-value-for="' + slider.name + '"]');
                 slider.addEventListener('input', () => { label.textContent = Number(slider.value).toFixed(2); });
-                slider.addEventListener('change', () => form.submit());
+                slider.addEventListener('change', () => form.requestSubmit());
             });
 
             // Priority alerts <-> all barangays with cases
@@ -596,6 +598,24 @@
                     return el;
                 };
 
+                // Chart labels sit right of their marker; when there is no room left of the chart's edge they flip to the
+                // marker's left side (or slide left) instead of being cut off by the SVG border.
+                function edgeLabel(xPos, yPos, label, flipTo) {
+                    const el = add('text', { x: xPos, y: yPos, 'font-size': 10, 'font-weight': 700, fill: '#717782' }, label);
+                    let w = 0;
+                    try { w = el.getComputedTextLength(); } catch (err) { w = label.length * 6.4; }   // a browser that cannot measure: estimate
+                    const limit = W - 6;
+                    if (xPos + w > limit) {
+                        if (flipTo !== undefined && flipTo - w >= left) {
+                            el.setAttribute('x', flipTo);
+                            el.setAttribute('text-anchor', 'end');
+                        } else {
+                            el.setAttribute('x', Math.max(left + 2, limit - w));
+                        }
+                    }
+                    return el;
+                }
+
                 function render() {
                     svg.replaceChildren();
                     tip.classList.add('hidden');
@@ -641,13 +661,13 @@
                         const i0 = hist.findIndex((p) => p.date >= windowStart);
                         if (i0 >= 0) {
                             add('rect', { x: x(i0), y: top, width: Math.max(3, x(h - 1) - x(i0)), height: H - top - bottom, fill: '#004a93', 'fill-opacity': 0.05 });
-                            add('text', { x: x(i0) + 6, y: top + 24, 'font-size': 10, 'font-weight': 700, fill: '#717782' }, 'TRAINING WINDOW');
+                            edgeLabel(x(i0) + 6, top + 24, 'TRAINING WINDOW');
                         }
                     }
                     if (fut.length) {
                         const dx = (x(h - 1) + x(h)) / 2;
                         add('line', { x1: dx, x2: dx, y1: top, y2: H - bottom, stroke: '#c1c7d3', 'stroke-dasharray': '4,4' });
-                        add('text', { x: dx + 6, y: top + 10, 'font-size': 10, 'font-weight': 700, fill: '#717782' }, 'FORECAST');
+                        edgeLabel(dx + 6, top + 10, 'FORECAST', dx - 6);
 
                         const upper = [[x(h - 1), y(hist[h - 1].value)]].concat(fut.map((p, k) => [x(h + k), y(p.upper)]));
                         const lower = [[x(h - 1), y(hist[h - 1].value)]].concat(fut.map((p, k) => [x(h + k), y(p.lower)])).reverse();
@@ -698,18 +718,25 @@
                 }
 
                 // The nearest point to the pointer (anywhere along the chart) is highlighted
-                svg.addEventListener('pointermove', (e) => {
+                const pick = (e) => {
                     if (!plotted.length) return;
                     const rect = svg.getBoundingClientRect();
                     const vx = (e.clientX - rect.left) * (W / rect.width);
                     let best = plotted[0];
                     plotted.forEach((pt) => { if (Math.abs(pt.x - vx) < Math.abs(best.x - vx)) best = pt; });
                     showTip(best, rect);
-                });
-                svg.addEventListener('pointerleave', () => {
+                };
+                const hideTip = () => {
                     tip.classList.add('hidden');
                     if (hoverLine) { hoverLine.setAttribute('visibility', 'hidden'); hoverRing.setAttribute('visibility', 'hidden'); }
-                });
+                };
+                svg.addEventListener('pointermove', pick);
+                svg.addEventListener('pointerdown', pick);   // a tap on a phone
+                svg.addEventListener('pointerleave', (e) => { if (e.pointerType !== 'touch') hideTip(); });
+                // on a touch screen the details stay until the next tap somewhere else
+                if (window.__forecastTapAway) document.removeEventListener('pointerdown', window.__forecastTapAway);
+                window.__forecastTapAway = (e) => { if (!svg.contains(e.target)) hideTip(); };
+                document.addEventListener('pointerdown', window.__forecastTapAway);
 
                 render();
             }
@@ -723,7 +750,23 @@
             }
         })();
     </script>
-
+            </div>
+        </div>
+    </main>
+    <script>
+        // Daily / Weekly / Monthly: the highlight moves the moment a button is pressed, while the page updates in place
+        document.addEventListener('click', function (e) {
+            var pill = e.target.closest && e.target.closest('a[data-period-pill]');
+            if (!pill || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+            var on = ['bg-surface-container-lowest', 'text-primary', 'shadow-sm'];
+            var off = ['text-on-surface-variant', 'hover:bg-surface-container-high'];
+            Array.prototype.forEach.call(pill.parentElement.querySelectorAll('a[data-period-pill]'), function (a) {
+                var active = a === pill;
+                on.forEach(function (c) { a.classList.toggle(c, active); });
+                off.forEach(function (c) { a.classList.toggle(c, !active); });
+            });
+        });
+    </script>
             @php
             $user = Auth::user();
 

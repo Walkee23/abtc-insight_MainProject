@@ -99,6 +99,8 @@
         }
     </style>
     <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
+    <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
+    <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
 </head>
 
 <body class="text-on-surface select-none">
@@ -165,7 +167,7 @@
                 <button type="button" onclick="openRegisterLogoutModal()"
                     class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold shadow-sm hover:shadow-md hover:bg-primary/90 transition-all active:scale-95 mr-2 cursor-pointer">
                     <span class="material-symbols-outlined text-[20px]" data-icon="person_add">person_add</span>
-                    <span>Register New Patient</span>
+                    <span class="hidden sm:inline">Register New Patient</span>
                 </button>
 
                 <!--  total of pending priority and normal queue items -->
@@ -298,7 +300,7 @@
                                                         </div>
                                                     </div>
                                                     <!-- Close Button (Href to #) -->
-                                                    <a href="#" class="text-white/70 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10">
+                                                    <a href="#modal-closed" class="text-white/70 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10">
                                                         <span class="material-symbols-outlined text-[20px]">close</span>
                                                     </a>
                                                 </div>
@@ -333,7 +335,7 @@
                                                 <!-- Modal Footer Actions -->
                                                 <div class="p-6 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3 items-center">
                                                     <!-- Cancel Link -->
-                                                    <a href="#" class="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-colors inline-flex items-center">
+                                                    <a href="#modal-closed" class="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-colors inline-flex items-center">
                                                         Cancel
                                                     </a>
 
@@ -422,17 +424,17 @@
                                                 <div class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden text-left">
 
                                                     <!-- Header -->
-                                                    <div class="bg-gradient-to-r from-primary to-primary-container p-6 text-white flex justify-between items-start">
-                                                        <div class="flex items-center gap-3">
+                                                    <div class="bg-gradient-to-r from-primary to-primary-container p-6 text-white flex flex-nowrap gap-3 justify-between items-start">
+                                                        <div class="flex items-center gap-3 min-w-0">
                                                             <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white font-bold text-lg">
                                                                 {{ $patient->queue_id }}
                                                             </div>
-                                                            <div>
+                                                            <div class="min-w-0">
                                                                 <span class="text-[11px] font-bold tracking-wider uppercase opacity-80">Call to Counter</span>
                                                                 <h3 class="text-xl font-bold leading-tight">{{ $patient->patient_name }}</h3>
                                                             </div>
                                                         </div>
-                                                        <a href="#" class="text-white/70 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10">
+                                                        <a href="#modal-closed" class="shrink-0 text-white/70 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10">
                                                             <span class="material-symbols-outlined text-[20px]">close</span>
                                                         </a>
                                                     </div>
@@ -466,7 +468,7 @@
 
                                                     <!-- Footer Actions -->
                                                     <div class="p-6 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
-                                                        <a href="#" class="px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-colors inline-flex items-center">
+                                                        <a href="#modal-closed" class="px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-colors inline-flex items-center">
                                                             Cancel
                                                         </a>
 

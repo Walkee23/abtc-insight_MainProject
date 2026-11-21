@@ -94,6 +94,8 @@
         }
     </style>
     <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
+    <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
+    <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
 </head>
 
 <body class="text-on-surface select-none flex min-h-screen">
@@ -147,7 +149,9 @@
     <!-- Main Content Area -->
     <main class="flex-1 flex flex-col ml-64">
                 <!-- TopNavBar -->
-            <div class="flex justify-end items-center w-full h-16 px-8 sticky top-0 z-40 bg-slate-50/85 dark:bg-slate-900/85 backdrop-blur-md shadow-sm shadow-blue-900/5">
+            <header class="flex justify-between items-center w-full h-16 px-8 sticky top-0 z-40 bg-slate-50/85 dark:bg-slate-900/85 backdrop-blur-md shadow-sm shadow-blue-900/5">
+            <div class="flex items-center gap-8">
+            </div>
             <div class="flex items-center gap-4">
                 <div class="flex items-center gap-1 border-r border-outline-variant/20 pr-4">
                 </div>
@@ -187,16 +191,16 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </header>
 
         <div class="p-8">
         <!-- Header Section -->
-        <header class="flex justify-between items-center mb-8">
+        <header class="flex flex-col items-start gap-3 sm:flex-row sm:justify-between sm:items-center mb-8">
             <div>
-                <h1 class="text-3xl font-black text-on-surface tracking-tight">Clinic Operational Dashboard</h1>
+                <h1 class="mn-page-title text-3xl font-black text-on-surface tracking-tight">Clinic Operational Dashboard</h1>
                 <p class="text-xs text-on-surface-variant mt-1 font-medium">Real-time walk-in volume, verification throughput, and rabies clinical protocols.</p>
             </div>
-            <div class="px-4 py-2 bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm text-xs font-bold text-secondary flex items-center gap-2">
+            <div class="shrink-0 whitespace-nowrap px-4 py-2 bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm text-xs font-bold text-secondary flex items-center gap-2">
                 <span class="material-symbols-outlined text-[16px] text-primary">calendar_today</span>
                 <span>{{ now()->format('F d, Y') }}</span>
             </div>
@@ -286,10 +290,10 @@
 
             <!-- Expected Follow-up Visits Card & Scrollable Name List -->
             <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/20 shadow-sm">
-                <div class="flex justify-between items-center mb-4">
+                <div class="flex flex-wrap justify-between items-center gap-x-4 gap-y-2 mb-4">
                     <h3 class="font-bold text-sm text-on-surface flex items-center gap-2">
                         <span class="material-symbols-outlined text-emerald-600 text-[18px]">event_repeat</span>
-                        Scheduled Follow-Up Inflow (Due Today) — <span class="text-xs text-slate-500 font-normal">Click a card to view names</span>
+                        <span>Scheduled Follow-Up Inflow (Due Today)<span class="hidden sm:inline"> — </span><span class="block sm:inline text-xs text-slate-500 font-normal">Click a card to view names</span></span>
                     </h3>
                     <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">DOH Schedule</span>
                 </div>

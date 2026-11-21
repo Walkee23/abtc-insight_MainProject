@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Support\Audit;
+use App\Support\PepSchedule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use chillerlan\QRCode\QRCode;
@@ -12,6 +13,9 @@ use chillerlan\QRCode\Output\QRMarkupSVG;
 
 class ClinicalEncodingController extends Controller
 {
+    /** The vaccine brands a dose can be given with (stored with these exact names). */
+    public const VACCINE_BRANDS = ['VERORAB (PVRV)', 'SPEEDA (PVRV)', 'VAXIRAB (PCEC)', 'ABHAYRAB (PVRV)'];
+
     /** Wound types the health worker can pick in Section VI (stored comma-separated in wound_description). */
     public const WOUND_TYPES = ['Punctured', 'Lacerated', 'Avulsion', 'Abrasion'];
 
@@ -46,6 +50,67 @@ class ClinicalEncodingController extends Controller
         return $userId
             ? $query->where($alias . '.assigned_health_worker_id', $userId)
             : $query->whereRaw('1 = 0');
+    }
+
+    /**
+     * Cases Staff has finished that no Health Worker owns yet: the pool Health Workers
+     * pick from. Once one claims a case it leaves this pool and only that account can
+     * open or change it (see ownCase).
+     */
+    private function unclaimed($query, string $alias = 'bc')
+    {
+        return $query
+            ->whereExists(function ($e) use ($alias) {
+                $e->select(DB::raw(1))->from('inflow_general_particulars as hg')
+                    ->whereColumn('hg.inflow_record_id', $alias . '.inflow_record_id')
+                    ->where('hg.status', 'Encoded');
+            })
+            ->whereNull($alias . '.assigned_health_worker_id')
+            ->whereNull($alias . '.outcome');
+    }
+
+    /**
+     * Claim an unassigned case. One UPDATE that only matches while nobody owns the case,
+     * so if two Health Workers click at the same moment exactly one gets it.
+     */
+    public function claim($biteCaseId)
+    {
+        $userId = Auth::id();
+        abort_unless($userId, 403);
+
+        $claimed = $this->unclaimed(DB::table('bite_cases as bc'))
+            ->where('bc.bite_case_id', $biteCaseId)
+            ->update(['bc.assigned_health_worker_id' => $userId]);
+
+        if ($claimed !== 1) {
+            return redirect()->route('healthworker.dashboard')
+                ->with('claim_error', 'That case is no longer available. Another Health Worker already took it.');
+        }
+
+        $case = DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->first();
+        Audit::log('case_claimed', "Claimed case #{$case->case_number} of patient {$case->patient_id}");
+
+        return redirect()->route('healthworker.clinical-encoding', ['bite_case_id' => $biteCaseId])
+            ->with('status', 'Case claimed. It is now yours and hidden from other Health Workers.');
+    }
+
+    /** Give a case back to the pool. Only its owner can do this, and finished cases stay put. */
+    public function release($biteCaseId)
+    {
+        $case = $this->ownCase($biteCaseId);
+
+        $released = DB::table('bite_cases')
+            ->where('bite_case_id', $biteCaseId)
+            ->where('assigned_health_worker_id', Auth::id())
+            ->whereNull('outcome')
+            ->update(['assigned_health_worker_id' => null]);
+
+        if ($released === 1) {
+            Audit::log('case_released', "Released case #{$case->case_number} of patient {$case->patient_id} back to the unclaimed pool");
+        }
+
+        return redirect()->route('healthworker.dashboard')
+            ->with('status', $released === 1 ? 'Case released. Other Health Workers can now claim it.' : 'Finished cases cannot be released.');
     }
 
     /** A case that is assigned to the logged-in health worker, or a 404. */
@@ -242,7 +307,12 @@ class ClinicalEncodingController extends Controller
             'tetanus_details' => 'exclude_unless:tetanus_given,true,1|' . $required . '|string|max:200',
             'tig_given' => 'nullable|boolean',
             'tig_details' => 'exclude_unless:tig_given,true,1|' . $required . '|string|max:200',
-            'vaccine_brand' => $required . '|string|max:100',
+            // the brand is chosen per dose: Day 0 always, the other days only when that dose has a date
+            'day0_brand' => [$isDraft ? 'nullable' : 'required', \Illuminate\Validation\Rule::in(self::VACCINE_BRANDS)],
+            'day3_brand' => [$isDraft ? 'nullable' : 'required_with:day3_date', 'nullable', \Illuminate\Validation\Rule::in(self::VACCINE_BRANDS)],
+            'day7_brand' => [$isDraft ? 'nullable' : 'required_with:day7_date', 'nullable', \Illuminate\Validation\Rule::in(self::VACCINE_BRANDS)],
+            'day14_brand' => [$isDraft ? 'nullable' : 'required_with:day14_date', 'nullable', \Illuminate\Validation\Rule::in(self::VACCINE_BRANDS)],
+            'day28_brand' => [$isDraft ? 'nullable' : 'required_with:day28_date', 'nullable', \Illuminate\Validation\Rule::in(self::VACCINE_BRANDS)],
             'route' => $required . '|in:ID,IM',
             'dose_type' => $required . '|in:Primary,Booster',
             'day0_date' => $required . '|date|before_or_equal:today',
@@ -262,12 +332,6 @@ class ClinicalEncodingController extends Controller
             $validated['patient_weight'] = $bhwWeight;
         }
 
-        // Administered by is always the logged-in health worker: never taken from the form
-        // (a guest session leaves whatever was saved before untouched)
-        if ($name = Auth::user()->full_name ?? null) {
-            $validated['administered_by'] = $name;
-        }
-
         // "Given at the barangay (by the BHW)" counts as given
         $validated['tetanus_by_barangay'] = $request->boolean('tetanus_by_barangay');
         $validated['tig_by_barangay'] = $request->boolean('tig_by_barangay');
@@ -278,10 +342,49 @@ class ClinicalEncodingController extends Controller
         // as '' (shows as "Select" again) rather than a made-up default
         $validated['dose_type'] = $validated['dose_type'] ?? '';
 
+        // The dose dates follow the dose type and route (App\Support\PepSchedule): Primary IM = Day 0, 3, 7, 14, 28;
+        // Primary ID = Day 0, 3, 7, 28; Booster = Day 0, 3. A dose that is not part of the course keeps nothing:
+        // no date, no brand, no "administered by".
+        $courseDays = PepSchedule::days($validated['dose_type'], $validated['route'] ?? null);
+        $existing = DB::table('bite_section7_immunization')->where('bite_case_id', $biteCaseId)->first();
+        $me = Auth::user()->full_name ?? null;   // a guest session leaves whatever was saved before untouched
+
+        foreach ([0, 3, 7, 14, 28] as $day) {
+            $date = 'day' . $day . '_date';
+            $brand = 'day' . $day . '_brand';
+            $by = 'day' . $day . '_administered_by';
+
+            if (!in_array($day, $courseDays, true)) {
+                $validated[$date] = null;
+                $validated[$brand] = null;
+                $validated[$by] = null;
+                continue;
+            }
+            if (empty($validated[$date])) {
+                $validated[$by] = null;   // no date, so nobody gave this dose yet
+                continue;
+            }
+            // Each dose is given by whoever recorded it: saving another visit never changes it. Only a dose that is newly
+            // recorded (or whose date was changed) belongs to the person saving now.
+            $wasDate = $existing->{$date} ?? null;
+            $wasBy = $existing->{$by} ?? null;
+            $unchanged = $wasBy && $wasDate && substr((string) $wasDate, 0, 10) === substr((string) $validated[$date], 0, 10);
+            $validated[$by] = $unchanged ? $wasBy : ($me ?: $wasBy);
+        }
+
+        // the older single columns mirror the Day 0 dose (nothing reads them any more, but old exports may)
+        $validated['vaccine_brand'] = array_key_exists('day0_brand', $validated) ? $validated['day0_brand'] : ($existing->vaccine_brand ?? null);
+        $validated['administered_by'] = $validated['day0_administered_by'] ?? ($existing->administered_by ?? null);
+
         DB::table('bite_section7_immunization')->updateOrInsert(
             ['bite_case_id' => $biteCaseId],
             $validated
         );
+
+        // The dose the patient checked in for (Returning Patient) is now recorded: clear the mark
+        if ($case->return_dose_day && !empty($validated['day' . $case->return_dose_day . '_date'])) {
+            DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->update(['return_dose_day' => null, 'returned_at' => null]);
+        }
 
         if ($isDraft) {
             return back()->with('status', 'Section VII saved as draft.');
@@ -393,9 +496,9 @@ class ClinicalEncodingController extends Controller
     {
         $today = now()->toDateString();
 
-        // Cases still in Clinical Encoding / PEP (finalized ones have outcome = 'Completed')
-        $unfinished = fn() => $this->handedOff(DB::table('bite_cases as bc'))->where(function ($q) {
-            $q->whereNull('bc.outcome')->orWhere('bc.outcome', '<>', 'Completed');
+        // Cases still in Clinical Encoding / PEP (finalized or discharged ones have an outcome)
+        $unfinished = fn () => $this->handedOff(DB::table('bite_cases as bc'))->where(function ($q) {
+            $q->whereNull('bc.outcome');
         });
 
         $stats = [
@@ -440,18 +543,54 @@ class ClinicalEncodingController extends Controller
             ->limit(10)
             ->get();
 
-        // Reminders: PEP doses that are due or overdue, worked out from the Day 0 date
-        // (Primary: Day 3 / 7 / 28, Booster: Day 3), skipping doses already recorded
+        // Unclaimed pool: handed-off cases nobody owns yet (Category III first, longest-waiting first)
+        // Filters (all optional): search text, WHO category, and new vs returning
+        $uFilter = [
+            'q'    => trim((string) request('uq', '')),
+            'cat'  => in_array(request('ucat'), ['I', 'II', 'III'], true) ? request('ucat') : '',
+            'type' => in_array(request('utype'), ['new', 'returning'], true) ? request('utype') : '',
+        ];
+        $unclaimedQuery = fn () => $this->unclaimed(DB::table('bite_cases as bc'))
+            ->join('patients as p', 'p.patient_id', '=', 'bc.patient_id')
+            ->leftJoin('inflow_general_particulars as ig', 'ig.inflow_record_id', '=', 'bc.inflow_record_id')
+            ->when($uFilter['q'] !== '', function ($q) use ($uFilter) {
+                // every typed word must appear in the name; the whole text may also be a patient ID or queue number
+                $words = array_filter(preg_split('/[\s,]+/', $uFilter['q']), fn ($w) => $w !== '');
+                $q->where(function ($w) use ($words, $uFilter) {
+                    $w->where(function ($n) use ($words) {
+                        foreach ($words as $word) {
+                            $n->where('p.patient_name', 'like', '%' . $word . '%');
+                        }
+                    })->orWhere('p.patient_id', 'like', '%' . $uFilter['q'] . '%')
+                      ->orWhere('ig.queue_id', 'like', '%' . $uFilter['q'] . '%');
+                });
+            })
+            ->when($uFilter['cat'] !== '', fn ($q) => $q->where('bc.category', $uFilter['cat']))
+            ->when($uFilter['type'] === 'new', fn ($q) => $q->whereNull('bc.return_dose_day')->where('bc.case_number', '<=', 1))
+            ->when($uFilter['type'] === 'returning', fn ($q) => $q->where(fn ($r) => $r->whereNotNull('bc.return_dose_day')->orWhere('bc.case_number', '>', 1)))
+            ->orderByRaw("CASE WHEN bc.category = 'III' THEN 0 ELSE 1 END")
+            ->orderByRaw('COALESCE(bc.returned_at, bc.date_verified)');
+        // 5 per page; a page past the end (e.g. the last case on it was just claimed) falls back to the last page
+        $unclaimedPages = max(1, (int) ceil($unclaimedQuery()->count() / 5));
+        $unclaimedPage = min(max(1, (int) request('unclaimed_page', 1)), $unclaimedPages);
+        $unclaimed = $unclaimedQuery()
+            ->paginate(5, ['bc.bite_case_id', 'bc.case_number', 'bc.category', 'bc.date_verified', 'bc.return_dose_day', 'bc.returned_at', 'p.patient_id', 'p.patient_name', 'ig.queue_id'], 'unclaimed_page', $unclaimedPage)
+            ->fragment('unclaimed')
+            ->withQueryString();
+
+        // Reminders: PEP doses that are due or overdue, worked out from the Day 0 date and the case's route
+        // (App\Support\PepSchedule: Primary IM Day 3 / 7 / 14 / 28, Primary ID Day 3 / 7 / 28, Booster Day 3),
+        // skipping doses already recorded
         $reminders = [];
         $immunizations = $unfinished()
             ->join('patients as p', 'p.patient_id', '=', 'bc.patient_id')
             ->join('bite_section7_immunization as s7', 's7.bite_case_id', '=', 'bc.bite_case_id')
             ->whereNotNull('s7.day0_date')
-            ->select('bc.bite_case_id', 'p.patient_name', 's7.dose_type', 's7.day0_date', 's7.day3_date', 's7.day7_date', 's7.day28_date')
+            ->select('bc.bite_case_id', 'p.patient_name', 's7.dose_type', 's7.route', 's7.day0_date', 's7.day3_date', 's7.day7_date', 's7.day14_date', 's7.day28_date')
             ->get();
 
         foreach ($immunizations as $row) {
-            $days = $row->dose_type === 'Booster' ? [3] : [3, 7, 28];
+            $days = PepSchedule::followUpDays($row->dose_type, $row->route);
             foreach ($days as $day) {
                 $due = \Carbon\Carbon::parse($row->day0_date)->addDays($day)->startOfDay();
                 // Already given, or not due yet
@@ -505,6 +644,6 @@ class ClinicalEncodingController extends Controller
         usort($activity, fn($a, $b) => $b->at <=> $a->at);
         $activity = array_slice($activity, 0, 6);
 
-        return view('healthworker.dashboard', compact('stats', 'queue', 'reminders', 'activity'));
+        return view('healthworker.dashboard', compact('stats', 'queue', 'unclaimed', 'uFilter', 'reminders', 'activity'));
     }
 }

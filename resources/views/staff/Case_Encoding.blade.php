@@ -101,6 +101,8 @@
     </style>
     <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
     <script src="{{ asset('js/custom-select.js') }}" defer></script>
+    <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
+    <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
 </head>
 
 <body class="bg-surface text-on-surface min-h-screen flex">
@@ -205,7 +207,7 @@
             <!-- Page Header & Search -->
             <section class="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h2 class="text-2xl font-extrabold text-blue-900 tracking-tight">Case Encoding</h2>
+                    <h2 class="mn-page-title text-2xl font-extrabold text-blue-900 tracking-tight">Case Encoding</h2>
                     <p class="text-on-surface-variant text-sm mt-1">Complete bite case incident data for verified patients (Sections 3-5)</p>
                 </div>
                 <form action="{{ route('staff.case-encoding') }}" method="GET" class="w-full md:w-1/2 relative">
@@ -217,7 +219,7 @@
             <!-- Main Two-Column Layout -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                 <!-- Left Column: Patient List -->
-                <div class="lg:col-span-3 space-y-4 h-[calc(100vh-280px)] flex flex-col">
+                <div class="lg:col-span-3 space-y-4 h-auto max-h-[22rem] lg:max-h-none lg:h-[calc(100vh-280px)] flex flex-col">
                     <div class="flex items-center justify-between px-2">
                         <h4 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Verified Queue</h4>
                         <span class="text-[10px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full">{{ $verifiedQueue->count() }} Awaiting</span>
@@ -258,10 +260,10 @@
                 <!-- Right Column: Encoding Form -->
                 <div class="lg:col-span-9">
                     <div class="bg-surface-container-lowest rounded-lg shadow-sm border border-outline-variant/10">
-                        <div class="p-6 border-b border-surface-container-high flex items-center justify-between bg-primary/5 sticky top-16 z-20 backdrop-blur-sm">
-                            <div>
-                                <h3 class="text-lg font-bold text-primary">Animal Bite Case Encoding Form</h3>
-                                <p class="text-xs text-on-surface-variant">
+                        <div class="mn-sticky-actions p-6 border-b border-surface-container-high flex items-center justify-between gap-3 bg-primary/5 sticky top-16 z-20 backdrop-blur-sm">
+                            <div class="min-w-0">
+                                <h3 class="text-lg font-bold text-primary"><span class="hidden md:inline">Animal Bite </span>Case Encoding<span class="hidden md:inline"> Form</span></h3>
+                                <p class="text-xs text-on-surface-variant truncate">
                                     @if(isset($selectedPatient) && $selectedPatient)
                                     Currently encoding: <span class="font-bold text-on-surface">{{ $selectedPatient->patient_name }} (#{{ $selectedPatient->inflow_record_id }})</span>
                                     @else
@@ -269,24 +271,34 @@
                                     @endif
                                 </p>
                             </div>
-                            <div class="flex gap-2">
-                                <button type="button" onclick="if(confirm('Discard unsaved changes?')) window.location.reload();" class="px-4 py-2 text-xs font-bold text-secondary bg-surface-container-high rounded-full hover:bg-surface-container-highest transition-colors">Discard</button>
-                                <button type="submit" form="caseEncodingForm" name="action" value="draft" class="px-4 py-2 text-xs font-bold text-white bg-primary rounded-full hover:bg-primary-container transition-all shadow-md active:scale-95">Save Progress</button>
+                            <div class="flex gap-2 shrink-0">
+                                <button type="button" onclick="discardChanges()" class="px-4 py-2 text-xs font-bold text-secondary bg-surface-container-high rounded-full hover:bg-surface-container-highest transition-colors">Discard</button>
+                                <button type="submit" form="caseEncodingForm" name="action" value="draft" formnovalidate class="px-4 py-2 text-xs font-bold text-white bg-primary rounded-full hover:bg-primary-container transition-all shadow-md active:scale-95">Save Progress</button>
                             </div>
                         </div>
 
-                        <form id="caseEncodingForm" action="{{ route('staff.store-case-encoding', $selectedPatient->inflow_record_id ?? 0) }}" method="POST" class="p-8 space-y-12">
+                        <form id="caseEncodingForm" autocomplete="off" action="{{ route('staff.store-case-encoding', $selectedPatient->inflow_record_id ?? 0) }}" method="POST" class="p-8 space-y-12">
                             @csrf
 
                             @php
-                            $biteDt = !empty($bhwExposure->exposure_datetime) ? \Carbon\Carbon::parse($bhwExposure->exposure_datetime) : null;
+                            // Progress Staff already saved (Save Progress) wins over what the BHW referral pre-fills
+                            $s3 = $saved->s3 ?? null;
+                            $s4 = $saved->s4 ?? null;
+                            $s5 = $saved->s5 ?? null;
+                            $yn = fn ($v, $want) => $v !== null && (int) $v === $want;
+                            $priorDoses = $s5 && $s5->prev_arv_dates ? (json_decode($s5->prev_arv_dates, true) ?: []) : [];
+                            $biteDt = $s3 ? (!empty($s3->bite_date_time) ? \Carbon\Carbon::parse($s3->bite_date_time) : null)
+                                : (!empty($bhwExposure->exposure_datetime) ? \Carbon\Carbon::parse($bhwExposure->exposure_datetime) : null);
                             $biteDateVal = $biteDt ? $biteDt->format('Y-m-d') : '';
                             // The BHW form saves 00:00:00 when no time was entered, so treat that as blank
                             $biteTimeVal = ($biteDt && $biteDt->format('H:i:s') !== '00:00:00') ? $biteDt->format('H:i') : '';
-                            $animal = $bhwExposure->biting_animal ?? '';
-                            $exposureList = array_map('trim', explode(',', $bhwExposure->exposure_type ?? ''));
-                            $animalFate = $bhwExposure->animal_remarks ?? '';
-                            $obsDateVal = !empty($bhwExposure->obs_14_days) ? \Carbon\Carbon::parse($bhwExposure->obs_14_days)->format('Y-m-d') : '';
+                            $animal = $s3 ? ($s3->animal_type ?? '') : ($bhwExposure->biting_animal ?? '');
+                            $animalOther = $s3 ? ($s3->animal_type_other ?? '') : ($bhwExposure->biting_animal_other ?? '');
+                            $exposureList = array_map('trim', explode(',', $s3 ? ($s3->exposure_type ?? '') : ($bhwExposure->exposure_type ?? '')));
+                            $animalFate = $s3 ? ($s3->animal_fate ?? '') : ($bhwExposure->animal_remarks ?? '');
+                            $obsRaw = $s3 ? ($s3->obs_14_days ?? null) : ($bhwExposure->obs_14_days ?? null);
+                            $obsDateVal = !empty($obsRaw) ? \Carbon\Carbon::parse($obsRaw)->format('Y-m-d') : '';
+                            $vaxStatus = $s3->animal_vax_status ?? 'Unknown';
                             @endphp
 
                             <!-- Section 3: Details of Exposure -->
@@ -309,17 +321,17 @@
                                                 <input class="text-primary focus:ring-primary animal-type-radio" name="animal_type" value="Others" type="radio" required {{ $animal === 'Others' ? 'checked' : '' }} /> Others
                                             </label>
                                         </div>
-                                        <input id="animal_type_other_input" class=" {{ $animal === 'Others' ? '' : 'hidden' }} w-full bg-surface-container-highest border-none rounded-lg text-xs px-3 py-2 focus:ring-2 focus:ring-primary/20 transition-all outline-none" name="animal_type_other" value="{{ $bhwExposure->biting_animal_other ?? '' }}" placeholder="Specify animal..." type="text" />
+                                        <input id="animal_type_other_input" class=" {{ $animal === 'Others' ? '' : 'hidden' }} w-full bg-surface-container-highest border-none rounded-lg text-xs px-3 py-2 focus:ring-2 focus:ring-primary/20 transition-all outline-none" name="animal_type_other" value="{{ $animalOther }}" placeholder="Specify animal..." type="text" />
                                     </div>
 
                                     <div class="space-y-4">
                                         <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Pet or Stray <span class="text-error">*</label>
                                         <div class="flex gap-4">
                                             <label class="flex items-center gap-2 text-sm cursor-pointer">
-                                                <input class="text-primary focus:ring-primary" name="pet_status" value="Pet" type="radio" /> Pet
+                                                <input class="text-primary focus:ring-primary" name="pet_status" value="Pet" type="radio" {{ ($s3->animal_ownership ?? '') === 'Pet' ? 'checked' : '' }} /> Pet
                                             </label>
                                             <label class="flex items-center gap-2 text-sm cursor-pointer">
-                                                <input class="text-primary focus:ring-primary" name="pet_status" value="Stray" type="radio" /> Stray
+                                                <input class="text-primary focus:ring-primary" name="pet_status" value="Stray" type="radio" {{ ($s3->animal_ownership ?? '') === 'Stray' ? 'checked' : '' }} /> Stray
                                             </label>
                                         </div>
                                     </div>
@@ -353,22 +365,22 @@
                                             <div class="flex flex-col gap-2">
                                                 <span class="text-[10px] text-on-surface-variant">Provoked</span>
                                                 <div class="flex gap-3">
-                                                    <label class="text-[11px]"><input class="text-primary" name="provoked" value="1" type="radio" /> Yes</label>
-                                                    <label class="text-[11px]"><input class="text-primary" name="provoked" value="0" type="radio" /> No</label>
+                                                    <label class="text-[11px]"><input class="text-primary" name="provoked" value="1" type="radio" {{ $yn($s3->is_provoked ?? null, 1) ? 'checked' : '' }} /> Yes</label>
+                                                    <label class="text-[11px]"><input class="text-primary" name="provoked" value="0" type="radio" {{ $yn($s3->is_provoked ?? null, 0) ? 'checked' : '' }} /> No</label>
                                                 </div>
                                             </div>
                                             <div class="flex flex-col gap-2">
                                                 <span class="text-[10px] text-on-surface-variant">On Leash</span>
                                                 <div class="flex gap-3">
-                                                    <label class="text-[11px]"><input class="text-primary" name="leash" value="1" type="radio" /> Yes</label>
-                                                    <label class="text-[11px]"><input class="text-primary" name="leash" value="0" type="radio" /> No</label>
+                                                    <label class="text-[11px]"><input class="text-primary" name="leash" value="1" type="radio" {{ $yn($s3->is_leashed ?? null, 1) ? 'checked' : '' }} /> Yes</label>
+                                                    <label class="text-[11px]"><input class="text-primary" name="leash" value="0" type="radio" {{ $yn($s3->is_leashed ?? null, 0) ? 'checked' : '' }} /> No</label>
                                                 </div>
                                             </div>
                                             <div class="flex flex-col gap-2">
                                                 <span class="text-[10px] text-on-surface-variant">Gate Status</span>
                                                 <div class="flex gap-3">
-                                                    <label class="text-[11px]"><input class="text-primary" name="gate" value="1" type="radio" /> With gate</label>
-                                                    <label class="text-[11px]"><input class="text-primary" name="gate" value="0" type="radio" /> Without gate</label>
+                                                    <label class="text-[11px]"><input class="text-primary" name="gate" value="1" type="radio" {{ $yn($s3->has_gate ?? null, 1) ? 'checked' : '' }} /> With gate</label>
+                                                    <label class="text-[11px]"><input class="text-primary" name="gate" value="0" type="radio" {{ $yn($s3->has_gate ?? null, 0) ? 'checked' : '' }} /> Without gate</label>
                                                 </div>
                                             </div>
                                         </div>
@@ -378,20 +390,20 @@
                                         <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Vax Status &amp; Date</label>
                                         <div class="flex gap-2">
                                             <select id="vax_status_select" class="flex-1 bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20" name="animal_vax_status">
-                                                <option>Unknown</option>
-                                                <option>Vaccinated</option>
-                                                <option>Not Vaccinated</option>
+                                                <option {{ $vaxStatus === 'Unknown' ? 'selected' : '' }}>Unknown</option>
+                                                <option {{ $vaxStatus === 'Vaccinated' ? 'selected' : '' }}>Vaccinated</option>
+                                                <option {{ $vaxStatus === 'Not Vaccinated' ? 'selected' : '' }}>Not Vaccinated</option>
                                             </select>
-                                            <input id="vax_date_input" class="flex-1 bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20 disabled:opacity-50 disabled:cursor-not-allowed" name="animal_vax_date" type="date" min="2000-01-01" max="{{ date('Y-m-d') }}" disabled />
+                                            <input id="vax_date_input" class="flex-1 bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20 disabled:opacity-50 disabled:cursor-not-allowed" name="animal_vax_date" type="date" value="{{ $s3->animal_vax_date ?? '' }}" min="2000-01-01" max="{{ date('Y-m-d') }}" {{ $vaxStatus === 'Vaccinated' ? '' : 'disabled' }} />
                                         </div>
                                     </div>
 
                                     <div class="md:col-span-2 space-y-2">
                                         <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Circumstances of Exposure</label>
-                                        <textarea class="w-full bg-surface-container-highest border-none rounded-lg text-sm px-4 py-3 focus:ring-2 focus:ring-primary/20 transition-all outline-none resize-none" name="circumstances" placeholder="Brief description of the incident..." rows="3"></textarea>
+                                        <textarea class="w-full bg-surface-container-highest border-none rounded-lg text-sm px-4 py-3 focus:ring-2 focus:ring-primary/20 transition-all outline-none resize-none" name="circumstances" placeholder="Brief description of the incident..." rows="3">{{ $s3->circumstances ?? '' }}</textarea>
                                     </div>
 
-                                    <div class="md:col-span-2 grid grid-cols-2 gap-8">
+                                    <div class="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-8">
                                         <div class="space-y-4">
                                             <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Fate of Animal</label>
                                             <div class="grid grid-cols-2 gap-2">
@@ -423,16 +435,16 @@
                                         <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Wound washed with</label>
                                         <div class="flex flex-wrap gap-4 items-center">
                                             <label class="flex items-center gap-2 text-sm cursor-pointer">
-                                                <input class="text-primary focus:ring-primary wound-wash-radio" name="wound_washed" value="Water only" type="radio" /> Water only
+                                                <input class="text-primary focus:ring-primary wound-wash-radio" name="wound_washed" value="Water only" type="radio" {{ ($s4->wound_washed ?? '') === 'Water only' ? 'checked' : '' }} /> Water only
                                             </label>
                                             <label class="flex items-center gap-2 text-sm cursor-pointer">
-                                                <input class="text-primary focus:ring-primary wound-wash-radio" name="wound_washed" value="Soap &amp; Water" type="radio" /> Soap &amp; Water
+                                                <input class="text-primary focus:ring-primary wound-wash-radio" name="wound_washed" value="Soap &amp; Water" type="radio" {{ ($s4->wound_washed ?? '') === 'Soap & Water' ? 'checked' : '' }} /> Soap &amp; Water
                                             </label>
                                             <div class="flex items-center gap-2">
                                                 <label class="flex items-center gap-2 text-sm cursor-pointer">
-                                                    <input class="text-primary focus:ring-primary wound-wash-radio" name="wound_washed" value="Others" type="radio" /> Others
+                                                    <input class="text-primary focus:ring-primary wound-wash-radio" name="wound_washed" value="Others" type="radio" {{ ($s4->wound_washed ?? '') === 'Others' ? 'checked' : '' }} /> Others
                                                 </label>
-                                                <input id="wound_wash_other_input" class="bg-surface-container-highest border-none rounded-lg text-xs px-3 py-1.5 focus:ring-2 focus:ring-primary/20 transition-all outline-none w-40 disabled:opacity-50 disabled:cursor-not-allowed" name="wound_wash_other" placeholder="Specify treatment..." type="text" disabled />
+                                                <input id="wound_wash_other_input" class="bg-surface-container-highest border-none rounded-lg text-xs px-3 py-1.5 focus:ring-2 focus:ring-primary/20 transition-all outline-none w-40 disabled:opacity-50 disabled:cursor-not-allowed" name="wound_wash_other" placeholder="Specify treatment..." type="text" value="{{ $s4->wound_wash_other ?? '' }}" {{ ($s4->wound_washed ?? '') === 'Others' ? '' : 'disabled' }} />
                                             </div>
                                         </div>
                                     </div>
@@ -440,11 +452,11 @@
                                         <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Local irritant applied</label>
                                         <div class="flex flex-col gap-3">
                                             <label class="relative inline-flex items-center cursor-pointer">
-                                                <input id="local_irritant_checkbox" class="sr-only peer" name="local_irritant_applied" value="1" type="checkbox" />
+                                                <input id="local_irritant_checkbox" class="sr-only peer" name="local_irritant_applied" value="1" type="checkbox" {{ !empty($s4->local_irritant_applied) ? 'checked' : '' }} />
                                                 <div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                                                 <span class="ml-3 text-sm font-medium text-on-surface-variant">Yes, applied</span>
                                             </label>
-                                            <input id="local_irritant_input" class="w-full bg-surface-container-highest border-none rounded-lg text-xs px-4 py-2 focus:ring-2 focus:ring-primary/20 outline-none disabled:opacity-50 disabled:cursor-not-allowed" name="local_irritant_detail" placeholder="Specify (e.g., Garlic, Vinegar, etc.)" type="text" disabled />
+                                            <input id="local_irritant_input" class="w-full bg-surface-container-highest border-none rounded-lg text-xs px-4 py-2 focus:ring-2 focus:ring-primary/20 outline-none disabled:opacity-50 disabled:cursor-not-allowed" name="local_irritant_detail" placeholder="Specify (e.g., Garlic, Vinegar, etc.)" type="text" value="{{ $s4->local_irritant_detail ?? '' }}" {{ !empty($s4->local_irritant_applied) ? '' : 'disabled' }} />
                                         </div>
                                     </div>
                                 </div>
@@ -461,29 +473,29 @@
                                         <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Previously Vaccinated?</label>
                                         <div class="flex gap-4">
                                             <label class="flex items-center gap-2 text-sm cursor-pointer has-[:checked]:font-bold has-[:checked]:text-primary">
-                                                <input class="text-primary focus:ring-primary" id="prev_arv_yes" name="prev_arv_given" value="1" type="radio" /> Yes
+                                                <input class="text-primary focus:ring-primary" id="prev_arv_yes" name="prev_arv_given" value="1" type="radio" {{ $yn($s5->prev_arv_given ?? null, 1) ? 'checked' : '' }} /> Yes
                                             </label>
                                             <label class="flex items-center gap-2 text-sm cursor-pointer has-[:checked]:font-bold has-[:checked]:text-primary">
-                                                <input class="text-primary focus:ring-primary" id="prev_arv_no" name="prev_arv_given" value="0" type="radio" /> No
+                                                <input class="text-primary focus:ring-primary" id="prev_arv_no" name="prev_arv_given" value="0" type="radio" {{ $yn($s5->prev_arv_given ?? null, 0) ? 'checked' : '' }} /> No
                                             </label>
                                         </div>
                                     </div>
                                     <div id="dose_dates_wrapper" class="grid grid-cols-2 md:grid-cols-4 gap-4 hidden">
                                         <div class="space-y-2">
                                             <label class="block text-[10px] font-bold text-on-surface-variant uppercase">Dose 1 Date</label>
-                                            <input class="w-full bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20" id="dose1_date" name="dose1_date" type="date" min="2000-01-01" max="{{ date('Y-m-d') }}" />
+                                            <input class="w-full bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20" id="dose1_date" name="dose1_date" type="date" value="{{ $priorDoses['dose1'] ?? '' }}" min="2000-01-01" max="{{ date('Y-m-d') }}" />
                                         </div>
                                         <div class="space-y-2">
                                             <label class="block text-[10px] font-bold text-on-surface-variant uppercase">Dose 2 Date</label>
-                                            <input class="w-full bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20" id="dose2_date" name="dose2_date" type="date" min="2000-01-01" max="{{ date('Y-m-d') }}" />
+                                            <input class="w-full bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20" id="dose2_date" name="dose2_date" type="date" value="{{ $priorDoses['dose2'] ?? '' }}" min="2000-01-01" max="{{ date('Y-m-d') }}" />
                                         </div>
                                         <div class="space-y-2">
                                             <label class="block text-[10px] font-bold text-on-surface-variant uppercase">Dose 3 Date</label>
-                                            <input class="w-full bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20" id="dose3_date" name="dose3_date" type="date" min="2000-01-01" max="{{ date('Y-m-d') }}" />
+                                            <input class="w-full bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20" id="dose3_date" name="dose3_date" type="date" value="{{ $priorDoses['dose3'] ?? '' }}" min="2000-01-01" max="{{ date('Y-m-d') }}" />
                                         </div>
                                         <div class="space-y-2">
                                             <label class="block text-[10px] font-bold text-on-surface-variant uppercase">Booster Date</label>
-                                            <input class="w-full bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20" id="booster_date" name="booster_date" type="date" min="2000-01-01" max="{{ date('Y-m-d') }}" />
+                                            <input class="w-full bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20" id="booster_date" name="booster_date" type="date" value="{{ $priorDoses['booster'] ?? '' }}" min="2000-01-01" max="{{ date('Y-m-d') }}" />
                                         </div>
                                     </div>
                                 </div>
@@ -495,19 +507,19 @@
                             </section>
 
                             <section class="space-y-3">
-                                <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Assign to Healthworker <span class="text-error">*</span></label>
+                                <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Assign to Healthworker <span class="text-on-surface-variant normal-case font-medium">(optional)</span></label>
                                 <select name="assigned_health_worker_id" class="w-full md:w-1/2 bg-surface-container-highest border-none rounded-lg text-sm px-4 py-2.5 focus:ring-2 focus:ring-primary/20">
-                                    <option value="" selected disabled hidden>--</option>
+                                    <option value="" {{ empty($saved->assigned ?? null) ? 'selected' : '' }}>Leave unassigned (a Health Worker will claim it)</option>
                                     @foreach($healthworkers as $hw)
-                                    <option value="{{ $hw->user_id }}">{{ $hw->full_name }}</option>
+                                    <option value="{{ $hw->user_id }}" {{ (int) ($saved->assigned ?? 0) === (int) $hw->user_id ? 'selected' : '' }}>{{ $hw->full_name }}</option>
                                     @endforeach
                                 </select>
-                                <p class="text-[10px] text-on-surface-variant italic">Required when you click Complete Encoding.</p>
+                                <p class="text-[10px] text-on-surface-variant italic">Leave this empty to let any Health Worker claim the case from their dashboard.</p>
                             </section>
 
                             <!-- Form Submission -->
                             <div class="pt-8 border-t border-surface-container-high flex justify-end gap-4">
-                                <button type="button" class="px-8 py-3 text-sm font-bold text-secondary bg-surface-container-low rounded-full hover:bg-surface-container-high transition-all">Cancel Entry</button>
+                                <button type="button" onclick="discardChanges()" class="px-8 py-3 text-sm font-bold text-secondary bg-surface-container-low rounded-full hover:bg-surface-container-high transition-all">Cancel Entry</button>
                                 <button type="submit" name="action" value="complete" class="px-10 py-3 text-sm font-bold text-white bg-primary rounded-full hover:bg-primary-container transition-all shadow-xl active:scale-95 flex items-center gap-2">
                                     <span class="material-symbols-outlined text-[18px]">check_circle</span>
                                     Complete Encoding
@@ -521,6 +533,13 @@
     </main>
 
     <script>
+        // Discard / Cancel Entry: drop what was typed since the last save and reload the saved version
+        function discardChanges() {
+            if (confirm('Discard unsaved changes? The form goes back to the last saved progress.')) {
+                window.location.assign(window.location.pathname + window.location.search);
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             // --- Section 3: Animal Type "Others" Logic ---
             const animalTypeRadios = document.querySelectorAll('.animal-type-radio');

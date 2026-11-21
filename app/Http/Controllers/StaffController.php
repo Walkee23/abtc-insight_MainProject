@@ -55,7 +55,96 @@ class StaffController extends Controller
             $selectedPatient = $normalQueue->first();
         }
 
-        return view('staff.Patient_Verification', compact('priorityQueue', 'normalQueue', 'search', 'selectedPatient'));
+        // BHW referrals still waiting for the patient to arrive (listed in their own section of the page)
+        $bhwReferrals = DB::table('bhw_referral_info')
+            ->leftJoin('bhw_referral_exposure', 'bhw_referral_info.referral_id', '=', 'bhw_referral_exposure.referral_id')
+            ->where('bhw_referral_info.status', 'Pending')
+            ->when($search, function ($q) use ($search) {
+                $q->where(function ($w) use ($search) {
+                    $w->where('bhw_referral_info.patient_name', 'LIKE', "%{$search}%")
+                        ->orWhere('bhw_referral_info.reference_no', 'LIKE', "%{$search}%");
+                });
+            })
+            ->select('bhw_referral_info.*', 'bhw_referral_exposure.exposure_category')
+            ->orderBy('bhw_referral_info.submitted_at')
+            ->get();
+
+        return view('staff.Patient_Verification', compact('priorityQueue', 'normalQueue', 'search', 'selectedPatient', 'bhwReferrals'));
+    }
+
+    /**
+     * "Verify Attendance & Transfer" on a pending BHW referral: the referred patient is at the
+     * counter, so Staff skip the self-registration queue. The walk-in record is created already
+     * Verified (carrying the referral code, which Case Encoding uses to link the bite case), the
+     * permanent patients row is created, and the referral is marked Received so the code cannot
+     * be used a second time. The bite case itself is created later, in Case Encoding.
+     */
+    public function verifyBhwReferral(int $referral_id)
+    {
+        return DB::transaction(function () use ($referral_id) {
+            $referral = DB::table('bhw_referral_info')
+                ->where('referral_id', $referral_id)
+                ->where('status', 'Pending')
+                ->lockForUpdate()
+                ->first();
+
+            if (!$referral) {
+                return back()->withErrors(['error' => 'Referral not found or already processed.']);
+            }
+
+            $isPriority = !in_array(strtolower((string) ($referral->priority_status ?? 'none')), ['', 'none'], true);
+            $prefix = $isPriority ? 'P' : 'N';
+            $queueDate = now()->toDateString();
+
+            $maxSeq = DB::table('inflow_general_particulars')
+                ->where('queue_date', $queueDate)
+                ->where('queue_id', 'LIKE', $prefix . '%')
+                ->lockForUpdate()
+                ->selectRaw('MAX(CAST(SUBSTRING(queue_id, 2) AS UNSIGNED)) as m')
+                ->value('m');
+            $queueId = $prefix . ((int) $maxSeq + 1);
+
+            $inflowId = DB::table('inflow_general_particulars')->insertGetId([
+                'queue_id'          => $queueId,
+                'queue_date'        => $queueDate,
+                'bhw_referral_id'   => $referral->reference_no,
+                'patient_name'      => $referral->patient_name,
+                'age'               => $referral->age,
+                'sex'               => ucfirst(strtolower((string) $referral->gender)),
+                'date_of_birth'     => $referral->date_of_birth,
+                'civil_status'      => $referral->civil_status,
+                'contact_num'       => $referral->contact_num,
+                'barangay'          => $referral->patient_barangay,
+                'philhealth_member' => 0,
+                'reg_date'          => now(),
+                'status'            => 'Verified',
+            ], 'inflow_record_id');
+
+            $regDate = now()->format('Ymd');
+            $dob = \Carbon\Carbon::parse($referral->date_of_birth)->format('Ymd');
+            $count = DB::table('patients')->where('patient_id', 'LIKE', "CEB-{$regDate}-{$dob}-%")->count();
+            $patientId = "CEB-{$regDate}-{$dob}-" . str_pad((string) ($count + 1), 3, '0', STR_PAD_LEFT);
+
+            DB::table('patients')->insert([
+                'patient_id'        => $patientId,
+                'inflow_record_id'  => $inflowId,
+                'date_registered'   => now(),
+                'patient_name'      => $referral->patient_name,
+                'age'               => $referral->age,
+                'sex'               => ucfirst(strtolower((string) $referral->gender)),
+                'date_of_birth'     => $referral->date_of_birth,
+                'civil_status'      => $referral->civil_status,
+                'contact_num'       => $referral->contact_num,
+                'philhealth_member' => 0,
+            ]);
+
+            DB::table('bhw_referral_info')
+                ->where('referral_id', $referral->referral_id)
+                ->update(['status' => 'Received', 'updated_at' => now()]);
+
+            return redirect()->route('staff.patient-verification')
+                ->with('success', 'Referral verified. The patient is now in Case Encoding.');
+        });
     }
 
     public function verifyAttendance(string $inflow_record_id)
@@ -156,7 +245,21 @@ class StaffController extends Controller
             ->get();
 
 
-        return view('staff.Case_Encoding', compact('verifiedQueue', 'selectedPatient', 'search', 'bhwExposure', 'healthworkers'));
+        // Progress saved earlier with "Save Progress", so the form shows it again instead of starting blank
+        $saved = null;
+        if ($selectedPatient) {
+            $draftCase = DB::table('bite_cases')->where('inflow_record_id', $selectedPatient->inflow_record_id)->first();
+            if ($draftCase) {
+                $saved = (object) [
+                    's3'       => DB::table('bite_section3_exposure')->where('bite_case_id', $draftCase->bite_case_id)->first(),
+                    's4'       => DB::table('bite_section4_wound_treatment')->where('bite_case_id', $draftCase->bite_case_id)->first(),
+                    's5'       => DB::table('bite_section5_prior_arv')->where('bite_case_id', $draftCase->bite_case_id)->first(),
+                    'assigned' => $draftCase->assigned_health_worker_id,
+                ];
+            }
+        }
+
+        return view('staff.Case_Encoding', compact('verifiedQueue', 'selectedPatient', 'search', 'bhwExposure', 'healthworkers', 'saved'));
     }
 
     public function storeCaseEncoding(Request $request, string $inflow_record_id)
@@ -169,10 +272,6 @@ class StaffController extends Controller
 
         $isComplete = $request->input('action') === 'complete';
 
-        if ($isComplete && !$request->filled('assigned_health_worker_id')) {
-            return back()->withErrors(['error' => 'Please assign a healthworker before completing.'])->withInput();
-        }
-
         if ($isComplete && !in_array($request->input('pet_status'), ['Pet', 'Stray'], true)) {
             return back()->withErrors(['error' => 'Please select if the animal is a Pet or Stray.'])->withInput();
         }
@@ -182,6 +281,17 @@ class StaffController extends Controller
             if (!$hasDoseDate) {
                 return back()->withErrors(['error' => 'Please provide at least one dose date since "Previously Vaccinated" is set to Yes.'])->withInput();
             }
+        }
+
+        // Save Progress may be incomplete; Complete Encoding needs the core exposure facts
+        if ($isComplete) {
+            $request->validate([
+                'animal_type' => 'required|string|max:50',
+                'bite_date'   => 'required|date|before_or_equal:today',
+            ], [
+                'animal_type.required' => 'Please choose the animal type before completing.',
+                'bite_date.required'   => 'Please enter the date of the bite before completing.',
+            ]);
         }
 
         $inflow = DB::table('inflow_general_particulars')->where('inflow_record_id', $inflow_record_id)->first();
@@ -241,15 +351,18 @@ class StaffController extends Controller
             DB::table('bite_section3_exposure')->updateOrInsert(
                 ['bite_case_id' => $biteCaseId],
                 [
-                    'animal_type'       => $request->input('animal_type'),
+                    // A draft can still be missing these, so blank is stored as NULL (never a made-up value)
+                    'animal_type'       => $request->input('animal_type') ?: null,
                     'animal_type_other' => $request->input('animal_type_other'),
-                    'bite_date_time'    => $request->input('bite_date') . ($request->input('bite_time') ? ' ' . $request->input('bite_time') : ' 00:00:00'),
-                    'animal_ownership'  => $request->input('pet_status'),
+                    'animal_ownership'  => in_array($request->input('pet_status'), ['Pet', 'Stray'], true) ? $request->input('pet_status') : null,
+                    'bite_date_time'    => $request->filled('bite_date')
+                        ? $request->input('bite_date') . ($request->input('bite_time') ? ' ' . $request->input('bite_time') : ' 00:00:00')
+                        : null,
                     'animal_vax_status' => $request->input('animal_vax_status'),
                     'animal_vax_date'   => $request->input('animal_vax_date') ?: null,
                     'animal_fate'       => $request->input('fate'),
                     'obs_14_days'       => $request->input('obs_14_days') ?: null,
-                    'exposure_type'     => implode(', ', $request->input('exposure_type', [])),
+                    'exposure_type'     => implode(', ', $request->input('exposure_type', [])) ?: null,
                     'is_provoked'       => $request->input('provoked'),
                     'is_leashed'        => $request->input('leash'),
                     'has_gate'          => $request->input('gate'),

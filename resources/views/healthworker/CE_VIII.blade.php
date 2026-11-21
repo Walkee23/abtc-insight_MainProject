@@ -93,6 +93,8 @@
         }
     </style>
     <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
+    <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
+    <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
 </head>
 
 <body class="bg-surface text-on-surface selection:bg-primary-container selection:text-on-primary-container">
@@ -207,10 +209,10 @@
         </div>
     </header>
     <main class="ml-64 pt-16 min-h-screen bg-surface">
-        <div class="max-w-[1600px] mx-auto p-8 flex gap-8">
-            <section class="w-1/3 flex flex-col gap-6">
-                <div class="bg-surface-container-low rounded-xl p-6 flex flex-col h-[calc(100vh-12rem)]">
-                    <div class="flex items-center justify-between mb-6">
+        <div class="max-w-[1600px] mx-auto p-8 flex flex-col xl:flex-row gap-8">
+            <section class="w-full xl:w-1/3 flex flex-col gap-6">
+                <div class="bg-surface-container-low rounded-xl p-6 flex flex-col h-80 xl:h-[calc(100vh-12rem)]">
+                    <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 mb-6">
                         <h2 class="text-lg font-bold tracking-tight text-on-surface leading-tight">Pending Encoding<br>Queue</h2>
                         <span class="px-2.5 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full whitespace-nowrap shrink-0">{{ $queue->count() }} Active</span>
                     </div>
@@ -248,7 +250,7 @@
                     </div>
                 </div>
             </section>
-            <section class="w-2/3 min-w-0 flex flex-col gap-6">
+            <section class="w-full xl:w-2/3 min-w-0 flex flex-col gap-6">
                 @if(session('status'))
                 {{-- Toast: fixed bottom-right (below the form card, so it never overlaps the footer buttons), auto-dismisses after 4s --}}
                 <div id="statusToast" role="status"
@@ -261,8 +263,8 @@
                     </button>
                 </div>
                 @endif
-                <div
-                    class="bg-surface-container-lowest rounded-xl shadow-lg shadow-blue-900/5 overflow-hidden border border-outline-variant/10 flex flex-col h-[calc(100vh-12rem)]">
+                <div data-arrival-anchor="/healthworker/clinical-encoding"
+                    class="bg-surface-container-lowest rounded-xl shadow-lg shadow-blue-900/5 overflow-hidden border border-outline-variant/10 flex flex-col min-h-[14rem] h-auto xl:h-[calc(100vh-12rem)]">
                     @if($case)
                     <!-- Form Header & Step Indicator -->
                     <div class="bg-surface-container-low border-b border-outline-variant/20">
@@ -273,7 +275,7 @@
                                 <h2 class="text-2xl font-extrabold tracking-tight text-on-surface">{{ $case->patient_name ?? 'No case selected' }}</h2>
                             </div>
                             <div class="flex gap-4">
-                                <div class="text-right">
+                                <div class="text-left sm:text-right">
                                     <p class="text-[10px] font-semibold text-outline uppercase tracking-wider">Patient
                                         ID</p>
                                     <p class="text-sm font-bold">{{ $case->patient_id ?? '—' }}</p>
@@ -292,7 +294,7 @@
                                     <span class="text-[10px] font-bold text-outline mt-2 absolute -bottom-6 w-max">Wound
                                         Desc.</span>
                                 </div>
-                                <div class="flex-1 h-0.5 bg-primary/40 -mt-4"></div>
+                                <div class="flex-1 h-0.5 bg-primary/40"></div>
                                 <!-- Step 2 (Completed) -->
                                 <div class="flex flex-col items-center flex-1 relative group">
                                     <div
@@ -303,7 +305,7 @@
                                     <span
                                         class="text-[10px] font-bold text-outline mt-2 absolute -bottom-6 w-max">Immunization</span>
                                 </div>
-                                <div class="flex-1 h-0.5 bg-primary/40 -mt-4"></div>
+                                <div class="flex-1 h-0.5 bg-primary/40"></div>
                                 <!-- Step 3 (Active) -->
                                 <div class="flex flex-col items-center flex-1 relative group">
                                     <div
@@ -312,7 +314,7 @@
                                     <span
                                         class="text-[10px] font-bold text-primary mt-2 absolute -bottom-6 w-max">Remarks</span>
                                 </div>
-                                <div class="flex-1 h-0.5 bg-slate-200 -mt-4"></div>
+                                <div class="flex-1 h-0.5 bg-slate-200"></div>
                                 <!-- Step 4 -->
                                 <div class="flex flex-col items-center flex-1 relative group">
                                     <div

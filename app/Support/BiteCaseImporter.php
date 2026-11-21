@@ -38,8 +38,8 @@ class BiteCaseImporter
         'd1'        => ['1STDOSE', 'FIRSTDOSE', 'DOSE1', 'DAY0'],
         'd2'        => ['2NDDOSE', 'SECONDDOSE', 'DOSE2', 'DAY3'],
         'd3'        => ['3RDDOSE', 'THIRDDOSE', 'DOSE3', 'DAY7'],
-        'd14'       => ['DAY14', '4THDOSE', 'DOSE4'],
-        'd28'       => ['DAY28', '5THDOSE', 'DOSE5'],
+        // the 4th dose of a 4-dose primary course is the Day 28 dose (Day 14 is not part of the schedule)
+        'd28'       => ['DAY28', '4THDOSE', 'DOSE4', '5THDOSE', 'DOSE5'],
         'vaccine'   => ['VACCINE', 'VACCINEBRAND', 'BRAND', 'VACCINEUSED'],
         'booster'   => ['BOOSTER'],
         'erig'      => ['ERIG'],
@@ -428,7 +428,6 @@ class BiteCaseImporter
             'day0'  => $d1,
             'day3'  => $this->date($get('d2'))['date'] ?? null,
             'day7'  => $this->date($get('d3'))['date'] ?? null,
-            'day14' => $this->date($get('d14'))['date'] ?? null,
             'day28' => $this->date($get('d28'))['date'] ?? null,
         ];
         $given = count(array_filter([$doses['day0'], $doses['day3'], $doses['day7']]));
@@ -728,7 +727,7 @@ class BiteCaseImporter
                 'vaccine_brand' => $r['brand'],
                 'dose_type'     => $r['dose_type'],
                 'day0_date'     => $d['day0'], 'day3_date' => $d['day3'], 'day7_date' => $d['day7'],
-                'day14_date'    => $d['day14'], 'day28_date' => $d['day28'],
+                'day28_date'    => $d['day28'],
                 'passive_given' => $r['passive'] ? 1 : 0,
                 'passive_type'  => $r['passive'],
             ]);

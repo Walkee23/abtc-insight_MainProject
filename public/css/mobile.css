@@ -162,8 +162,8 @@
   .px-8:not(aside *), .px-10:not(aside *), .px-12:not(aside *) { padding-left: 1rem !important; padding-right: 1rem !important; }
 
   /* rows with something on the left and something on the right wrap instead of overflowing
-     (the top bar and the sidebar keep their single line, and so do rows of equal-width columns such as bar charts) */
-  .flex.justify-between:not(.flex-col):not(.flex-nowrap):not(:has(> .w-full)):not(header):not(header *):not(aside *) { flex-wrap: wrap; row-gap: .75rem; }
+     (the top bar and the sidebar keep their single line, and so do buttons, e.g. an accordion header with its chevron, and rows of equal-width columns such as bar charts) */
+  .flex.justify-between:not(.flex-col):not(.flex-nowrap):not(:has(> .w-full)):not(button):not(header):not(header *):not(aside *) { flex-wrap: wrap; row-gap: .75rem; }
 
   /* ---- one spacing rhythm on phones ------------------------------------------------------------------
      page gutter 16px, cards 20px inside, 20-24px between sections, compact table rows --------------------- */

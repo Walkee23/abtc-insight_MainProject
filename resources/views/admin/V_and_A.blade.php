@@ -836,15 +836,15 @@
 
             <!-- COLLAPSIBLE ACCORDION FOR EXPORTS & ANNUAL MATRIX TABLE -->
             <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/10 shadow-sm overflow-hidden mb-8">
-                <button onclick="toggleAccordion()" class="w-full p-6 bg-surface-container-low flex justify-between items-center text-left hover:bg-surface-container transition-colors">
-                    <div class="flex items-center gap-3">
+                <button onclick="toggleAccordion()" class="w-full p-6 bg-surface-container-low flex justify-between items-center gap-3 text-left hover:bg-surface-container transition-colors">
+                    <div class="flex items-center gap-3 min-w-0">
                         <span class="material-symbols-outlined text-primary">table_chart</span>
                         <div>
                             <h4 class="text-base font-bold text-on-surface tracking-tight">Annual Matrix Summary & Data Exports</h4>
                             <p class="text-xs text-on-surface-variant">Click to expand detailed reports, exports, and historical matrix data.</p>
                         </div>
                     </div>
-                    <span id="accordion-icon" class="material-symbols-outlined transition-transform duration-300">expand_more</span>
+                    <span id="accordion-icon" class="material-symbols-outlined shrink-0 transition-transform duration-300">expand_more</span>
                 </button>
 @php
     // the two annual files cover one whole year; offer every year that has data, newest first

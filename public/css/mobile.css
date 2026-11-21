@@ -165,6 +165,11 @@
      (the top bar and the sidebar keep their single line, and so do buttons, e.g. an accordion header with its chevron, and rows of equal-width columns such as bar charts) */
   .flex.justify-between:not(.flex-col):not(.flex-nowrap):not(:has(> .w-full)):not(button):not(header):not(header *):not(aside *) { flex-wrap: wrap; row-gap: .75rem; }
 
+  /* a label with a small value / button beside it (marked by mobile-nav.js) stays on one row; the label wraps instead */
+  .mn-keep-row { flex-wrap: nowrap !important; column-gap: .75rem; }
+  .mn-keep-row > :first-child { min-width: 0; flex: 1 1 auto; }
+  .mn-keep-row > :last-child { flex-shrink: 0; }
+
   /* ---- one spacing rhythm on phones ------------------------------------------------------------------
      page gutter 16px, cards 20px inside, 20-24px between sections, compact table rows --------------------- */
   .mn-gutter { padding-left: 1rem !important; padding-right: 1rem !important; }
@@ -255,6 +260,9 @@
 
   /* toasts sit above the bottom edge but never wider than the screen */
   #statusToast, #claimErrorToast { left: 1rem; right: 1rem; max-width: none; }
+
+  /* date / time boxes have a built-in minimum width: let them shrink to the space they are given (small phones) */
+  main input[type="date"], main input[type="time"], main input[type="datetime-local"], main input[type="month"] { min-width: 0; max-width: 100%; }
 
   /* touch-sized controls */
   main select, main input:not([type="checkbox"]):not([type="radio"]) { min-height: 2.5rem; }

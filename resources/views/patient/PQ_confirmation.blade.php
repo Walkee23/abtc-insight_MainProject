@@ -171,11 +171,11 @@
     </main>
     <!-- Footer (Shared Component) -->
     <footer class="w-full py-8 mt-auto bg-surface-container-low">
-        <div class="flex flex-col md:flex-row justify-between items-center px-12 w-full max-w-screen-2xl mx-auto gap-4">
+        <div class="flex flex-col md:flex-row justify-between items-center px-6 md:px-12 w-full max-w-screen-2xl mx-auto gap-4 text-center">
             <div class="text-xs font-medium uppercase tracking-widest font-['Inter'] text-on-surface-variant">
                 © 2024 CEBU CITY HEALTH CENTER. CLINICAL PRECISION SYSTEM.
             </div>
-            <div class="flex gap-8">
+            <div class="flex flex-wrap justify-center gap-x-6 gap-y-2 md:gap-8">
                 <a class="text-xs font-medium uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors"
                     href="#">PRIVACY POLICY</a>
                 <a class="text-xs font-medium uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors"

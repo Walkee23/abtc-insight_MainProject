@@ -234,11 +234,11 @@
   </main>
   <!-- Footer Execution -->
   <footer class="w-full border-t border-slate-200/10 bg-slate-50 dark:bg-slate-950">
-    <div class="flex flex-col md:flex-row justify-between items-center px-12 py-8 gap-4 max-w-7xl mx-auto">
+    <div class="flex flex-col md:flex-row justify-between items-center px-6 md:px-12 py-8 gap-4 max-w-7xl mx-auto text-center">
       <p class="text-xs font-medium uppercase tracking-widest font-['Inter'] text-slate-500 dark:text-slate-500"
         style="">
         © 2026 Cebu City Health Department</p>
-      <div class="flex gap-6">
+      <div class="flex flex-wrap justify-center gap-x-6 gap-y-2">
         <a class="text-xs font-medium uppercase tracking-widest font-['Inter'] text-slate-500 dark:text-slate-500 hover:text-blue-500 transition-colors"
           href="#" style="">Privacy Policy</a>
         <a class="text-xs font-medium uppercase tracking-widest font-['Inter'] text-slate-500 dark:text-slate-500 hover:text-blue-500 transition-colors"

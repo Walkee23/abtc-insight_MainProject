@@ -259,12 +259,12 @@
     </div>
   </main>
   <!-- Footer -->
-  <footer class="flex flex-col md:flex-row justify-between items-center px-8 py-6 w-full border-t border-[#c1c7d3]/15 bg-[#f2f4f6] dark:bg-slate-950 font-['Inter'] text-sm">
-    <div class="flex items-center gap-4 mb-4 md:mb-0">
+  <footer class="flex flex-col md:flex-row justify-between items-center gap-4 px-6 md:px-8 py-6 w-full border-t border-[#c1c7d3]/15 bg-[#f2f4f6] dark:bg-slate-950 font-['Inter'] text-sm text-center md:text-left">
+    <div class="flex flex-col md:flex-row items-center gap-1 md:gap-4">
       <span class="font-bold text-[#004a93]">ABTC-Insight</span>
-      <span class="text-[#414751] dark:text-slate-500">© 2024 Cebu City Health Center. Clinical Precision System.</span>
+      <span class="text-[#414751] dark:text-slate-500 text-xs md:text-sm">© 2024 Cebu City Health Center. Clinical Precision System.</span>
     </div>
-    <div class="flex gap-6">
+    <div class="flex flex-wrap justify-center gap-x-6 gap-y-2">
       <a class="text-[#414751] dark:text-slate-500 hover:text-[#004a93] dark:hover:text-blue-300 transition-colors duration-200" href="#">Privacy Policy</a>
       <a class="text-[#414751] dark:text-slate-500 hover:text-[#004a93] dark:hover:text-blue-300 transition-colors duration-200" href="#">Contact Support</a>
       <a class="text-[#414751] dark:text-slate-500 hover:text-[#004a93] dark:hover:text-blue-300 transition-colors duration-200" href="#">Terms of Service</a>

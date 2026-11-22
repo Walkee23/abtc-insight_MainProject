@@ -461,10 +461,10 @@
     </div>
     <!-- Global Footer -->
     <footer class="w-full mt-20 border-t border-outline-variant/30 bg-transparent text-center">
-      <div class="flex flex-col md:flex-row justify-between items-center gap-4 px-8 py-10 max-w-7xl mx-auto">
-        <span class="text-on-surface-variant font-inter text-xs tracking-wide uppercase">© 2024 Cebu City Health Center.
+      <div class="flex flex-col md:flex-row justify-between items-center gap-4 px-6 md:px-8 py-8 md:py-10 max-w-7xl mx-auto">
+        <span class="text-on-surface-variant font-inter text-[11px] md:text-xs leading-relaxed tracking-wide uppercase">© 2024 Cebu City Health Center.
           All rights reserved. Clinical Precision &amp; Editorial Authority.</span>
-        <div class="flex gap-6">
+        <div class="flex flex-wrap justify-center gap-x-6 gap-y-2">
           <a class="text-on-surface-variant text-xs tracking-wide uppercase hover:text-primary underline underline-offset-4 transition-opacity"
             href="#">Privacy Policy</a>
           <a class="text-on-surface-variant text-xs tracking-wide uppercase hover:text-primary underline underline-offset-4 transition-opacity"
@@ -638,6 +638,8 @@
       4: false
     };
 
+    // the step labels keep their centred, wrapping layout in every state (the same classes as in the markup above)
+    const STEP_LABEL = 'text-[10px] uppercase font-bold tracking-tighter text-center leading-tight min-h-[25px] sm:min-h-0 max-w-[4.25rem] sm:max-w-none transition-colors';
     const ACTIVE_CIRCLE = 'w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold shadow-lg shadow-primary/20 transition-all';
     const DONE_CIRCLE = 'w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold transition-all';
     const UPCOMING_CIRCLE = 'w-8 h-8 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center text-xs font-bold transition-all';
@@ -650,17 +652,17 @@
       if (state === 'done') {
         circle.className = DONE_CIRCLE;
         circle.innerHTML = '<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: \'FILL\' 1;">check</span>';
-        label.className = 'text-[10px] uppercase font-bold tracking-tighter text-primary transition-colors';
+        label.className = STEP_LABEL + ' text-primary';
         if (line) line.className = 'flex-1 h-[2px] bg-primary/40 mx-1 -mt-6 transition-colors';
       } else if (state === 'active') {
         circle.className = ACTIVE_CIRCLE;
         circle.textContent = stepNum;
-        label.className = 'text-[10px] uppercase font-bold tracking-tighter text-primary transition-colors';
+        label.className = STEP_LABEL + ' text-primary';
         if (line) line.className = 'flex-1 h-[2px] bg-surface-container-high mx-1 -mt-6 transition-colors';
       } else {
         circle.className = UPCOMING_CIRCLE;
         circle.textContent = stepNum;
-        label.className = 'text-[10px] uppercase font-bold tracking-tighter text-on-surface-variant transition-colors';
+        label.className = STEP_LABEL + ' text-on-surface-variant';
         if (line) line.className = 'flex-1 h-[2px] bg-surface-container-high mx-1 -mt-6 transition-colors';
       }
     }

@@ -64,7 +64,7 @@
     (document.head || document.documentElement).appendChild(style);
 
     function eligible(s) {
-        return !!s && s.tagName === 'SELECT' && !s.multiple && !s.disabled && (!s.size || s.size <= 1)
+        return !!s && s.tagName === 'SELECT' && !s.multiple && !s.matches(':disabled') && (!s.size || s.size <= 1)
             && !s.hasAttribute('data-native') && !(s.closest && s.closest('[data-native-select]'));
     }
 

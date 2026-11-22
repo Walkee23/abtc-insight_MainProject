@@ -241,6 +241,9 @@ class StaffController extends Controller
                 ->first();
             $selectedPatient = $openedRecord;
         }
+        // Handed to the Health Worker (status Encoded): Staff only views it
+        $readOnly = $selectedPatient && ($selectedPatient->status ?? null) !== 'Verified';
+
         $bhwExposure = null;
         if ($selectedPatient && !empty($selectedPatient->bhw_referral_id)) {
             $bhwExposure = DB::table('bhw_referral_info')
@@ -272,7 +275,7 @@ class StaffController extends Controller
             }
         }
 
-        return view('staff.Case_Encoding', compact('verifiedQueue', 'selectedPatient', 'openedRecord', 'search', 'bhwExposure', 'healthworkers', 'saved'));
+        return view('staff.Case_Encoding', compact('verifiedQueue', 'selectedPatient', 'openedRecord', 'readOnly', 'search', 'bhwExposure', 'healthworkers', 'saved'));
     }
 
     public function storeCaseEncoding(Request $request, string $inflow_record_id)
@@ -281,6 +284,13 @@ class StaffController extends Controller
 
         if (!$patient) {
             return back()->withErrors(['error' => 'Patient record not found. Please verify attendance first.']);
+        }
+
+        // Once the case has been handed to the Health Worker (status Encoded) Staff can only view it
+        $currentStatus = DB::table('inflow_general_particulars')->where('inflow_record_id', $inflow_record_id)->value('status');
+        if ($currentStatus !== 'Verified') {
+            return redirect()->route('staff.case-encoding', $inflow_record_id)
+                ->withErrors(['error' => 'This case was already handed to the Health Worker, so it can no longer be edited here.']);
         }
 
         $isComplete = $request->input('action') === 'complete';

@@ -103,6 +103,12 @@
     <script src="{{ asset('js/custom-select.js') }}" defer></script>
     <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
     <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
+<style>
+        /* a case that was handed to the Health Worker: shown for viewing only */
+        .case-readonly input, .case-readonly select, .case-readonly textarea { cursor: default; }
+        .case-readonly input:disabled, .case-readonly select:disabled, .case-readonly textarea:disabled { opacity: .75; }
+        .case-readonly label { cursor: default !important; }
+    </style>
 </head>
 
 <body class="bg-surface text-on-surface min-h-screen flex">
@@ -278,8 +284,8 @@
                             <div class="min-w-0">
                                 <h3 class="text-lg font-bold text-primary"><span class="hidden md:inline">Animal Bite </span>Case Encoding<span class="hidden md:inline"> Form</span></h3>
                                 <p class="text-xs text-on-surface-variant truncate">
-                                    @if(!empty($openedRecord))
-                                    Encoded case: <span class="font-bold text-on-surface">{{ $selectedPatient->patient_name }} (#{{ $selectedPatient->inflow_record_id }})</span> &middot; opened from Patient Lookup
+                                    @if(!empty($readOnly))
+                                    Read-only: <span class="font-bold text-on-surface">{{ $selectedPatient->patient_name }} (#{{ $selectedPatient->inflow_record_id }})</span> &middot; already handed to the Health Worker
                                     @elseif(isset($selectedPatient) && $selectedPatient)
                                     Currently encoding: <span class="font-bold text-on-surface">{{ $selectedPatient->patient_name }} (#{{ $selectedPatient->inflow_record_id }})</span>
                                     @else
@@ -288,13 +294,19 @@
                                 </p>
                             </div>
                             <div class="flex gap-2 shrink-0">
+                                @if(!empty($readOnly))
+                                <span class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-on-surface-variant bg-surface-container-high rounded-full whitespace-nowrap"><span class="material-symbols-outlined text-[15px]">lock</span>Read-only</span>
+                                <a href="{{ route('staff.patient-lookup') }}" class="px-4 py-2 text-xs font-bold text-white bg-primary rounded-full hover:bg-primary-container transition-all shadow-md whitespace-nowrap">Back to Lookup</a>
+                                @else
                                 <button type="button" onclick="discardChanges()" class="px-4 py-2 text-xs font-bold text-secondary bg-surface-container-high rounded-full hover:bg-surface-container-highest transition-colors">Discard</button>
                                 <button type="submit" form="caseEncodingForm" name="action" value="draft" formnovalidate class="px-4 py-2 text-xs font-bold text-white bg-primary rounded-full hover:bg-primary-container transition-all shadow-md active:scale-95">Save Progress</button>
+                                @endif
                             </div>
                         </div>
 
-                        <form id="caseEncodingForm" autocomplete="off" action="{{ route('staff.store-case-encoding', $selectedPatient->inflow_record_id ?? 0) }}" method="POST" class="p-8 space-y-12">
+                        <form id="caseEncodingForm" autocomplete="off" action="{{ route('staff.store-case-encoding', $selectedPatient->inflow_record_id ?? 0) }}" method="POST" class="p-8">
                             @csrf
+                            <fieldset class="min-w-0 space-y-12 border-0 p-0 m-0 {{ !empty($readOnly) ? 'case-readonly' : '' }}" @if(!empty($readOnly)) disabled @endif>
 
                             @php
                             // Progress Staff already saved (Save Progress) wins over what the BHW referral pre-fills
@@ -534,6 +546,12 @@
                             </section>
 
                             <!-- Form Submission -->
+                            @if(!empty($readOnly))
+                            <div class="pt-8 border-t border-surface-container-high flex items-start gap-3 text-xs text-on-surface-variant">
+                                <span class="material-symbols-outlined text-[18px] text-primary shrink-0">lock</span>
+                                <p>This case has been encoded and handed to the Health Worker, so it is shown here for viewing only. Changes are made by the Health Worker in Clinical Encoding.</p>
+                            </div>
+                            @else
                             <div class="pt-8 border-t border-surface-container-high flex justify-end gap-4">
                                 <button type="button" onclick="discardChanges()" class="px-8 py-3 text-sm font-bold text-secondary bg-surface-container-low rounded-full hover:bg-surface-container-high transition-all">Cancel Entry</button>
                                 <button type="submit" name="action" value="complete" class="px-10 py-3 text-sm font-bold text-white bg-primary rounded-full hover:bg-primary-container transition-all shadow-xl active:scale-95 flex items-center gap-2">
@@ -541,6 +559,8 @@
                                     Complete Encoding
                                 </button>
                             </div>
+                            @endif
+                            </fieldset>
                         </form>
                     </div>
                 </div>

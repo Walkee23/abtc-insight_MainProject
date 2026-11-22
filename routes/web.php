@@ -87,7 +87,7 @@ Route::prefix('admin')->middleware('admin')->group(function () {
         return redirect()->route('admin.usm')->with('success', 'User account created successfully!');
     })->name('admin.store-user');
 
-    // System tools (Admin only, enforced in the controller): backups, auto-backup, audit logs, health
+    // System tools (Admin only, enforced in the controller): backups, auto-backup, audit logs, import
     Route::prefix('system')->group(function () {
         Route::get('/backups', [SystemToolsController::class, 'backups'])->name('admin.system.backups');
         Route::post('/backups', [SystemToolsController::class, 'createBackup'])->name('admin.system.backups.create');
@@ -97,7 +97,6 @@ Route::prefix('admin')->middleware('admin')->group(function () {
         Route::post('/auto-backup', [SystemToolsController::class, 'saveAutoBackup'])->name('admin.system.auto-backup.save');
         Route::get('/audit-logs', [SystemToolsController::class, 'auditLogs'])->name('admin.system.audit-logs');
         Route::get('/audit-logs/export', [SystemToolsController::class, 'exportAuditLogs'])->name('admin.system.audit-logs.export');
-        Route::get('/health', [SystemToolsController::class, 'health'])->name('admin.system.health');
         Route::post('/import-cases/chunk', [SystemToolsController::class, 'importChunk'])->name('admin.system.import-cases.chunk');
         Route::post('/import-cases', [SystemToolsController::class, 'importCases'])->name('admin.system.import-cases');
         Route::get('/import-cases/template', [SystemToolsController::class, 'importTemplate'])->name('admin.system.import-cases.template');

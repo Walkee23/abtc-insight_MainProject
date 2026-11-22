@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Schema;
 
 /**
  * Admin > User & System Management tools: database backups, the auto-backup schedule,
- * the audit log and the server health check. These expose or change sensitive data
+ * the audit log and the case import. These expose or change sensitive data
  * (a backup contains every table, password hashes included), so they are Admin-only.
  */
 class SystemToolsController extends Controller
@@ -337,86 +337,5 @@ class SystemToolsController extends Controller
             fputcsv($out, BiteCaseImporter::templateExample());
             fclose($out);
         }, 'animal-bite-cases-template.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
-    }
-
-    // ----------------------------------------------------------- health check
-
-    public function health(): JsonResponse
-    {
-        $this->admin();
-        $checks = [];
-        $add = function (string $name, string $status, string $detail) use (&$checks) {
-            $checks[] = ['name' => $name, 'status' => $status, 'detail' => $detail];
-        };
-
-        // Database
-        try {
-            $started = microtime(true);
-            DB::select('SELECT 1');
-            $ms = round((microtime(true) - $started) * 1000, 1);
-            $version = DB::selectOne('SELECT VERSION() AS v')->v ?? '';
-            $add('Database connection', $ms > 500 ? 'warn' : 'ok', DB::getDatabaseName() . " · MySQL {$version} · {$ms} ms");
-            $tables = count(DB::select("SHOW FULL TABLES WHERE Table_type = 'BASE TABLE'"));
-            $add('Database tables', $tables > 0 ? 'ok' : 'fail', "{$tables} tables");
-        } catch (\Throwable $e) {
-            $add('Database connection', 'fail', $e->getMessage());
-        }
-
-        // Pending migrations
-        try {
-            $ran = Schema::hasTable('migrations') ? DB::table('migrations')->pluck('migration')->all() : [];
-            $files = array_map(fn ($f) => pathinfo($f, PATHINFO_FILENAME), glob(database_path('migrations/*.php')) ?: []);
-            $pending = count(array_diff($files, $ran));
-            $add('Migrations', $pending ? 'warn' : 'ok', $pending ? "{$pending} pending, run php artisan migrate" : 'Up to date');
-        } catch (\Throwable $e) {
-            $add('Migrations', 'warn', 'Could not check: ' . $e->getMessage());
-        }
-
-        // Disk space
-        $free = @disk_free_space(storage_path());
-        $total = @disk_total_space(storage_path());
-        if ($free !== false && $total) {
-            $pct = $free / $total * 100;
-            $gb = $free / 1024 ** 3;
-            $add('Disk space', $gb < 1 ? 'fail' : ($gb < 10 || $pct < 10 ? 'warn' : 'ok'), DatabaseBackup::humanSize((int) $free) . ' free of ' . DatabaseBackup::humanSize((int) $total) . ' (' . round($pct) . '%)');
-        }
-
-        // Writable folders
-        $notWritable = array_filter(['storage/app' => storage_path('app'), 'storage/logs' => storage_path('logs'), 'storage/framework' => storage_path('framework'), 'bootstrap/cache' => base_path('bootstrap/cache')], fn ($p) => !is_writable($p));
-        $add('Writable folders', $notWritable ? 'fail' : 'ok', $notWritable ? 'Not writable: ' . implode(', ', array_keys($notWritable)) : 'storage and bootstrap/cache are writable');
-
-        // PHP
-        $missing = array_filter(['pdo_mysql', 'mbstring', 'openssl', 'json', 'ctype', 'tokenizer'], fn ($e) => !extension_loaded($e));
-        $add('PHP', $missing ? 'fail' : 'ok', 'PHP ' . PHP_VERSION . ' · Laravel ' . app()->version() . ($missing ? ' · missing extensions: ' . implode(', ', $missing) : ''));
-
-        // Environment
-        $add('Environment', config('app.debug') && app()->environment('production') ? 'warn' : 'ok',
-            app()->environment() . (config('app.debug') ? ', debug mode on' : ', debug mode off'));
-
-        // Backups
-        $backups = DatabaseBackup::list();
-        if (!$backups) {
-            $add('Latest backup', 'warn', 'No backup yet. Use Manual Database Backup.');
-        } else {
-            $age = $backups[0]['modified']->diffInDays(now(self::TZ));
-            $add('Latest backup', $age > 7 ? 'warn' : 'ok', $backups[0]['name'] . ' · ' . $backups[0]['modified']->diffForHumans());
-        }
-
-        $cfg = DatabaseBackup::config();
-        if ($cfg['enabled']) {
-            $overdue = DatabaseBackup::isDue($cfg);
-            $add('Auto-backup', $overdue ? 'warn' : 'ok', $overdue ? 'Scheduled but not run yet (the scheduler may not be running)' : 'On, next run ' . optional(DatabaseBackup::nextRun($cfg))->format('M d, g:i A'));
-        } else {
-            $add('Auto-backup', 'warn', 'Turned off');
-        }
-
-        $worst = in_array('fail', array_column($checks, 'status'), true) ? 'fail' : (in_array('warn', array_column($checks, 'status'), true) ? 'warn' : 'ok');
-
-        return response()->json([
-            'overall' => $worst,
-            'summary' => ['ok' => 'All systems healthy', 'warn' => 'Working, with items to look at', 'fail' => 'Problems found'][$worst],
-            'checked_at' => now(self::TZ)->format('M d, Y g:i:s A'),
-            'checks' => $checks,
-        ]);
     }
 }

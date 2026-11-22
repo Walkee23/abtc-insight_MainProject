@@ -144,8 +144,7 @@
         </div>
             <div class="flex items-center gap-4">
                 <div class="hidden lg:flex items-center gap-2 px-3 py-1 bg-green-50 text-green-700 rounded-full text-[10px] font-bold uppercase tracking-wider">
-                    <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
-                        Registered
+                    
                 </div>
             <div class="flex items-center gap-1 border-r border-outline-variant/20 pr-4">
         </div>

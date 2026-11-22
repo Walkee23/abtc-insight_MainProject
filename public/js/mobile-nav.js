@@ -7,6 +7,9 @@
  *    drawer always opens at full width, and comes back when the window is wide again
  *  - tables that are not already inside a scrolling box get one, so wide tables scroll sideways
  *    inside the card instead of stretching the page
+ *  - pop-ups (any "fixed inset-0" box): while one is open the page behind it does not scroll, and
+ *    [data-popup-open="id"] / [data-popup-close] open and close a pop-up in place (no #link, so the
+ *    page never jumps)
  */
 (function () {
     'use strict';
@@ -407,4 +410,77 @@
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
     else init();
+})();
+
+/* Pop-ups: no scrolling of the page behind an open pop-up, and open/close in place */
+(function () {
+    'use strict';
+
+    var root = document.documentElement;
+    var locked = false;
+    var frame = 0;
+    var current = null;   // the pop-up opened by a [data-popup-open] button
+
+    function isOpen(el) {
+        var cs = getComputedStyle(el);
+        return cs.display !== 'none' && cs.visibility !== 'hidden' && cs.pointerEvents !== 'none' && el.offsetWidth > 0;
+    }
+
+    function sync() {
+        frame = 0;
+        var open = false;
+        var boxes = document.querySelectorAll('.fixed.inset-0, [role="dialog"].fixed');
+        for (var i = 0; i < boxes.length; i++) {
+            if (isOpen(boxes[i])) { open = true; break; }
+        }
+        if (open === locked) return;
+        locked = open;
+        if (open) {
+            var gap = window.innerWidth - root.clientWidth;   // the scrollbar goes away: keep the page from shifting sideways
+            root.style.overflow = 'hidden';
+            if (gap > 0) root.style.paddingRight = gap + 'px';
+        } else {
+            root.style.overflow = '';
+            root.style.paddingRight = '';
+        }
+    }
+    function schedule() { if (!frame) frame = setTimeout(sync, 16); }   // (a timer, not requestAnimationFrame: that stops in a background tab)
+
+    function show(box) {
+        hide();
+        current = box;
+        box.classList.remove('hidden');
+        box.classList.add('flex');
+        var close = box.querySelector('[data-popup-close]');
+        if (close) close.focus({ preventScroll: true });
+        schedule();
+    }
+    function hide() {
+        if (!current) return;
+        current.classList.add('hidden');
+        current.classList.remove('flex');
+        current = null;
+        schedule();
+    }
+
+    document.addEventListener('click', function (e) {
+        var opener = e.target.closest('[data-popup-open]');
+        if (opener) {
+            var box = document.getElementById(opener.getAttribute('data-popup-open'));
+            if (box) show(box);
+            return;
+        }
+        if (!current) return;
+        if (e.target.closest('[data-popup-close]') || e.target === current) hide();   // a close button, or the dark area around the card
+    });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hide(); });
+
+    function start() {
+        sync();
+        if (window.MutationObserver) {
+            new MutationObserver(schedule).observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['class', 'style', 'hidden'] });
+        }
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+    else start();
 })();

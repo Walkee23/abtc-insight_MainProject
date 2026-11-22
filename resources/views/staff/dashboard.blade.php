@@ -273,15 +273,15 @@
                                     </td>
                                     <td class="px-3 py-4 text-right">
                                         <!-- Trigger Button para sa Priority Modal -->
-                                        <a href="#call-priority-modal-{{ $patient->inflow_record_id }}"
+                                        <button type="button" data-popup-open="call-priority-modal-{{ $patient->inflow_record_id }}"
                                             class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-500/10 hover:bg-green-600 text-green-700 hover:text-white text-xs font-bold rounded-lg border border-green-500/20 transition-all shadow-sm">
                                             <span class="material-symbols-outlined text-[15px]">campaign</span>
                                             <span>Call &amp; Verify</span>
-                                        </a>
+                                        </button>
 
-                                        <!-- Pure CSS Modal (Walay JavaScript) para sa Priority Patient -->
+                                        <!-- Priority patient pop-up (opened/closed by the shared script in js/mobile-nav.js) -->
                                         <div id="call-priority-modal-{{ $patient->inflow_record_id }}"
-                                            class="fixed inset-0 z-50 hidden [&:target]:flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                                            class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm whitespace-normal font-normal" role="dialog" aria-modal="true">
 
                                             <div class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden text-left">
 
@@ -300,9 +300,9 @@
                                                         </div>
                                                     </div>
                                                     <!-- Close Button (Href to #) -->
-                                                    <a href="#modal-closed" class="text-white/70 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10">
+                                                    <button type="button" data-popup-close class="text-white/70 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10">
                                                         <span class="material-symbols-outlined text-[20px]">close</span>
-                                                    </a>
+                                                    </button>
                                                 </div>
 
                                                 <!-- Modal Body: Patient Quick Specs -->
@@ -335,9 +335,9 @@
                                                 <!-- Modal Footer Actions -->
                                                 <div class="p-6 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3 items-center">
                                                     <!-- Cancel Link -->
-                                                    <a href="#modal-closed" class="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-colors inline-flex items-center">
+                                                    <button type="button" data-popup-close class="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-colors inline-flex items-center">
                                                         Cancel
-                                                    </a>
+                                                    </button>
 
                                                     <!-- Proceed Form -> Calls staff.call-patient without modifying status -->
                                                     <form method="POST" action="{{ route('staff.call-patient', $patient->inflow_record_id) }}">
@@ -410,16 +410,16 @@
 
                                         <!-- 5. Action Cell -->
                                         <td class="px-4 py-4 text-right">
-                                            <!-- Button nga mo-trigger sa CSS Modal -->
-                                            <a href="#call-modal-{{ $patient->inflow_record_id }}"
+                                            <!-- Opens the pop-up below (a button, not a #link, so the page does not jump) -->
+                                            <button type="button" data-popup-open="call-modal-{{ $patient->inflow_record_id }}"
                                                 class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 hover:bg-primary text-primary hover:text-white text-xs font-bold rounded-lg border border-primary/20 transition-all shadow-sm">
                                                 <span class="material-symbols-outlined text-[15px]">campaign</span>
                                                 <span>Call &amp; Verify</span>
-                                            </a>
+                                            </button>
 
-                                            <!-- Pure CSS Modal -->
+                                            <!-- Call pop-up (opened/closed by the shared script in js/mobile-nav.js) -->
                                             <div id="call-modal-{{ $patient->inflow_record_id }}"
-                                                class="fixed inset-0 z-50 hidden [&:target]:flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                                                class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm whitespace-normal font-normal" role="dialog" aria-modal="true">
 
                                                 <div class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden text-left">
 
@@ -434,9 +434,9 @@
                                                                 <h3 class="text-xl font-bold leading-tight">{{ $patient->patient_name }}</h3>
                                                             </div>
                                                         </div>
-                                                        <a href="#modal-closed" class="shrink-0 text-white/70 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10">
+                                                        <button type="button" data-popup-close class="shrink-0 text-white/70 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10">
                                                             <span class="material-symbols-outlined text-[20px]">close</span>
-                                                        </a>
+                                                        </button>
                                                     </div>
 
                                                     <!-- Body: Patient Overview -->
@@ -468,9 +468,9 @@
 
                                                     <!-- Footer Actions -->
                                                     <div class="p-6 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
-                                                        <a href="#modal-closed" class="px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-colors inline-flex items-center">
+                                                        <button type="button" data-popup-close class="px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-colors inline-flex items-center">
                                                             Cancel
-                                                        </a>
+                                                        </button>
 
                                                         <form method="POST" action="{{ route('staff.call-patient', $patient->inflow_record_id) }}">
                                                             @csrf

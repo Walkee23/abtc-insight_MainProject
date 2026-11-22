@@ -374,14 +374,14 @@
                                     <h3 class="text-sm font-extrabold uppercase tracking-widest text-on-surface-variant">
                                         Immunization Schedule</h3>
                                 </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-[auto_auto] sm:justify-start gap-6 mb-8">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
                                     <div>
                                         <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Route <span class="text-error">*</span></label>
-                                        {!! $dropdown('route', ['ID' => 'ID (Intradermal)', 'IM' => 'IM (Intramuscular)'], 'bg-surface-container-low', true) !!}
+                                        {!! $dropdown('route', ['ID' => 'ID (Intradermal)', 'IM' => 'IM (Intramuscular)']) !!}
                                     </div>
                                     <div>
                                         <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Dose Type <span class="text-error">*</span></label>
-                                        {!! $dropdown('dose_type', ['Primary' => 'Primary', 'Booster' => 'Booster'], 'bg-surface-container-low', true) !!}
+                                        {!! $dropdown('dose_type', ['Primary' => 'Primary', 'Booster' => 'Booster']) !!}
                                     </div>
                                 </div>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">

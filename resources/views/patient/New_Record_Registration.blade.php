@@ -449,8 +449,8 @@
           <div class="flex items-center gap-4">
             <button id="clearFormBtn" class="text-sm font-bold text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low active:scale-95 rounded-full px-4 py-2 transition-all"
               type="reset">Clear Form</button>
-            <button
-              class="bg-primary text-white px-8 py-3 rounded-full font-bold text-sm flex items-center gap-2 hover:opacity-90 transition-all shadow-lg shadow-primary/20"
+            <button id="submitRegistrationBtn"
+              class="bg-primary text-white px-8 py-3 rounded-full font-bold text-sm flex items-center gap-2 hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/20 disabled:opacity-60 disabled:cursor-not-allowed"
               type="submit">
               Submit and Get Queue Number
               <span class="material-symbols-outlined text-base">arrow_forward</span>
@@ -474,6 +474,22 @@
         </div>
       </div>
     </footer>
+    <!-- Confirmation before clearing the form or submitting it -->
+    <div id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle"
+      class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm items-center justify-center p-4 opacity-0 transition-opacity duration-200">
+      <div id="confirmCard" class="bg-surface-container-lowest rounded-2xl max-w-sm w-full p-8 text-center shadow-2xl border border-outline-variant/30 scale-95 transition-transform duration-200">
+        <div id="confirmIconWrap" class="mx-auto mb-4 w-14 h-14 rounded-full flex items-center justify-center">
+          <span id="confirmIcon" class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;"></span>
+        </div>
+        <h3 id="confirmTitle" class="text-xl font-extrabold tracking-tight text-on-surface"></h3>
+        <p id="confirmText" class="mt-2 text-sm text-on-surface-variant leading-relaxed"></p>
+        <p id="confirmDetail" class="hidden mt-3 text-sm font-bold text-on-surface bg-surface-container-low rounded-xl px-4 py-2.5 break-words"></p>
+        <div class="mt-6 grid grid-cols-2 gap-3">
+          <button type="button" id="confirmCancelBtn" class="px-4 py-3 rounded-full font-bold text-sm text-on-surface-variant bg-surface-container hover:bg-surface-container-high active:scale-95 transition-all">Cancel</button>
+          <button type="button" id="confirmOkBtn" class="px-4 py-3 rounded-full font-bold text-sm text-white active:scale-95 transition-all shadow-lg"></button>
+        </div>
+      </div>
+    </div>
     <!-- Form cleared: confirms that Clear Form removed everything -->
     <div id="clearedModal" role="dialog" aria-modal="true" aria-labelledby="clearedTitle"
       class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm items-center justify-center p-4 opacity-0 transition-opacity duration-200">
@@ -957,6 +973,74 @@
       }
     });
 
+    // Confirmation pop-up shared by "Clear Form" and "Submit and Get Queue Number"
+    const confirmModal = document.getElementById('confirmModal');
+    const confirmCard = document.getElementById('confirmCard');
+    const confirmOkBtn = document.getElementById('confirmOkBtn');
+    const confirmCancelBtn = document.getElementById('confirmCancelBtn');
+    const confirmDetail = document.getElementById('confirmDetail');
+    const CONFIRMS = {
+      clear: {
+        icon: 'delete_sweep', iconWrap: 'bg-amber-100 text-amber-600',
+        title: 'Clear the form?',
+        text: 'Everything you have entered will be removed and you will start again from Step 1. This cannot be undone.',
+        ok: 'Yes, clear form', okClass: 'bg-error shadow-error/20', focus: 'cancel',
+      },
+      submit: {
+        icon: 'help', iconWrap: 'bg-blue-100 text-primary',
+        title: 'Submit your registration?',
+        text: 'Please check that your details are correct. After you submit, you will get your queue number.',
+        ok: 'Yes, submit', okClass: 'bg-primary shadow-primary/20', focus: 'ok',
+      },
+    };
+    let confirmAction = null;
+    let confirmOnYes = null;
+    function openConfirm(kind, detail, onYes) {
+      const c = CONFIRMS[kind];
+      confirmAction = kind;
+      confirmOnYes = onYes;
+      document.getElementById('confirmIconWrap').className = 'mx-auto mb-4 w-14 h-14 rounded-full flex items-center justify-center ' + c.iconWrap;
+      document.getElementById('confirmIcon').textContent = c.icon;
+      document.getElementById('confirmTitle').textContent = c.title;
+      document.getElementById('confirmText').textContent = c.text;
+      confirmDetail.textContent = detail || '';
+      confirmDetail.classList.toggle('hidden', !detail);
+      confirmOkBtn.textContent = c.ok;
+      confirmOkBtn.className = 'px-4 py-3 rounded-full font-bold text-sm text-white active:scale-95 transition-all shadow-lg ' + c.okClass;
+      confirmModal.classList.remove('hidden');
+      confirmModal.classList.add('flex');
+      setTimeout(() => {   // next tick, so the fade-in runs
+        confirmModal.classList.remove('opacity-0');
+        confirmCard.classList.remove('scale-95');
+      }, 20);
+      (c.focus === 'ok' ? confirmOkBtn : confirmCancelBtn).focus({ preventScroll: true });
+    }
+    function closeConfirm() {
+      confirmAction = null;
+      confirmModal.classList.add('opacity-0');
+      confirmCard.classList.add('scale-95');
+      setTimeout(() => {
+        if (confirmAction === null) {
+          confirmModal.classList.add('hidden');
+          confirmModal.classList.remove('flex');
+        }
+      }, 200);
+    }
+    confirmCancelBtn.addEventListener('click', closeConfirm);
+    confirmModal.addEventListener('click', (e) => { if (e.target === confirmModal) closeConfirm(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && confirmAction) closeConfirm(); });
+    confirmOkBtn.addEventListener('click', () => {
+      const yes = confirmOnYes;
+      closeConfirm();
+      if (yes) yes();
+    });
+
+    // Clear Form: ask first, then clear (the reset handler below then shows "Form cleared")
+    document.getElementById('clearFormBtn').addEventListener('click', function (e) {
+      e.preventDefault();
+      openConfirm('clear', '', () => document.querySelector('form').reset());
+    });
+
     // "Form cleared" pop-up: closes with the button, a click outside, Escape, or by itself after a few seconds
     const clearedModal = document.getElementById('clearedModal');
     const clearedCard = document.getElementById('clearedCard');
@@ -1180,9 +1264,30 @@
     // listener (age cap, BHW format, Sex/Civil Status/PhilHealth) has already
     // had a chance to call preventDefault() - just check the outcome instead
     // of re-running those checks (which would re-trigger their alert() calls).
+    let submitConfirmed = false;
     registrationForm.addEventListener('submit', function(e) {
-      if (!e.defaultPrevented) {
-        clearDraft();
+      if (e.defaultPrevented) return;   // a check above failed: nothing to confirm yet
+
+      if (!submitConfirmed) {
+        // every check passed: ask before sending, naming who is being registered
+        e.preventDefault();
+        const who = [document.getElementById('givenNameInput')?.value, document.getElementById('surnameInput')?.value]
+          .map(v => (v || '').trim()).filter(Boolean).join(' ');
+        openConfirm('submit', who ? 'Registering: ' + who : '', () => {
+          submitConfirmed = true;
+          const btn = document.getElementById('submitRegistrationBtn');
+          btn.disabled = true;   // no double submit
+          registrationForm.requestSubmit();
+        });
+        return;
+      }
+      clearDraft();
+    });
+    // coming back to this page with the Back button: the form can be submitted again
+    window.addEventListener('pageshow', function(e) {
+      if (e.persisted) {
+        submitConfirmed = false;
+        document.getElementById('submitRegistrationBtn').disabled = false;
       }
     });
     // --- BHW Referral Autofill Logic ---

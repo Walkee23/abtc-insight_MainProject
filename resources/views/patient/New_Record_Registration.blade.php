@@ -135,40 +135,6 @@
         </div>
         <p class="text-on-surface-variant text-sm font-medium">Cebu City Animal Bite Treatment Center — CCHD</p>
       </div>
-      <!-- 4-step Progress Indicator -->
-      <div class="flex items-center mb-12 px-2" id="progressIndicator">
-        <div class="flex flex-col items-center gap-2 shrink-0" id="stepWrap-1">
-          <div
-            class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold shadow-lg shadow-primary/20 transition-all"
-            id="stepCircle-1">1</div>
-          <span class="text-[10px] uppercase font-bold tracking-tighter text-center leading-tight min-h-[25px] sm:min-h-0 max-w-[4.25rem] sm:max-w-none text-primary transition-colors"
-            id="stepLabel-1">Priority Status</span>
-        </div>
-        <div class="flex-1 h-[2px] bg-surface-container-high mx-1 -mt-6 transition-colors" id="stepLine-1"></div>
-        <div class="flex flex-col items-center gap-2 shrink-0" id="stepWrap-2">
-          <div
-            class="w-8 h-8 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center text-xs font-bold transition-all"
-            id="stepCircle-2">2</div>
-          <span class="text-[10px] uppercase font-bold tracking-tighter text-center leading-tight min-h-[25px] sm:min-h-0 max-w-[4.25rem] sm:max-w-none text-on-surface-variant transition-colors"
-            id="stepLabel-2">Personal Info</span>
-        </div>
-        <div class="flex-1 h-[2px] bg-surface-container-high mx-1 -mt-6 transition-colors" id="stepLine-2"></div>
-        <div class="flex flex-col items-center gap-2 shrink-0" id="stepWrap-3">
-          <div
-            class="w-8 h-8 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center text-xs font-bold transition-all"
-            id="stepCircle-3">3</div>
-          <span class="text-[10px] uppercase font-bold tracking-tighter text-center leading-tight min-h-[25px] sm:min-h-0 max-w-[4.25rem] sm:max-w-none text-on-surface-variant transition-colors"
-            id="stepLabel-3">PhilHealth</span>
-        </div>
-        <div class="flex-1 h-[2px] bg-surface-container-high mx-1 -mt-6 transition-colors" id="stepLine-3"></div>
-        <div class="flex flex-col items-center gap-2 shrink-0" id="stepWrap-4">
-          <div
-            class="w-8 h-8 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center text-xs font-bold transition-all"
-            id="stepCircle-4">4</div>
-          <span class="text-[10px] uppercase font-bold tracking-tighter text-center leading-tight min-h-[25px] sm:min-h-0 max-w-[4.25rem] sm:max-w-none text-on-surface-variant transition-colors"
-            id="stepLabel-4">Medical History</span>
-        </div>
-      </div>
       <!-- Form Content -->
       <form action="{{ route('patient.new-submit') }}" method="POST" class="space-y-12">
         @csrf
@@ -656,94 +622,6 @@
       }
     });
 
-    // Interactive progress indicator: a step is only checked off once every
-    // required field within that step is actually filled in.
-    const totalSteps = 4;
-    const stepDone = {
-      1: false,
-      2: false,
-      3: false,
-      4: false
-    };
-
-    // the step labels keep their centred, wrapping layout in every state (the same classes as in the markup above)
-    const STEP_LABEL = 'text-[10px] uppercase font-bold tracking-tighter text-center leading-tight min-h-[25px] sm:min-h-0 max-w-[4.25rem] sm:max-w-none transition-colors';
-    const ACTIVE_CIRCLE = 'w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold shadow-lg shadow-primary/20 transition-all';
-    const DONE_CIRCLE = 'w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold transition-all';
-    const UPCOMING_CIRCLE = 'w-8 h-8 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center text-xs font-bold transition-all';
-
-    function setStepState(stepNum, state) {
-      const circle = document.getElementById(`stepCircle-${stepNum}`);
-      const label = document.getElementById(`stepLabel-${stepNum}`);
-      const line = document.getElementById(`stepLine-${stepNum}`);
-
-      if (state === 'done') {
-        circle.className = DONE_CIRCLE;
-        circle.innerHTML = '<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: \'FILL\' 1;">check</span>';
-        label.className = STEP_LABEL + ' text-primary';
-        if (line) line.className = 'flex-1 h-[2px] bg-primary/40 mx-1 -mt-6 transition-colors';
-      } else if (state === 'active') {
-        circle.className = ACTIVE_CIRCLE;
-        circle.textContent = stepNum;
-        label.className = STEP_LABEL + ' text-primary';
-        if (line) line.className = 'flex-1 h-[2px] bg-surface-container-high mx-1 -mt-6 transition-colors';
-      } else {
-        circle.className = UPCOMING_CIRCLE;
-        circle.textContent = stepNum;
-        label.className = STEP_LABEL + ' text-on-surface-variant';
-        if (line) line.className = 'flex-1 h-[2px] bg-surface-container-high mx-1 -mt-6 transition-colors';
-      }
-    }
-
-    // Step 2 (Personal Info) is complete only when every required field has a value
-    function isStep2Complete() {
-      return isBhwReferralFormatValid(bhwReferralInput.value) &&
-        surnameInput.value.trim() !== '' &&
-        givenNameInput.value.trim() !== '' &&
-        dobInput.value !== '' &&
-        sexInput.value !== '' &&
-        civilStatusInput.value !== '' &&
-        contactNumberInput.value.trim() !== '' &&
-        barangayInput.value.trim() !== '';
-    }
-
-    // Step 3 (PhilHealth) is complete once a Yes/No choice is made -
-    // and if Yes, the member name and DOB must be filled too
-    function isStep3Complete() {
-      const selected = document.querySelector('input[name="philhealth_member"]:checked');
-      if (!selected) return false;
-      if (selected.value === 'yes') {
-        return philhealthMemberNameInput.value.trim() !== '' && philhealthMemberDobInput.value !== '';
-      }
-      return true;
-    }
-
-    // Step 1 (Priority Status) is a single click, tracked directly
-    function isStep1Complete() {
-      return stepDone[1] === true;
-    }
-
-    // Recalculate all 4 steps from scratch every time something relevant changes,
-    // so a step can un-check itself if a required field gets cleared afterward
-    function recalcSteps() {
-      const completions = [isStep1Complete(), isStep2Complete(), isStep3Complete(), false];
-      let activeAssigned = false;
-
-      for (let i = 1; i <= totalSteps; i++) {
-        const done = completions[i - 1];
-        stepDone[i] = done;
-
-        if (done) {
-          setStepState(i, 'done');
-        } else if (!activeAssigned) {
-          setStepState(i, 'active');
-          activeAssigned = true;
-        } else {
-          setStepState(i, 'upcoming');
-        }
-      }
-    }
-
     // Full Name split: Surname, Given Name, Middle Initial -> combined into one hidden field
     const surnameInput = document.getElementById('surnameInput');
     const givenNameInput = document.getElementById('givenNameInput');
@@ -930,23 +808,8 @@
         this.classList.remove('border-surface-container-high');
         this.classList.add('border-primary', 'bg-primary/5', 'ring-2', 'ring-primary/20');
 
-        // Step 1 is done once a priority option is picked
-        stepDone[1] = true;
-        recalcSteps();
       });
     });
-
-    // Step 2 fields: recalculate completion every time any of them change
-    const contactNumberInput = document.getElementById('contactNumberInput');
-    [bhwReferralInput, surnameInput, givenNameInput, dobInput, contactNumberInput, barangayInput].forEach(field => {
-      if (field) {
-        field.addEventListener('input', recalcSteps);
-      }
-    });
-    // Sex and Civil Status are hidden inputs updated by the custom dropdowns above,
-    // so recalcSteps() also needs to run whenever their dropdown option is picked
-    document.getElementById('sexDropdown').addEventListener('click', recalcSteps);
-    document.getElementById('civilStatusDropdown').addEventListener('click', recalcSteps);
 
     const philhealthRadios = document.querySelectorAll('input[name="philhealth_member"]');
     const philhealthDetails = document.getElementById('philhealthDetails');
@@ -962,15 +825,7 @@
           philhealthMemberNameInput.value = '';
           philhealthMemberDobInput.value = '';
         }
-        recalcSteps();
       });
-    });
-
-    // Step 3 fields: recalculate whenever the member name/DOB change (only relevant when Yes is picked)
-    [philhealthMemberNameInput, philhealthMemberDobInput].forEach(field => {
-      if (field) {
-        field.addEventListener('input', recalcSteps);
-      }
     });
 
     // Confirmation pop-up shared by "Clear Form" and "Submit and Get Queue Number"
@@ -1071,20 +926,10 @@
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !clearedModal.classList.contains('hidden')) hideClearedModal(); });
 
     // Clear Form: native reset only clears input/select values, so this cleans up
-    // everything else that JS controls (progress steps, dropdown display text,
+    // everything else that JS controls (dropdown display text,
     // PhilHealth toggle, and highlighted priority cards)
     document.querySelector('form').addEventListener('reset', function() {
       setTimeout(function() {
-        // Reset progress indicator back to step 1
-        stepDone[1] = false;
-        stepDone[2] = false;
-        stepDone[3] = false;
-        stepDone[4] = false;
-        setStepState(1, 'active');
-        setStepState(2, 'upcoming');
-        setStepState(3, 'upcoming');
-        setStepState(4, 'upcoming');
-
         // Reset Sex and Civil Status dropdown display text
         const sexDisplayText = document.getElementById('sexDisplayText');
         sexDisplayText.textContent = 'Select';
@@ -1109,7 +954,7 @@
         clearBhwReferralError();
 
         // Back to the top of the form, and tell the user it worked
-        document.getElementById('progressIndicator').scrollIntoView({ block: 'center', behavior: 'smooth' });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         showClearedModal();
       }, 0);
 
@@ -1230,7 +1075,6 @@
         const chosen = priorityOptions[draft.priorityIndex];
         chosen.classList.remove('border-surface-container-high');
         chosen.classList.add('border-primary', 'bg-primary/5', 'ring-2', 'ring-primary/20');
-        stepDone[1] = true;
       }
 
       // Restore PhilHealth Yes/No selection, and show/hide details to match
@@ -1248,7 +1092,6 @@
 
       // Re-sync everything that depends on the restored values
       updateFullNameHidden();
-      recalcSteps();
     }
 
     // Restore whatever was saved, as soon as the page loads
@@ -1362,11 +1205,6 @@
               // Trigger blur on DOB to calculate the age
               if (document.getElementById('dobInput').value) {
                 document.getElementById('dobInput').dispatchEvent(new Event('blur'));
-              }
-
-              // Recalculate progress steps to reflect new data
-              if (typeof recalcSteps === 'function') {
-                recalcSteps();
               }
 
               clearBhwReferralError();

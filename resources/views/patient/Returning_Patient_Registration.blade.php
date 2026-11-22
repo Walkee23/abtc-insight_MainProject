@@ -87,21 +87,6 @@
       font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
     }
 
-    .step-active {
-      background-color: #004a93;
-      color: white;
-    }
-
-    .step-complete {
-      background-color: #10b981;
-      color: white;
-    }
-
-    .step-inactive {
-      background-color: #e0e3e5;
-      color: #717782;
-    }
-
     /* the dose the patient picked: same layout as a given dose (Day / date / status), in the primary blue */
     .dose-chip.is-selected {
       background-color: #d6e3ff;
@@ -161,33 +146,6 @@
           </div>
           <span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-[12px] font-bold tracking-wide uppercase whitespace-nowrap shrink-0">Existing Record</span>
         </div>
-        <!-- Step Indicator -->
-        <div class="flex items-center mb-12">
-          <!-- Step 1 -->
-          <div class="flex flex-col items-center gap-2 shrink-0">
-            <div class="w-10 h-10 rounded-full step-active flex items-center justify-center shadow-lg ring-4 ring-primary-container/20" id="returningStepCircle-1">
-              <span class="font-bold">1</span>
-            </div>
-            <span class="text-xs font-bold text-primary uppercase tracking-wider" id="returningStepLabel-1">Find Record</span>
-          </div>
-          <div class="flex-1 h-[2px] bg-surface-container-high mx-1 -mt-6 transition-colors" id="returningStepLine-1"></div>
-          <!-- Step 2 -->
-          <div class="flex flex-col items-center gap-2 shrink-0">
-            <div class="w-10 h-10 rounded-full step-inactive flex items-center justify-center" id="returningStepCircle-2">
-              <span class="font-bold">2</span>
-            </div>
-            <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider" id="returningStepLabel-2">Choose Dose</span>
-          </div>
-          <div class="flex-1 h-[2px] bg-surface-container-high mx-1 -mt-6 transition-colors" id="returningStepLine-2"></div>
-          <!-- Step 3 -->
-          <div class="flex flex-col items-center gap-2 shrink-0">
-            <div class="w-10 h-10 rounded-full step-inactive flex items-center justify-center" id="returningStepCircle-3">
-              <span class="font-bold">3</span>
-            </div>
-            <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider" id="returningStepLabel-3">Confirm</span>
-          </div>
-        </div>
-
         @if($errors->any())
         <div class="bg-red-50 text-red-700 px-6 py-4 rounded-lg text-sm font-medium mb-6">{{ $errors->first() }}</div>
         @endif
@@ -323,35 +281,6 @@
   </footer>
  
   <script>
-    // Helper to update the 3-step progress indicator
-    function markReturningStep(stepNum, state) {
-      const circle = document.getElementById(`returningStepCircle-${stepNum}`);
-      const label = document.getElementById(`returningStepLabel-${stepNum}`);
-      const line = document.getElementById(`returningStepLine-${stepNum}`);
-
-      circle.classList.remove('step-active', 'step-complete', 'step-inactive', 'shadow-lg', 'ring-4', 'ring-primary-container/20', 'shadow-md');
-
-      if (state === 'done') {
-        circle.classList.add('step-complete', 'shadow-md');
-        circle.innerHTML = '<span class="material-symbols-outlined text-xl">check</span>';
-        label.classList.remove('text-primary', 'text-on-surface-variant');
-        label.classList.add('text-emerald-600');
-        if (line) line.className = 'flex-1 h-[2px] bg-primary/40 mx-1 -mt-6 transition-colors';
-      } else if (state === 'active') {
-        circle.classList.add('step-active', 'shadow-lg', 'ring-4', 'ring-primary-container/20');
-        circle.innerHTML = `<span class="font-bold">${stepNum}</span>`;
-        label.classList.remove('text-emerald-600', 'text-on-surface-variant');
-        label.classList.add('text-primary');
-        if (line) line.className = 'flex-1 h-[2px] bg-surface-container-high mx-1 -mt-6 transition-colors';
-      } else {
-        circle.classList.add('step-inactive');
-        circle.innerHTML = `<span class="font-bold">${stepNum}</span>`;
-        label.classList.remove('text-emerald-600', 'text-primary');
-        label.classList.add('text-on-surface-variant');
-        if (line) line.className = 'flex-1 h-[2px] bg-surface-container-high mx-1 -mt-6 transition-colors';
-      }
-    }
-
     const $ = (id) => document.getElementById(id);
     const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -495,8 +424,6 @@
         chip.querySelector('.dose-status').textContent = on ? 'Selected' : (chip.dataset.checked === '1' ? 'Already checked in' : 'Tap to select');
       });
       $('submitBtn').disabled = false;
-      markReturningStep(2, 'done');
-      markReturningStep(3, 'active');
     }
 
     // One card per ongoing case. Doses are taken in order: D0 and the doses already given are filled in from the record,
@@ -553,9 +480,6 @@
       $('casesList').innerHTML = '';
       ['tokenInput', 'caseInput', 'doseInput', 'searchPatientId', 'searchName', 'searchDob', 'returningContactNumberInput'].forEach((id) => { $(id).value = ''; });
       $('submitBtn').disabled = true;
-      markReturningStep(1, 'active');
-      markReturningStep(2, 'inactive');
-      markReturningStep(3, 'inactive');
     }
 
     $('clearBtn').addEventListener('click', resetAll);
@@ -628,10 +552,6 @@
         $('noCaseMsg').classList.toggle('hidden', hasCases);
         $('confirmArea').classList.toggle('hidden', !canCheckIn);
         renderCases(data.cases);
-
-        markReturningStep(1, 'done');
-        markReturningStep(2, canCheckIn ? 'active' : 'inactive');
-        markReturningStep(3, 'inactive');
       } catch (error) {
         console.error('Search failed:', error);
         notFoundMsg.textContent = 'Something went wrong. Please try again.';

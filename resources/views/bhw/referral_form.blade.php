@@ -133,7 +133,6 @@
     
 
     <!-- Top App Bar -->
-    <header class="fixed top-0 right-0 w-[calc(100%-16rem)] z-40 bg-surface-bright/85 backdrop-blur-xl flex justify-end items-center h-20 px-8 border-b border-outline-variant/10 shadow-sm">
     <header class="fixed top-0 right-0 w-[calc(100%-16rem)] z-40 bg-surface-bright/85 backdrop-blur-xl flex justify-between items-center h-20 px-8 border-b border-outline-variant/10 shadow-sm">
         <div class="flex items-center gap-4">
         </div>
@@ -648,9 +647,7 @@
                 }
             });
 
-            exposureTypeRadios.forEach(r => r.addEventListener('change', applyCategoryRule));
-            applyCategoryRule();
-
+            
             // 4. Preview Button Alert
             document.getElementById('previewBtn').addEventListener('click', function() {
                 alert("Preview functionality: This will open a popup showing how the printed form looks before saving. We can add a Bootstrap/Tailwind Modal here next!");

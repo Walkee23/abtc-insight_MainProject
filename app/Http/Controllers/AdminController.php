@@ -71,13 +71,13 @@ class AdminController extends Controller
         ->whereNotNull('s7.day0_date')
         ->count();
 
-    // 3. Completed PEP Today: courses whose every dose is recorded (the schedule depends on the route: IM Day 0, 3, 7, 14,
-    // 28; ID Day 0, 3, 7, 28; Booster Day 0, 3) and whose last dose, Day 28 (Day 3 for a Booster), is dated today.
+    // 3. Completed PEP Today: courses whose every dose is recorded (the schedule depends on the route: IM Day 0, 3, 7, 14;
+    // ID Day 0, 3, 7, 28; Booster Day 0, 3) and whose last dose (Day 14 for IM, Day 28 for ID, Day 3 for a Booster) is dated today.
     // (There is no "completed at" column, so the last dose date is the closest signal.)
     $completedToday = DB::table('bite_cases as bc')
         ->join('bite_section7_immunization as s7', 's7.bite_case_id', '=', 'bc.bite_case_id')
         ->whereRaw('(' . \App\Support\PepSchedule::completeSql('s7') . ')')
-        ->whereRaw("DATE(CASE WHEN s7.dose_type = 'Booster' THEN s7.day3_date ELSE s7.day28_date END) = ?", [today()->toDateString()])
+        ->whereRaw("DATE(CASE WHEN s7.dose_type = 'Booster' THEN s7.day3_date WHEN s7.route = 'IM' THEN s7.day14_date ELSE s7.day28_date END) = ?", [today()->toDateString()])
         ->count();
 
     // 4. Top Incident Hotspots (30 o 90 ka adlaw)
@@ -182,7 +182,7 @@ class AdminController extends Controller
     {
         // 1. PEP Completion Rate: every PEP course on record (Day 0 given) is scanned in the database.
         // A course is completed when ALL of its scheduled doses have a recorded date (App\Support\PepSchedule):
-        //   Primary, IM route:  Day 0, Day 3, Day 7, Day 14 and Day 28  (5 dates)
+        //   Primary, IM route:  Day 0, Day 3, Day 7 and Day 14  (4 dates)
         //   Primary, ID route:  Day 0, Day 3, Day 7 and Day 28  (4 dates; also records with no route, e.g. imports)
         //   Booster:            Day 0 and Day 3                 (2 dates)
         $complete = \App\Support\PepSchedule::completeSql('s7');

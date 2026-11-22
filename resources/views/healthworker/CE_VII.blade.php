@@ -475,10 +475,9 @@
                                 <div class="bg-surface-container-low rounded-xl p-6">
                                     <p class="text-xs font-extrabold text-outline uppercase tracking-widest mb-1">Dose
                                         Tracking Grid</p>
-                                    <p class="text-[11px] text-outline mb-4">Primary IM route: Day 0, 3, 7, 14 and 28. Primary ID route: Day 0, 3, 7 and 28. Booster: Day 0 and 3. Each dose has its own vaccine brand and is given by whoever recorded it.</p>
+                                    <p class="text-[11px] text-outline mb-4">IM route: Day 0, 3, 7 and 14. ID route: Day 0, 3, 7 and 28. Booster: Day 0 and 3. Each dose has its own vaccine brand, and "Given by" stays empty until the dose is recorded by a health worker.</p>
                                     <style>
                                         @media (min-width: 768px) {
-                                            #doseGrid[data-cols="5"] { grid-template-columns: repeat(5, minmax(0, 1fr)); }
                                             #doseGrid[data-cols="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
                                         }
                                         @media (max-width: 767.98px) {
@@ -494,7 +493,7 @@
                                             <p data-error-for="day{{ $d }}_date" class="mt-1 text-xs font-semibold text-error {{ $errors->has('day' . $d . '_date') ? '' : 'hidden' }}">{{ $errors->first('day' . $d . '_date') }}</p>
                                             <p class="text-[10px] font-bold text-outline uppercase mt-3 mb-1">Vaccine brand @if($d === 0)<span class="text-error">*</span>@endif</p>
                                             {!! $dropdown('day' . $d . '_brand', $brandOptions, 'bg-surface-container-low !py-2 !px-2 text-xs') !!}
-                                            <p class="mt-2 text-[10px] text-outline">Given by: <span class="font-semibold text-on-surface-variant">{{ $section->{'day' . $d . '_administered_by'} ?? (Auth::user()->full_name ?? '') }}</span></p>
+                                            <p class="mt-2 text-[10px] text-outline">Given by: <span class="font-semibold text-on-surface-variant">{{ ($section->{'day' . $d . '_administered_by'} ?? '') ?: '—' }}</span></p>
                                         </div>
                                         @endforeach
                                     </div>
@@ -698,13 +697,13 @@
             }
 
             // Dose dates follow the dose type and the route:
-            //   Primary + IM = Day 0, 3, 7, 14, 28   Primary + ID (or no route yet) = Day 0, 3, 7, 28   Booster = Day 0, 3
+            //   Primary + IM = Day 0, 3, 7, 14   Primary + ID (or no route yet) = Day 0, 3, 7, 28   Booster = Day 0, 3
             const doseTypeInput = form.querySelector('[data-field="dose_type"]');
             const routeInput = form.querySelector('[data-field="route"]');
             const doseGrid = document.getElementById('doseGrid');
             function courseDays() {
                 if (doseTypeInput.value === 'Booster') return [0, 3];
-                return routeInput.value === 'IM' ? [0, 3, 7, 14, 28] : [0, 3, 7, 28];
+                return routeInput.value === 'IM' ? [0, 3, 7, 14] : [0, 3, 7, 28];
             }
             function applySchedule() {
                 const days = courseDays();
@@ -725,7 +724,7 @@
                         label.classList.remove('text-on-surface');
                     }
                 });
-                doseGrid.dataset.cols = String(days.length); // 2, 4 or 5 boxes: the columns follow (see the style rule above the grid)
+                doseGrid.dataset.cols = String(days.length); // 2 or 4 boxes: the columns follow (see the style rule above the grid)
             }
             applySchedule();
 

@@ -342,7 +342,7 @@ class ClinicalEncodingController extends Controller
         // as '' (shows as "Select" again) rather than a made-up default
         $validated['dose_type'] = $validated['dose_type'] ?? '';
 
-        // The dose dates follow the dose type and route (App\Support\PepSchedule): Primary IM = Day 0, 3, 7, 14, 28;
+        // The dose dates follow the dose type and route (App\Support\PepSchedule): Primary IM = Day 0, 3, 7, 14;
         // Primary ID = Day 0, 3, 7, 28; Booster = Day 0, 3. A dose that is not part of the course keeps nothing:
         // no date, no brand, no "administered by".
         $courseDays = PepSchedule::days($validated['dose_type'], $validated['route'] ?? null);
@@ -579,7 +579,7 @@ class ClinicalEncodingController extends Controller
             ->withQueryString();
 
         // Reminders: PEP doses that are due or overdue, worked out from the Day 0 date and the case's route
-        // (App\Support\PepSchedule: Primary IM Day 3 / 7 / 14 / 28, Primary ID Day 3 / 7 / 28, Booster Day 3),
+        // (App\Support\PepSchedule: Primary IM Day 3 / 7 / 14, Primary ID Day 3 / 7 / 28, Booster Day 3),
         // skipping doses already recorded
         $reminders = [];
         $immunizations = $unfinished()

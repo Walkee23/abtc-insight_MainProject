@@ -5,9 +5,9 @@ namespace App\Support;
 /**
  * The PEP dose schedule of a case, from its Section VII dose type and route:
  *
- *   Primary, IM route (intramuscular)  -> Day 0, 3, 7, 14, 28  (5 dates)
- *   Primary, ID route (intradermal)    -> Day 0, 3, 7, 28       (4 dates)
- *   Booster                            -> Day 0, 3              (2 dates)
+ *   Primary, IM route (intramuscular)  -> Day 0, 3, 7, 14  (4 dates)
+ *   Primary, ID route (intradermal)    -> Day 0, 3, 7, 28  (4 dates)
+ *   Booster                            -> Day 0, 3         (2 dates)
  *
  * A case with no route on record (imported records, or a draft) is treated like ID: Day 28.
  * Every screen and report that needs "which doses does this case have" goes through here.
@@ -21,7 +21,15 @@ class PepSchedule
             return [0, 3];
         }
 
-        return $route === 'IM' ? [0, 3, 7, 14, 28] : [0, 3, 7, 28];
+        return $route === 'IM' ? [0, 3, 7, 14] : [0, 3, 7, 28];
+    }
+
+    /** The day of the last dose of the course (what ends it): Day 3 for a Booster, Day 14 for IM, Day 28 for ID. */
+    public static function lastDay(?string $doseType, ?string $route): int
+    {
+        $days = self::days($doseType, $route);
+
+        return end($days);
     }
 
     /** The day numbers after Day 0 (the visits a returning patient can check in for). */
@@ -37,7 +45,7 @@ class PepSchedule
     public static function completeSql(string $s7 = 's7'): string
     {
         return "CASE WHEN {$s7}.dose_type = 'Booster' THEN {$s7}.day3_date IS NOT NULL
-                     WHEN {$s7}.route = 'IM' THEN ({$s7}.day3_date IS NOT NULL AND {$s7}.day7_date IS NOT NULL AND {$s7}.day14_date IS NOT NULL AND {$s7}.day28_date IS NOT NULL)
+                     WHEN {$s7}.route = 'IM' THEN ({$s7}.day3_date IS NOT NULL AND {$s7}.day7_date IS NOT NULL AND {$s7}.day14_date IS NOT NULL)
                      ELSE ({$s7}.day3_date IS NOT NULL AND {$s7}.day7_date IS NOT NULL AND {$s7}.day28_date IS NOT NULL) END";
     }
 }

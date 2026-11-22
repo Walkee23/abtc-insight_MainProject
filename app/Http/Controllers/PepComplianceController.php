@@ -15,7 +15,7 @@ class PepComplianceController extends Controller
      * PEP Compliance.
      *
      * Doses are worked out from Section VII (bite_section7_immunization): the Day 0 date
-     * sets the schedule (by dose type and route, see App\Support\PepSchedule: Primary IM D0/D3/D7/D14/D28, Primary ID D0/D3/D7/D28, Booster D0/D3) and each recorded day date
+     * sets the schedule (by dose type and route, see App\Support\PepSchedule: Primary IM D0/D3/D7/D14, Primary ID D0/D3/D7/D28, Booster D0/D3) and each recorded day date
      * is the actual dose.
      */
     public function index(Request $request)
@@ -152,7 +152,7 @@ class PepComplianceController extends Controller
      * dose's scheduled date, actual date and status worked out in SQL:
      * Completed On Time / Completed Late / Missed / Pending.
      *
-     * Schedule (App\Support\PepSchedule): Primary IM D0/D3/D7/D14/D28 (5 doses), Primary ID D0/D3/D7/D28 (4 doses),
+     * Schedule (App\Support\PepSchedule): Primary IM D0/D3/D7/D14, Primary ID D0/D3/D7/D28 (4 doses each),
      * Booster D0/D3 (2 doses). Dose numbers follow that order. $mine limits it to the cases assigned to the logged-in health worker.
      */
     private function doses(bool $mine)
@@ -182,7 +182,7 @@ class PepComplianceController extends Controller
             ->unionAll($slot(3, '2'))
             ->unionAll($slot(7, '3', $primary))
             ->unionAll($slot(14, '4', $primary . " AND s7.route = 'IM'"))
-            ->unionAll($slot(28, "IF(s7.route = 'IM', 5, 4)", $primary));
+            ->unionAll($slot(28, '4', $primary . " AND COALESCE(s7.route, '') <> 'IM'"));
 
         $today = DB::getPdo()->quote($this->today()->toDateString());
         $scheduled = 'DATE(DATE_ADD(d.day0, INTERVAL d.day_no DAY))';

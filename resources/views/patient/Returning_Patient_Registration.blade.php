@@ -115,6 +115,7 @@
       background: linear-gradient(135deg, #004a93 0%, #0b61bb 100%);
     }
   </style>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script src="{{ asset('js/custom-select.js') }}" defer></script>
     <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
     <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
@@ -202,8 +203,15 @@
             <div id="idLookup" class="mb-4">
               <div class="space-y-1.5">
                 <label class="text-xs font-bold text-on-surface-variant uppercase ml-1" for="searchPatientId">Patient ID</label>
-                <input type="text" id="searchPatientId" autocomplete="off" spellcheck="false" placeholder="CEB-20261120-19840910-001" class="w-full bg-surface-container-highest border-0 focus:ring-2 focus:ring-primary/20 rounded-lg px-4 py-3.5 font-medium uppercase tracking-wide" />
-                <p class="text-xs text-on-surface-variant ml-1">The ID you were given at your first visit. It starts with CEB.</p>
+                <div class="flex flex-wrap gap-2">
+                  <input type="text" id="searchPatientId" autocomplete="off" spellcheck="false" placeholder="CEB-20261120-19840910-001" class="w-full basis-full sm:basis-0 sm:flex-1 min-w-0 bg-surface-container-highest border-0 focus:ring-2 focus:ring-primary/20 rounded-lg px-4 py-3.5 font-medium uppercase tracking-wide" />
+                  <button type="button" id="scanQrBtn" title="Scan your Patient ID QR code"
+                    class="w-full sm:w-auto justify-center bg-secondary-container text-on-secondary-container px-5 py-3.5 rounded-lg text-sm font-bold hover:opacity-90 active:scale-95 transition-all flex items-center gap-1.5 whitespace-nowrap">
+                    <span class="material-symbols-outlined text-[18px]">qr_code_scanner</span>
+                    <span>Scan QR</span>
+                  </button>
+                </div>
+                <p class="text-xs text-on-surface-variant ml-1">The ID you were given at your first visit. It starts with CEB. You can also scan or upload the QR code from your last visit.</p>
               </div>
             </div>
             <button type="button" id="toggleLookup" class="text-sm font-bold text-primary hover:underline mb-4">I don't have my Patient ID</button>
@@ -258,6 +266,49 @@
       </div>
     </div>
   </main>
+  <!-- Scan / upload the Patient ID QR code -->
+  <div id="qrScannerModal" role="dialog" aria-modal="true" aria-labelledby="qrModalTitle" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm items-center justify-center p-4">
+    <div class="bg-surface-container-lowest rounded-2xl max-w-md w-full p-6 shadow-2xl border border-outline-variant/30 space-y-4 max-h-[92vh] overflow-y-auto">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary">qr_code_scanner</span>
+          <h3 id="qrModalTitle" class="font-bold text-base text-on-surface">Scan or Upload Patient QR</h3>
+        </div>
+        <button type="button" id="closeQrModalBtn" aria-label="Close" class="p-1 text-on-surface-variant hover:text-on-surface rounded-lg">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 p-1 bg-surface-container rounded-xl">
+        <button type="button" id="tabCameraBtn" class="py-2 px-3 rounded-lg text-xs font-bold bg-white text-primary shadow-sm transition-all flex items-center justify-center gap-1.5">
+          <span class="material-symbols-outlined text-[16px]">photo_camera</span>
+          Use Camera
+        </button>
+        <button type="button" id="tabUploadBtn" class="py-2 px-3 rounded-lg text-xs font-bold text-on-surface-variant hover:text-on-surface transition-all flex items-center justify-center gap-1.5">
+          <span class="material-symbols-outlined text-[16px]">upload_file</span>
+          Upload QR Photo
+        </button>
+      </div>
+
+      <div id="cameraPanel" class="space-y-3">
+        <div id="qrReader" class="w-full rounded-xl overflow-hidden bg-black min-h-[240px]"></div>
+        <p class="text-xs text-on-surface-variant text-center">Point your camera at the QR code you received at your last visit.</p>
+      </div>
+
+      <div id="uploadPanel" class="hidden space-y-3">
+        <input type="file" id="qrFileInput" accept="image/png,image/jpeg,.png,.jpg,.jpeg" class="hidden" />
+        <div id="qrFileDropzone" role="button" tabindex="0" class="border-2 border-dashed border-outline-variant/60 hover:border-primary rounded-xl p-8 text-center cursor-pointer transition-colors bg-surface-container-low/50">
+          <span class="material-symbols-outlined text-4xl text-primary mb-2">qr_code_2</span>
+          <p class="text-sm font-bold text-on-surface">Choose your QR code image</p>
+          <p class="text-[11px] text-on-surface-variant mt-1">Only a PNG or JPG photo of your Patient ID QR code (up to 5 MB). Any other kind of file is rejected.</p>
+        </div>
+        <div id="qrFileReader" class="hidden"></div>
+      </div>
+
+      <p id="qrModalError" role="alert" class="hidden text-xs text-error font-semibold text-center bg-error-container/50 py-2 px-3 rounded-lg"></p>
+    </div>
+  </div>
+
   <!-- Footer -->
   <footer class="flex flex-col md:flex-row justify-between items-center gap-4 px-6 md:px-8 py-6 w-full border-t border-[#c1c7d3]/15 bg-[#f2f4f6] dark:bg-slate-950 font-['Inter'] text-sm text-center md:text-left">
     <div class="flex flex-col md:flex-row items-center gap-1 md:gap-4">
@@ -315,6 +366,120 @@
       const n = new Date();
       return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
     }
+
+    // ----- Scan / upload the Patient ID QR code -------------------------------------------------------------------
+    // Only a real Patient ID QR code is accepted (CEB-YYYYMMDD-YYYYMMDD-NNN). The image is read in the browser and
+    // never uploaded; the lookup itself is still checked by the server.
+    const PATIENT_ID_RE = /^CEB-\d{8}-\d{8}-\d{1,6}$/;
+    const QR_MAX_BYTES = 5 * 1024 * 1024;
+    const qrModal = $('qrScannerModal');
+    const qrError = $('qrModalError');
+    let qrCamera = null;
+    let lastBadScan = '';
+    const qrFileScanner = new Html5Qrcode('qrFileReader');
+
+    function showQrError(msg) { qrError.textContent = msg; qrError.classList.remove('hidden'); }
+    function clearQrError() { qrError.textContent = ''; qrError.classList.add('hidden'); }
+
+    // The real file type is read from the first bytes of the file, not from its name or the type the browser reports
+    async function isRealPngOrJpeg(file) {
+      const b = new Uint8Array(await file.slice(0, 12).arrayBuffer());
+      const png = b.length >= 8 && [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A].every((v, i) => b[i] === v);
+      const jpeg = b.length >= 3 && b[0] === 0xFF && b[1] === 0xD8 && b[2] === 0xFF;
+      return png || jpeg;
+    }
+
+    // true once a valid Patient ID QR code has been used
+    function useScannedPatientId(rawText) {
+      const id = String(rawText || '').trim().toUpperCase();
+      if (!PATIENT_ID_RE.test(id)) {
+        if (id !== lastBadScan) {   // the camera sees the same wrong code many times a second: say it once
+          lastBadScan = id;
+          showQrError('Invalid QR code. Only the Patient ID QR code from your visit (CEB-XXXXXXXX-XXXXXXXX-XXX) is accepted.');
+        }
+        return false;
+      }
+      clearQrError();
+      closeQrModal();
+      if (byName) $('toggleLookup').click();   // back to the Patient ID box
+      $('searchPatientId').value = id;
+      $('searchBtn').click();
+      return true;
+    }
+
+    function stopQrCamera() {
+      if (qrCamera && qrCamera.isScanning) return qrCamera.stop().catch(() => {});
+      return Promise.resolve();
+    }
+    function startQrCamera() {
+      clearQrError(); lastBadScan = '';
+      if (!qrCamera) qrCamera = new Html5Qrcode('qrReader');
+      if (qrCamera.isScanning) return;
+      qrCamera.start({ facingMode: 'environment' }, { fps: 10, qrbox: { width: 240, height: 240 } },
+        (text) => { useScannedPatientId(text); }, () => {})
+        .catch(() => { showQrError('Camera unavailable or permission denied. Switch to "Upload QR Photo" above.'); });
+    }
+
+    const TAB_ON = 'py-2 px-3 rounded-lg text-xs font-bold bg-white text-primary shadow-sm transition-all flex items-center justify-center gap-1.5';
+    const TAB_OFF = 'py-2 px-3 rounded-lg text-xs font-bold text-on-surface-variant hover:text-on-surface transition-all flex items-center justify-center gap-1.5';
+    function qrTab(camera) {
+      clearQrError(); lastBadScan = '';
+      $('tabCameraBtn').className = camera ? TAB_ON : TAB_OFF;
+      $('tabUploadBtn').className = camera ? TAB_OFF : TAB_ON;
+      $('cameraPanel').classList.toggle('hidden', !camera);
+      $('uploadPanel').classList.toggle('hidden', camera);
+      if (camera) startQrCamera(); else stopQrCamera();
+    }
+    function openQrModal() {
+      qrModal.classList.remove('hidden');
+      qrModal.classList.add('flex');
+      qrTab(true);
+    }
+    function closeQrModal() {
+      stopQrCamera();
+      qrModal.classList.add('hidden');
+      qrModal.classList.remove('flex');
+      $('qrFileInput').value = '';
+      clearQrError();
+    }
+
+    $('scanQrBtn').addEventListener('click', openQrModal);
+    $('closeQrModalBtn').addEventListener('click', closeQrModal);
+    $('tabCameraBtn').addEventListener('click', () => qrTab(true));
+    $('tabUploadBtn').addEventListener('click', () => qrTab(false));
+    qrModal.addEventListener('click', (e) => { if (e.target === qrModal) closeQrModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !qrModal.classList.contains('hidden')) closeQrModal(); });
+
+    const pickQrFile = () => { $('qrFileInput').value = ''; $('qrFileInput').click(); };
+    $('qrFileDropzone').addEventListener('click', pickQrFile);
+    $('qrFileDropzone').addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pickQrFile(); } });
+
+    $('qrFileInput').addEventListener('change', async function (e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      clearQrError(); lastBadScan = '';
+      const reject = (msg) => { showQrError(msg); $('qrFileInput').value = ''; };
+
+      // 1. name, reported type and size
+      if (!/\.(png|jpe?g)$/i.test(file.name) || !['image/png', 'image/jpeg'].includes(file.type)) {
+        return reject('Invalid file. Only a PNG or JPG image of your QR code can be uploaded.');
+      }
+      if (file.size === 0) {
+        return reject('This image is empty. Please choose your QR code photo.');
+      }
+      if (file.size > QR_MAX_BYTES) {
+        return reject('The image must be smaller than 5 MB.');
+      }
+      // 2. what the file really is (a renamed PDF, script or other file is turned away here)
+      if (!(await isRealPngOrJpeg(file))) {
+        return reject('Invalid file. This is not a real PNG or JPG image.');
+      }
+      // 3. it must contain a Patient ID QR code
+      qrFileScanner.scanFile(file, false)
+        .then((text) => { useScannedPatientId(text); })
+        .catch(() => { showQrError('No QR code detected in this image. Please upload a clear photo of your Patient ID QR code.'); })
+        .finally(() => { $('qrFileInput').value = ''; });
+    });
 
     $('searchDob').max =new Date().toISOString().slice(0, 10);
 

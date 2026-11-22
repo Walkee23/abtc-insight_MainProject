@@ -277,16 +277,16 @@
                 </td>
                 <td class="px-5 py-5 text-right whitespace-nowrap">
                     @if($patient->inflow_record_id)
-                        <!-- Trigger Button ng CSS Modal -->
-                        <a href="#case-modal-{{ $patient->inflow_record_id }}" 
+                        <!-- Opens the case summary below. A button, not a #link: a link jumps the page to the pop-up -->
+                        <button type="button" data-case-open="case-modal-{{ $patient->inflow_record_id }}"
                         class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-surface-container-lowest text-primary text-xs font-bold rounded-lg border border-primary/20 hover:bg-primary hover:text-white transition-all shadow-sm">
                             <span class="material-symbols-outlined text-[15px]">clinical_notes</span>
                             <span>View Case</span>
-                        </a>
+                        </button>
 
-                        <!-- PURE CSS MODAL PARA SA CLINICAL SUMMARY CHART (WALANG JAVASCRIPT) -->
-                        <div id="case-modal-{{ $patient->inflow_record_id }}" 
-                            class="fixed inset-0 z-50 hidden [&:target]:flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                        <!-- Clinical summary pop-up (opened and closed by the script at the bottom of this page) -->
+                        <div id="case-modal-{{ $patient->inflow_record_id }}" data-case-modal role="dialog" aria-modal="true"
+                            class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm whitespace-normal font-normal">
                             
                             <div class="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden text-left max-h-[90vh] flex flex-col">
                                 
@@ -307,9 +307,9 @@
                                         </div>
                                     </div>
                                     <!-- Close button papuntang '#' -->
-                                    <a href="#modal-closed" class="shrink-0 text-white/70 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10">
+                                    <button type="button" data-case-close aria-label="Close" class="shrink-0 text-white/70 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10">
                                         <span class="material-symbols-outlined text-[22px]">close</span>
-                                    </a>
+                                    </button>
                                 </div>
 
                                 <!-- Modal Body (Scrollable kung mahaba ang notes) -->
@@ -366,38 +366,38 @@
                                             PEP Regimen Schedule &amp; Clinical Notes
                                         </h4>
                                         
-                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-stretch">
                                             <!-- Day 3 -->
-                                            <div class="p-3 rounded-xl border {{ !empty($patient->day3_notes) ? 'border-emerald-200 bg-emerald-50/40 text-emerald-950' : 'border-slate-200 bg-slate-50 text-slate-400' }}">
-                                                <div class="flex items-center justify-between mb-1">
-                                                    <span class="font-bold text-[11px]">Dose 2 (Day 3)</span>
+                                            <div class="min-w-0 p-3.5 rounded-xl border {{ !empty($patient->day3_notes) ? 'border-emerald-200 bg-emerald-50/40 text-emerald-950' : 'border-slate-200 bg-slate-50 text-slate-400' }}">
+                                                <div class="flex items-center justify-between gap-2 mb-1.5">
+                                                    <span class="font-bold text-[11px] whitespace-nowrap">Dose 2 (Day 3)</span>
                                                     <span class="material-symbols-outlined text-[16px] {{ !empty($patient->day3_notes) ? 'text-emerald-600' : 'text-slate-300' }}">
                                                         {{ !empty($patient->day3_notes) ? 'check_circle' : 'pending' }}
                                                     </span>
                                                 </div>
-                                                <p class="text-[11px] leading-relaxed italic">{{ $patient->day3_notes ?? 'Not yet administered / no notes recorded.' }}</p>
+                                                <p class="text-[11px] leading-relaxed italic break-words">{{ $patient->day3_notes ?? 'Not yet administered / no notes recorded.' }}</p>
                                             </div>
 
                                             <!-- Day 7 -->
-                                            <div class="p-3 rounded-xl border {{ !empty($patient->day7_notes) ? 'border-purple-200 bg-purple-50/40 text-purple-950' : 'border-slate-200 bg-slate-50 text-slate-400' }}">
-                                                <div class="flex items-center justify-between mb-1">
-                                                    <span class="font-bold text-[11px]">Dose 3 (Day 7)</span>
+                                            <div class="min-w-0 p-3.5 rounded-xl border {{ !empty($patient->day7_notes) ? 'border-purple-200 bg-purple-50/40 text-purple-950' : 'border-slate-200 bg-slate-50 text-slate-400' }}">
+                                                <div class="flex items-center justify-between gap-2 mb-1.5">
+                                                    <span class="font-bold text-[11px] whitespace-nowrap">Dose 3 (Day 7)</span>
                                                     <span class="material-symbols-outlined text-[16px] {{ !empty($patient->day7_notes) ? 'text-purple-600' : 'text-slate-300' }}">
                                                         {{ !empty($patient->day7_notes) ? 'check_circle' : 'pending' }}
                                                     </span>
                                                 </div>
-                                                <p class="text-[11px] leading-relaxed italic">{{ $patient->day7_notes ?? 'Awaiting Day 7 dose.' }}</p>
+                                                <p class="text-[11px] leading-relaxed italic break-words">{{ $patient->day7_notes ?? 'Awaiting Day 7 dose.' }}</p>
                                             </div>
 
                                             <!-- Day 28 -->
-                                            <div class="p-3 rounded-xl border {{ !empty($patient->day28_notes) ? 'border-blue-200 bg-blue-50/40 text-blue-950' : 'border-slate-200 bg-slate-50 text-slate-400' }}">
-                                                <div class="flex items-center justify-between mb-1">
-                                                    <span class="font-bold text-[11px]">Dose 4 (Day 28)</span>
+                                            <div class="min-w-0 p-3.5 rounded-xl border {{ !empty($patient->day28_notes) ? 'border-blue-200 bg-blue-50/40 text-blue-950' : 'border-slate-200 bg-slate-50 text-slate-400' }}">
+                                                <div class="flex items-center justify-between gap-2 mb-1.5">
+                                                    <span class="font-bold text-[11px] whitespace-nowrap">Dose 4 (Day 28)</span>
                                                     <span class="material-symbols-outlined text-[16px] {{ !empty($patient->day28_notes) ? 'text-blue-600' : 'text-slate-300' }}">
                                                         {{ !empty($patient->day28_notes) ? 'check_circle' : 'pending' }}
                                                     </span>
                                                 </div>
-                                                <p class="text-[11px] leading-relaxed italic">{{ $patient->day28_notes ?? 'Awaiting completion.' }}</p>
+                                                <p class="text-[11px] leading-relaxed italic break-words">{{ $patient->day28_notes ?? 'Awaiting completion.' }}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -406,9 +406,9 @@
 
                                 <!-- Modal Footer -->
                                 <div class="p-5 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center shrink-0">
-                                    <a href="#modal-closed" class="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-colors">
+                                    <button type="button" data-case-close class="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-colors">
                                         Close Preview
-                                    </a>
+                                    </button>
 
                                     <!-- Direct link to full Case Encoding editor -->
                                     <a href="{{ route('staff.case-encoding', $patient->inflow_record_id) }}" 
@@ -601,6 +601,56 @@
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape') closeProfileModal();
     });
+</script>
+<script>
+    // Case summary pop-up. It opens and closes in place: the page does not scroll or jump, and the page behind
+    // stays where it is (and does not scroll) while the pop-up is open.
+    (function () {
+        var root = document.documentElement;
+        var open = null;
+
+        function lock(on) {
+            if (on) {
+                var gap = window.innerWidth - root.clientWidth;   // keep the page from shifting when its scrollbar goes away
+                root.style.overflow = 'hidden';
+                if (gap > 0) root.style.paddingRight = gap + 'px';
+            } else {
+                root.style.overflow = '';
+                root.style.paddingRight = '';
+            }
+        }
+        function show(modal) {
+            if (open) hide();
+            open = modal;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lock(true);
+            var close = modal.querySelector('[data-case-close]');
+            if (close) close.focus({ preventScroll: true });
+        }
+        function hide() {
+            if (!open) return;
+            open.classList.add('hidden');
+            open.classList.remove('flex');
+            open = null;
+            lock(false);
+        }
+
+        document.addEventListener('click', function (e) {
+            var opener = e.target.closest('[data-case-open]');
+            if (opener) {
+                var modal = document.getElementById(opener.getAttribute('data-case-open'));
+                if (modal) show(modal);
+                return;
+            }
+            if (!open) return;
+            // the close buttons, or a click on the dark area around the card
+            if (e.target.closest('[data-case-close]') || e.target === open) hide();
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') hide();
+        });
+    })();
 </script>
     @include('partials.idle-timeout')
 </body>

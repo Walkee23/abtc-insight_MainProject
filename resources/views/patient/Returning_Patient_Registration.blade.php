@@ -102,6 +102,15 @@
       color: #717782;
     }
 
+    /* the dose the patient picked: same layout as a given dose (Day / date / status), in the primary blue */
+    .dose-chip.is-selected {
+      background-color: #d6e3ff;
+      border-color: #004a93;
+      color: #004a93;
+      box-shadow: 0 0 0 3px rgba(0, 74, 147, 0.15);
+    }
+    .dose-chip.is-selected .dose-status { color: #004a93; font-size: 10px; font-weight: 700; }
+
     .clinical-gradient {
       background: linear-gradient(135deg, #004a93 0%, #0b61bb 100%);
     }
@@ -301,19 +310,24 @@
       return `${MONTHS[m - 1]} ${d}, ${y}`;
     }
 
-    $('searchDob').max = new Date().toISOString().slice(0, 10);
+    // today in the patient's own timezone (toISOString would give the UTC date, a day behind in the early morning)
+    function localToday() {
+      const n = new Date();
+      return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
+    }
+
+    $('searchDob').max =new Date().toISOString().slice(0, 10);
 
     // Pick a dose: highlight it, remember it, and let the patient confirm
     function chooseDose(caseId, day) {
       $('caseInput').value = caseId;
       $('doseInput').value = day;
-      document.querySelectorAll('.dose-chip').forEach((chip) => {
+      // The chosen dose is filled in like a given one (Day, date, status), in the primary colour, so it is clear which visit is sent
+      document.querySelectorAll('button.dose-chip').forEach((chip) => {
         const on = chip.dataset.case === String(caseId) && chip.dataset.day === String(day);
-        chip.classList.toggle('bg-primary', on);
-        chip.classList.toggle('text-white', on);
-        chip.classList.toggle('border-primary', on);
-        chip.classList.toggle('ring-2', on);
-        chip.classList.toggle('ring-primary/20', on);
+        chip.classList.toggle('is-selected', on);
+        chip.querySelector('.dose-date').classList.toggle('hidden', !on);
+        chip.querySelector('.dose-status').textContent = on ? 'Selected' : (chip.dataset.checked === '1' ? 'Already checked in' : 'Tap to select');
       });
       $('submitBtn').disabled = false;
       markReturningStep(2, 'done');
@@ -328,7 +342,7 @@
         const cells = [0, ...c.days].map((day) => {
           const date = c.dates[day];
           const given = !!date;
-          const base = 'dose-chip rounded-xl border-2 px-3 py-3 text-center transition-all ';
+          const base = 'dose-chip rounded-xl border-2 px-1.5 py-3 text-center transition-all ';
           if (day === 0 || given) {
             return `<div class="${base} border-emerald-200 bg-emerald-50 text-emerald-800">
               <div class="text-[11px] font-black uppercase tracking-wide">Day ${day}</div>
@@ -337,9 +351,10 @@
           }
           if (day === c.next_day) {
             return `<button type="button" class="${base} border-primary/50 hover:border-primary bg-white text-on-surface ring-2 ring-primary/10"
-              data-case="${c.bite_case_id}" data-day="${day}">
+              data-case="${c.bite_case_id}" data-day="${day}" data-checked="${c.checked_in_for === day ? 1 : 0}">
               <div class="text-[11px] font-black uppercase tracking-wide">Day ${day}</div>
-              <div class="text-[11px] font-semibold mt-1 text-primary">${c.checked_in_for === day ? 'Already checked in' : 'Tap to select'}</div></button>`;
+              <div class="dose-date hidden text-[11px] font-semibold mt-1">${esc(fmtDate(localToday()))}</div>
+              <div class="dose-status text-[11px] font-semibold mt-1 text-primary">${c.checked_in_for === day ? 'Already checked in' : 'Tap to select'}</div></button>`;
           }
           return `<div class="${base} border-dashed border-surface-container-high bg-surface-container-low text-on-surface-variant cursor-not-allowed" aria-disabled="true"
               title="Available after Day ${c.next_day ?? ''}">

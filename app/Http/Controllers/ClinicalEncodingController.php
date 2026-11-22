@@ -266,7 +266,37 @@ class ClinicalEncodingController extends Controller
         // Weight taken at the BHW referral, if this patient came through one
         $bhwWeight = $biteCaseId ? $this->bhwWeight($biteCaseId) : null;
 
-        return view('healthworker.CE_VII', compact('queue', 'case', 'section', 'bhwWeight'));
+        // Doses recorded at an earlier visit are shown from the system and cannot be edited
+        $lockedDays = $case ? $this->lockedDoseDays($case, $section) : [];
+
+        return view('healthworker.CE_VII', compact('queue', 'case', 'section', 'bhwWeight', 'lockedDays'));
+    }
+
+    /**
+     * Dose days (0, 3, 7, 14, 28) whose data was recorded at an earlier visit and is therefore read-only:
+     *  - every recorded dose up to the last one that was there when a visit was finalized (doses_locked_through), and
+     *  - every recorded dose before the one the patient just checked in for (return_dose_day).
+     * The dose being recorded now, and anything after it, stays editable.
+     */
+    private function lockedDoseDays($case, $section): array
+    {
+        if (!$section) {
+            return [];
+        }
+        $through = $case->doses_locked_through ?? null;
+        $returning = (int) ($case->return_dose_day ?? 0);
+
+        $locked = [];
+        foreach ([0, 3, 7, 14, 28] as $day) {
+            if (empty($section->{'day' . $day . '_date'})) {
+                continue;
+            }
+            if (($through !== null && $day <= (int) $through) || ($returning > 0 && $day < $returning)) {
+                $locked[] = $day;
+            }
+        }
+
+        return $locked;
     }
 
     /**
@@ -304,13 +334,28 @@ class ClinicalEncodingController extends Controller
         $isDraft = $request->input('action') === 'draft';
         $required = $isDraft ? 'nullable' : 'required';
 
+        // Doses recorded at an earlier visit are read from the system: whatever the form sends for them is replaced by
+        // the saved values (and is not checked again). The route and dose type go with them, because changing the route
+        // would change which doses belong to the course.
+        $existing = DB::table('bite_section7_immunization')->where('bite_case_id', $biteCaseId)->first();
+        $lockedDays = $this->lockedDoseDays($case, $existing);
+        if ($lockedDays) {
+            $fromSystem = ['route' => $existing->route, 'dose_type' => $existing->dose_type];
+            foreach ($lockedDays as $day) {
+                $fromSystem['day' . $day . '_date'] = substr((string) $existing->{'day' . $day . '_date'}, 0, 10);
+                $fromSystem['day' . $day . '_brand'] = $existing->{'day' . $day . '_brand'};
+            }
+            $request->merge($fromSystem);
+        }
+
         $validated = $request->validate([
             'tetanus_given' => 'nullable|boolean',
             'tetanus_details' => 'exclude_unless:tetanus_given,true,1|' . $required . '|string|max:200',
             'tig_given' => 'nullable|boolean',
             'tig_details' => 'exclude_unless:tig_given,true,1|' . $required . '|string|max:200',
             // the brand is chosen per dose: Day 0 always, the other days only when that dose has a date
-            'day0_brand' => [$isDraft ? 'nullable' : 'required', \Illuminate\Validation\Rule::in(self::VACCINE_BRANDS)],
+            // (a locked dose is already recorded: an older record with no brand stays as it is)
+            'day0_brand' => [$isDraft || in_array(0, $lockedDays, true) ? 'nullable' : 'required', \Illuminate\Validation\Rule::in(self::VACCINE_BRANDS)],
             'day3_brand' => [$isDraft ? 'nullable' : 'required_with:day3_date', 'nullable', \Illuminate\Validation\Rule::in(self::VACCINE_BRANDS)],
             'day7_brand' => [$isDraft ? 'nullable' : 'required_with:day7_date', 'nullable', \Illuminate\Validation\Rule::in(self::VACCINE_BRANDS)],
             'day14_brand' => [$isDraft ? 'nullable' : 'required_with:day14_date', 'nullable', \Illuminate\Validation\Rule::in(self::VACCINE_BRANDS)],
@@ -347,15 +392,26 @@ class ClinicalEncodingController extends Controller
         // The dose dates follow the dose type and route (App\Support\PepSchedule): Primary IM = Day 0, 3, 7, 14;
         // Primary ID = Day 0, 3, 7, 28; Booster = Day 0, 3. A dose that is not part of the course keeps nothing:
         // no date, no brand, no "administered by".
-        $courseDays = PepSchedule::days($validated['dose_type'], $validated['route'] ?? null);
-        $existing = DB::table('bite_section7_immunization')->where('bite_case_id', $biteCaseId)->first();
         $me = Auth::user()->full_name ?? null;   // a guest session leaves whatever was saved before untouched
+
+        if ($lockedDays) {
+            $validated['route'] = $existing->route;
+            $validated['dose_type'] = $existing->dose_type ?? '';
+        }
+
+        $courseDays = PepSchedule::days($validated['dose_type'], $validated['route'] ?? null);
 
         foreach ([0, 3, 7, 14, 28] as $day) {
             $date = 'day' . $day . '_date';
             $brand = 'day' . $day . '_brand';
             $by = 'day' . $day . '_administered_by';
 
+            if (in_array($day, $lockedDays, true)) {
+                $validated[$date] = substr((string) $existing->{$date}, 0, 10);
+                $validated[$brand] = $existing->{$brand};
+                $validated[$by] = $existing->{$by};
+                continue;
+            }
             if (!in_array($day, $courseDays, true)) {
                 $validated[$date] = null;
                 $validated[$brand] = null;
@@ -475,6 +531,17 @@ class ClinicalEncodingController extends Controller
         // Otherwise the case stays open, with the doses saved so far, until the patient comes back for the next one.
         $s7 = DB::table('bite_section7_immunization')->where('bite_case_id', $biteCaseId)->first();
         $nextDose = ($s7 && $s7->day0_date) ? PepSchedule::nextDay($s7->dose_type, $s7->route, $s7) : null;
+
+        // The visit is final: every dose recorded so far is locked from now on (the next visit only reads them)
+        $lastRecorded = null;
+        foreach ([0, 3, 7, 14, 28] as $day) {
+            if ($s7 && !empty($s7->{'day' . $day . '_date'})) {
+                $lastRecorded = $day;
+            }
+        }
+        if ($lastRecorded !== null) {
+            DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->update(['doses_locked_through' => $lastRecorded]);
+        }
 
         if ($nextDose === null) {
             // The course is finished: mark the case Completed so it drops out of the queue

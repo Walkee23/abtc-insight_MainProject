@@ -355,6 +355,11 @@
                                 . '<p data-error-for="' . e($name) . '" class="mt-1 ml-1 text-xs font-semibold text-error ' . ($fit ? 'w-0 min-w-full ' : '') . ($errors->has($name) ? '' : 'hidden') . '">' . e($errors->first($name)) . '</p>'
                                 . '</div>';
                             };
+                            // A value recorded at an earlier visit: shown from the system, not editable (the hidden input keeps the form and its checks working)
+                            $lockedValue = fn ($name, $label, $value, $box = 'py-3 px-4') => '<input type="hidden" name="' . e($name) . '" value="' . e($value) . '" data-field="' . e($name) . '" data-locked="1" />'
+                                . '<div class="flex items-center justify-between gap-2 rounded-lg bg-surface-container-high ' . $box . ' font-medium text-on-surface-variant cursor-not-allowed select-none">'
+                                . '<span class="truncate">' . e($label) . '</span><span class="material-symbols-outlined text-outline text-[18px]">lock</span></div>';
+                            $lockedDays = $lockedDays ?? [];
                             $brandOptions = array_combine(\App\Http\Controllers\ClinicalEncodingController::VACCINE_BRANDS, \App\Http\Controllers\ClinicalEncodingController::VACCINE_BRANDS);
                             @endphp
                             {{-- Toast: fixed bottom-right, auto-dismisses after 4s (same look as the draft-saved toast) --}}
@@ -377,11 +382,19 @@
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
                                     <div>
                                         <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Route <span class="text-error">*</span></label>
+                                        @if($lockedDays)
+                                        {!! $lockedValue('route', ['ID' => 'ID (Intradermal)', 'IM' => 'IM (Intramuscular)'][$section->route ?? ''] ?? '—', $section->route ?? '') !!}
+                                        @else
                                         {!! $dropdown('route', ['ID' => 'ID (Intradermal)', 'IM' => 'IM (Intramuscular)']) !!}
+                                        @endif
                                     </div>
                                     <div>
                                         <label class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Dose Type <span class="text-error">*</span></label>
+                                        @if($lockedDays)
+                                        {!! $lockedValue('dose_type', $section->dose_type ?: '—', $section->dose_type ?? '') !!}
+                                        @else
                                         {!! $dropdown('dose_type', ['Primary' => 'Primary', 'Booster' => 'Booster']) !!}
+                                        @endif
                                     </div>
                                 </div>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
@@ -476,29 +489,50 @@
                                     <p class="text-xs font-extrabold text-outline uppercase tracking-widest mb-1">Dose
                                         Tracking Grid</p>
                                     <p class="text-[11px] text-outline mb-4">IM route: Day 0, 3, 7 and 14. ID route: Day 0, 3, 7 and 28. Booster: Day 0 and 3. Each dose has its own vaccine brand, and "Given by" stays empty until the dose is recorded by a health worker.</p>
+                                    {{-- The grid follows the width of its own box (not the screen), so it also fits when the sidebar is expanded or collapsed:
+                                         2 boxes per row, 4 in a row once the box is wide enough for the vaccine brand names --}}
                                     <style>
-                                        @media (min-width: 768px) {
-                                            #doseGrid[data-cols="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-                                        }
-                                        @media (max-width: 767.98px) {
-                                            #doseGrid[data-cols="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+                                        #doseWrap { container-type: inline-size; }
+                                        #doseGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
+                                        @container (min-width: 900px) {
+                                            #doseGrid[data-cols="4"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
                                         }
                                     </style>
-                                    <div id="doseGrid" data-cols="4" class="grid grid-cols-4 gap-3">
+                                    <div id="doseWrap">
+                                    <div id="doseGrid" data-cols="4">
                                         @foreach([0 => 'Day 0', 3 => 'Day 3', 7 => 'Day 7', 14 => 'Day 14', 28 => 'Day 28'] as $d => $dayLabel)
-                                        <div data-field-wrap="day{{ $d }}_date" data-day="{{ $d }}" @if((int) ($case->return_dose_day ?? 0) === $d) data-registered @endif class="bg-white p-3 rounded-lg border {{ $d === 0 ? 'border-primary/20' : 'border-outline-variant/30' }} {{ (int) ($case->return_dose_day ?? 0) === $d ? 'ring-2 ring-primary/40' : 'ring-1 ring-transparent' }}">
-                                            @if((int) ($case->return_dose_day ?? 0) === $d)
-                                            <p class="mb-2 inline-block rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-primary">Patient registered for this dose</p>
-                                            @endif
-                                            <p class="text-[10px] font-bold {{ $d === 0 ? 'text-primary' : 'text-outline' }} uppercase mb-1">{{ $dayLabel }} @if($d === 0)<span class="text-error">*</span>@endif</p>
+                                        @php
+                                            $isRegistered = (int) ($case->return_dose_day ?? 0) === $d;
+                                            $isLocked = in_array($d, $lockedDays, true);
+                                            $savedDate = $isLocked ? substr((string) $section->{'day' . $d . '_date'}, 0, 10) : null;
+                                        @endphp
+                                        <div data-field-wrap="day{{ $d }}_date" data-day="{{ $d }}" @if($isRegistered) data-registered @endif class="min-w-0 bg-white p-3 rounded-lg border {{ $d === 0 ? 'border-primary/20' : 'border-outline-variant/30' }} {{ $isRegistered ? 'ring-2 ring-primary/40' : 'ring-1 ring-transparent' }}">
+                                            <div class="flex items-center justify-between gap-2 mb-1 min-h-[1.25rem]">
+                                                <p class="text-[10px] font-bold {{ $d === 0 ? 'text-primary' : 'text-outline' }} uppercase">{{ $dayLabel }} @if($d === 0 && !$isLocked)<span class="text-error">*</span>@endif</p>
+                                                @if($isRegistered)
+                                                <span title="The patient registered for this dose" class="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-primary">Registered</span>
+                                                @elseif($isLocked)
+                                                <span title="Recorded at an earlier visit" class="shrink-0 inline-flex items-center gap-0.5 rounded-full bg-surface-container-high px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-on-surface-variant"><span class="material-symbols-outlined text-[11px]">lock</span>Recorded</span>
+                                                @endif
+                                            </div>
+                                            @if($isLocked)
+                                            {{-- recorded at an earlier visit: read from the system --}}
+                                            <input type="hidden" name="day{{ $d }}_date" data-field="day{{ $d }}_date" data-locked="1" value="{{ $savedDate }}" />
+                                            <p class="h-7 flex items-center text-xs font-bold text-on-surface">{{ \Illuminate\Support\Carbon::parse($savedDate)->format('m/d/Y') }}</p>
+                                            <p data-error-for="day{{ $d }}_date" class="mt-1 text-xs font-semibold text-error hidden"></p>
+                                            <p class="text-[10px] font-bold text-outline uppercase mt-3 mb-1">Vaccine brand</p>
+                                            {!! $lockedValue('day' . $d . '_brand', $section->{'day' . $d . '_brand'} ?: '—', $section->{'day' . $d . '_brand'} ?? '', '!py-2 !px-2 text-xs') !!}
+                                            @else
                                             <input name="day{{ $d }}_date" data-field="day{{ $d }}_date" type="date" max="{{ now()->toDateString() }}" value="{{ $val('day' . $d . '_date') }}"
-                                                class="w-full text-[10px] font-bold text-on-surface bg-transparent border-none p-0 focus:ring-0" />
+                                                class="w-full h-7 text-xs font-bold text-on-surface bg-transparent border-none p-0 focus:ring-0" />
                                             <p data-error-for="day{{ $d }}_date" class="mt-1 text-xs font-semibold text-error {{ $errors->has('day' . $d . '_date') ? '' : 'hidden' }}">{{ $errors->first('day' . $d . '_date') }}</p>
                                             <p class="text-[10px] font-bold text-outline uppercase mt-3 mb-1">Vaccine brand @if($d === 0)<span class="text-error">*</span>@endif</p>
                                             {!! $dropdown('day' . $d . '_brand', $brandOptions, 'bg-surface-container-low !py-2 !px-2 text-xs') !!}
+                                            @endif
                                             <p class="mt-2 text-[10px] text-outline">Given by: <span class="font-semibold text-on-surface-variant">{{ ($section->{'day' . $d . '_administered_by'} ?? '') ?: '—' }}</span></p>
                                         </div>
                                         @endforeach
+                                    </div>
                                     </div>
                                 </div>
                             </div>
@@ -617,7 +651,8 @@
                     const currentField = field(name);
                     
                     // 2. Skip validation entirely if the field doesn't exist or is disabled
-                    if (!currentField || currentField.disabled) {
+                    // (a value recorded at an earlier visit is read-only and was checked back then)
+                    if (!currentField || currentField.disabled || currentField.dataset.locked) {
                         return; // This moves on to the next item in ALL_CHECKED
                     }
 

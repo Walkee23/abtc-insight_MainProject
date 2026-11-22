@@ -447,7 +447,7 @@
               the Data Privacy Act of 2012.</p>
           </div>
           <div class="flex items-center gap-4">
-            <button class="text-sm font-bold text-on-surface-variant hover:text-on-surface px-4 py-2 transition-colors"
+            <button id="clearFormBtn" class="text-sm font-bold text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low active:scale-95 rounded-full px-4 py-2 transition-all"
               type="reset">Clear Form</button>
             <button
               class="bg-primary text-white px-8 py-3 rounded-full font-bold text-sm flex items-center gap-2 hover:opacity-90 transition-all shadow-lg shadow-primary/20"
@@ -474,6 +474,18 @@
         </div>
       </div>
     </footer>
+    <!-- Form cleared: confirms that Clear Form removed everything -->
+    <div id="clearedModal" role="dialog" aria-modal="true" aria-labelledby="clearedTitle"
+      class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm items-center justify-center p-4 opacity-0 transition-opacity duration-200">
+      <div id="clearedCard" class="bg-surface-container-lowest rounded-2xl max-w-sm w-full p-8 text-center shadow-2xl border border-outline-variant/30 scale-95 transition-transform duration-200">
+        <div class="mx-auto mb-4 w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+          <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+        </div>
+        <h3 id="clearedTitle" class="text-xl font-extrabold tracking-tight text-on-surface">Form cleared</h3>
+        <p class="mt-2 text-sm text-on-surface-variant leading-relaxed">Everything you entered has been removed and the form is back to Step 1. You can start again.</p>
+        <button type="button" id="clearedOkBtn" class="mt-6 w-full bg-primary text-white px-6 py-3 rounded-full font-bold text-sm hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/20">Start Again</button>
+      </div>
+    </div>
     <!-- QR Scanner & Upload Modal -->
     <div id="qrScannerModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
       <div class="bg-surface-container-lowest rounded-2xl max-w-md w-full p-6 shadow-2xl border border-outline-variant/30 space-y-4">
@@ -945,6 +957,35 @@
       }
     });
 
+    // "Form cleared" pop-up: closes with the button, a click outside, Escape, or by itself after a few seconds
+    const clearedModal = document.getElementById('clearedModal');
+    const clearedCard = document.getElementById('clearedCard');
+    const clearedOkBtn = document.getElementById('clearedOkBtn');
+    let clearedTimer = null;
+    function showClearedModal() {
+      clearTimeout(clearedTimer);
+      clearedModal.classList.remove('hidden');
+      clearedModal.classList.add('flex');
+      setTimeout(() => {   // next tick, so the fade-in runs
+        clearedModal.classList.remove('opacity-0');
+        clearedCard.classList.remove('scale-95');
+      }, 20);
+      clearedOkBtn.focus({ preventScroll: true });
+      clearedTimer = setTimeout(hideClearedModal, 4000);
+    }
+    function hideClearedModal() {
+      clearTimeout(clearedTimer);
+      clearedModal.classList.add('opacity-0');
+      clearedCard.classList.add('scale-95');
+      setTimeout(() => {
+        clearedModal.classList.add('hidden');
+        clearedModal.classList.remove('flex');
+      }, 200);
+    }
+    clearedOkBtn.addEventListener('click', hideClearedModal);
+    clearedModal.addEventListener('click', (e) => { if (e.target === clearedModal) hideClearedModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !clearedModal.classList.contains('hidden')) hideClearedModal(); });
+
     // Clear Form: native reset only clears input/select values, so this cleans up
     // everything else that JS controls (progress steps, dropdown display text,
     // PhilHealth toggle, and highlighted priority cards)
@@ -982,6 +1023,10 @@
 
         // Clear any BHW referral format error
         clearBhwReferralError();
+
+        // Back to the top of the form, and tell the user it worked
+        document.getElementById('progressIndicator').scrollIntoView({ block: 'center', behavior: 'smooth' });
+        showClearedModal();
       }, 0);
 
       // A manual Clear Form click should also wipe the saved draft

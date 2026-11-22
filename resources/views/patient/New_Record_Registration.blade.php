@@ -145,7 +145,7 @@
         <section id="section1">
           <div class="flex items-center gap-2 mb-6">
             <div class="w-1 h-5 bg-primary rounded-full"></div>
-            <h2 class="text-sm font-bold uppercase tracking-widest text-on-surface">Step 1: Priority Status</h2>
+            <h2 class="text-sm font-bold uppercase tracking-widest text-on-surface">Priority Status</h2>
           </div>
           <div class="grid grid-cols-2 gap-4">
             <!-- Card: None -->
@@ -213,7 +213,7 @@
         <section id="section2">
           <div class="flex items-center gap-2 mb-6">
             <div class="w-1 h-5 bg-primary rounded-full"></div>
-            <h2 class="text-sm font-bold uppercase tracking-widest text-on-surface">Step 2: Personal Information</h2>
+            <h2 class="text-sm font-bold uppercase tracking-widest text-on-surface">Personal Information</h2>
           </div>
           <div class="grid grid-cols-2 gap-x-6 gap-y-4">
             <div class="col-span-2">
@@ -349,7 +349,7 @@
         <section id="section3">
           <div class="flex items-center gap-2 mb-6">
             <div class="w-1 h-5 bg-primary rounded-full"></div>
-            <h2 class="text-sm font-bold uppercase tracking-widest text-on-surface">Step 3: PhilHealth Coverage</h2>
+            <h2 class="text-sm font-bold uppercase tracking-widest text-on-surface">PhilHealth Coverage</h2>
           </div>
           <div class="bg-surface-container-low p-6 rounded-lg space-y-6">
             <div class="flex items-center justify-between">
@@ -384,7 +384,7 @@
         <section id="section4">
           <div class="flex items-center gap-2 mb-6">
             <div class="w-1 h-5 bg-primary rounded-full"></div>
-            <h2 class="text-sm font-bold uppercase tracking-widest text-on-surface">Step 4: Medical History</h2>
+            <h2 class="text-sm font-bold uppercase tracking-widest text-on-surface">Medical History</h2>
           </div>
           <div class="space-y-6">
             <div>
@@ -464,7 +464,7 @@
           <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
         </div>
         <h3 id="clearedTitle" class="text-xl font-extrabold tracking-tight text-on-surface">Form cleared</h3>
-        <p class="mt-2 text-sm text-on-surface-variant leading-relaxed">Everything you entered has been removed and the form is back to Step 1. You can start again.</p>
+        <p class="mt-2 text-sm text-on-surface-variant leading-relaxed">Everything you entered has been removed and the form is back to the start. You can start again.</p>
         <button type="button" id="clearedOkBtn" class="mt-6 w-full bg-primary text-white px-6 py-3 rounded-full font-bold text-sm hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/20">Start Again</button>
       </div>
     </div>
@@ -838,7 +838,7 @@
       clear: {
         icon: 'delete_sweep', iconWrap: 'bg-amber-100 text-amber-600',
         title: 'Clear the form?',
-        text: 'Everything you have entered will be removed and you will start again from Step 1. This cannot be undone.',
+        text: 'Everything you have entered will be removed and you will start again with a blank form. This cannot be undone.',
         ok: 'Yes, clear form', okClass: 'bg-error shadow-error/20', focus: 'cancel',
       },
       submit: {

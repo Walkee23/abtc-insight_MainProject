@@ -133,10 +133,12 @@ class ClinicalEncodingController extends Controller
             ->join('patients as p', 'p.patient_id', '=', 'bc.patient_id')
             ->leftJoin('bite_section6_wound_description as s6', 's6.bite_case_id', '=', 'bc.bite_case_id')
             ->leftJoin('bite_section9_progress_notes as s9', 's9.bite_case_id', '=', 'bc.bite_case_id')
-            // Finalized cases (Section IX saved and finalized) leave the queue
+            // Finalized cases (Section IX saved and finalized) leave the queue, and so does a case whose visit is done
+            // while more doses are still due (it comes back when the patient registers for the next dose)
             ->where(function ($q) {
                 $q->whereNull('bc.outcome');
             })
+            ->whereNull('bc.visit_completed_at')
             ->select(
                 'bc.bite_case_id',
                 'bc.case_number',
@@ -477,6 +479,10 @@ class ClinicalEncodingController extends Controller
         if ($nextDose === null) {
             // The course is finished: mark the case Completed so it drops out of the queue
             DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->update(['outcome' => 'Completed']);
+        } else {
+            // This visit is done: the case leaves the queue (it stays open for the next dose and returns to the pool
+            // when the patient registers for it)
+            DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->update(['visit_completed_at' => now()]);
         }
 
         $patientId = DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->value('patient_id');
@@ -493,7 +499,7 @@ class ClinicalEncodingController extends Controller
         return redirect()->route('healthworker.clinical-encoding')
             ->with('status', $nextDose === null
                 ? 'Clinical encoding completed for this case.'
-                : "Visit saved. The case stays open: the patient registers again for the Day {$nextDose} dose.")
+                : "Visit saved and removed from the queue. The patient registers again for the Day {$nextDose} dose.")
             ->with('qr_popup', $qrPopup);   // the patient's ID, so they have it for the next visit
     }
 
@@ -510,9 +516,12 @@ class ClinicalEncodingController extends Controller
             $q->whereNull('bc.outcome');
         });
 
+        // Cases waiting for the Health Worker to encode: a case whose visit is done (more doses due later) is not one of them
+        $inQueue = fn () => $unfinished()->whereNull('bc.visit_completed_at');
+
         $stats = [
-            'pending' => $unfinished()->count(),
-            'pending_cat3' => $unfinished()->where('bc.category', 'III')->count(),
+            'pending' => $inQueue()->count(),
+            'pending_cat3' => $inQueue()->where('bc.category', 'III')->count(),
             'active_pep' => $unfinished()
                 ->join('bite_section7_immunization as s7', 's7.bite_case_id', '=', 'bc.bite_case_id')
                 ->whereNotNull('s7.day0_date')->count(),
@@ -529,7 +538,7 @@ class ClinicalEncodingController extends Controller
             : 0;
 
         // Priority queue: Category III first, then longest-waiting first
-        $queue = $unfinished()
+        $queue = $inQueue()
             ->join('patients as p', 'p.patient_id', '=', 'bc.patient_id')
             ->leftJoin('inflow_general_particulars as ig', 'ig.inflow_record_id', '=', 'bc.inflow_record_id')
             ->leftJoin('bite_section6_wound_description as s6', 's6.bite_case_id', '=', 'bc.bite_case_id')

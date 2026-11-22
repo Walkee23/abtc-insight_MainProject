@@ -253,6 +253,7 @@ class PatientController extends Controller
                     'return_dose_day'           => $day,
                     'returned_at'               => now(),
                     'outcome'                   => null,   // a case completed too early is open again until its last dose
+                    'visit_completed_at'        => null,   // the previous visit is over, this one is waiting for the Health Worker
                 ]);
             }
 

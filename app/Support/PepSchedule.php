@@ -39,6 +39,23 @@ class PepSchedule
     }
 
     /**
+     * The next dose that is due: the first day of the course (after Day 0) that has no date yet, or null when every
+     * dose is recorded. $dates is the bite_section7_immunization row (object or array) with its day{N}_date values.
+     * Doses are taken in order, so this is the only dose a returning patient can check in for.
+     */
+    public static function nextDay(?string $doseType, ?string $route, $dates): ?int
+    {
+        foreach (self::followUpDays($doseType, $route) as $day) {
+            $value = is_array($dates) ? ($dates["day{$day}_date"] ?? null) : ($dates->{"day{$day}_date"} ?? null);
+            if (empty($value)) {
+                return $day;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * SQL (MySQL) that is true when every dose of the course has a recorded date.
      * $s7 is the alias of bite_section7_immunization in the query.
      */

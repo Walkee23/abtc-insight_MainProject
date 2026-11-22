@@ -188,9 +188,17 @@
           <input type="hidden" name="bite_case_id" id="caseInput" value="">
           <input type="hidden" name="dose_day" id="doseInput" value="">
 
-          <!-- Section 1: Find the record (full name + date of birth, both required) -->
+          <!-- Section 1: Find the record with the unique Patient ID (CEB-...); full name + date of birth is the fallback -->
           <div class="mb-10" id="lookupSection">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div id="idLookup" class="mb-4">
+              <div class="space-y-1.5">
+                <label class="text-xs font-bold text-on-surface-variant uppercase ml-1" for="searchPatientId">Patient ID</label>
+                <input type="text" id="searchPatientId" autocomplete="off" spellcheck="false" placeholder="CEB-20261120-19840910-001" class="w-full bg-surface-container-highest border-0 focus:ring-2 focus:ring-primary/20 rounded-lg px-4 py-3.5 font-medium uppercase tracking-wide" />
+                <p class="text-xs text-on-surface-variant ml-1">The ID you were given at your first visit. It starts with CEB.</p>
+              </div>
+            </div>
+            <button type="button" id="toggleLookup" class="text-sm font-bold text-primary hover:underline mb-4">I don't have my Patient ID</button>
+            <div id="nameLookup" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div class="space-y-1.5">
                 <label class="text-xs font-bold text-on-surface-variant uppercase ml-1" for="searchName">Full Name</label>
                 <input type="text" id="searchName" autocomplete="off" placeholder="e.g. Juan Dela Cruz" class="w-full bg-surface-container-highest border-0 focus:ring-2 focus:ring-primary/20 rounded-lg px-4 py-3.5 font-medium" />
@@ -202,7 +210,7 @@
             </div>
             <button type="button" id="searchBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3.5 rounded-lg transition-all">Find My Record</button>
             <div id="notFoundMsg" class="hidden mt-4 bg-red-50 text-red-700 px-6 py-4 rounded-lg text-sm font-medium">
-              No matching record found. Please check your full name and date of birth, or approach the registration desk.
+              No matching record found. Please check your Patient ID, or approach the registration desk.
             </div>
             <div id="recordFoundBox" class="hidden mt-4 bg-emerald-600 text-white px-6 py-4 rounded-lg items-center gap-3 shadow-md">
               <span class="material-symbols-outlined">person_check</span>
@@ -213,7 +221,7 @@
           <!-- Section 2: Choose the dose. Shown once a record has been found -->
           <div id="detailsSection" class="hidden">
             <div class="flex items-center gap-3 mb-6">
-              <h2 class="text-xs font-black tracking-[0.15em] text-on-surface-variant uppercase">Which dose are you here for?</h2>
+              <h2 class="text-xs font-black tracking-[0.15em] text-on-surface-variant uppercase">Your doses: tap the one you are here for</h2>
               <div class="h-px flex-grow bg-outline-variant opacity-20"></div>
             </div>
 
@@ -312,14 +320,14 @@
       markReturningStep(3, 'active');
     }
 
-    // One card per ongoing case: D0 and the doses already given are filled in from the record
+    // One card per ongoing case. Doses are taken in order: D0 and the doses already given are filled in from the record,
+    // ONLY the next dose can be chosen, and the ones after it stay locked until it has been given.
     function renderCases(cases) {
       const list = $('casesList');
       list.innerHTML = cases.map((c) => {
         const cells = [0, ...c.days].map((day) => {
           const date = c.dates[day];
           const given = !!date;
-          const selectable = day !== 0 && !given;
           const base = 'dose-chip rounded-xl border-2 px-3 py-3 text-center transition-all ';
           if (day === 0 || given) {
             return `<div class="${base} border-emerald-200 bg-emerald-50 text-emerald-800">
@@ -327,17 +335,27 @@
               <div class="text-[11px] font-semibold mt-1">${esc(fmtDate(date) ?? 'Given')}</div>
               <div class="text-[10px] font-bold text-emerald-600 mt-0.5">Given</div></div>`;
           }
-          return `<button type="button" class="${base} border-surface-container-high hover:border-primary bg-white text-on-surface"
+          if (day === c.next_day) {
+            return `<button type="button" class="${base} border-primary/50 hover:border-primary bg-white text-on-surface ring-2 ring-primary/10"
               data-case="${c.bite_case_id}" data-day="${day}">
               <div class="text-[11px] font-black uppercase tracking-wide">Day ${day}</div>
-              <div class="text-[11px] font-semibold mt-1 text-on-surface-variant">${c.checked_in_for === day ? 'Already checked in' : 'Tap to select'}</div></button>`;
+              <div class="text-[11px] font-semibold mt-1 text-primary">${c.checked_in_for === day ? 'Already checked in' : 'Tap to select'}</div></button>`;
+          }
+          return `<div class="${base} border-dashed border-surface-container-high bg-surface-container-low text-on-surface-variant cursor-not-allowed" aria-disabled="true"
+              title="Available after Day ${c.next_day ?? ''}">
+              <div class="text-[11px] font-black uppercase tracking-wide">Day ${day}</div>
+              <div class="text-[11px] font-semibold mt-1">Queued</div>
+              <div class="text-[10px] font-semibold text-on-surface-variant/70 mt-0.5">after Day ${c.next_day ?? ''}</div></div>`;
         }).join('');
+        const note = c.complete
+          ? '<p class="mt-4 text-sm font-semibold text-emerald-700">All doses of this case are recorded. Your course is complete.</p>'
+          : `<p class="mt-4 text-xs text-on-surface-variant">Doses still queued for you: <span class="font-bold text-on-surface">${c.days.filter((d) => !c.dates[d]).map((d) => 'Day ' + d).join(', ')}</span>. Tap your next dose, <span class="font-bold text-on-surface">Day ${c.next_day}</span>, then confirm the check-in. The doses are taken in order.</p>`;
         return `<div class="border border-outline-variant/30 rounded-xl p-5">
           <div class="flex items-center justify-between mb-4">
             <p class="text-sm font-bold text-on-surface">Bite case #${esc(c.case_number)} · ${esc(c.dose_type)} course</p>
             <span class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-surface-container-high text-on-surface-variant">Category ${esc(c.category)}</span>
           </div>
-          <div class="grid grid-cols-3 sm:grid-cols-5 gap-3">${cells}</div></div>`;
+          <div class="grid grid-cols-3 sm:grid-cols-5 gap-3">${cells}</div>${note}</div>`;
       }).join('');
 
       list.querySelectorAll('button.dose-chip').forEach((chip) => {
@@ -353,7 +371,7 @@
       $('noCaseMsg').classList.add('hidden');
       $('confirmArea').classList.add('hidden');
       $('casesList').innerHTML = '';
-      ['tokenInput', 'caseInput', 'doseInput', 'searchName', 'searchDob', 'returningContactNumberInput'].forEach((id) => { $(id).value = ''; });
+      ['tokenInput', 'caseInput', 'doseInput', 'searchPatientId', 'searchName', 'searchDob', 'returningContactNumberInput'].forEach((id) => { $(id).value = ''; });
       $('submitBtn').disabled = true;
       markReturningStep(1, 'active');
       markReturningStep(2, 'inactive');
@@ -362,18 +380,40 @@
 
     $('clearBtn').addEventListener('click', resetAll);
 
+    // "I don't have my Patient ID": switch to full name + date of birth (and back)
+    let byName = false;
+    $('toggleLookup').addEventListener('click', () => {
+      byName = !byName;
+      $('idLookup').classList.toggle('hidden', byName);
+      $('nameLookup').classList.toggle('hidden', !byName);
+      $('toggleLookup').textContent = byName ? 'I have my Patient ID' : "I don't have my Patient ID";
+      $('notFoundMsg').classList.add('hidden');
+    });
+
     $('searchBtn').addEventListener('click', async function () {
-      const name = $('searchName').value.trim();
-      const dob = $('searchDob').value;
       const notFoundMsg = $('notFoundMsg');
-      if (!name || !dob) {
-        notFoundMsg.textContent = 'Please enter your full name and date of birth.';
-        notFoundMsg.classList.remove('hidden');
-        return;
+      let query;
+      if (byName) {
+        const name = $('searchName').value.trim();
+        const dob = $('searchDob').value;
+        if (!name || !dob) {
+          notFoundMsg.textContent = 'Please enter your full name and date of birth.';
+          notFoundMsg.classList.remove('hidden');
+          return;
+        }
+        query = `name=${encodeURIComponent(name)}&dob=${encodeURIComponent(dob)}`;
+      } else {
+        const patientId = $('searchPatientId').value.trim();
+        if (!patientId) {
+          notFoundMsg.textContent = 'Please enter your Patient ID.';
+          notFoundMsg.classList.remove('hidden');
+          return;
+        }
+        query = `patient_id=${encodeURIComponent(patientId)}`;
       }
 
       try {
-        const response = await fetch(`/patient/search?name=${encodeURIComponent(name)}&dob=${encodeURIComponent(dob)}`, { headers: { Accept: 'application/json' } });
+        const response = await fetch(`/patient/search?${query}`, { headers: { Accept: 'application/json' } });
         if (response.status === 429) {
           notFoundMsg.textContent = 'Too many searches. Please wait a minute and try again.';
           notFoundMsg.classList.remove('hidden');
@@ -382,7 +422,9 @@
         const data = await response.json();
 
         if (!data.found) {
-          notFoundMsg.textContent = 'No matching record found. Please check your full name and date of birth, or approach the registration desk.';
+          notFoundMsg.textContent = byName
+            ? 'No matching record found. Please check your full name and date of birth, or approach the registration desk.'
+            : 'No matching record found. Please check your Patient ID, or approach the registration desk.';
           notFoundMsg.classList.remove('hidden');
           $('recordFoundBox').classList.add('hidden');
           $('recordFoundBox').classList.remove('flex');
@@ -402,12 +444,13 @@
 
         $('detailsSection').classList.remove('hidden');
         const hasCases = data.cases.length > 0;
+        const canCheckIn = data.cases.some((c) => c.next_day !== null);
         $('noCaseMsg').classList.toggle('hidden', hasCases);
-        $('confirmArea').classList.toggle('hidden', !hasCases);
+        $('confirmArea').classList.toggle('hidden', !canCheckIn);
         renderCases(data.cases);
 
         markReturningStep(1, 'done');
-        markReturningStep(2, hasCases ? 'active' : 'inactive');
+        markReturningStep(2, canCheckIn ? 'active' : 'inactive');
         markReturningStep(3, 'inactive');
       } catch (error) {
         console.error('Search failed:', error);

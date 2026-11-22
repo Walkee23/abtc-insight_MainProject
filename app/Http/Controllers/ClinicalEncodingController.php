@@ -469,8 +469,15 @@ class ClinicalEncodingController extends Controller
             return back()->with('status', 'Section IX saved as draft.');
         }
 
-        // Finalized: mark the case Completed so it drops out of the queue
-        DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->update(['outcome' => 'Completed']);
+        // Finalizing a visit only completes the case when EVERY dose of its course is recorded (route-based schedule).
+        // Otherwise the case stays open, with the doses saved so far, until the patient comes back for the next one.
+        $s7 = DB::table('bite_section7_immunization')->where('bite_case_id', $biteCaseId)->first();
+        $nextDose = ($s7 && $s7->day0_date) ? PepSchedule::nextDay($s7->dose_type, $s7->route, $s7) : null;
+
+        if ($nextDose === null) {
+            // The course is finished: mark the case Completed so it drops out of the queue
+            DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->update(['outcome' => 'Completed']);
+        }
 
         $patientId = DB::table('bite_cases')->where('bite_case_id', $biteCaseId)->value('patient_id');
 
@@ -484,8 +491,10 @@ class ClinicalEncodingController extends Controller
 
         // Last section - back to the queue; the QR pop-up shows there
         return redirect()->route('healthworker.clinical-encoding')
-            ->with('status', 'Clinical encoding completed for this case.')
-            ->with('qr_popup', $qrPopup);
+            ->with('status', $nextDose === null
+                ? 'Clinical encoding completed for this case.'
+                : "Visit saved. The case stays open: the patient registers again for the Day {$nextDose} dose.")
+            ->with('qr_popup', $qrPopup);   // the patient's ID, so they have it for the next visit
     }
 
     // ---------------------------------------------------------------

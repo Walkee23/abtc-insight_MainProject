@@ -486,7 +486,10 @@
                                     </style>
                                     <div id="doseGrid" data-cols="4" class="grid grid-cols-4 gap-3">
                                         @foreach([0 => 'Day 0', 3 => 'Day 3', 7 => 'Day 7', 14 => 'Day 14', 28 => 'Day 28'] as $d => $dayLabel)
-                                        <div data-field-wrap="day{{ $d }}_date" data-day="{{ $d }}" class="bg-white p-3 rounded-lg border {{ $d === 0 ? 'border-primary/20' : 'border-outline-variant/30' }} ring-1 ring-transparent">
+                                        <div data-field-wrap="day{{ $d }}_date" data-day="{{ $d }}" @if((int) ($case->return_dose_day ?? 0) === $d) data-registered @endif class="bg-white p-3 rounded-lg border {{ $d === 0 ? 'border-primary/20' : 'border-outline-variant/30' }} {{ (int) ($case->return_dose_day ?? 0) === $d ? 'ring-2 ring-primary/40' : 'ring-1 ring-transparent' }}">
+                                            @if((int) ($case->return_dose_day ?? 0) === $d)
+                                            <p class="mb-2 inline-block rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-primary">Patient registered for this dose</p>
+                                            @endif
                                             <p class="text-[10px] font-bold {{ $d === 0 ? 'text-primary' : 'text-outline' }} uppercase mb-1">{{ $dayLabel }} @if($d === 0)<span class="text-error">*</span>@endif</p>
                                             <input name="day{{ $d }}_date" data-field="day{{ $d }}_date" type="date" max="{{ now()->toDateString() }}" value="{{ $val('day' . $d . '_date') }}"
                                                 class="w-full text-[10px] font-bold text-on-surface bg-transparent border-none p-0 focus:ring-0" />
@@ -727,6 +730,12 @@
                 doseGrid.dataset.cols = String(days.length); // 2 or 4 boxes: the columns follow (see the style rule above the grid)
             }
             applySchedule();
+
+            // The patient registered for one dose (Returning Patient portal): bring it into view, ready for the date
+            const registered = doseGrid.querySelector('[data-registered] input[type="date"]');
+            if (registered && !registered.disabled) {
+                setTimeout(() => registered.scrollIntoView({ block: 'center', behavior: 'smooth' }), 300);
+            }
 
             // Styled dropdowns
             const menus = form.querySelectorAll('[data-dd]');

@@ -79,12 +79,28 @@ class PatientController extends Controller
     // App\Support\PepSchedule: Primary IM 3 / 7 / 14, Primary ID 3 / 7 / 28, Booster 3.
 
     /**
-     * Returning Patient: find a patient by full name AND exact date of birth, then list the
-     * unfinished bite case(s) they can come back for. Both are required, so the public page
-     * cannot be used to browse patient records by name alone. Not found and ambiguous look the same.
+     * Returning Patient: find the patient, then list the unfinished bite case(s) they can come back for.
+     *
+     * The patient finds themselves with the unique Patient ID they were given (CEB-...). If they no longer have it,
+     * full name AND exact date of birth also work. Not found and ambiguous look the same, and the page is rate-limited,
+     * so it cannot be used to browse patient records.
      */
     public function search(Request $request)
     {
+        $patientId = strtoupper(trim((string) $request->input('patient_id', '')));
+
+        if ($patientId !== '') {
+            if (!preg_match('/^CEB-\d{8}-\d{8}-\d{1,6}$/', $patientId)) {
+                return response()->json(['found' => false]);
+            }
+            $patient = DB::table('patients')->where('patient_id', $patientId)->first();
+            if (!$patient) {
+                return response()->json(['found' => false]);
+            }
+
+            return $this->returningRecord($patient);
+        }
+
         $name = trim((string) $request->input('name', ''));
         $dob  = (string) $request->input('dob', '');
 
@@ -110,31 +126,54 @@ class PatientController extends Controller
             return response()->json(['found' => false]);
         }
 
-        $patient = $matches->first();
+        return $this->returningRecord($matches->first());
+    }
 
-        $cases = DB::table('bite_cases as bc')
+    /**
+     * A case a patient can still come back for: it has no outcome yet, or it was marked Completed at the first visit
+     * by a Health Worker (older versions did that) while doses of its schedule are still due. Old imported records
+     * (never handled by a Health Worker here) are not offered.
+     */
+    private function returnable($q)
+    {
+        return $q->where(function ($w) {
+            $w->whereNull('bc.outcome')
+              ->orWhere(fn ($c) => $c->where('bc.outcome', 'Completed')->whereNotNull('bc.assigned_health_worker_id'));
+        });
+    }
+
+    /** The found patient with the doses of every unfinished case; the doses still due are listed, the NEXT one can be chosen. */
+    private function returningRecord(object $patient)
+    {
+        $cases = $this->returnable(DB::table('bite_cases as bc')
             ->join('bite_section7_immunization as s7', 's7.bite_case_id', '=', 'bc.bite_case_id')
             ->where('bc.patient_id', $patient->patient_id)
-            ->whereNull('bc.outcome')
-            ->whereNotNull('s7.day0_date')
+            ->whereNotNull('s7.day0_date'))
             ->orderByDesc('bc.case_number')
-            ->get(['bc.bite_case_id', 'bc.case_number', 'bc.category', 'bc.return_dose_day',
+            ->get(['bc.bite_case_id', 'bc.case_number', 'bc.category', 'bc.return_dose_day', 'bc.outcome',
                 's7.dose_type', 's7.route', 's7.day0_date', 's7.day3_date', 's7.day7_date', 's7.day14_date', 's7.day28_date'])
-            ->map(fn ($c) => [
-                'bite_case_id'   => $c->bite_case_id,
-                'case_number'    => $c->case_number,
-                'category'       => $c->category,
-                'dose_type'      => $c->dose_type ?: 'Primary',
-                'days'           => PepSchedule::followUpDays($c->dose_type, $c->route),
-                'dates'          => [
-                    0  => $c->day0_date,
-                    3  => $c->day3_date,
-                    7  => $c->day7_date,
-                    14 => $c->day14_date,
-                    28 => $c->day28_date,
-                ],
-                'checked_in_for' => $c->return_dose_day,
-            ])
+            ->filter(fn ($c) => !($c->outcome === 'Completed' && PepSchedule::nextDay($c->dose_type, $c->route, $c) === null))   // really finished
+            ->map(function ($c) {
+                $next = PepSchedule::nextDay($c->dose_type, $c->route, $c);
+
+                return [
+                    'bite_case_id'   => $c->bite_case_id,
+                    'case_number'    => $c->case_number,
+                    'category'       => $c->category,
+                    'dose_type'      => $c->dose_type ?: 'Primary',
+                    'days'           => PepSchedule::followUpDays($c->dose_type, $c->route),
+                    'dates'          => [
+                        0  => $c->day0_date,
+                        3  => $c->day3_date,
+                        7  => $c->day7_date,
+                        14 => $c->day14_date,
+                        28 => $c->day28_date,
+                    ],
+                    'next_day'       => $next,          // the only dose that can be chosen; null = every dose is recorded
+                    'complete'       => $next === null,
+                    'checked_in_for' => $c->return_dose_day,
+                ];
+            })
             ->values();
 
         return response()->json([
@@ -178,33 +217,44 @@ class PatientController extends Controller
         $day = (int) $validated['dose_day'];
 
         return DB::transaction(function () use ($validated, $proof, $day) {
-            $case = DB::table('bite_cases')
-                ->where('bite_case_id', $validated['bite_case_id'])
-                ->where('patient_id', $proof['patient_id'])
-                ->whereNull('outcome')
+            $case = $this->returnable(DB::table('bite_cases as bc')
+                ->where('bc.bite_case_id', $validated['bite_case_id'])
+                ->where('bc.patient_id', $proof['patient_id']))
                 ->lockForUpdate()
                 ->first();
 
             $s7 = $case ? DB::table('bite_section7_immunization')->where('bite_case_id', $case->bite_case_id)->first() : null;
 
-            $allowed = $s7 ? PepSchedule::followUpDays($s7->dose_type, $s7->route) : [];
-
-            if (!$case || !$s7 || !$s7->day0_date || !in_array($day, $allowed, true)) {
+            if (!$case || !$s7 || !$s7->day0_date || !in_array($day, PepSchedule::followUpDays($s7->dose_type, $s7->route), true)) {
                 return redirect()->route('patient.returning-patient')
                     ->withErrors(['token' => 'That dose cannot be checked in for. Please look up your record again.']);
             }
 
-            if ($s7->{'day' . $day . '_date'}) {
+            // The doses are taken in order: only the next one that has no date yet can be checked in for
+            // (at Day 3 the patient cannot register for Day 7, and so on).
+            $next = PepSchedule::nextDay($s7->dose_type, $s7->route, $s7);
+            if ($next === null) {
                 return redirect()->route('patient.returning-patient')
-                    ->withErrors(['token' => "Day {$day} is already recorded as given."]);
+                    ->withErrors(['token' => 'Every dose of this case is already recorded. Your course is complete.']);
+            }
+            if ($day !== $next) {
+                return redirect()->route('patient.returning-patient')
+                    ->withErrors(['token' => "Please check in for Day {$next} first. The doses must be taken in order."]);
             }
 
-            // Same bite case, so it is only updated. Back to the pool, marked with the dose due.
-            DB::table('bite_cases')->where('bite_case_id', $case->bite_case_id)->update([
-                'assigned_health_worker_id' => null,
-                'return_dose_day'           => $day,
-                'returned_at'               => now(),
-            ]);
+            // Already checked in for this dose and waiting for the Health Worker: do not queue it again, and never
+            // take the case away from a Health Worker who has already started encoding it.
+            $alreadyIn = (int) $case->return_dose_day === $day;
+
+            if (!$alreadyIn) {
+                // Same bite case, so it is only updated. Back to the pool, marked with the dose due.
+                DB::table('bite_cases')->where('bite_case_id', $case->bite_case_id)->update([
+                    'assigned_health_worker_id' => null,
+                    'return_dose_day'           => $day,
+                    'returned_at'               => now(),
+                    'outcome'                   => null,   // a case completed too early is open again until its last dose
+                ]);
+            }
 
             if (!empty($validated['contact_num'])) {
                 DB::table('patients')->where('patient_id', $proof['patient_id'])
@@ -213,7 +263,9 @@ class PatientController extends Controller
 
             $patient = DB::table('patients')->where('patient_id', $proof['patient_id'])->first();
 
-            Audit::log('returning_checkin', "Patient {$proof['patient_id']} checked in for the Day {$day} dose of case #{$case->case_number}", 'Patient (self check-in)');
+            if (!$alreadyIn) {
+                Audit::log('returning_checkin', "Patient {$proof['patient_id']} checked in for the Day {$day} dose of case #{$case->case_number}", 'Patient (self check-in)');
+            }
 
             return view('patient.returning_confirmation', [
                 'patientName' => $patient->patient_name,

@@ -228,6 +228,19 @@ class StaffController extends Controller
         } elseif ($verifiedQueue->isNotEmpty()) {
             $selectedPatient = $verifiedQueue->first();
         }
+
+        // A record opened from Patient Lookup is usually not in the Verified queue any more (its encoding is done and
+        // it was handed to the Health Worker): load it directly so the form shows what was saved, and show it in the
+        // list on the left instead of leaving the page empty.
+        $openedRecord = null;
+        if ($inflow_record_id && !$selectedPatient) {
+            $openedRecord = DB::table('inflow_general_particulars')
+                ->join('patients', 'inflow_general_particulars.inflow_record_id', '=', 'patients.inflow_record_id')
+                ->where('inflow_general_particulars.inflow_record_id', $inflow_record_id)
+                ->select('inflow_general_particulars.*', 'patients.patient_id')
+                ->first();
+            $selectedPatient = $openedRecord;
+        }
         $bhwExposure = null;
         if ($selectedPatient && !empty($selectedPatient->bhw_referral_id)) {
             $bhwExposure = DB::table('bhw_referral_info')
@@ -259,7 +272,7 @@ class StaffController extends Controller
             }
         }
 
-        return view('staff.Case_Encoding', compact('verifiedQueue', 'selectedPatient', 'search', 'bhwExposure', 'healthworkers', 'saved'));
+        return view('staff.Case_Encoding', compact('verifiedQueue', 'selectedPatient', 'openedRecord', 'search', 'bhwExposure', 'healthworkers', 'saved'));
     }
 
     public function storeCaseEncoding(Request $request, string $inflow_record_id)

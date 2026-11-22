@@ -233,6 +233,18 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-outline-variant/10">
+                                @if(!empty($openedRecord))
+                                {{-- opened from Patient Lookup: already encoded, so it is not in the Verified queue --}}
+                                <tr class="bg-primary/5">
+                                    <td class="px-4 py-4 shadow-[inset_4px_0_0_0_#004a93]">
+                                        <p class="font-bold text-on-surface">{{ $openedRecord->patient_name }}</p>
+                                        <p class="text-[10px] text-on-surface-variant">#{{ $openedRecord->inflow_record_id }}</p>
+                                    </td>
+                                    <td class="px-4 py-4">
+                                        <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full text-[9px] font-bold whitespace-nowrap">{{ $openedRecord->status === 'Encoded' ? 'Encoded' : ($openedRecord->status ?: 'Opened') }}</span>
+                                    </td>
+                                </tr>
+                                @endif
                                 @forelse($verifiedQueue as $index => $row)
                                 @php
                                 $rowUrl = route('staff.case-encoding', $row->inflow_record_id);
@@ -248,9 +260,11 @@
                                     </td>
                                 </tr>
                                 @empty
+                                @if(empty($openedRecord))
                                 <tr>
                                     <td colspan="2" class="px-4 py-8 text-center text-on-surface-variant text-xs">No verified patients awaiting encoding.</td>
                                 </tr>
+                                @endif
                                 @endforelse
                             </tbody>
                         </table>
@@ -264,7 +278,9 @@
                             <div class="min-w-0">
                                 <h3 class="text-lg font-bold text-primary"><span class="hidden md:inline">Animal Bite </span>Case Encoding<span class="hidden md:inline"> Form</span></h3>
                                 <p class="text-xs text-on-surface-variant truncate">
-                                    @if(isset($selectedPatient) && $selectedPatient)
+                                    @if(!empty($openedRecord))
+                                    Encoded case: <span class="font-bold text-on-surface">{{ $selectedPatient->patient_name }} (#{{ $selectedPatient->inflow_record_id }})</span> &middot; opened from Patient Lookup
+                                    @elseif(isset($selectedPatient) && $selectedPatient)
                                     Currently encoding: <span class="font-bold text-on-surface">{{ $selectedPatient->patient_name }} (#{{ $selectedPatient->inflow_record_id }})</span>
                                     @else
                                     No patient selected — choose one from the Verified Queue.

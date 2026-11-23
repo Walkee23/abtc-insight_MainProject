@@ -101,6 +101,8 @@
         }
 
         html { scroll-behavior: smooth; }
+        .no-scrollbar { scrollbar-width: none; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
 
         /* FAQ: no default marker, the chevron turns when an item is open */
         details.faq > summary { list-style: none; cursor: pointer; }
@@ -134,10 +136,22 @@
             ->filter(fn ($x) => $x['dose'] && $x['dose']->due)
             ->sortBy(fn ($x) => $x['dose']->due)->first();
         $inProgress = collect($cases)->filter($active)->count();
+
+        // "In 2 days" / "Today" / "Overdue by 3 days"
+        $away = function ($iso) use ($today) {
+            $n = (int) \Carbon\Carbon::parse($today)->startOfDay()->diffInDays(\Carbon\Carbon::parse($iso)->startOfDay(), false);
+            return $n === 0 ? 'Today' : ($n === 1 ? 'Tomorrow' : ($n > 1 ? 'In ' . $n . ' days' : 'Overdue by ' . abs($n) . ' day' . (abs($n) === 1 ? '' : 's')));
+        };
+        // doses given / doses in the course
+        $progress = function ($c) {
+            $total = count($c->doses);
+            $given = collect($c->doses)->where('state', 'done')->count();
+            return [$given, $total, $total ? (int) round($given / $total * 100) : 0];
+        };
     @endphp
 
     <!-- Top bar -->
-    <nav class="fixed top-0 inset-x-0 z-50 flex justify-between items-center gap-3 px-4 sm:px-6 h-16 bg-slate-50/85 backdrop-blur-xl shadow-sm">
+    <nav class="print:hidden fixed top-0 inset-x-0 z-50 flex justify-between items-center gap-3 px-4 sm:px-6 h-16 bg-slate-50/85 backdrop-blur-xl shadow-sm">
         <div class="flex items-center gap-8 min-w-0">
             <a href="{{ url('/') }}" class="flex items-center gap-2.5 hover:opacity-80 transition-opacity min-w-0">
                 <div class="w-9 h-9 bg-primary rounded-lg flex items-center justify-center shrink-0">
@@ -145,10 +159,6 @@
                 </div>
                 <span class="text-lg sm:text-xl font-bold tracking-tighter text-blue-800 truncate">ABTC-Insight</span>
             </a>
-            <div class="hidden md:flex items-center gap-6 text-sm font-medium tracking-tight">
-                <a data-nav="cases" class="text-blue-700 font-semibold border-b-2 border-blue-700 pb-1" href="#cases">My cases</a>
-                <a data-nav="faq" class="text-slate-600 hover:text-blue-600 transition-colors" href="#faq">Rabies FAQ</a>
-            </div>
         </div>
         <div class="flex items-center gap-3 shrink-0">
             <a href="{{ route('patient.tracking.portal') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-primary bg-primary/10 hover:bg-primary/15 active:scale-95 transition-all">
@@ -159,55 +169,65 @@
         </div>
     </nav>
 
-    <main class="pt-24 pb-28 md:pb-14 px-4 sm:px-6 max-w-6xl mx-auto">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+    <main class="pt-24 print:pt-4 pb-28 md:pb-14 px-4 sm:px-6 max-w-4xl mx-auto">
+        <div>
             <!-- MAIN CONTENT -->
-            <div class="lg:col-span-8 space-y-6 lg:space-y-8 min-w-0">
+            <div class="space-y-6 lg:space-y-8 min-w-0">
 
-                <!-- Greeting -->
-                <section class="relative overflow-hidden rounded-2xl bg-primary-container p-6 sm:p-8 text-on-primary">
-                    <div class="relative z-10">
-                        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2 break-words">Welcome back, {{ $firstName }}!</h1>
-                        <p class="text-on-primary-container/90 text-sm sm:text-base max-w-md">Here is your treatment record: your cases, the doses you have received and what comes next.</p>
-                        <div class="mt-5 flex flex-wrap items-center gap-2">
-                            <span class="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-[11px] font-semibold">
+                <!-- Greeting + next dose -->
+                <section class="print:hidden relative overflow-hidden rounded-2xl bg-primary-container text-on-primary">
+                    <div class="relative z-10 p-6 sm:p-8 grid gap-6 md:grid-cols-[1fr_auto] md:items-center">
+                        <div class="min-w-0">
+                            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2 break-words">Welcome back, {{ $firstName }}!</h1>
+                            <p class="text-on-primary-container/90 text-sm sm:text-base max-w-md">Here is your treatment record: your cases, the doses you have received and what comes next.</p>
+                            <span class="mt-5 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-[11px] font-semibold max-w-full">
                                 <span class="material-symbols-outlined text-[15px]">fingerprint</span>
                                 <span class="font-mono break-all">{{ $patient->patient_id }}</span>
                             </span>
-                            @if($soonest)
-                            <span class="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[11px] font-bold {{ $soonest['dose']->overdue ? 'text-amber-800' : 'text-primary' }}">
-                                <span class="material-symbols-outlined text-[15px]">{{ $soonest['dose']->overdue ? 'schedule' : 'event' }}</span>
-                                {{ $soonest['dose']->overdue ? 'Overdue: Day ' . $soonest['dose']->day . ' dose' : 'Next dose: Day ' . $soonest['dose']->day . ' · ' . $short($soonest['dose']->due) }}
-                            </span>
-                            @elseif(count($cases) && !$inProgress)
-                            <span class="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[11px] font-bold text-emerald-700">
-                                <span class="material-symbols-outlined text-[15px]">verified</span> No doses due
-                            </span>
-                            @endif
                         </div>
+
+                        @if($soonest)
+                        @php $sd = $soonest['dose']; @endphp
+                        <div class="rounded-2xl bg-white text-on-surface p-5 md:w-60 shadow-xl shadow-black/10">
+                            <p class="text-[10px] font-extrabold uppercase tracking-widest {{ $sd->overdue ? 'text-amber-700' : 'text-on-surface-variant' }}">{{ $sd->overdue ? 'Dose overdue' : 'Next dose' }}</p>
+                            <p class="mt-1 text-4xl font-black tracking-tight {{ $sd->overdue ? 'text-amber-700' : 'text-primary' }}">Day {{ $sd->day }}</p>
+                            <p class="mt-0.5 text-sm font-semibold text-on-surface">{{ \Carbon\Carbon::parse($sd->due)->format('D, M j') }}</p>
+                            <span class="mt-3 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold {{ $sd->overdue ? 'bg-amber-100 text-amber-800' : 'bg-primary-fixed text-primary' }}">
+                                <span class="material-symbols-outlined text-[14px]">{{ $sd->overdue ? 'schedule' : 'event' }}</span>{{ $away($sd->due) }}
+                            </span>
+                            <p class="mt-3 text-[11px] text-on-surface-variant">Case #{{ $soonest['case']->case_number }}</p>
+                        </div>
+                        @elseif(count($cases) && !$inProgress)
+                        <div class="rounded-2xl bg-white text-on-surface p-5 md:w-60 shadow-xl shadow-black/10">
+                            <span class="inline-flex w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 items-center justify-center"><span class="material-symbols-outlined">verified</span></span>
+                            <p class="mt-3 text-lg font-extrabold">No doses due</p>
+                            <p class="text-xs text-on-surface-variant mt-0.5">Every course on record is finished.</p>
+                        </div>
+                        @endif
                     </div>
                     <div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
                     <div class="absolute bottom-0 left-0 w-32 h-32 bg-primary/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/4"></div>
                 </section>
 
                 <!-- My cases -->
-                <section id="cases" class="scroll-mt-24">
+                <section id="cases" class="print:hidden scroll-mt-24">
                     <div class="flex items-end justify-between gap-3 mb-4">
                         <h2 class="text-lg sm:text-xl font-bold tracking-tight text-on-surface">My Treatment Cases</h2>
-                        <span class="text-xs font-semibold text-on-surface-variant whitespace-nowrap">{{ count($cases) }} {{ count($cases) === 1 ? 'case' : 'cases' }}</span>
+                        <span class="text-xs font-semibold text-on-surface-variant whitespace-nowrap">{{ count($cases) }} {{ count($cases) === 1 ? 'case' : 'cases' }}@if(count($cases) > 1)<span class="sm:hidden"> · swipe</span>@endif</span>
                     </div>
                     @if(count($cases))
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="no-scrollbar flex gap-3 overflow-x-auto snap-x snap-mandatory scroll-px-4 -mx-4 px-4 pb-2 sm:mx-0 sm:px-0 sm:pb-0 sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible">
                         @foreach($cases as $c)
                         @php
                             [$badgeText, $badgeClass] = $badge($c);
                             $isSel = $selected && $selected->case_number === $c->case_number;
                             $nextDose = collect($c->doses)->firstWhere('state', 'next');
                             $isActive = $active($c);
+                            [$given, $total, $pct] = $progress($c);
                         @endphp
                         <a href="{{ route('patient.tracking.result', ['case' => $c->case_number]) }}#detail"
                             @if($isSel) aria-current="true" @endif
-                            class="group h-full flex flex-col p-5 rounded-xl border-l-4 shadow-sm transition-all hover:shadow-md {{ $isActive ? 'bg-surface-container-lowest border-primary' : 'bg-surface-container-low border-outline-variant/40' }} {{ $isSel ? 'ring-2 ring-primary/40' : 'ring-1 ring-outline-variant/10' }}">
+                            class="group snap-start shrink-0 w-[82%] sm:w-auto sm:shrink flex flex-col p-5 rounded-xl border-l-4 shadow-sm transition-all hover:shadow-md {{ $isActive ? 'bg-surface-container-lowest border-primary' : 'bg-surface-container-low border-outline-variant/40' }} {{ $isSel ? 'ring-2 ring-primary/40' : 'ring-1 ring-outline-variant/10' }}">
                             <div class="flex justify-between items-start gap-2 mb-3">
                                 <div class="flex flex-wrap items-center gap-1.5">
                                     <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full {{ $badgeClass }}">{{ $badgeText }}</span>
@@ -217,6 +237,12 @@
                             </div>
                             <h3 class="font-bold text-base sm:text-lg leading-snug">{{ $c->animal ? $c->animal . ' Bite Incident' : 'Animal Bite Incident' }}</h3>
                             <p class="text-on-surface-variant text-sm mt-0.5">{{ $c->reported ? 'Reported ' . $fmt($c->reported) : 'Reported date not recorded' }}</p>
+                            @if($total && $c->status !== 'discharged')
+                            <div class="mt-4">
+                                <div class="flex justify-between text-[11px] font-semibold text-on-surface-variant mb-1.5"><span>{{ $given }} of {{ $total }} doses given</span><span>{{ $pct }}%</span></div>
+                                <div class="h-1.5 rounded-full bg-surface-container-highest overflow-hidden"><div class="h-full rounded-full {{ $pct === 100 ? 'bg-emerald-500' : 'bg-primary' }}" style="width: {{ $pct }}%"></div></div>
+                            </div>
+                            @endif
                             <div class="mt-auto pt-4 flex items-center gap-2 text-sm font-semibold {{ $isActive ? ($nextDose && $nextDose->overdue ? 'text-amber-700' : 'text-primary') : 'text-on-surface-variant' }}">
                                 @if($c->status === 'checked_in')
                                     <span class="material-symbols-outlined text-[18px]">how_to_reg</span> Checked in for Day {{ $c->checked_in_for }}
@@ -268,6 +294,7 @@
                             'II' => ['Category II (Moderate)', 'bg-tertiary-fixed text-on-tertiary-fixed-variant', 'info'],
                             'III' => ['Category III (Severe)', 'bg-error-container text-on-error-container', 'warning']][$c->category] ?? null;
                     $gridCols = count($c->doses) >= 4 ? 'sm:grid-cols-4' : 'sm:grid-cols-2';
+                    [$dGiven, $dTotal, $dPct] = $progress($c);
                 @endphp
                 <!-- Case detail -->
                 <section id="detail" class="bg-surface-container-lowest rounded-2xl p-5 sm:p-8 shadow-sm ring-1 ring-outline-variant/10 scroll-mt-24">
@@ -276,17 +303,39 @@
                             <p class="text-[11px] uppercase font-bold tracking-widest text-on-surface-variant mb-1">Case details</p>
                             <h2 class="text-xl sm:text-2xl font-bold tracking-tight">Case #{{ $c->case_number }}@if($c->reported) <span class="text-on-surface-variant font-semibold">· {{ $fmt($c->reported) }}</span>@endif</h2>
                         </div>
-                        @if($cat)
-                        <div class="inline-flex items-center gap-2 px-3.5 py-2 rounded-full self-start sm:self-auto shrink-0 {{ $cat[1] }}">
-                            <span class="material-symbols-outlined text-[20px]">{{ $cat[2] }}</span>
-                            <span class="text-xs sm:text-sm font-bold tracking-tight">{{ $cat[0] }}</span>
+                        <div class="flex flex-wrap items-center gap-2 self-start sm:self-auto shrink-0">
+                            @if($cat)
+                            <div class="inline-flex items-center gap-2 px-3.5 py-2 rounded-full {{ $cat[1] }}">
+                                <span class="material-symbols-outlined text-[20px]">{{ $cat[2] }}</span>
+                                <span class="text-xs sm:text-sm font-bold tracking-tight">{{ $cat[0] }}</span>
+                            </div>
+                            @endif
+                            <button type="button" onclick="window.print()" title="Print or save this record" class="print:hidden inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-bold text-primary bg-primary/10 hover:bg-primary/15 active:scale-95 transition-all">
+                                <span class="material-symbols-outlined text-[18px]">print</span>Print
+                            </button>
                         </div>
-                        @endif
+                    </div>
+
+                    {{-- shown on paper only: whose record this is --}}
+                    <p class="hidden print:block mb-6 text-sm"><span class="font-bold">{{ $patient->patient_name }}</span> · Tracking ID <span class="font-mono">{{ $patient->patient_id }}</span></p>
+
+                    <!-- Instruction first: what the patient has to do -->
+                    <div class="mb-8 rounded-xl p-4 sm:p-5 flex items-start gap-3 sm:gap-4 {{ $warn ? 'bg-amber-50' : 'bg-primary/5' }}">
+                        <div class="p-2.5 rounded-lg shrink-0 {{ $warn ? 'bg-amber-100 text-amber-700' : 'bg-primary-container/10 text-primary' }}">
+                            <span class="material-symbols-outlined">{{ $warn ? 'schedule' : 'info' }}</span>
+                        </div>
+                        <div class="min-w-0">
+                            <h4 class="font-bold text-on-surface mb-0.5">What to do next</h4>
+                            <p class="text-sm text-on-surface-variant leading-relaxed">{{ $msg }}</p>
+                        </div>
                     </div>
 
                     @if(count($c->doses))
                     <div>
-                        <h3 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-6 sm:mb-8">Immunization timeline</h3>
+                        <div class="flex items-center justify-between gap-3 mb-6 sm:mb-8">
+                            <h3 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Immunization timeline</h3>
+                            <span class="text-xs font-semibold text-on-surface-variant whitespace-nowrap">{{ $dGiven }} of {{ $dTotal }} doses given</span>
+                        </div>
                         <div class="relative">
                             {{-- the line: across on a wide screen, down the side on a phone --}}
                             <div class="hidden sm:block absolute top-5 h-0.5 bg-surface-container-highest {{ count($c->doses) >= 4 ? 'left-[12.5%] right-[12.5%]' : 'left-1/4 right-1/4' }}"></div>
@@ -329,30 +378,22 @@
                         </div>
                     </div>
                     @endif
-
-                    <!-- Instruction -->
-                    <div class="{{ count($c->doses) ? 'mt-8 sm:mt-10' : '' }} rounded-xl p-4 sm:p-5 flex items-start gap-3 sm:gap-4 {{ $warn ? 'bg-amber-50' : 'bg-surface-container-low' }}">
-                        <div class="p-2.5 rounded-lg shrink-0 {{ $warn ? 'bg-amber-100 text-amber-700' : 'bg-primary-container/10 text-primary' }}">
-                            <span class="material-symbols-outlined">{{ $warn ? 'schedule' : 'info' }}</span>
-                        </div>
-                        <div class="min-w-0">
-                            <h4 class="font-bold text-on-surface mb-0.5">Patient instruction</h4>
-                            <p class="text-sm text-on-surface-variant leading-relaxed">{{ $msg }}</p>
-                        </div>
-                    </div>
                 </section>
                 @endif
 
-                <p class="text-center text-xs text-on-surface-variant leading-relaxed px-2">For your privacy this page closes after 20 minutes. Need help? Please visit the Information Staff at the ABTC.</p>
-            </div>
+                <div class="print:hidden flex items-start gap-3 rounded-xl bg-surface-container-lowest ring-1 ring-outline-variant/10 px-4 py-3.5">
+                    <span class="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5">lock_clock</span>
+                    <p class="text-xs text-on-surface-variant leading-relaxed">For your privacy this page closes after 20 minutes. Need help? Please visit the Information Staff at the ABTC.</p>
+                </div>
 
-            <!-- Rabies prevention FAQ -->
-            <aside id="faq" class="lg:col-span-4 scroll-mt-24">
-                <div id="faqList" class="lg:sticky lg:top-24 space-y-3 rounded-2xl p-2 -m-2 transition-shadow duration-500">
-                    <h2 class="text-base sm:text-lg font-bold tracking-tight text-on-surface mb-1 flex items-center gap-2">
+                <!-- Rabies prevention FAQ -->
+            <section id="faq" class="print:hidden scroll-mt-24">
+                <div id="faqList" class="rounded-2xl p-2 -m-2 transition-shadow duration-500">
+                    <h2 class="text-base sm:text-lg font-bold tracking-tight text-on-surface mb-3 flex items-center gap-2">
                         <span class="material-symbols-outlined text-primary">clinical_notes</span>
                         Rabies Prevention <span class="text-xs font-normal text-on-surface-variant">(WHO)</span>
                     </h2>
+                    <div class="grid gap-3 lg:grid-cols-3 lg:items-start">
                     @foreach([
                         ['What is PEP?', 'Post-Exposure Prophylaxis (PEP) is the immediate treatment of a bite victim after rabies exposure. This prevents virus entry into the central nervous system.'],
                         ['Why is time critical?', 'Once symptoms appear, rabies is 99.9% fatal. Immediate PEP after exposure can effectively stop the infection.'],
@@ -366,13 +407,16 @@
                         <p class="px-4 pb-4 text-xs text-on-surface-variant leading-relaxed">{{ $a }}</p>
                     </details>
                     @endforeach
+                    </div>
                 </div>
-            </aside>
+            </section>
+            </div>
+
         </div>
     </main>
 
     <!-- Bottom bar (phones only) -->
-    <nav class="md:hidden fixed bottom-0 inset-x-0 bg-surface-container-lowest/95 backdrop-blur shadow-[0_-4px_20px_rgba(0,0,0,0.05)] px-6 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] flex justify-around items-center z-50">
+    <nav class="print:hidden md:hidden fixed bottom-0 inset-x-0 bg-surface-container-lowest/95 backdrop-blur shadow-[0_-4px_20px_rgba(0,0,0,0.05)] px-6 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] flex justify-around items-center z-50">
         <a href="#cases" class="flex flex-col items-center gap-0.5 text-primary">
             <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">grid_view</span>
             <span class="text-[10px] font-bold">My cases</span>

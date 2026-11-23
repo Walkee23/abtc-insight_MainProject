@@ -89,6 +89,9 @@
         }
     </style>
     <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
+    <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
+    <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
+    <script src="{{ asset('js/soft-nav.js') }}" defer></script>
 </head>
 <body class="bg-surface text-on-surface flex min-h-screen">
 
@@ -196,7 +199,7 @@
 </div>
 </section>
 <!-- Search Area -->
-<section class="bg-surface-container-lowest p-8 rounded-xl tonal-elevation ghost-border">
+<section data-soft-region="search" class="bg-surface-container-lowest p-8 rounded-xl tonal-elevation ghost-border">
     <form action="{{ route('staff.patient-lookup') }}" method="GET" class="flex flex-col md:flex-row gap-4 items-center">
         <div class="relative flex-1 w-full">
             <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
@@ -215,7 +218,7 @@
     </form>
 </section>
 <!-- Results Table -->
-<section class="bg-surface-container-lowest rounded-xl tonal-elevation ghost-border overflow-hidden">
+<section data-soft-region="results" class="bg-surface-container-lowest rounded-xl tonal-elevation ghost-border overflow-hidden">
 <div class="px-8 py-6 border-b border-outline-variant/10 flex justify-between items-center">
 <h3 class="font-bold text-on-surface flex items-center gap-2">
 <span class="material-symbols-outlined text-primary" data-icon="list_alt">list_alt</span>
@@ -229,71 +232,74 @@
 <table class="w-full text-left border-collapse">
 <thead>
 <tr class="bg-surface-container-low">
-<th class="px-8 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant">Patient Name</th>
-<th class="px-6 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant">Patient ID</th>
-<th class="px-6 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant">Age/Sex</th>
-<th class="px-6 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant">Barangay</th>
-<th class="px-6 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant">Last Visit</th>
-<th class="px-6 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant text-center">Active PEP</th>
-<th class="px-8 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant text-right">Action</th>
+<th class="px-5 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant">Patient Name</th>
+<th class="px-3 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant whitespace-nowrap">Patient ID</th>
+<th class="px-3 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant whitespace-nowrap">Age/Sex</th>
+<th class="px-3 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant whitespace-nowrap">Barangay</th>
+<th class="px-3 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant whitespace-nowrap">Last Visit</th>
+<th class="px-3 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant text-center whitespace-nowrap">Active PEP</th>
+<th class="px-5 py-4 text-[11px] uppercase tracking-widest font-bold text-on-surface-variant text-right">Action</th>
 </tr>
 </thead>
 <tbody class="divide-y divide-outline-variant/10">
     @if(isset($patients) && $patients->count() > 0)
         @foreach($patients as $patient)
             <tr class="hover:bg-surface-bright transition-colors group">
-                <td class="px-8 py-5">
+                <td class="px-5 py-5 min-w-[12rem]">
                     <div class="flex items-center gap-3">
                         <div class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold text-xs">
                             {{ strtoupper(substr($patient->patient_name ?? 'P', 0, 2)) }}
                         </div>
                         <div>
                             <span class="font-bold text-on-surface block">{{ $patient->patient_name }}</span>
-                            <span class="text-[10px] text-on-surface-variant">{{ $patient->contact_num ?? 'No contact' }}</span>
+                            <span class="text-[10px] text-on-surface-variant block">{{ $patient->contact_num ?? 'No contact' }}</span>
+                            <span class="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide {{ $patient->ph_class }}" title="PhilHealth">
+                                <span class="material-symbols-outlined text-[11px]">health_and_safety</span>{{ $patient->ph_label }}
+                            </span>
                         </div>
                     </div>
                 </td>
-                <td class="px-6 py-5">
+                <td class="px-3 py-5">
                     <code class="text-xs font-mono text-primary bg-primary/5 px-2 py-1 rounded">{{ $patient->patient_id }}</code>
                 </td>
-                <td class="px-6 py-5 text-on-surface-variant font-medium">
+                <td class="px-3 py-5 text-on-surface-variant font-medium whitespace-nowrap">
                     {{ $patient->age }} / {{ substr($patient->sex ?? 'U', 0, 1) }}
                 </td>
-                <td class="px-6 py-5 text-on-surface-variant">
+                <td class="px-3 py-5 text-on-surface-variant">
                     {{ $patient->barangay ?? 'N/A' }}
                 </td>
-                <td class="px-6 py-5 text-on-surface-variant">
+                <td class="px-3 py-5 text-on-surface-variant whitespace-nowrap">
                     {{ $patient->date_registered ? \Carbon\Carbon::parse($patient->date_registered)->format('M d, Y') : 'N/A' }}
                 </td>
                 
-                <td class="px-6 py-5 text-center">
+                <td class="px-3 py-5 text-center">
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tight {{ $patient->pep_badge ?? 'bg-slate-100 text-slate-500' }}">
                         {{ $patient->pep_status ?? 'No Case' }}
                     </span>
                 </td>
-                <td class="px-8 py-5 text-right">
+                <td class="px-5 py-5 text-right whitespace-nowrap">
                     @if($patient->inflow_record_id)
-                        <!-- Trigger Button ng CSS Modal -->
-                        <a href="#case-modal-{{ $patient->inflow_record_id }}" 
+                        <!-- Opens the case summary below. A button, not a #link: a link jumps the page to the pop-up -->
+                        <button type="button" data-popup-open="case-modal-{{ $patient->inflow_record_id }}"
                         class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-surface-container-lowest text-primary text-xs font-bold rounded-lg border border-primary/20 hover:bg-primary hover:text-white transition-all shadow-sm">
                             <span class="material-symbols-outlined text-[15px]">clinical_notes</span>
                             <span>View Case</span>
-                        </a>
+                        </button>
 
-                        <!-- PURE CSS MODAL PARA SA CLINICAL SUMMARY CHART (WALANG JAVASCRIPT) -->
-                        <div id="case-modal-{{ $patient->inflow_record_id }}" 
-                            class="fixed inset-0 z-50 hidden [&:target]:flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                        <!-- Clinical summary pop-up (opened and closed by the script at the bottom of this page) -->
+                        <div id="case-modal-{{ $patient->inflow_record_id }}" role="dialog" aria-modal="true"
+                            class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm whitespace-normal font-normal">
                             
                             <div class="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden text-left max-h-[90vh] flex flex-col">
                                 
                                 <!-- Modal Header -->
-                                <div class="bg-gradient-to-r from-primary to-primary-container p-6 text-white flex justify-between items-start shrink-0">
-                                    <div class="flex items-center gap-4">
+                                <div class="bg-gradient-to-r from-primary to-primary-container p-6 text-white flex flex-nowrap gap-3 justify-between items-start shrink-0">
+                                    <div class="flex items-center gap-4 min-w-0">
                                         <div class="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white font-extrabold text-base shadow-inner">
                                             {{ strtoupper(substr($patient->patient_name ?? 'P', 0, 2)) }}
                                         </div>
-                                        <div>
-                                            <div class="flex items-center gap-2">
+                                        <div class="min-w-0">
+                                            <div class="flex flex-wrap items-center gap-2">
                                                 <span class="text-[10px] font-mono tracking-wider px-2 py-0.5 bg-white/20 rounded font-bold uppercase">{{ $patient->patient_id }}</span>
                                                 <span class="text-[10px] font-bold px-2 py-0.5 rounded-full {{ $patient->pep_badge ?? 'bg-white/30 text-white' }}">
                                                     {{ $patient->pep_status }}
@@ -303,9 +309,9 @@
                                         </div>
                                     </div>
                                     <!-- Close button papuntang '#' -->
-                                    <a href="#" class="text-white/70 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10">
+                                    <button type="button" data-popup-close aria-label="Close" class="shrink-0 text-white/70 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10">
                                         <span class="material-symbols-outlined text-[22px]">close</span>
-                                    </a>
+                                    </button>
                                 </div>
 
                                 <!-- Modal Body (Scrollable kung mahaba ang notes) -->
@@ -323,8 +329,8 @@
                                         </div>
                                         <div class="p-3 bg-surface-container-low rounded-xl">
                                             <span class="text-slate-500 block font-medium mb-0.5">PhilHealth</span>
-                                            <span class="font-bold text-sm {{ $patient->philhealth_member ? 'text-emerald-600' : 'text-slate-500' }}">
-                                                {{ $patient->philhealth_member ? 'Member' : 'Non-member' }}
+                                            <span class="font-bold text-sm {{ ['Verified member' => 'text-emerald-600', 'Member' => 'text-emerald-600', 'Expired' => 'text-amber-600', 'Pending verification' => 'text-sky-700'][$patient->ph_label] ?? 'text-slate-500' }}">
+                                                {{ $patient->ph_label }}
                                             </span>
                                         </div>
                                         <div class="p-3 bg-surface-container-low rounded-xl">
@@ -342,7 +348,7 @@
                                         <div class="grid grid-cols-3 gap-2">
                                             <div>
                                                 <span class="text-slate-400 block text-[10px]">Case Number</span>
-                                                <span class="font-semibold text-slate-700 dark:text-slate-300">#{{ $patient->case_number ?? 'Pending' }}</span>
+                                                <span class="font-semibold text-slate-700 dark:text-slate-300">#{{ $patient->case_number ?? 'Pending' }}@if(($patient->case_count ?? 0) > 1) <span class="font-medium text-slate-400">(latest of {{ $patient->case_count }} cases)</span>@endif</span>
                                             </div>
                                             <div>
                                                 <span class="text-slate-400 block text-[10px]">Exposure Category</span>
@@ -362,38 +368,38 @@
                                             PEP Regimen Schedule &amp; Clinical Notes
                                         </h4>
                                         
-                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-stretch">
                                             <!-- Day 3 -->
-                                            <div class="p-3 rounded-xl border {{ !empty($patient->day3_notes) ? 'border-emerald-200 bg-emerald-50/40 text-emerald-950' : 'border-slate-200 bg-slate-50 text-slate-400' }}">
-                                                <div class="flex items-center justify-between mb-1">
-                                                    <span class="font-bold text-[11px]">Dose 2 (Day 3)</span>
+                                            <div class="min-w-0 p-3.5 rounded-xl border {{ !empty($patient->day3_notes) ? 'border-emerald-200 bg-emerald-50/40 text-emerald-950' : 'border-slate-200 bg-slate-50 text-slate-400' }}">
+                                                <div class="flex items-center justify-between gap-2 mb-1.5">
+                                                    <span class="font-bold text-[11px] whitespace-nowrap">Dose 2 (Day 3)</span>
                                                     <span class="material-symbols-outlined text-[16px] {{ !empty($patient->day3_notes) ? 'text-emerald-600' : 'text-slate-300' }}">
                                                         {{ !empty($patient->day3_notes) ? 'check_circle' : 'pending' }}
                                                     </span>
                                                 </div>
-                                                <p class="text-[11px] leading-relaxed italic">{{ $patient->day3_notes ?? 'Not yet administered / no notes recorded.' }}</p>
+                                                <p class="text-[11px] leading-relaxed italic break-words">{{ $patient->day3_notes ?? 'Not yet administered / no notes recorded.' }}</p>
                                             </div>
 
                                             <!-- Day 7 -->
-                                            <div class="p-3 rounded-xl border {{ !empty($patient->day7_notes) ? 'border-purple-200 bg-purple-50/40 text-purple-950' : 'border-slate-200 bg-slate-50 text-slate-400' }}">
-                                                <div class="flex items-center justify-between mb-1">
-                                                    <span class="font-bold text-[11px]">Dose 3 (Day 7)</span>
+                                            <div class="min-w-0 p-3.5 rounded-xl border {{ !empty($patient->day7_notes) ? 'border-purple-200 bg-purple-50/40 text-purple-950' : 'border-slate-200 bg-slate-50 text-slate-400' }}">
+                                                <div class="flex items-center justify-between gap-2 mb-1.5">
+                                                    <span class="font-bold text-[11px] whitespace-nowrap">Dose 3 (Day 7)</span>
                                                     <span class="material-symbols-outlined text-[16px] {{ !empty($patient->day7_notes) ? 'text-purple-600' : 'text-slate-300' }}">
                                                         {{ !empty($patient->day7_notes) ? 'check_circle' : 'pending' }}
                                                     </span>
                                                 </div>
-                                                <p class="text-[11px] leading-relaxed italic">{{ $patient->day7_notes ?? 'Awaiting Day 7 dose.' }}</p>
+                                                <p class="text-[11px] leading-relaxed italic break-words">{{ $patient->day7_notes ?? 'Awaiting Day 7 dose.' }}</p>
                                             </div>
 
                                             <!-- Day 28 -->
-                                            <div class="p-3 rounded-xl border {{ !empty($patient->day28_notes) ? 'border-blue-200 bg-blue-50/40 text-blue-950' : 'border-slate-200 bg-slate-50 text-slate-400' }}">
-                                                <div class="flex items-center justify-between mb-1">
-                                                    <span class="font-bold text-[11px]">Dose 4 (Day 28)</span>
+                                            <div class="min-w-0 p-3.5 rounded-xl border {{ !empty($patient->day28_notes) ? 'border-blue-200 bg-blue-50/40 text-blue-950' : 'border-slate-200 bg-slate-50 text-slate-400' }}">
+                                                <div class="flex items-center justify-between gap-2 mb-1.5">
+                                                    <span class="font-bold text-[11px] whitespace-nowrap">Dose 4 (Day 28)</span>
                                                     <span class="material-symbols-outlined text-[16px] {{ !empty($patient->day28_notes) ? 'text-blue-600' : 'text-slate-300' }}">
                                                         {{ !empty($patient->day28_notes) ? 'check_circle' : 'pending' }}
                                                     </span>
                                                 </div>
-                                                <p class="text-[11px] leading-relaxed italic">{{ $patient->day28_notes ?? 'Awaiting completion.' }}</p>
+                                                <p class="text-[11px] leading-relaxed italic break-words">{{ $patient->day28_notes ?? 'Awaiting completion.' }}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -402,9 +408,9 @@
 
                                 <!-- Modal Footer -->
                                 <div class="p-5 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center shrink-0">
-                                    <a href="#" class="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-colors">
+                                    <button type="button" data-popup-close class="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-colors">
                                         Close Preview
-                                    </a>
+                                    </button>
 
                                     <!-- Direct link to full Case Encoding editor -->
                                     <a href="{{ route('staff.case-encoding', $patient->inflow_record_id) }}" 

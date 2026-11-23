@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\PepSchedule;
 use Illuminate\Http\Request;
+use App\Support\Audit;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
 
 class PatientController extends Controller
 {
@@ -73,94 +76,334 @@ class PatientController extends Controller
         ]);
     }
 
-    // Search for an existing patient by name or ID
+    // The dose visits a returning patient can check in for (Day 0 was given at the first visit) come from
+    // App\Support\PepSchedule: Primary IM 3 / 7 / 14, Primary ID 3 / 7 / 28, Booster 3.
+
+    /**
+     * Returning Patient: find the patient, then list the unfinished bite case(s) they can come back for.
+     *
+     * The patient finds themselves with the unique Patient ID they were given (CEB-...). If they no longer have it,
+     * full name AND exact date of birth also work. Not found and ambiguous look the same, and the page is rate-limited,
+     * so it cannot be used to browse patient records.
+     */
     public function search(Request $request)
     {
-        $query = trim($request->input('query', ''));
+        $patientId = strtoupper(trim((string) $request->input('patient_id', '')));
 
-        $words = array_filter(
-            preg_split('/[\s,]+/', $query),
-            fn($w) => mb_strlen($w) >= 2
-        );
+        if ($patientId !== '') {
+            if (!preg_match('/^CEB-\d{8}-\d{8}-\d{1,6}$/', $patientId)) {
+                return response()->json(['found' => false]);
+            }
+            $patient = DB::table('patients')->where('patient_id', $patientId)->first();
+            if (!$patient) {
+                return response()->json(['found' => false]);
+            }
 
-        $patient = DB::table('inflow_general_particulars')
-            ->where(function ($q) use ($words, $query) {
-                if (count($words) > 0) {
-                    foreach ($words as $word) {
-                        $q->where('patient_name', 'LIKE', "%{$word}%");
-                    }
-                } else {
-                    $q->where('patient_name', 'LIKE', "%{$query}%");
-                }
-            })
-            ->orWhere('inflow_record_id', $query)
-            ->orWhere('id_number', $query)
-            ->orderBy('reg_date', 'desc')
-            ->first();
+            return $this->returningRecord($patient);
+        }
 
-        if (!$patient) {
+        $name = trim((string) $request->input('name', ''));
+        $dob  = (string) $request->input('dob', '');
+
+        $words = array_values(array_filter(
+            preg_split('/[^a-z0-9]+/', strtolower(\Illuminate\Support\Str::ascii($name)), -1, PREG_SPLIT_NO_EMPTY),
+            fn ($w) => strlen($w) >= 2
+        ));
+
+        if (count($words) < 2 || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dob)) {
             return response()->json(['found' => false]);
         }
 
+        $matches = DB::table('patients')
+            ->whereDate('date_of_birth', $dob)
+            ->get()
+            ->filter(function ($p) use ($words) {
+                $stored = preg_split('/[^a-z0-9]+/', strtolower(\Illuminate\Support\Str::ascii($p->patient_name)), -1, PREG_SPLIT_NO_EMPTY);
+                return count(array_diff($words, $stored)) === 0;
+            })
+            ->values();
+
+        if ($matches->count() !== 1) {
+            return response()->json(['found' => false]);
+        }
+
+        return $this->returningRecord($matches->first());
+    }
+
+    /**
+     * Tracking Portal, step 1: check the Tracking ID (the unique Patient ID, CEB-..., also the content of the patient's
+     * QR code) AND the exact date of birth. A wrong ID and a wrong birth date look the same, and after 5 wrong tries for
+     * one ID the lookup is locked for 15 minutes, so the birth date cannot be guessed.
+     *
+     * On success only the patient's ID is kept in the session (for 20 minutes) and the browser is sent to the result
+     * page, so the ID and birth date never appear in a URL.
+     */
+    public function track(Request $request)
+    {
+        $id  = strtoupper(trim((string) $request->input('tracking_id', '')));
+        $dob = (string) $request->input('dob', '');
+        $notFound = fn () => response()->json(['found' => false]);
+
+        if (!preg_match('/^CEB-\d{8}-\d{8}-\d{1,6}$/', $id) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dob)) {
+            return $notFound();
+        }
+
+        $key = 'track:' . $id;
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            return response()->json([
+                'found'   => false,
+                'locked'  => true,
+                'message' => 'Too many tries for this Tracking ID. Please wait ' . ceil(RateLimiter::availableIn($key) / 60) . ' minute(s) and try again, or ask the Information Staff at the ABTC.',
+            ], 429);
+        }
+
+        $patient = DB::table('patients')->where('patient_id', $id)->whereDate('date_of_birth', $dob)->first();
+        if (!$patient) {
+            RateLimiter::hit($key, 900);
+
+            return $notFound();
+        }
+        RateLimiter::clear($key);
+
+        $request->session()->put('tracking', ['patient_id' => $patient->patient_id, 'exp' => now()->addMinutes(20)->timestamp]);
+
+        return response()->json(['found' => true, 'redirect' => route('patient.tracking.result')]);
+    }
+
+    /** Tracking Portal, step 2: the result page (its own page). Without a recent successful lookup it goes back to the form. */
+    public function trackResult(Request $request)
+    {
+        $proof = $request->session()->get('tracking');
+        if (!$proof || ($proof['exp'] ?? 0) < now()->timestamp) {
+            $request->session()->forget('tracking');
+
+            return redirect()->route('patient.tracking.portal');
+        }
+
+        $patient = DB::table('patients')->where('patient_id', $proof['patient_id'])->first();
+        if (!$patient) {
+            $request->session()->forget('tracking');
+
+            return redirect()->route('patient.tracking.portal');
+        }
+
+        $today = now()->toDateString();
+        $cases = DB::table('bite_cases as bc')
+            ->leftJoin('bite_section7_immunization as s7', 's7.bite_case_id', '=', 'bc.bite_case_id')
+            ->leftJoin('bite_section3_exposure as s3', 's3.bite_case_id', '=', 'bc.bite_case_id')
+            ->where('bc.patient_id', $patient->patient_id)
+            ->orderByDesc('bc.case_number')
+            ->get(['bc.bite_case_id', 'bc.case_number', 'bc.category', 'bc.outcome', 'bc.date_verified', 'bc.return_dose_day',
+                's3.animal_type', 's3.bite_date_time',
+                's7.dose_type', 's7.route', 's7.day0_date', 's7.day3_date', 's7.day7_date', 's7.day14_date', 's7.day28_date',
+                's7.day0_brand', 's7.day3_brand', 's7.day7_brand', 's7.day14_brand', 's7.day28_brand'])
+            ->map(function ($c) use ($today) {
+                $days = PepSchedule::days($c->dose_type, $c->route);
+                $next = $c->day0_date ? PepSchedule::nextDay($c->dose_type, $c->route, $c) : 0;   // 0 = Day 0 is still to be given
+                $day0 = $c->day0_date ? substr((string) $c->day0_date, 0, 10) : null;
+
+                $doses = [];
+                foreach ($days as $d) {
+                    $date = $c->{'day' . $d . '_date'} ? substr((string) $c->{'day' . $d . '_date'}, 0, 10) : null;
+                    $due  = (!$date && $day0) ? \Carbon\Carbon::parse($day0)->addDays($d)->toDateString() : null;
+                    $state = $date ? 'done' : ($d === $next ? 'next' : 'pending');
+                    $doses[] = (object) [
+                        'day'     => $d,
+                        'state'   => $state,
+                        'date'    => $date,
+                        'due'     => $due,
+                        'overdue' => $state === 'next' && $due && $due < $today,
+                        'brand'   => $c->{'day' . $d . '_brand'} ?: null,
+                    ];
+                }
+
+                $discharged = is_string($c->outcome) && str_starts_with($c->outcome, 'Discharged');
+                if ($discharged) {
+                    $status = 'discharged';
+                } elseif ($c->outcome === 'Incomplete') {
+                    $status = 'past';
+                } elseif ($c->day0_date && $next === null) {
+                    $status = 'completed';
+                } elseif ($c->return_dose_day) {
+                    $status = 'checked_in';
+                } elseif ($c->day0_date) {
+                    $status = 'ongoing';
+                } else {
+                    $status = 'registered';
+                }
+
+                return (object) [
+                    'case_number'    => $c->case_number,
+                    'category'       => $c->category,
+                    'animal'         => $c->animal_type,
+                    'reported'       => $c->bite_date_time ? substr((string) $c->bite_date_time, 0, 10) : ($c->date_verified ? substr((string) $c->date_verified, 0, 10) : null),
+                    'dose_type'      => $c->dose_type ?: 'Primary',
+                    'status'         => $status,
+                    'checked_in_for' => $c->return_dose_day,
+                    'doses'          => $discharged ? [] : $doses,   // a discharged (Category I) case has no vaccine course
+                ];
+            })
+            ->values();
+
+        // The case shown in the detailed view: the one picked (?case=N), else the first one still in progress, else the newest
+        $wanted = (int) $request->query('case', 0);
+        $selected = $cases->firstWhere('case_number', $wanted)
+            ?? $cases->first(fn ($x) => in_array($x->status, ['ongoing', 'checked_in', 'registered'], true))
+            ?? $cases->first();
+
+        // "Surname, Given, M." -> the given name for the greeting
+        $parts = array_values(array_filter(array_map('trim', explode(',', (string) $patient->patient_name))));
+        $firstName = count($parts) >= 2 ? $parts[1] : ($parts[0] ?? 'Patient');
+
+        return response()
+            ->view('patient.Track_Record', ['patient' => $patient, 'cases' => $cases, 'selected' => $selected, 'firstName' => $firstName, 'today' => $today])
+            ->header('Cache-Control', 'no-store, private');
+    }
+
+    /**
+     * A case a patient can still come back for: it has no outcome yet, or it was marked Completed at the first visit
+     * by a Health Worker (older versions did that) while doses of its schedule are still due. Old imported records
+     * (never handled by a Health Worker here) are not offered.
+     */
+    private function returnable($q)
+    {
+        return $q->where(function ($w) {
+            $w->whereNull('bc.outcome')
+              ->orWhere(fn ($c) => $c->where('bc.outcome', 'Completed')->whereNotNull('bc.assigned_health_worker_id'));
+        });
+    }
+
+    /** The found patient with the doses of every unfinished case; the doses still due are listed, the NEXT one can be chosen. */
+    private function returningRecord(object $patient)
+    {
+        $cases = $this->returnable(DB::table('bite_cases as bc')
+            ->join('bite_section7_immunization as s7', 's7.bite_case_id', '=', 'bc.bite_case_id')
+            ->where('bc.patient_id', $patient->patient_id)
+            ->whereNotNull('s7.day0_date'))
+            ->orderByDesc('bc.case_number')
+            ->get(['bc.bite_case_id', 'bc.case_number', 'bc.category', 'bc.return_dose_day', 'bc.outcome',
+                's7.dose_type', 's7.route', 's7.day0_date', 's7.day3_date', 's7.day7_date', 's7.day14_date', 's7.day28_date'])
+            ->filter(fn ($c) => !($c->outcome === 'Completed' && PepSchedule::nextDay($c->dose_type, $c->route, $c) === null))   // really finished
+            ->map(function ($c) {
+                $next = PepSchedule::nextDay($c->dose_type, $c->route, $c);
+
+                return [
+                    'bite_case_id'   => $c->bite_case_id,
+                    'case_number'    => $c->case_number,
+                    'category'       => $c->category,
+                    'dose_type'      => $c->dose_type ?: 'Primary',
+                    'days'           => PepSchedule::followUpDays($c->dose_type, $c->route),
+                    'dates'          => [
+                        0  => $c->day0_date,
+                        3  => $c->day3_date,
+                        7  => $c->day7_date,
+                        14 => $c->day14_date,
+                        28 => $c->day28_date,
+                    ],
+                    'next_day'       => $next,          // the only dose that can be chosen; null = every dose is recorded
+                    'complete'       => $next === null,
+                    'checked_in_for' => $c->return_dose_day,
+                ];
+            })
+            ->values();
+
         return response()->json([
-            'found' => true,
+            'found'   => true,
             'patient' => [
-                'patient_id'    => $patient->inflow_record_id,
                 'patient_name'  => $patient->patient_name,
                 'date_of_birth' => $patient->date_of_birth,
                 'sex'           => $patient->sex,
-                'age'           => $patient->age,
-                'id_number'     => $patient->id_number,
+                'contact_num'   => $patient->contact_num,
             ],
+            'cases'   => $cases,
+            // Proves to the check-in step which patient was found (valid 30 minutes, tamper-proof)
+            'token'   => encrypt(json_encode(['patient_id' => $patient->patient_id, 'exp' => now()->addMinutes(30)->timestamp])),
         ]);
     }
 
+    /**
+     * Returning Patient check-in for the next dose of the SAME bite case. The case is updated,
+     * never duplicated: it goes back to the Health Workers' unclaimed pool marked with the dose
+     * the patient came for. No queue number is issued.
+     */
     public function storeReturning(Request $request)
     {
         $validated = $request->validate([
-            'patient_id'        => 'required|string',
-            'contact_num'       => 'required|string|max:20',
-            'civil_status'      => 'nullable|string|max:20',
-            'philhealth_member' => 'required|boolean',
-            'barangay'          => 'required|string|max:100',
-            'priority_status'   => 'nullable|string',
+            'token'        => 'required|string',
+            'bite_case_id' => 'required|integer',
+            'dose_day'     => 'required|integer|in:3,7,14,28',
+            'contact_num'  => 'nullable|string|max:20',
         ]);
 
-        $patient = DB::table('inflow_general_particulars')->where('inflow_record_id', $validated['patient_id'])->first();
-
-        if (!$patient) {
-            return back()->withErrors(['patient_id' => 'Patient record not found.']);
+        try {
+            $proof = json_decode(decrypt($validated['token']), true);
+        } catch (\Throwable $e) {
+            $proof = null;
+        }
+        if (!$proof || ($proof['exp'] ?? 0) < now()->timestamp) {
+            return redirect()->route('patient.returning-patient')
+                ->withErrors(['token' => 'Your search expired. Please look up your record again.']);
         }
 
-        $isPriority = ($validated['priority_status'] ?? 'none') !== 'none';
-        $prefix = $isPriority ? 'P' : 'N';
-        $queueDate = now()->toDateString();
+        $day = (int) $validated['dose_day'];
 
-        $countToday = DB::table('inflow_general_particulars')
-            ->where('queue_date', $queueDate)
-            ->where('queue_id', 'LIKE', $prefix . '%')
-            ->count();
-        $queueId = $prefix . ($countToday + 1);
+        return DB::transaction(function () use ($validated, $proof, $day) {
+            $case = $this->returnable(DB::table('bite_cases as bc')
+                ->where('bc.bite_case_id', $validated['bite_case_id'])
+                ->where('bc.patient_id', $proof['patient_id']))
+                ->lockForUpdate()
+                ->first();
 
-        DB::table('inflow_general_particulars')->insert([
-            'queue_id'          => $queueId,
-            'queue_date'        => $queueDate,
-            'id_number'         => $patient->id_number,
-            'patient_name'      => $patient->patient_name,
-            'age'               => $patient->age,
-            'sex'               => $patient->sex,
-            'date_of_birth'     => $patient->date_of_birth,
-            'civil_status'      => $validated['civil_status'] ?? 'Single',
-            'contact_num'       => $validated['contact_num'],
-            'barangay'          => $validated['barangay'],
-            'philhealth_member' => $validated['philhealth_member'],
-            'reg_date'          => now(),
-            'status'            => 'Pending',
-        ]);
+            $s7 = $case ? DB::table('bite_section7_immunization')->where('bite_case_id', $case->bite_case_id)->first() : null;
 
-        return $isPriority
-            ? view('patient.PQ_confirmation', ['queueNumber' => $queueId])
-            : view('patient.NQ_confirmation', ['queueNumber' => $queueId]);
+            if (!$case || !$s7 || !$s7->day0_date || !in_array($day, PepSchedule::followUpDays($s7->dose_type, $s7->route), true)) {
+                return redirect()->route('patient.returning-patient')
+                    ->withErrors(['token' => 'That dose cannot be checked in for. Please look up your record again.']);
+            }
+
+            // The doses are taken in order: only the next one that has no date yet can be checked in for
+            // (at Day 3 the patient cannot register for Day 7, and so on).
+            $next = PepSchedule::nextDay($s7->dose_type, $s7->route, $s7);
+            if ($next === null) {
+                return redirect()->route('patient.returning-patient')
+                    ->withErrors(['token' => 'Every dose of this case is already recorded. Your course is complete.']);
+            }
+            if ($day !== $next) {
+                return redirect()->route('patient.returning-patient')
+                    ->withErrors(['token' => "Please check in for Day {$next} first. The doses must be taken in order."]);
+            }
+
+            // Already checked in for this dose and waiting for the Health Worker: do not queue it again, and never
+            // take the case away from a Health Worker who has already started encoding it.
+            $alreadyIn = (int) $case->return_dose_day === $day;
+
+            if (!$alreadyIn) {
+                // Same bite case, so it is only updated. Back to the pool, marked with the dose due.
+                DB::table('bite_cases')->where('bite_case_id', $case->bite_case_id)->update([
+                    'assigned_health_worker_id' => null,
+                    'return_dose_day'           => $day,
+                    'returned_at'               => now(),
+                    'outcome'                   => null,   // a case completed too early is open again until its last dose
+                    'visit_completed_at'        => null,   // the previous visit is over, this one is waiting for the Health Worker
+                ]);
+            }
+
+            if (!empty($validated['contact_num'])) {
+                DB::table('patients')->where('patient_id', $proof['patient_id'])
+                    ->update(['contact_num' => $validated['contact_num']]);
+            }
+
+            $patient = DB::table('patients')->where('patient_id', $proof['patient_id'])->first();
+
+            if (!$alreadyIn) {
+                Audit::log('returning_checkin', "Patient {$proof['patient_id']} checked in for the Day {$day} dose of case #{$case->case_number}", 'Patient (self check-in)');
+            }
+
+            return view('patient.returning_confirmation', [
+                'patientName' => $patient->patient_name,
+                'doseDay'     => $day,
+            ]);
+        });
     }
 
     // BHW-referral registration

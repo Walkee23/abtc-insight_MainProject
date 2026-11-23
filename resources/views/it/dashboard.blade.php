@@ -11,6 +11,8 @@
     </script>
     <style>body { font-family: 'Inter', sans-serif; }</style>
     <script src="{{ asset('js/custom-select.js') }}" defer></script>
+    <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
+    <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
 </head>
 <body class="bg-surface text-slate-800 min-h-screen">
 

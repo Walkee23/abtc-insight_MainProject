@@ -97,6 +97,9 @@
         }
     </style>
     <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
+    <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
+    <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
+    <script src="{{ asset('js/soft-nav.js') }}" defer></script>
 </head>
 
 <body class="bg-surface text-on-surface">
@@ -204,7 +207,7 @@
     <main class="ml-64 pt-24 min-h-screen bg-surface">
         <div class="p-8">
             <!-- Summary Stats -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div data-soft-region="stats" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <!-- PEP Completion -->
                 <div
                     class="bg-surface-container-lowest p-5 rounded-lg ghost-border hover:shadow-md transition-all duration-300">
@@ -259,7 +262,7 @@
             <!-- Main Content: Tracking & Logs -->
             <div class="grid grid-cols-1 gap-8 mb-8">
                 <!-- PEP Compliance Tracking Table -->
-                <div class="bg-surface-container-lowest rounded-lg ghost-border p-6">
+                <div data-soft-region="tracking" class="bg-surface-container-lowest rounded-lg ghost-border p-6">
                     <div class="flex flex-wrap justify-between items-center gap-3 mb-6">
                         <div class="flex flex-wrap items-center gap-3">
                             <h2 class="text-lg font-extrabold tracking-tight text-on-surface">PEP Compliance Tracking</h2>
@@ -270,7 +273,7 @@
                                 @endforeach
                             </div>
                         </div>
-                        <div class="flex gap-2">
+                        <div class="flex flex-wrap gap-2">
                             @foreach(['all' => 'All', 'pending' => 'Pending', 'missed' => 'Missed', 'completed' => 'Completed'] as $key => $label)
                             <a href="{{ route('healthworker.compliance', array_filter(['q' => $search, 'status' => $key === 'all' ? null : $key, 'scope' => $scope === 'all' ? 'all' : null])) }}"
                                 class="px-3 py-1.5 text-xs font-semibold rounded-full transition-colors {{ $status === $key ? 'bg-primary text-on-primary shadow-sm' : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-variant' }}">{{ $label }}</a>
@@ -411,7 +414,7 @@
                             late), by barangay, across all health workers</p>
                     </div>
                     <a href="{{ route('healthworker.compliance.export', $scope === 'all' ? ['scope' => 'all'] : []) }}"
-                        class="px-6 py-3 bg-primary text-on-primary rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-primary/20 active:scale-95 transition-all whitespace-nowrap">
+                        class="w-full md:w-auto justify-center text-center px-6 py-3 bg-primary text-on-primary rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-primary/20 active:scale-95 transition-all md:whitespace-nowrap">
                         Download {{ $scope === 'all' ? 'Facility' : 'My' }} Compliance Report
                         <span class="material-symbols-outlined text-sm">download</span>
                     </a>
@@ -442,14 +445,15 @@
         (function () {
             // The header search box searches the compliance table too (Enter to search)
             const headerSearch = document.querySelector('header input[type="text"]');
-            const pageSearch = document.getElementById('complianceSearchInput');
-            if (headerSearch && pageSearch) {
-                headerSearch.value = pageSearch.value;
+            const pageSearch = () => document.getElementById('complianceSearchInput');
+            if (headerSearch && pageSearch()) {
+                headerSearch.value = pageSearch().value;
                 headerSearch.addEventListener('keydown', (e) => {
-                    if (e.key !== 'Enter') return;
-                    pageSearch.value = headerSearch.value;
-                    pageSearch.form.requestSubmit();
+                    if (e.key !== 'Enter' || !pageSearch()) return;
+                    pageSearch().value = headerSearch.value;
+                    pageSearch().form.requestSubmit();
                 });
+                document.addEventListener('soft:updated', () => { if (pageSearch()) headerSearch.value = pageSearch().value; });
             }
         })();
     </script>

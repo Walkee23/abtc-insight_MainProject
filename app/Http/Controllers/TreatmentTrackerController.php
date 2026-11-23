@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\PepSchedule;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -12,7 +13,7 @@ class TreatmentTrackerController extends Controller
 {
     /**
      * Treatment Tracker: one row per PEP course (a handed-off bite case with a Day 0 date
-     * in Section VII). Schedule: Primary D0/D3/D7/D28, Booster D0/D3; each recorded day
+     * in Section VII). Schedule (App\Support\PepSchedule): Primary IM D0/D3/D7/D14, Primary ID D0/D3/D7/D28, Booster D0/D3; each recorded day
      * date is a dose that was given.
      */
     public function index(Request $request)
@@ -86,6 +87,8 @@ class TreatmentTrackerController extends Controller
             ->join('patients as p', 'p.patient_id', '=', 'bc.patient_id')
             ->join('bite_section7_immunization as s7', 's7.bite_case_id', '=', 'bc.bite_case_id')
             ->whereNotNull('s7.day0_date')
+            // a case closed as Incomplete is a past record that will not continue (e.g. one from 2025): it is not tracked
+            ->where(fn ($q) => $q->whereNull('bc.outcome')->orWhere('bc.outcome', '<>', 'Incomplete'))
             // only the cases Staff assigned to the logged-in health worker (none for a new account)
             ->where('bc.assigned_health_worker_id', Auth::id() ?? 0)
             // only cases Staff has handed over to the Health Worker
@@ -96,11 +99,11 @@ class TreatmentTrackerController extends Controller
             ->get([
                 'bc.bite_case_id', 'bc.case_number', 'bc.category', 'bc.barangay',
                 'p.patient_id', 'p.patient_name', 'p.contact_num',
-                's7.dose_type', 's7.day0_date', 's7.day3_date', 's7.day7_date', 's7.day14_date', 's7.day28_date',
+                's7.dose_type', 's7.route', 's7.day0_date', 's7.day3_date', 's7.day7_date', 's7.day14_date', 's7.day28_date',
             ]);
 
         return $cases->map(function ($c) use ($today) {
-            $schedule = $c->dose_type === 'Booster' ? [0, 3] : ($c->day14_date ? [0, 3, 7, 14, 28] : [0, 3, 7, 28]);
+            $schedule = PepSchedule::days($c->dose_type, $c->route);
             $day0 = Carbon::parse($c->day0_date)->startOfDay();
 
             $doses = [];

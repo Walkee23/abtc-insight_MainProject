@@ -93,6 +93,9 @@
     }
   </style>
     <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
+    <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
+    <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
+    <script src="{{ asset('js/soft-nav.js') }}" defer></script>
 </head>
 
 <body class="bg-surface text-on-surface antialiased">
@@ -205,6 +208,7 @@
           health records, rabies treatment progress, and clinical history within the Cebu City Health Center network.
         </p>
       </div>
+      <div data-soft-region="patients">
       <!-- Search & Filter -->
       <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
         <form method="GET" action="{{ route('healthworker.patient-database') }}" class="flex-1 min-w-[260px] max-w-md">
@@ -226,7 +230,7 @@
             @endif
           </div>
         </form>
-        <div class="flex gap-2">
+        <div class="flex flex-wrap gap-2">
           @foreach(['all' => 'All Patients', 'active' => 'Active PEP', 'completed' => 'Completed'] as $key => $label)
           <a href="{{ route('healthworker.patient-database', array_filter(['q' => $search, 'status' => $key === 'all' ? null : $key, 'scope' => $scope === 'mine' ? 'mine' : null])) }}"
             class="px-4 py-2 text-sm font-semibold rounded-full transition-colors {{ $status === $key ? 'bg-primary text-on-primary shadow-sm' : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-variant' }}">{{ $label }}</a>
@@ -244,13 +248,14 @@
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="bg-surface-container-low/50">
-                <th class="px-4 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Patient Name</th>
-                <th class="px-4 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Patient ID</th>
-                <th class="px-4 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Age/Sex</th>
-                <th class="px-4 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Barangay</th>
-                <th class="px-4 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Last Visit</th>
-                <th class="px-4 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Active PEP</th>
-                <th class="px-4 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant text-right whitespace-nowrap">Action</th>
+                <th class="px-3 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Patient Name</th>
+                <th class="px-3 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Patient ID</th>
+                <th class="px-3 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Age/Sex</th>
+                <th class="px-3 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Barangay</th>
+                <th class="px-3 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Last Visit</th>
+                <th class="px-3 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">PhilHealth</th>
+                <th class="px-3 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Active PEP</th>
+                <th class="px-3 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant text-right whitespace-nowrap">Action</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-surface-container-high">
@@ -265,18 +270,21 @@
                 ][$patient->pep_status];
               @endphp
               <tr class="hover:bg-surface-container-low transition-colors group">
-                <td class="px-4 py-5">
+                <td class="px-3 py-5">
                   <span class="font-semibold text-on-surface whitespace-nowrap">{{ $patient->patient_name }}</span>
                 </td>
-                <td class="px-4 py-5 text-sm text-on-surface-variant font-mono whitespace-nowrap">{{ $patient->patient_id }}</td>
-                <td class="px-4 py-5 text-sm text-on-surface-variant whitespace-nowrap">{{ $patient->age }} / {{ strtoupper(substr($patient->sex, 0, 1)) }}</td>
-                <td class="px-4 py-5 text-sm text-on-surface-variant whitespace-nowrap">{{ $patient->barangay ?? '—' }}</td>
-                <td class="px-4 py-5 text-sm text-on-surface-variant whitespace-nowrap">{{ $patient->last_visit ? \Carbon\Carbon::parse($patient->last_visit)->format('M d, Y') : '—' }}</td>
-                <td class="px-4 py-5">
+                <td class="px-3 py-5 text-sm text-on-surface-variant font-mono whitespace-nowrap">{{ $patient->patient_id }}</td>
+                <td class="px-3 py-5 text-sm text-on-surface-variant whitespace-nowrap">{{ $patient->age }} / {{ strtoupper(substr($patient->sex, 0, 1)) }}</td>
+                <td class="px-3 py-5 text-sm text-on-surface-variant whitespace-nowrap">{{ $patient->barangay ?? '—' }}</td>
+                <td class="px-3 py-5 text-sm text-on-surface-variant whitespace-nowrap">{{ $patient->last_visit ? \Carbon\Carbon::parse($patient->last_visit)->format('M d, Y') : '—' }}</td>
+                <td class="px-3 py-5">
+                  <span class="inline-block whitespace-nowrap px-3 py-1 rounded-full {{ $patient->ph_class }} text-[10px] font-bold uppercase tracking-wider">{{ $patient->ph_label }}</span>
+                </td>
+                <td class="px-3 py-5">
                   <span
                     class="inline-block whitespace-nowrap px-3 py-1 rounded-full {{ $pill }} text-[10px] font-bold uppercase tracking-wider">{{ $patient->pep_status }}</span>
                 </td>
-                <td class="px-4 py-5 text-right">
+                <td class="px-3 py-5 text-right">
                   <button type="button" data-view-record="{{ $patient->patient_id }}"
                     class="whitespace-nowrap text-primary font-bold text-xs hover:underline decoration-2 underline-offset-4">View
                     Record</button>
@@ -284,7 +292,7 @@
               </tr>
               @empty
               <tr>
-                <td colspan="7" class="px-6 py-14 text-center text-sm text-on-surface-variant">
+                <td colspan="8" class="px-6 py-14 text-center text-sm text-on-surface-variant">
                   @if($scope === 'mine' && $search === '' && $status === 'all')
                   No patients assigned to you yet. Switch off "My Patients" to browse everyone.
                   @elseif($search !== '' || $status !== 'all' || $scope === 'mine')
@@ -343,6 +351,7 @@
           </div>
           @endif
         </div>
+      </div>
       </div>
       <!-- Contextual Hint -->
       <div class="mt-8 p-4 bg-primary/5 rounded-xl border border-primary/10 flex gap-4 items-start">
@@ -426,8 +435,15 @@
          ['Civil Status', r.civil_status || '—'], ['Contact No.', r.contact || '—'],
          ['PhilHealth', r.philhealth || '—']].forEach(([label, value]) => {
           const wrap = el('div');
-          wrap.append(el('dt', 'text-[10px] font-bold text-outline uppercase tracking-wider mb-1', label),
-                      el('dd', 'text-sm font-semibold text-on-surface', value));
+          const dd = el('dd', 'text-sm font-semibold text-on-surface');
+          if (label === 'PhilHealth') {
+            // a coloured status, then the member named in the registration form
+            dd.append(el('span', 'inline-block whitespace-nowrap px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ' + (r.philhealth_class || ''), value));
+            if (r.philhealth_member_name) dd.append(el('span', 'block text-xs font-medium text-on-surface-variant mt-1 break-words', 'Member: ' + r.philhealth_member_name));
+          } else {
+            dd.textContent = value;
+          }
+          wrap.append(el('dt', 'text-[10px] font-bold text-outline uppercase tracking-wider mb-1', label), dd);
           details.append(wrap);
         });
 
@@ -467,22 +483,26 @@
         document.body.classList.remove('overflow-hidden');
       }
 
-      document.querySelectorAll('[data-view-record]').forEach((btn) =>
-        btn.addEventListener('click', () => openRecord(btn.dataset.viewRecord)));
+      // delegated: the patient list is replaced as a whole when it is searched or paged
+      document.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-view-record]');
+        if (btn) openRecord(btn.dataset.viewRecord);
+      });
       document.getElementById('recordClose').addEventListener('click', closeRecord);
       document.getElementById('recordBackdrop').addEventListener('click', closeRecord);
       document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeRecord(); });
 
       // The header search box searches the patient database too (Enter to search)
       const headerSearch = document.querySelector('header input[type="text"]');
-      const pageSearch = document.getElementById('patientSearchInput');
-      if (headerSearch && pageSearch) {
-        headerSearch.value = pageSearch.value;
+      const pageSearch = () => document.getElementById('patientSearchInput');
+      if (headerSearch && pageSearch()) {
+        headerSearch.value = pageSearch().value;
         headerSearch.addEventListener('keydown', (e) => {
-          if (e.key !== 'Enter') return;
-          pageSearch.value = headerSearch.value;
-          pageSearch.form.requestSubmit();
+          if (e.key !== 'Enter' || !pageSearch()) return;
+          pageSearch().value = headerSearch.value;
+          pageSearch().form.requestSubmit();
         });
+        document.addEventListener('soft:updated', () => { if (pageSearch()) headerSearch.value = pageSearch().value; });
       }
     })();
   </script>

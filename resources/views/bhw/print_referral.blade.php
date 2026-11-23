@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>BHW Referral - {{ $referral->reference_no }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -25,7 +26,29 @@
                 margin: 0 auto;
                 background: #ffffff;
                 box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+                transform-origin: top left;
             }
+
+            /* The sheet is shown like a PDF page: the whole 8.5in page scaled down to the screen width (see the script
+               at the bottom), with the toolbar kept at normal size and pinned to the top. Pinch to zoom in. */
+            .paper-fit { margin: 0 auto; overflow: hidden; }
+            .no-print { position: sticky; top: 0; z-index: 10; }
+        }
+
+        @media screen and (max-width: 880px) {
+            html { overflow-x: hidden; }
+            body { padding: 0 0 16px; }
+            .no-print {
+                max-width: none;
+                margin-bottom: 12px;
+                padding: 10px 12px;
+                gap: .5rem;
+                background: rgba(226, 232, 240, .95);
+                backdrop-filter: blur(6px);
+                box-shadow: 0 1px 0 rgba(15, 23, 42, .1);
+            }
+            .no-print a, .no-print button { white-space: nowrap; min-width: 0; padding-left: .875rem; padding-right: .875rem; }
+            .bond-paper { box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18); }
         }
 
         @media print {
@@ -41,7 +64,14 @@
                 print-color-adjust: exact;
             }
 
+            .paper-fit {
+                width: auto !important;
+                height: auto !important;
+                overflow: visible !important;
+            }
+
             .bond-paper {
+                transform: none !important;
                 width: 100% !important;
                 max-width: 100% !important;
                 min-height: auto !important;
@@ -60,16 +90,17 @@
 <body class="text-slate-900 font-sans antialiased">
 
     {{-- Screen-only Action Bar --}}
-    <div class="no-print max-w-[8.5in] mx-auto mb-4 flex justify-between items-center">
+    <div class="no-print max-w-[8.5in] mx-auto mb-4 flex flex-nowrap justify-between items-center gap-2">
         <a href="{{ route('bhw.dashboard') }}" class="px-4 py-2 bg-slate-600 text-white text-sm font-semibold rounded-lg shadow hover:bg-slate-700">
-            &larr; Back to Dashboard
+            &larr; Back<span class="hidden sm:inline">&nbsp;to Dashboard</span>
         </a>
         <button onclick="window.print()" class="px-4 py-2 bg-blue-700 text-white text-sm font-semibold rounded-lg shadow hover:bg-blue-800">
-            Print Referral
+            Print<span class="hidden sm:inline">&nbsp;Referral</span>
         </button>
     </div>
 
-    {{-- Full-width Bond Paper Container --}}
+    {{-- Full-width Bond Paper Container (wrapped so the scaled sheet takes only the room it really uses) --}}
+    <div class="paper-fit">
     <div class="bond-paper">
 
         {{-- Header with Top-Left Cebu City Seal & Top-Right CHD Logo --}}
@@ -206,6 +237,30 @@
         </div>
 
     </div>
+    </div>
+
+    <script>
+        // Fit the whole sheet to the screen width (never enlarge past 100%), like a PDF viewer's "fit width".
+        (function () {
+            var wrap = document.querySelector('.paper-fit');
+            var paper = document.querySelector('.bond-paper');
+            function fit() {
+                var margin = window.innerWidth <= 880 ? 12 : 0;
+                var w = paper.offsetWidth, h = paper.offsetHeight;
+                var vv = window.visualViewport;
+                var screenW = Math.min(document.documentElement.clientWidth, window.innerWidth, vv ? vv.width * vv.scale : Infinity);
+                var avail = screenW - margin * 2;
+                var scale = Math.min(1, avail / w);
+                paper.style.transform = scale < 1 ? 'scale(' + scale + ')' : '';
+                wrap.style.width = Math.round(w * scale) + 'px';
+                wrap.style.height = Math.round(h * scale) + 'px';
+            }
+            fit();
+            window.addEventListener('load', fit);
+            window.addEventListener('resize', fit);
+            window.addEventListener('orientationchange', fit);
+        })();
+    </script>
 
 </body>
 

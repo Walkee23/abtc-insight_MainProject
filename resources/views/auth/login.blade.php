@@ -88,6 +88,8 @@
             background: linear-gradient(135deg, #004a93 0%, #0b61bb 100%);
         }
     </style>
+    <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
+    <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
 </head>
 
 <body class="bg-surface text-on-surface min-h-screen flex flex-col antialiased">
@@ -120,14 +122,20 @@
         <div class="fixed bottom-1/4 -right-20 w-96 h-96 bg-secondary/5 rounded-full blur-3xl pointer-events-none"></div>
         <!-- Login Card -->
         <div class="w-full max-w-[480px] z-10">
-            <div class="bg-surface-container-lowest rounded-xl p-8 md:p-12 shadow-[0_24px_48px_rgba(25,28,30,0.04)] border border-outline-variant/10">
+            <div class="bg-surface-container-lowest rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.06)] ring-1 ring-outline-variant/10 overflow-hidden">
+              <div class="h-1.5 clinical-gradient"></div>
+              <div class="p-6 sm:p-8 md:p-10">
                 <!-- Header -->
-                <div class="text-center mb-10">
-                    <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-on-surface mb-2">ABTC-Insight Portal Login</h1>
-                    <p class="text-on-surface-variant text-sm md:text-base">Access the clinical system for ABTC Staff, Health Workers, and Administrators.</p>
+                <div class="text-center mb-8">
+                    <div class="mx-auto mb-4 w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                        <span class="material-symbols-outlined text-[30px]" style="font-variation-settings: 'FILL' 1;">lock_person</span>
+                    </div>
+                    <span class="inline-block bg-secondary-container text-on-secondary-container px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase mb-2">Authorized personnel</span>
+                    <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight text-on-surface mb-1.5">Welcome back</h1>
+                    <p class="text-on-surface-variant text-sm leading-relaxed">Sign in to the ABTC-Insight clinical system for Staff, Health Workers, and Administrators.</p>
                 </div>
                 <!-- Form -->
-                <form method="POST" action="{{ route('login.submit') }}" class="space-y-6">
+                <form method="POST" action="{{ route('login.submit') }}" id="loginForm" class="space-y-5">
                     @csrf
 
                     <div class="space-y-2">
@@ -136,7 +144,7 @@
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-outline">
                                 <span class="material-symbols-outlined text-[20px]">person</span>
                             </div>
-                            <input class="block w-full pl-11 pr-4 py-4 bg-surface-container-highest border-none rounded-lg text-on-surface focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all duration-200 outline-none" id="username" name="username" placeholder="Enter your username" type="text" required />
+                            <input class="block w-full pl-11 pr-4 py-4 bg-surface-container-highest border-none rounded-xl text-on-surface font-medium focus:ring-2 focus:ring-primary/25 focus:bg-surface-container-lowest transition-all duration-200 outline-none" id="username" name="username" placeholder="Enter your username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" value="{{ old('username') }}" required />
                         </div>
                     </div>
 
@@ -148,35 +156,32 @@
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-outline">
                                 <span class="material-symbols-outlined text-[20px]">lock</span>
                             </div>
-                            <input class="block w-full pl-11 pr-12 py-4 bg-surface-container-highest border-none rounded-lg text-on-surface focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all duration-200 outline-none" id="password" name="password" placeholder="••••••••" type="password" required />
+                            <input class="block w-full pl-11 pr-12 py-4 bg-surface-container-highest border-none rounded-xl text-on-surface font-medium focus:ring-2 focus:ring-primary/25 focus:bg-surface-container-lowest transition-all duration-200 outline-none" id="password" name="password" placeholder="••••••••" type="password" autocomplete="current-password" required />
                             <button class="absolute inset-y-0 right-0 pr-4 flex items-center text-outline hover:text-primary transition-colors" id="togglePasswordBtn" type="button">
                                 <span class="material-symbols-outlined text-[20px]" id="togglePasswordIcon">visibility</span>
                             </button>
                         </div>
+                        <p id="capsHint" class="hidden mt-1.5 ml-1 text-xs font-semibold text-amber-700 items-center gap-1"><span class="material-symbols-outlined text-[16px]">keyboard_capslock</span>Caps Lock is on</p>
                     </div>
 
                     @if(request('timeout'))
-                    <div class="flex items-center gap-2 text-amber-700 bg-amber-50 border border-amber-200 text-sm font-semibold px-3 py-2 rounded-lg">
+                    <div id="timeoutNotice" role="status" class="flex items-center gap-2 text-amber-700 bg-amber-50 border border-amber-200 text-sm font-semibold px-3 py-2 rounded-lg overflow-hidden transition-all duration-500 ease-out" style="max-height: 6rem;">
                         <span class="material-symbols-outlined text-[18px]">schedule</span>
                         You were logged out due to inactivity. Please sign in again.
                     </div>
                     @endif
 
                     @if($errors->any())
-                    <div class="text-red-500 text-sm font-semibold px-2">
-                        {{ $errors->first() }}
+                    <div role="alert" class="flex items-start gap-2 text-red-700 bg-red-50 border border-red-200 text-sm font-semibold px-3 py-2.5 rounded-lg">
+                        <span class="material-symbols-outlined text-[18px] shrink-0 mt-px">error</span>
+                        <span>{{ $errors->first() }}</span>
                     </div>
                     @endif
 
-                    <div class="flex items-center gap-3 p-3 rounded-lg bg-surface-container-low border border-outline-variant/15">
-                        <span class="material-symbols-outlined text-primary text-[18px]">verified_user</span>
-                        <p class="text-[11px] text-on-surface-variant leading-tight">Secure session managed by Cebu City Health Security Protocols. Authorized personnel access only.</p>
-                    </div>
-
-                    <div class="pt-2">
-                        <button class="w-full py-4 px-6 clinical-gradient text-white font-semibold rounded-lg shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 transform active:scale-[0.98] flex items-center justify-center gap-2" type="submit">
-                            <span>Login</span>
-                            <span class="material-symbols-outlined text-sm">login</span>
+                    <div class="pt-1">
+                        <button id="loginBtn" class="w-full py-4 px-6 clinical-gradient text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 transform active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-wait" type="submit">
+                            <span id="loginBtnText">Login</span>
+                            <span class="material-symbols-outlined text-[20px]">login</span>
                         </button>
                     </div>
 
@@ -198,9 +203,15 @@
                         </div>
                     </div>
                 </form>
+
+                <div class="mt-7 flex items-start gap-3 rounded-xl bg-surface-container-low px-4 py-3">
+                    <span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-px">verified_user</span>
+                    <p class="text-[11px] text-on-surface-variant leading-relaxed">Secure session managed by Cebu City Health Security Protocols. Authorized personnel access only.</p>
+                </div>
+              </div>
             </div>
             <!-- Contextual Help / Login Support -->
-            <div class="mt-8 flex justify-center gap-6">
+            <div class="mt-6 flex flex-wrap justify-center gap-x-6 gap-y-2">
                 <div class="flex items-center gap-2 text-[12px] text-on-surface-variant/70">
                     <span class="material-symbols-outlined text-[14px]">support_agent</span>
                     <span>IT Support: (032) 231-1000</span>
@@ -213,12 +224,12 @@
         </div>
     </main>
     <!-- Standardized Footer -->
-    <footer class="bg-surface-container-low border-t border-outline-variant/10 py-8 px-8">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+    <footer class="bg-surface-container-low border-t border-outline-variant/10 py-8 px-6 md:px-8">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-5 md:gap-6 text-center">
             <div class="text-sm font-medium text-on-surface-variant">
                 © 2026 CEBU CITY HEALTH DEPARTMENT
             </div>
-            <div class="flex flex-wrap justify-center gap-6 md:gap-8">
+            <div class="flex flex-wrap justify-center gap-x-6 gap-y-2 md:gap-8">
                 <a class="text-xs font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors" href="#">Privacy Policy</a>
                 <a class="text-xs font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors" href="#">Terms of Service</a>
                 <a class="text-xs font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors" href="#">Accessibility</a>
@@ -234,6 +245,51 @@
             passwordInput.type = isHidden ? 'text' : 'password';
             togglePasswordIcon.textContent = isHidden ? 'visibility_off' : 'visibility';
         });
+
+        // "Caps Lock is on" while typing the password
+        passwordInput.addEventListener('keyup', function (e) {
+            var on = !!(e.getModifierState && e.getModifierState('CapsLock'));
+            var hint = document.getElementById('capsHint');
+            hint.classList.toggle('hidden', !on);
+            hint.classList.toggle('flex', on);
+        });
+        passwordInput.addEventListener('blur', function () {
+            var hint = document.getElementById('capsHint');
+            hint.classList.add('hidden'); hint.classList.remove('flex');
+        });
+
+        // one click is enough: the button shows it is working and cannot be pressed twice
+        document.getElementById('loginForm').addEventListener('submit', function () {
+            document.getElementById('loginBtn').disabled = true;
+            document.getElementById('loginBtnText').textContent = 'Signing in...';
+        });
+        window.addEventListener('pageshow', function (e) {   // back to this page from the browser history
+            if (e.persisted) {
+                document.getElementById('loginBtn').disabled = false;
+                document.getElementById('loginBtnText').textContent = 'Login';
+            }
+        });
+
+        // The "logged out due to inactivity" notice stays for 10 seconds, then fades away and gives its space back.
+        // The ?timeout flag is also dropped from the address, so refreshing the page does not bring it back.
+        (function () {
+            var notice = document.getElementById('timeoutNotice');
+            if (!notice) return;
+            try {
+                var url = new URL(window.location.href);
+                url.searchParams.delete('timeout');
+                window.history.replaceState({}, '', url.pathname + url.search + url.hash);
+            } catch (e) { /* the notice still goes away below */ }
+            setTimeout(function () {
+                notice.style.opacity = '0';
+                notice.style.maxHeight = '0';
+                notice.style.paddingTop = '0';
+                notice.style.paddingBottom = '0';
+                notice.style.borderWidth = '0';
+                notice.style.marginTop = '0';
+                setTimeout(function () { notice.remove(); }, 600);
+            }, 10000);
+        })();
     </script>
 </body>
 

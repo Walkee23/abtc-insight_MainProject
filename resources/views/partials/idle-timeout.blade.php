@@ -4,6 +4,7 @@
     const PING_EVERY = 2 * 60 * 1000;      // keep the server session alive while active
     let idleTimer;
     let lastPing = Date.now();
+    let lastActivity = Date.now();
 
     async function logoutNow() {
         try {
@@ -17,6 +18,7 @@
     }
 
     function resetTimer() {
+        lastActivity = Date.now();
         clearTimeout(idleTimer);
         idleTimer = setTimeout(logoutNow, IDLE_LIMIT);
 
@@ -29,6 +31,13 @@
 
     ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click']
         .forEach(evt => document.addEventListener(evt, resetTimer, { passive: true }));
+
+    // A phone freezes a page's timers while the screen is off or the tab is in the background, so the idle timer
+    // above may not have fired. When the page comes back after the idle limit, sign out right away instead of
+    // showing a page whose session has ended.
+    const checkIdleOnReturn = () => { if (Date.now() - lastActivity >= IDLE_LIMIT) logoutNow(); };
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkIdleOnReturn(); });
+    window.addEventListener('pageshow', (e) => { if (e.persisted) checkIdleOnReturn(); });
 
     resetTimer();
 })();

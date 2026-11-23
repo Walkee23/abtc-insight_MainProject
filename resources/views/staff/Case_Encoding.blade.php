@@ -198,18 +198,6 @@
 
         <!-- Content Canvas -->
         <div class="p-8 space-y-6">
-            @if(session('success'))
-            <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg text-sm font-semibold flex items-center gap-2">
-                <span class="material-symbols-outlined text-green-600">check_circle</span>
-                {{ session('success') }}
-            </div>
-            @endif
-            @if($errors->any())
-            <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-sm font-semibold flex items-center gap-2">
-                <span class="material-symbols-outlined text-red-600">error</span>
-                {{ $errors->first() }}
-            </div>
-            @endif
 
             <!-- Page Header & Search -->
             <section class="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -300,7 +288,7 @@
                                 <a href="{{ route('staff.patient-lookup') }}" class="px-4 py-2 text-xs font-bold text-white bg-primary rounded-full hover:bg-primary-container transition-all shadow-md whitespace-nowrap">Back to Lookup</a>
                                 @else
                                 <button type="button" onclick="discardChanges()" class="px-4 py-2 text-xs font-bold text-secondary bg-surface-container-high rounded-full hover:bg-surface-container-highest transition-colors">Discard</button>
-                                <button type="submit" form="caseEncodingForm" name="action" value="draft" formnovalidate class="px-4 py-2 text-xs font-bold text-white bg-primary rounded-full hover:bg-primary-container transition-all shadow-md active:scale-95">Save Progress</button>
+                                <button type="submit" id="saveProgressBtn" form="caseEncodingForm" name="action" value="draft" formnovalidate class="px-4 py-2 text-xs font-bold text-white bg-primary rounded-full hover:bg-primary-container transition-all shadow-md active:scale-95">Save Progress</button>
                                 @endif
                             </div>
                         </div>
@@ -569,7 +557,7 @@
                             @else
                             <div class="pt-8 border-t border-surface-container-high flex justify-end gap-4">
                                 <button type="button" onclick="discardChanges()" class="px-8 py-3 text-sm font-bold text-secondary bg-surface-container-low rounded-full hover:bg-surface-container-high transition-all">Cancel Entry</button>
-                                <button type="submit" name="action" value="complete" class="px-10 py-3 text-sm font-bold text-white bg-primary rounded-full hover:bg-primary-container transition-all shadow-xl active:scale-95 flex items-center gap-2">
+                                <button type="submit" id="completeEncodingBtn" name="action" value="complete" class="px-10 py-3 text-sm font-bold text-white bg-primary rounded-full hover:bg-primary-container transition-all shadow-xl active:scale-95 flex items-center gap-2">
                                     <span class="material-symbols-outlined text-[18px]">check_circle</span>
                                     Complete Encoding
                                 </button>
@@ -583,12 +571,139 @@
         </div>
     </main>
 
+    <!-- Confirmation pop-up (Save Progress / Complete Encoding / Discard) -->
+    <div id="ceConfirmModal" role="dialog" aria-modal="true" aria-labelledby="ceConfirmTitle"
+        class="hidden fixed inset-0 z-[70] bg-slate-900/60 backdrop-blur-sm items-center justify-center p-4 opacity-0 transition-opacity duration-200">
+        <div id="ceConfirmCard" class="bg-white rounded-2xl max-w-sm w-full p-7 text-center shadow-2xl border border-slate-100 scale-95 transition-transform duration-200">
+            <div id="ceConfirmIconWrap" class="mx-auto mb-4 w-14 h-14 rounded-full flex items-center justify-center">
+                <span id="ceConfirmIcon" class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;"></span>
+            </div>
+            <h3 id="ceConfirmTitle" class="text-xl font-extrabold tracking-tight text-on-surface"></h3>
+            <p id="ceConfirmText" class="mt-2 text-sm text-on-surface-variant leading-relaxed"></p>
+            <p id="ceConfirmDetail" class="hidden mt-3 text-sm font-bold text-on-surface bg-slate-50 rounded-xl px-4 py-2.5 break-words"></p>
+            <div class="mt-6 grid grid-cols-2 gap-3">
+                <button type="button" id="ceConfirmCancel" class="px-4 py-3 rounded-full font-bold text-sm text-slate-600 bg-slate-100 hover:bg-slate-200 active:scale-95 transition-all">Go Back</button>
+                <button type="button" id="ceConfirmOk" class="px-4 py-3 rounded-full font-bold text-sm text-white active:scale-95 transition-all shadow-lg disabled:opacity-60 disabled:cursor-wait"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Result pop-up (shown after a save, a completed encoding, or when something needs fixing) -->
+    @if(session('success') || $errors->any())
+    @php $ceOk = !$errors->any(); @endphp
+    <div id="ceResultModal" role="dialog" aria-modal="true" aria-labelledby="ceResultTitle"
+        class="hidden fixed inset-0 z-[70] bg-slate-900/60 backdrop-blur-sm items-center justify-center p-4 opacity-0 transition-opacity duration-200">
+        <div id="ceResultCard" class="bg-white rounded-2xl max-w-sm w-full p-7 text-center shadow-2xl border border-slate-100 scale-95 transition-transform duration-200">
+            <div class="mx-auto mb-4 w-14 h-14 rounded-full flex items-center justify-center {{ $ceOk ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600' }}">
+                <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">{{ $ceOk ? 'check_circle' : 'error' }}</span>
+            </div>
+            <h3 id="ceResultTitle" class="text-xl font-extrabold tracking-tight text-on-surface">{{ $ceOk ? 'Done' : 'Please check this' }}</h3>
+            <p class="mt-2 text-sm text-on-surface-variant leading-relaxed break-words">{{ $ceOk ? session('success') : $errors->first() }}</p>
+            <button type="button" id="ceResultOk" class="mt-6 w-full px-6 py-3 rounded-full font-bold text-sm text-white active:scale-95 transition-all shadow-lg {{ $ceOk ? 'bg-primary shadow-primary/20' : 'bg-red-600 shadow-red-600/20' }}">{{ $ceOk ? 'OK' : 'Back to the form' }}</button>
+        </div>
+    </div>
+    @endif
+
     <script>
+        // ---- pop-ups -----------------------------------------------------------------------------
+        const ceTones = {
+            blue:  { wrap: 'bg-blue-100 text-blue-700',       ok: 'bg-primary shadow-primary/20' },
+            green: { wrap: 'bg-emerald-100 text-emerald-600', ok: 'bg-emerald-600 shadow-emerald-600/20' },
+            amber: { wrap: 'bg-amber-100 text-amber-600',     ok: 'bg-amber-500 shadow-amber-500/20' },
+        };
+        let ceOnYes = null;
+
+        function ceShow(modal, card) {
+            document.body.classList.add('overflow-hidden');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => { modal.classList.remove('opacity-0'); card.classList.remove('scale-95'); }, 10);
+        }
+        function ceHide(modal, card) {
+            modal.classList.add('opacity-0');
+            card.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); document.body.classList.remove('overflow-hidden'); }, 200);
+        }
+
+        const ceModal = document.getElementById('ceConfirmModal');
+        const ceCard = document.getElementById('ceConfirmCard');
+        const ceOk = document.getElementById('ceConfirmOk');
+
+        function ceAsk(opts, onYes) {
+            const t = ceTones[opts.tone] || ceTones.blue;
+            document.getElementById('ceConfirmIconWrap').className = 'mx-auto mb-4 w-14 h-14 rounded-full flex items-center justify-center ' + t.wrap;
+            document.getElementById('ceConfirmIcon').textContent = opts.icon;
+            document.getElementById('ceConfirmTitle').textContent = opts.title;
+            document.getElementById('ceConfirmText').textContent = opts.text;
+            const detail = document.getElementById('ceConfirmDetail');
+            detail.textContent = opts.detail || '';
+            detail.classList.toggle('hidden', !opts.detail);
+            ceOk.className = 'px-4 py-3 rounded-full font-bold text-sm text-white active:scale-95 transition-all shadow-lg disabled:opacity-60 disabled:cursor-wait ' + t.ok;
+            ceOk.textContent = opts.ok;
+            ceOk.disabled = false;
+            ceOnYes = onYes;
+            ceShow(ceModal, ceCard);
+            setTimeout(() => ceOk.focus(), 60);
+        }
+        function ceClose() { ceOnYes = null; ceHide(ceModal, ceCard); }
+
+        document.getElementById('ceConfirmCancel').addEventListener('click', ceClose);
+        ceModal.addEventListener('click', (e) => { if (e.target === ceModal) ceClose(); });
+        ceOk.addEventListener('click', () => {
+            const go = ceOnYes;
+            if (!go) return;
+            ceOk.disabled = true;                 // one click is enough
+            go();
+        });
+
+        const ceResult = document.getElementById('ceResultModal');
+        if (ceResult) {
+            const card = document.getElementById('ceResultCard');
+            const close = () => ceHide(ceResult, card);
+            document.getElementById('ceResultOk').addEventListener('click', close);
+            ceResult.addEventListener('click', (e) => { if (e.target === ceResult) close(); });
+            setTimeout(() => ceShow(ceResult, card), 150);
+        }
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'Escape') return;
+            if (!ceModal.classList.contains('hidden')) ceClose();
+            else if (ceResult && !ceResult.classList.contains('hidden')) document.getElementById('ceResultOk').click();
+        });
+
+        // who the pop-ups talk about
+        const ceWho = @json(trim(($selectedPatient->patient_name ?? '') . (!empty($thisCaseNumber) ? ' · Case #' . $thisCaseNumber : '')));
+
+        // ---- Save Progress / Complete Encoding ask first -------------------------------------------
+        const ceForm = document.getElementById('caseEncodingForm');
+        const ceSaveBtn = document.getElementById('saveProgressBtn');
+        const ceCompleteBtn = document.getElementById('completeEncodingBtn');
+
+        if (ceSaveBtn) ceSaveBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            ceAsk({
+                tone: 'blue', icon: 'save', title: 'Save progress?',
+                text: 'Your answers are saved so you can come back and finish later. The case is not sent to the Health Worker yet.',
+                detail: ceWho, ok: 'Save Progress',
+            }, () => ceForm.requestSubmit(ceSaveBtn));
+        });
+
+        if (ceCompleteBtn) ceCompleteBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (!ceForm.reportValidity()) return;   // let the browser point at the missing field first
+            ceAsk({
+                tone: 'green', icon: 'task_alt', title: 'Complete encoding?',
+                text: 'The case is sent to the Health Worker for Clinical Encoding. After this you can only view it here.',
+                detail: ceWho, ok: 'Complete Encoding',
+            }, () => ceForm.requestSubmit(ceCompleteBtn));
+        });
+
         // Discard / Cancel Entry: drop what was typed since the last save and reload the saved version
         function discardChanges() {
-            if (confirm('Discard unsaved changes? The form goes back to the last saved progress.')) {
-                window.location.assign(window.location.pathname + window.location.search);
-            }
+            ceAsk({
+                tone: 'amber', icon: 'delete_sweep', title: 'Discard changes?',
+                text: 'What you typed since the last save is removed. The form goes back to the last saved progress.',
+                detail: '', ok: 'Discard',
+            }, () => window.location.assign(window.location.pathname + window.location.search));
         }
 
         document.addEventListener('DOMContentLoaded', function() {

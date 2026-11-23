@@ -280,6 +280,7 @@ class SystemToolsController extends Controller
     public function importCases(Request $request): JsonResponse
     {
         $this->admin();
+        $startedAt = microtime(true);
 
         // answered by hand: this app only renders JSON errors for api/* routes, so validate() would redirect
         $path = $this->importPath($request->input('upload_id'));
@@ -306,7 +307,19 @@ class SystemToolsController extends Controller
             return response()->json(['message' => $e->getMessage()], 422);
         } catch (\Throwable $e) {
             report($e);
-            return response()->json(['message' => 'The import stopped because of an unexpected error. Nothing was saved.'], 500);
+            $elapsed = round(microtime(true) - $startedAt, 2);
+            $memMb = round(memory_get_peak_usage(true) / 1048576, 1);
+            return response()->json([
+                'message' => sprintf(
+                    'Import error after %ss (Peak RAM: %s MB): [%s] %s in %s:%d',
+                    $elapsed,
+                    $memMb,
+                    class_basename($e),
+                    $e->getMessage(),
+                    basename($e->getFile()),
+                    $e->getLine()
+                ),
+            ], 500);
         }
 
         if (!$checkOnly) {
@@ -316,6 +329,7 @@ class SystemToolsController extends Controller
         $result['error_count'] = count($result['errors']);
         $result['errors'] = array_slice($result['errors'], 0, 100);
         $result['file'] = $name;
+        $result['elapsed_seconds'] = round(microtime(true) - $startedAt, 2);
 
         if ($checkOnly) {
             Audit::log('import_check', "Checked bite case file \"{$name}\": {$result['imported']} rows ready, {$result['duplicates']} already in the system, {$result['failed']} with problems (nothing saved)");

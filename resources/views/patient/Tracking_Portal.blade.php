@@ -170,13 +170,7 @@
                 id="tracking-id" name="tracking_id" placeholder="CEB-XXXXXXXX-XXXXXXXX-XXX" type="text"
                 autocomplete="off" spellcheck="false" autocapitalize="characters" />
             </div>
-            <p class="mt-2 text-xs text-on-surface-variant leading-relaxed">Type your Patient ID, the code printed under your QR. The box above only shows the format.</p>
-            <div class="mt-2.5 flex flex-wrap items-center gap-x-1.5 gap-y-1.5 text-[11px] font-semibold text-on-surface-variant" aria-label="Patient ID format">
-              <span class="px-2 py-1 rounded-md bg-primary/10 text-primary font-bold">CEB</span><span aria-hidden="true">-</span>
-              <span class="px-2 py-1 rounded-md bg-surface-container-low">Date registered <span class="font-normal opacity-70">YYYYMMDD</span></span><span aria-hidden="true">-</span>
-              <span class="px-2 py-1 rounded-md bg-surface-container-low">Birth date <span class="font-normal opacity-70">YYYYMMDD</span></span><span aria-hidden="true">-</span>
-              <span class="px-2 py-1 rounded-md bg-surface-container-low">No.</span>
-            </div>
+            <p class="mt-2 text-xs text-on-surface-variant leading-relaxed">Enter the Patient ID printed under your QR code.</p>
 
             <!-- Date of birth -->
             <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wide mt-6 mb-2" for="dob">Date of birth</label>

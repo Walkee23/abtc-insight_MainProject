@@ -668,6 +668,7 @@
             dischargeModal.addEventListener('click', (e) => { if (e.target === dischargeModal) dischargeModal.classList.add('hidden'); });
             document.getElementById('dischargeConfirm').addEventListener('click', () => {
                 formActionInput.value = 'discharge';
+                form.dataset.ceSkip = '1';   // the discharge pop-up above already asked
                 form.submit();
             });
 
@@ -882,6 +883,11 @@
             });
         </script>
         @include('partials.idle-timeout')
+    @include('partials.clinical-popups', [
+        'ceFormId'  => 'section6Form',
+        'ceSection' => 'Section VI',
+        'ceNext'    => ['tone' => 'blue', 'icon' => 'arrow_forward', 'title' => 'Save and continue?', 'text' => 'Section VI is saved and you move on to Section VII (immunization).', 'ok' => 'Save and Continue'],
+    ])
 </body>
 
 </html>

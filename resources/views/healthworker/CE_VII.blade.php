@@ -1090,6 +1090,11 @@
         
         @include('partials.idle-timeout')
 
-    </body>
+        @include('partials.clinical-popups', [
+        'ceFormId'  => 'section7Form',
+        'ceSection' => 'Section VII',
+        'ceNext'    => ['tone' => 'blue', 'icon' => 'arrow_forward', 'title' => 'Save and continue?', 'text' => 'Section VII is saved and you move on to Section VIII.', 'ok' => 'Save and Continue'],
+    ])
+</body>
 
 </html>

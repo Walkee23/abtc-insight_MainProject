@@ -583,6 +583,11 @@
         </script>
         @include('partials.idle-timeout')
 
-    </body>
+        @include('partials.clinical-popups', [
+        'ceFormId'  => 'section8Form',
+        'ceSection' => 'Section VIII',
+        'ceNext'    => ['tone' => 'blue', 'icon' => 'arrow_forward', 'title' => 'Save and continue?', 'text' => 'Section VIII is saved and you move on to Section IX (the final section).', 'ok' => 'Save and Continue'],
+    ])
+</body>
 
 </html>

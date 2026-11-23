@@ -612,6 +612,11 @@
 
         @include('partials.idle-timeout')
 
-    </body>
+        @include('partials.clinical-popups', [
+        'ceFormId'  => 'section9Form',
+        'ceSection' => 'Section IX',
+        'ceNext'    => ['tone' => 'green', 'icon' => 'verified_user', 'title' => 'Finalize this record?', 'text' => 'The doses recorded so far are locked and this visit is closed. The case leaves your queue, and the patient ID is shown so you can give it to them.', 'ok' => 'Save and Finalize'],
+    ])
+</body>
 
 </html>

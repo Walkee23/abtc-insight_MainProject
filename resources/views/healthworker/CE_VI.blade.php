@@ -109,10 +109,10 @@
         </div>
     </div>
 
-        <!-- Navigation -->
-        <nav class="space-y-1 px-6">
-            <!-- Dashboard (Inactive) -->
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
+    <!-- Navigation sits right beneath it -->
+    <nav class="space-y-1 px-4 dark:bg-slate-900">
+        <!-- Dashboard (Inactive) -->
+        <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50"
             href="{{ route('healthworker.dashboard') }}">
             <span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
             <span class="font-['Inter'] text-sm tracking-wide">Dashboard</span>
@@ -161,16 +161,7 @@
             <h1 class="text-blue-900 dark:text-blue-50 font-bold text-sm tracking-tight leading-none">ABTC-Insight
             </h1>
         </div>
-        <!-- Search Bar -->
-        <div class="flex items-center flex-1 max-w-md ml-12">
-            <div class="relative w-full group">
-                <span
-                    class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm group-focus-within:text-blue-700 transition-colors">search</span>
-                <input
-                    class="w-full bg-slate-100 dark:bg-slate-800/50 border-none rounded-full py-2 pl-9 pr-4 text-xs focus:ring-2 focus:ring-blue-700/20 placeholder:text-slate-400 font-['Inter']"
-                    placeholder="Search patient by name or ID..." type="text" />
-            </div>
-        </div>
+        
         <!-- Right Side Actions (Notifications, Help, Vertical Divider, Profile) -->
         <div class="flex items-center gap-4">
             
@@ -474,27 +465,7 @@
                         </div>
                     </div>
                 </div>
-                <!-- Wizard Footer Actions -->
-                <div
-                    class="p-6 bg-surface-container-low border-t border-outline-variant/20 flex justify-between items-center px-8">
-                    <button type="submit" form="section6Form" id="draftBtn" {{ $case ? '' : 'disabled' }}
-                        class="px-6 py-2.5 text-sm font-bold text-outline hover:text-on-surface transition-all flex items-center gap-2 {{ $case ? '' : 'opacity-40 cursor-not-allowed' }}">
-                        Save as Draft
-                    </button>
-                    <div class="flex gap-4">
-                        <button
-                            class="px-6 py-2.5 text-sm font-bold text-outline hover:bg-slate-200/50 rounded-lg transition-all hidden"
-                            id="backBtn">
-                            Back
-                        </button>
-                        <button {{ $case ? '' : 'disabled' }}
-                            class="px-8 py-2.5 bg-primary text-on-primary text-sm font-bold rounded-lg shadow-md shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-2 {{ $case ? '' : 'opacity-40 cursor-not-allowed' }}"
-                            id="nextBtn">
-                            Next Step
-                            <span class="material-symbols-outlined text-[18px]">chevron_right</span>
-                        </button>
-                    </div>
-                </div>
+               
                 @endif
             </section>
         </div>

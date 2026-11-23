@@ -191,6 +191,9 @@ Route::get('/patient/tracking-portal', function () {
     return view('patient.Tracking_Portal');
 })->name('patient.tracking.portal');
 
+// Tracking Portal lookup (Tracking ID + date of birth, POST so neither ends up in a URL or a log)
+Route::post('/patient/tracking-portal/lookup', [PatientController::class, 'track'])->middleware('throttle:12,1')->name('patient.tracking.lookup');
+
 // Public map data (counts per barangay only, no patient details)
 Route::get('/public/gis-data', [GisMapController::class, 'data'])->name('public.gis_data');
 

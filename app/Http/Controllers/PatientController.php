@@ -6,6 +6,7 @@ use App\Support\PepSchedule;
 use Illuminate\Http\Request;
 use App\Support\Audit;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
 
 class PatientController extends Controller
 {
@@ -127,6 +128,111 @@ class PatientController extends Controller
         }
 
         return $this->returningRecord($matches->first());
+    }
+
+    /**
+     * Tracking Portal: the patient's own treatment status.
+     *
+     * Needs BOTH the Tracking ID (the unique Patient ID, CEB-..., also the content of the patient's QR code) and the
+     * exact date of birth. A wrong ID and a wrong birth date look the same, and after 5 wrong tries for one ID the
+     * lookup is locked for 15 minutes, so the birth date cannot be guessed.
+     */
+    public function track(Request $request)
+    {
+        $id  = strtoupper(trim((string) $request->input('tracking_id', '')));
+        $dob = (string) $request->input('dob', '');
+        $notFound = fn () => response()->json(['found' => false]);
+
+        if (!preg_match('/^CEB-\d{8}-\d{8}-\d{1,6}$/', $id) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dob)) {
+            return $notFound();
+        }
+
+        $key = 'track:' . $id;
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            return response()->json([
+                'found'   => false,
+                'locked'  => true,
+                'message' => 'Too many tries for this Tracking ID. Please wait ' . ceil(RateLimiter::availableIn($key) / 60) . ' minute(s) and try again, or ask the Information Staff at the ABTC.',
+            ], 429);
+        }
+
+        $patient = DB::table('patients')->where('patient_id', $id)->whereDate('date_of_birth', $dob)->first();
+        if (!$patient) {
+            RateLimiter::hit($key, 900);
+
+            return $notFound();
+        }
+        RateLimiter::clear($key);
+
+        $today = now()->toDateString();
+        $cases = DB::table('bite_cases as bc')
+            ->leftJoin('bite_section7_immunization as s7', 's7.bite_case_id', '=', 'bc.bite_case_id')
+            ->leftJoin('bite_section3_exposure as s3', 's3.bite_case_id', '=', 'bc.bite_case_id')
+            ->where('bc.patient_id', $patient->patient_id)
+            ->orderByDesc('bc.case_number')
+            ->get(['bc.bite_case_id', 'bc.case_number', 'bc.category', 'bc.outcome', 'bc.date_verified', 'bc.return_dose_day',
+                'bc.visit_completed_at', 'bc.assigned_health_worker_id',
+                's3.animal_type', 's3.bite_date_time',
+                's7.dose_type', 's7.route', 's7.day0_date', 's7.day3_date', 's7.day7_date', 's7.day14_date', 's7.day28_date',
+                's7.day0_brand', 's7.day3_brand', 's7.day7_brand', 's7.day14_brand', 's7.day28_brand'])
+            ->map(function ($c) use ($today) {
+                $days = PepSchedule::days($c->dose_type, $c->route);
+                $next = $c->day0_date ? PepSchedule::nextDay($c->dose_type, $c->route, $c) : 0;   // 0 = Day 0 is still to be given
+                $day0 = $c->day0_date ? substr((string) $c->day0_date, 0, 10) : null;
+
+                $doses = [];
+                foreach ($days as $d) {
+                    $date = $c->{'day' . $d . '_date'} ? substr((string) $c->{'day' . $d . '_date'}, 0, 10) : null;
+                    $due  = (!$date && $day0) ? \Carbon\Carbon::parse($day0)->addDays($d)->toDateString() : null;
+                    $state = $date ? 'done' : ($d === $next ? 'next' : 'pending');
+                    $doses[] = [
+                        'day'     => $d,
+                        'state'   => $state,
+                        'date'    => $date,
+                        'due'     => $due,
+                        'overdue' => $state === 'next' && $due && $due < $today,
+                        'brand'   => $c->{'day' . $d . '_brand'} ?: null,
+                    ];
+                }
+
+                $discharged = is_string($c->outcome) && str_starts_with($c->outcome, 'Discharged');
+                if ($discharged) {
+                    $status = 'discharged';
+                } elseif ($c->outcome === 'Incomplete') {
+                    $status = 'past';
+                } elseif ($c->day0_date && $next === null) {
+                    $status = 'completed';
+                } elseif ($c->return_dose_day) {
+                    $status = 'checked_in';
+                } elseif ($c->day0_date) {
+                    $status = 'ongoing';
+                } else {
+                    $status = 'registered';
+                }
+
+                return [
+                    'case_number'  => $c->case_number,
+                    'category'     => $c->category,
+                    'animal'       => $c->animal_type,
+                    'reported'     => $c->bite_date_time ? substr((string) $c->bite_date_time, 0, 10) : ($c->date_verified ? substr((string) $c->date_verified, 0, 10) : null),
+                    'dose_type'    => $c->dose_type ?: 'Primary',
+                    'status'       => $status,
+                    'next_day'     => $status === 'ongoing' || $status === 'checked_in' ? $next : null,
+                    'checked_in_for' => $c->return_dose_day,
+                    'doses'        => $discharged ? [] : $doses,   // a discharged (Category I) case has no vaccine course
+                ];
+            })
+            ->values();
+
+        return response()->json([
+            'found'   => true,
+            'patient' => [
+                'name'        => $patient->patient_name,
+                'tracking_id' => $patient->patient_id,
+            ],
+            'today'   => $today,
+            'cases'   => $cases,
+        ]);
     }
 
     /**

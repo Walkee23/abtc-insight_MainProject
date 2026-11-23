@@ -29,11 +29,12 @@ class ItDashboardController extends Controller
 
         // Preview of what the 08:00 scheduler would pick up for tomorrow
         $upcoming = $sms->dueDoses(today()->addDay());
+        $missed   = $sms->missedDoses(today()->subDay());
 
         $failedJobs = DB::table('failed_jobs')->latest('failed_at')->limit(5)
             ->get(['id', 'queue', 'failed_at', 'exception']);
 
-        return view('it.dashboard', compact('logs', 'stats', 'upcoming', 'failedJobs'));
+        return view('it.dashboard', compact('logs', 'stats', 'upcoming', 'missed', 'failedJobs'));
     }
 
     /** Sends a real SMS to a number you type (no patient data involved). */
@@ -65,6 +66,14 @@ class ItDashboardController extends Controller
         $n = $sms->queueDueReminders(today()->addDay());
 
         return back()->with('status', "{$n} reminder(s) queued. Make sure `php artisan queue:work` is running.");
+    }
+
+    /** Same as the scheduled late follow-up check, on demand (for testing). */
+    public function runLateNow(SmsService $sms)
+    {
+        $n = $sms->queueLateFollowUps(today()->subDay());
+
+        return back()->with('status', "{$n} late follow-up(s) queued. Make sure `php artisan queue:work` is running.");
     }
 
     public function retry(int $smsId)

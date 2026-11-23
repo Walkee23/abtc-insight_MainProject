@@ -135,13 +135,8 @@
     <!-- Main Canvas Area -->
     <main class="ml-64 min-h-screen relative">
         <!-- TopAppBar Component -->
-        <header class="fixed top-0 right-0 w-[calc(100%-16rem)] z-40 bg-surface-bright/85 backdrop-blur-xl flex justify-between items-center h-20 px-8 border-b border-outline-variant/10 shadow-sm">
-            <div class="flex items-center gap-6">
-                <div class="flex items-center gap-4 bg-surface-container-highest px-4 py-2 rounded-full w-80">
-                    <span class="material-symbols-outlined text-on-surface-variant text-xl">search</span>
-                    <input class="bg-transparent border-none focus:ring-0 text-sm w-full placeholder:text-on-surface-variant/60" placeholder="Search Reference No. or Patient..." type="text" />
-                </div>
-            </div>
+        <header class="fixed top-0 right-0 w-[calc(100%-16rem)] z-40 bg-surface-bright/85 backdrop-blur-xl flex justify-end items-center h-20 px-8 border-b border-outline-variant/10 shadow-sm">
+           
             <div class="flex items-center gap-6">
                 <div class="flex items-center gap-2">
                     

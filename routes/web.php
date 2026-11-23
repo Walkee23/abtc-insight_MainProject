@@ -119,6 +119,7 @@ Route::prefix('staff')->middleware(['auth', 'role:Staff'])->group(function () {
     Route::get('/patient-verification', [StaffController::class, 'patientVerification'])->name('staff.patient-verification');
     Route::post('/verify-attendance/{inflow_record_id}', [StaffController::class, 'verifyAttendance'])->name('staff.verify-attendance');
     Route::post('/staff/bhw-referral/{referral_id}/verify', [StaffController::class, 'verifyBhwReferral'])->name('staff.verify-bhw-referral');
+    Route::post('/queue/remove/{inflow_record_id}', [StaffController::class, 'removeFromQueue'])->name('staff.remove-from-queue');
 });
 
 // Healthworker Routes
@@ -171,6 +172,7 @@ Route::prefix('it')->middleware(['auth', 'role:IT'])->group(function () {
     Route::post('/sms/test', [ItDashboardController::class, 'sendTest'])->name('it.sms.test');
     Route::post('/sms/run', [ItDashboardController::class, 'runNow'])->name('it.sms.run');
     Route::post('/sms/{smsId}/retry', [ItDashboardController::class, 'retry'])->name('it.sms.retry');
+    Route::post('/sms/late', [ItDashboardController::class, 'runLateNow'])->name('it.sms.late');
 });
 
 // Public Patient-Facing Pages

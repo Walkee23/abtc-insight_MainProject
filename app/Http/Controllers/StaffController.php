@@ -356,12 +356,6 @@ class StaffController extends Controller
                 ->first();
         }
 
-        $healthworkers = DB::table('users')
-            ->where('role', 'Health Worker')
-            ->where('is_active', 1)
-            ->select('user_id', 'full_name')
-            ->orderBy('full_name')
-            ->get();
 
 
         // A patient who registered before keeps their Patient ID: say so, and list the earlier cases (this visit is a NEW case)
@@ -396,12 +390,11 @@ class StaffController extends Controller
                     's3'       => DB::table('bite_section3_exposure')->where('bite_case_id', $draftCase->bite_case_id)->first(),
                     's4'       => DB::table('bite_section4_wound_treatment')->where('bite_case_id', $draftCase->bite_case_id)->first(),
                     's5'       => DB::table('bite_section5_prior_arv')->where('bite_case_id', $draftCase->bite_case_id)->first(),
-                    'assigned' => $draftCase->assigned_health_worker_id,
                 ];
             }
         }
 
-        return view('staff.Case_Encoding', compact('earlierCases', 'thisCaseNumber', 'verifiedQueue', 'selectedPatient', 'openedRecord', 'readOnly', 'search', 'bhwExposure', 'healthworkers', 'saved'));
+        return view('staff.Case_Encoding', compact('earlierCases', 'thisCaseNumber', 'verifiedQueue', 'selectedPatient', 'openedRecord', 'readOnly', 'search', 'bhwExposure', 'saved'));
     }
 
     public function storeCaseEncoding(Request $request, string $inflow_record_id)
@@ -546,12 +539,6 @@ class StaffController extends Controller
                     'prev_arv_dates' => json_encode($doses),
                 ]
             );
-
-            if ($request->filled('assigned_health_worker_id')) {
-                DB::table('bite_cases')
-                    ->where('bite_case_id', $biteCaseId)
-                    ->update(['assigned_health_worker_id' => $request->input('assigned_health_worker_id')]);
-            }
 
             if ($isComplete) {
                 DB::table('inflow_general_particulars')
@@ -899,5 +886,19 @@ class StaffController extends Controller
             'patientsDay7',
             'patientsDay28'
         ));
+    }
+
+    public function removeFromQueue($inflow_record_id)
+    {
+        $updated = \DB::table('inflow_general_particulars')
+            ->where('inflow_record_id', $inflow_record_id)
+            ->where('status', 'Pending')
+            ->update(['status' => 'No Show']);
+
+        if ($updated) {
+            \App\Support\Audit::log('queue_remove', "Marked inflow record #{$inflow_record_id} as No Show");
+        }
+
+        return back()->with('success', 'Patient removed from the queue (no show).');
     }
 }

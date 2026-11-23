@@ -93,6 +93,31 @@
         @endif
     </section>
 
+    {{-- Missed doses preview --}}
+    <section class="bg-white rounded-xl border border-slate-200 p-5">
+        <div class="flex items-start justify-between gap-4 mb-3">
+            <div>
+                <h2 class="font-bold mb-1">Missed yesterday ({{ today()->subDay()->format('M d, Y') }})</h2>
+                <p class="text-xs text-slate-500">Doses that were due yesterday and are not recorded as given. The late follow-up text goes to these patients.</p>
+            </div>
+            <form method="POST" action="{{ route('it.sms.late') }}">
+                @csrf
+                <button class="px-4 py-2 rounded bg-primary text-white text-sm font-semibold whitespace-nowrap">Queue late follow-ups</button>
+            </form>
+        </div>
+        @if($missed->isEmpty())
+            <p class="text-sm text-slate-500">No missed doses.</p>
+        @else
+            <table class="w-full text-sm">
+                <tr class="text-left text-xs uppercase text-slate-500"><th class="py-1">Patient ID</th><th>Dose</th><th>Phone</th></tr>
+                @foreach($missed as $u)
+                    <tr class="border-t"><td class="py-1.5">{{ $u->patient_id }}</td><td>{{ $u->dose_label }}</td>
+                        <td>{{ substr($u->contact_num, 0, 4) }}*****{{ substr($u->contact_num, -2) }}</td></tr>
+                @endforeach
+            </table>
+        @endif
+    </section>
+
     {{-- SMS log --}}
     <section class="bg-white rounded-xl border border-slate-200 p-5">
         <div class="flex items-center justify-between mb-3">
@@ -173,6 +198,5 @@
     </section>
     @endif
 </main>
-@include('partials.idle-timeout')
 </body>
 </html>

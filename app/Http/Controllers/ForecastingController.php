@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\Process;
 
 class ForecastingController extends Controller
 {
+    /** Why the Python engine could not be used on this request (shown beside the PHP fallback notice and logged). */
+    private ?string $pythonProblem = null;
+
     /** Damping of the trend: far-off days drift back towards the weekly pattern instead of climbing forever. */
     private const PHI = 0.95;
 
@@ -104,7 +107,7 @@ class ForecastingController extends Controller
     /** Only the sliders that moved away from their defaults, for tidy URLs. */
     private function paramQuery(array $params): array
     {
-        return array_filter($params, fn ($v, $k) => $v !== self::DEFAULTS[$k], ARRAY_FILTER_USE_BOTH);
+        return array_filter($params, fn($v, $k) => $v !== self::DEFAULTS[$k], ARRAY_FILTER_USE_BOTH);
     }
 
     private function today(): Carbon
@@ -131,7 +134,7 @@ class ForecastingController extends Controller
     }
 
     /**
-     * Patient volume forecast. Volume = walk-in registrations (inflow_general_particulars.queue_date).
+     * Patient volume forecast. Volume = daily inflow summaries (daily_inflow_summary) + today's live registrations.
      *
      * The model learns only from the 6 weeks (42 days) of daily counts before the as-of date, so
      * the most recent days carry the weight: Holt-Winters exponential smoothing with a weekly
@@ -141,15 +144,14 @@ class ForecastingController extends Controller
     private function forecast(string $period, array $params, Carbon $asOf): array
     {
         $cfg = self::PERIODS[$period];
-        $first = DB::table('inflow_general_particulars')->min('queue_date');
+        $daily = $this->dailyCounts();
 
         $base = ['status' => 'empty', 'period' => $period, 'cfg' => $cfg, 'as_of' => $asOf];
-        if (!$first) {
+        if (empty($daily)) {
             return $base;
         }
 
-        $firstDate = Carbon::parse($first, 'Asia/Manila')->startOfDay();
-        $daily = $this->dailyCounts();
+        $firstDate = Carbon::parse(min(array_keys($daily)), 'Asia/Manila')->startOfDay();
 
         // training window: the 6 weeks before the as-of date (less if the data starts later)
         $trainStart = $firstDate->gt($asOf->copy()->subDays(self::TRAIN_DAYS)) ? $firstDate->copy() : $asOf->copy()->subDays(self::TRAIN_DAYS);
@@ -167,7 +169,7 @@ class ForecastingController extends Controller
         // The numbers come from the Python engine (python/forecast.py, statsmodels Holt-Winters).
         // If Python cannot run, the page falls back to the same model written in PHP and says so.
         $python = $this->pythonForecast($y, $trainStart, $params);
-        $engine = 'PHP built-in fallback (Python was not available)';
+        $engine = 'PHP built-in fallback (Python was not available' . ($this->pythonProblem ? ': ' . $this->pythonProblem : '') . ')';
         $pythonOk = $python !== null;
 
         // daily forecasts from the as-of day; the trend is damped so far-off days stay realistic
@@ -245,7 +247,11 @@ class ForecastingController extends Controller
             'mape_label' => $mapeLabel,
             'history' => $history,
             // how many chart periods the training window covers (none for months: 6 weeks is under 2 months)
-            'window' => match ($period) { 'daily' => $n, 'weekly' => intdiv($n, 7), default => 0 },
+            'window' => match ($period) {
+                'daily' => $n,
+                'weekly' => intdiv($n, 7),
+                default => 0
+            },
             'window_start' => $trainStart->toDateString(),
             'future' => $future,
             'next_value' => $future[0]['value'],
@@ -299,26 +305,50 @@ class ForecastingController extends Controller
                 // PYTHON_BIN in .env wins; otherwise the usual names are tried in turn
                 $candidates = $configured ? [[$configured]] : [['python'], ['python3'], ['py', '-3']];
 
+                $tried = [];
+                $short = [];   // the same list without folder paths, for the notice on the page
                 foreach ($candidates as $command) {
-                    $result = Process::path(base_path())
-                        ->env(['PYTHONIOENCODING' => 'utf-8'])
-                        ->timeout(60)
-                        ->input($input)
-                        ->run([...$command, $script]);
+                    $name = implode(' ', $command);
+                    $label = basename(str_replace('\\', '/', $command[0])) . (isset($command[1]) ? ' ' . $command[1] : '');
+                    try {
+                        $result = Process::path(base_path())
+                            ->env([
+                                'PYTHONIOENCODING' => 'utf-8',
+                                'APPDATA' => getenv('APPDATA') ?: '',
+                                'USERPROFILE' => getenv('USERPROFILE') ?: '',
+                            ])
+                            ->timeout(60)
+                            ->input($input)
+                            ->run([...$command, $script]);
+                    } catch (\Throwable $e) {
+                        $tried[] = "{$name}: " . $e->getMessage();
+                        $short[] = "{$label}: " . mb_strimwidth($e->getMessage(), 0, 90, '...');
+                        continue;
+                    }
 
                     $data = json_decode($result->output(), true);
                     if (!is_array($data)) {
-                        continue;   // this name is not a working Python (or statsmodels is missing): try the next
+                        // this name is not a working Python (or a package such as statsmodels is missing): try the next
+                        // a Python error ends with its message (e.g. "ModuleNotFoundError: No module named 'statsmodels'")
+                        $lines = array_values(array_filter(array_map('trim', preg_split('/\R/', (string) ($result->errorOutput() ?: $result->output())))));
+                        $said = $lines ? end($lines) : '';
+                        $detail = 'exit code ' . $result->exitCode() . ($said !== '' ? ', ' . $said : ', no output');
+                        $tried[] = "{$name}: {$detail}";
+                        $short[] = "{$label}: " . mb_strimwidth($detail, 0, 110, '...');
+                        continue;
                     }
                     if (empty($data['ok'])) {
                         throw new \RuntimeException($data['error'] ?? 'The Python script reported an error.');
                     }
                     return $data;
                 }
-                throw new \RuntimeException('No working Python with statsmodels was found. Set PYTHON_BIN in .env.');
+                $this->pythonProblem = implode(' | ', $short);
+                throw new \RuntimeException('No working Python with statsmodels was found (set PYTHON_BIN in .env). Tried - ' . implode(' | ', $tried));
             });
         } catch (\Throwable $e) {
             Log::warning('Forecasting: the Python engine could not be used, falling back to PHP - ' . $e->getMessage());
+            // the notice on the page gets the short reason (set above when no Python could be run, otherwise the error text)
+            $this->pythonProblem = $this->pythonProblem ?: mb_strimwidth(trim(preg_split('/\R/', $e->getMessage())[0] ?? ''), 0, 220, '...');
             return null;
         }
     }
@@ -382,7 +412,7 @@ class ForecastingController extends Controller
             'trend' => $trend,
             'season' => $season,
             'seasonal' => $seasonal,
-            'sigma' => count($errors) > 1 ? sqrt(array_sum(array_map(fn ($e) => $e * $e, $errors)) / count($errors)) : 0.0,
+            'sigma' => count($errors) > 1 ? sqrt(array_sum(array_map(fn($e) => $e * $e, $errors)) / count($errors)) : 0.0,
             // weighted absolute % error: total miss / total actual. A plain MAPE explodes on the
             // near-empty weekend days, where one patient off is a huge percentage.
             'mape' => $actualSum > 0 ? $absError / $actualSum * 100 : null,
@@ -415,7 +445,25 @@ class ForecastingController extends Controller
     /** Registrations per day (Y-m-d => count). */
     private function dailyCounts(): array
     {
-        return DB::table('inflow_general_particulars')->selectRaw('queue_date as d, count(*) as c')->groupBy('queue_date')->pluck('c', 'd')->all();
+        $today = Carbon::today('Asia/Manila')->toDateString();
+
+        // 1. Completed days from daily_inflow_summary
+        $counts = DB::table('daily_inflow_summary')
+            ->where('inflow_date', '<', $today)
+            ->pluck('total_patients', 'inflow_date') // or 'total_verified' if you only want verified patients
+            ->map(fn($v) => (int) $v)
+            ->all();
+
+        // 2. Live count for today (not yet snapshotted at midnight)
+        $todayCount = DB::table('inflow_general_particulars')
+            ->whereDate('queue_date', $today)
+            ->count();
+
+        if ($todayCount > 0) {
+            $counts[$today] = $todayCount;
+        }
+
+        return $counts;
     }
 
     // -------------------------------------------------------------- outbreak
@@ -435,6 +483,7 @@ class ForecastingController extends Controller
         $baselineFrom = $today->copy()->subDays(34);
 
         $rows = DB::table('inflow_general_particulars')
+            ->whereIn('status', ['Verified', 'Encoded'])
             ->whereBetween('queue_date', [$baselineFrom->toDateString(), $today->toDateString()])
             ->get(['barangay', 'queue_date']);
 
@@ -454,7 +503,7 @@ class ForecastingController extends Controller
                 $past[] = $windows[$w] ?? 0;
             }
             $baseline = array_sum($past) / 4;
-            $std = sqrt(array_sum(array_map(fn ($v) => ($v - $baseline) ** 2, $past)) / 4);
+            $std = sqrt(array_sum(array_map(fn($v) => ($v - $baseline) ** 2, $past)) / 4);
 
             if ($current >= 3 && ($baseline == 0 || ($current > 2 * $baseline && $current > $baseline + 2 * $std))) {
                 $level = 'spike';
@@ -473,14 +522,14 @@ class ForecastingController extends Controller
             ];
         }
 
-        usort($list, fn ($a, $b) => [['spike' => 0, 'watch' => 1, 'normal' => 2][$a->level], -$a->current]
+        usort($list, fn($a, $b) => [['spike' => 0, 'watch' => 1, 'normal' => 2][$a->level], -$a->current]
             <=> [['spike' => 0, 'watch' => 1, 'normal' => 2][$b->level], -$b->current]);
 
         return [
             'monitored' => $this->barangayCount(),
             'with_cases' => count($list),
-            'spikes' => count(array_filter($list, fn ($b) => $b->level === 'spike')),
-            'watch' => count(array_filter($list, fn ($b) => $b->level === 'watch')),
+            'spikes' => count(array_filter($list, fn($b) => $b->level === 'spike')),
+            'watch' => count(array_filter($list, fn($b) => $b->level === 'watch')),
             'list' => $list,
             'from' => $currentFrom->format('M d'),
             'to' => $today->format('M d'),

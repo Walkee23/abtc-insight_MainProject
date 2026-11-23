@@ -146,8 +146,8 @@
                 <span class="text-lg sm:text-xl font-bold tracking-tighter text-blue-800 truncate">ABTC-Insight</span>
             </a>
             <div class="hidden md:flex items-center gap-6 text-sm font-medium tracking-tight">
-                <a class="text-blue-700 font-semibold border-b-2 border-blue-700 pb-1" href="#cases">My cases</a>
-                <a class="text-slate-600 hover:text-blue-600 transition-colors" href="#faq">Rabies FAQ</a>
+                <a data-nav="cases" class="text-blue-700 font-semibold border-b-2 border-blue-700 pb-1" href="#cases">My cases</a>
+                <a data-nav="faq" class="text-slate-600 hover:text-blue-600 transition-colors" href="#faq">Rabies FAQ</a>
             </div>
         </div>
         <div class="flex items-center gap-3 shrink-0">
@@ -348,7 +348,7 @@
 
             <!-- Rabies prevention FAQ -->
             <aside id="faq" class="lg:col-span-4 scroll-mt-24">
-                <div class="lg:sticky lg:top-24 space-y-3">
+                <div id="faqList" class="lg:sticky lg:top-24 space-y-3 rounded-2xl p-2 -m-2 transition-shadow duration-500">
                     <h2 class="text-base sm:text-lg font-bold tracking-tight text-on-surface mb-1 flex items-center gap-2">
                         <span class="material-symbols-outlined text-primary">clinical_notes</span>
                         Rabies Prevention <span class="text-xs font-normal text-on-surface-variant">(WHO)</span>
@@ -388,10 +388,34 @@
     </nav>
 
     <script>
-        // FAQ items are open in the side column on a wide screen and folded on a phone
         (function () {
+            var items = document.querySelectorAll('details[data-faq]');
+            var ACTIVE = 'text-blue-700 font-semibold border-b-2 border-blue-700 pb-1';
+            var IDLE = 'text-slate-600 hover:text-blue-600 transition-colors';
+
+            // FAQ items are open in the side column on a wide screen and folded on a phone
             var wide = window.matchMedia('(min-width: 1024px)').matches;
-            document.querySelectorAll('details[data-faq]').forEach(function (d) { d.open = wide; });
+            items.forEach(function (d) { d.open = wide; });
+
+            function mark(which) {
+                document.querySelectorAll('[data-nav]').forEach(function (a) {
+                    a.className = a.getAttribute('data-nav') === which ? ACTIVE : IDLE;
+                });
+            }
+
+            // "Rabies FAQ" / "FAQs": go to the questions, open them, and flash the box so it is clear where they are
+            // (on a wide screen they are already beside the page, so the flash is the feedback)
+            document.addEventListener('click', function (e) {
+                var link = e.target.closest('a[href="#faq"], a[href="#cases"]');
+                if (!link) return;
+                var faq = link.getAttribute('href') === '#faq';
+                mark(faq ? 'faq' : 'cases');
+                if (!faq) return;
+                items.forEach(function (d) { d.open = true; });
+                var box = document.getElementById('faqList');
+                box.classList.add('ring-2', 'ring-primary/40', 'bg-primary/5');
+                setTimeout(function () { box.classList.remove('ring-2', 'ring-primary/40', 'bg-primary/5'); }, 1600);
+            });
         })();
     </script>
 </body>

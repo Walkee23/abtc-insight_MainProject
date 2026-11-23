@@ -148,15 +148,8 @@ class StaffController extends Controller
                 ->first();
         }
 
-        $healthworkers = DB::table('users')
-            ->where('role', 'Health Worker')
-            ->where('is_active', 1)
-            ->select('user_id', 'full_name')
-            ->orderBy('full_name')
-            ->get();
 
-
-        return view('staff.Case_Encoding', compact('verifiedQueue', 'selectedPatient', 'search', 'bhwExposure', 'healthworkers'));
+        return view('staff.Case_Encoding', compact('verifiedQueue', 'selectedPatient', 'search', 'bhwExposure',));
     }
 
     public function storeCaseEncoding(Request $request, string $inflow_record_id)
@@ -169,10 +162,7 @@ class StaffController extends Controller
 
         $isComplete = $request->input('action') === 'complete';
 
-        if ($isComplete && !$request->filled('assigned_health_worker_id')) {
-            return back()->withErrors(['error' => 'Please assign a healthworker before completing.'])->withInput();
-        }
-
+        
         if ($isComplete && !in_array($request->input('pet_status'), ['Pet', 'Stray'], true)) {
             return back()->withErrors(['error' => 'Please select if the animal is a Pet or Stray.'])->withInput();
         }
@@ -283,12 +273,6 @@ class StaffController extends Controller
                     'prev_arv_dates' => json_encode($doses),
                 ]
             );
-
-            if ($request->filled('assigned_health_worker_id')) {
-                DB::table('bite_cases')
-                    ->where('bite_case_id', $biteCaseId)
-                    ->update(['assigned_health_worker_id' => $request->input('assigned_health_worker_id')]);
-            }
 
             if ($isComplete) {
                 DB::table('inflow_general_particulars')

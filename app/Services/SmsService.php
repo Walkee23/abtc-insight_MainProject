@@ -33,7 +33,6 @@ class SmsService
                 ->join('patients as p', 'p.patient_id', '=', 'bc.patient_id')
                 ->whereNotNull('i.day0_date')
                 ->where('bc.category', '!=', 'I') // Category I needs no vaccine course
-                ->where('p.contact_num', '!=', '') // imported historical cases have no phone number to text
                 ->whereRaw("COALESCE(i.day{$n}_date, DATE_ADD(i.day0_date, INTERVAL {$n} DAY)) = ?", [$date])
                 ->select('bc.bite_case_id', 'bc.patient_id', 'p.patient_name', 'p.contact_num')
                 ->get()
@@ -49,16 +48,71 @@ class SmsService
         return $all;
     }
 
-    /** Creates a Pending row in `sms` per due dose (skipping duplicates) and dispatches the job. */
+    /**
+     * Doses MISSED: due on $dueDate (day0 + N days) and not recorded as given.
+     * "Given" = Section VII dayN_date is filled, or dose_schedule has an actual_date for that dose.
+     * Skipped: Category I, closed cases, and patients who already had a LATER dose (they are still attending).
+     * To change what counts as "given", edit only this method.
+     */
+    public function missedDoses($dueDate)
+    {
+        $dueDate = Carbon::parse($dueDate)->toDateString();
+        $all = collect();
+
+        foreach (self::REMINDER_OFFSETS as $label => $n) {
+            // $n and $m come from the constant above, never from user input
+            $q = DB::table('bite_section7_immunization as i')
+                ->join('bite_cases as bc', 'bc.bite_case_id', '=', 'i.bite_case_id')
+                ->join('patients as p', 'p.patient_id', '=', 'bc.patient_id')
+                ->whereNotNull('i.day0_date')
+                ->where('bc.category', '!=', 'I')
+                ->where(fn ($w) => $w->whereNull('bc.outcome')
+                    ->orWhereNotIn('bc.outcome', ['Completed', 'Lost to Follow-up', 'Discharged (Cat. I)']))
+                ->whereRaw("DATE_ADD(i.day0_date, INTERVAL {$n} DAY) = ?", [$dueDate])
+                ->whereNull("i.day{$n}_date")
+                ->whereNotExists(fn ($x) => $x->select(DB::raw(1))->from('dose_schedule as ds')
+                    ->whereColumn('ds.bite_case_id', 'i.bite_case_id')
+                    ->where('ds.dose_label', $label)
+                    ->whereNotNull('ds.actual_date'));
+
+            foreach (self::REMINDER_OFFSETS as $m) {
+                if ($m > $n) $q->whereNull("i.day{$m}_date");
+            }
+
+            $rows = $q->select('bc.bite_case_id', 'bc.patient_id', 'p.patient_name', 'p.contact_num')->get()
+                ->map(function ($r) use ($label, $dueDate) {
+                    $r->dose_label = $label;
+                    $r->sched_date = $dueDate;   // the date the dose was due
+                    return $r;
+                });
+
+            $all = $all->concat($rows);
+        }
+
+        return $all;
+    }
+
     public function queueDueReminders($date): int
+    {
+        return $this->queueBatch($this->dueDoses($date), 'Reminder');
+    }
+
+    /** Pass the date the dose was due (normally yesterday). */
+    public function queueLateFollowUps($dueDate): int
+    {
+        return $this->queueBatch($this->missedDoses($dueDate), 'Late Follow-up');
+    }
+
+    /** Creates a Pending row in `sms` per dose (skipping duplicates) and dispatches the job. */
+    private function queueBatch($doses, string $type): int
     {
         $queued = 0;
 
-        foreach ($this->dueDoses($date) as $d) {
+        foreach ($doses as $d) {
             $exists = DB::table('sms')
                 ->where('bite_case_id', $d->bite_case_id)
                 ->where('dose_label', $d->dose_label)
-                ->where('sms_type', 'Reminder')
+                ->where('sms_type', $type)
                 ->whereIn('status', ['Pending', 'Sent'])
                 ->exists();
 
@@ -78,8 +132,10 @@ class SmsService
                 'sched_id'     => $schedId,
                 'dose_label'   => $d->dose_label,
                 'contact_num'  => $this->normalizePhone($d->contact_num),
-                'sms_type'     => 'Reminder',
-                'message'      => $this->buildMessage($d->patient_name, $d->dose_label, $d->sched_date),
+                'sms_type'     => $type,
+                'message'      => $type === 'Reminder'
+                    ? $this->buildMessage($d->patient_name, $d->dose_label, $d->sched_date)
+                    : $this->buildLateMessage($d->patient_name, $d->dose_label, $d->sched_date),
                 'status'       => 'Pending',
             ]);
 
@@ -90,6 +146,16 @@ class SmsService
         }
 
         return $queued;
+    }
+
+    public function buildLateMessage(string $patientName, string $doseLabel, $dueDate): string
+    {
+        $parts = array_map('trim', explode(',', $patientName));
+        $first = $parts[1] ?? $parts[0];
+        $dose  = 'Day ' . ltrim($doseLabel, 'D');
+        $on    = Carbon::parse($dueDate)->format('M j');
+
+        return "Hi {$first}, ABTC Insight noticed you missed your {$dose} vaccine dose on {$on}. Please visit the clinic as soon as possible to continue your treatment.";
     }
 
     public function buildMessage(string $patientName, string $doseLabel, $schedDate): string

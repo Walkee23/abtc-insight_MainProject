@@ -170,6 +170,7 @@ Route::prefix('it')->middleware(['auth', 'role:IT'])->group(function () {
     Route::post('/sms/test', [ItDashboardController::class, 'sendTest'])->name('it.sms.test');
     Route::post('/sms/run', [ItDashboardController::class, 'runNow'])->name('it.sms.run');
     Route::post('/sms/{smsId}/retry', [ItDashboardController::class, 'retry'])->name('it.sms.retry');
+    Route::post('/sms/late', [ItDashboardController::class, 'runLateNow'])->name('it.sms.late');
 });
 
 // Public Patient-Facing Pages

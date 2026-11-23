@@ -97,7 +97,7 @@
     <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
 </head>
 
-<body class="bg-surface text-on-surface selection:bg-primary-fixed">
+<body class="bg-surface text-on-surface selection:bg-primary-fixed min-h-screen flex flex-col">
   <!-- TopNavBar (Updated to match Patient Portal style) -->
   <nav class="fixed top-0 w-full z-50 bg-slate-50/85 backdrop-blur-md shadow-sm shadow-blue-900/5 transition-all duration-300 ease-in-out font-sans antialiased tracking-tight">
     <div class="flex justify-between items-center px-8 py-4 max-w-full mx-auto">
@@ -460,21 +460,6 @@
       </form>
       </div>
     </div>
-    <!-- Global Footer -->
-    <footer class="w-full mt-20 border-t border-outline-variant/30 bg-transparent text-center">
-      <div class="flex flex-col md:flex-row justify-between items-center gap-4 px-6 md:px-8 py-8 md:py-10 max-w-7xl mx-auto">
-        <span class="text-on-surface-variant font-inter text-[11px] md:text-xs leading-relaxed tracking-wide uppercase">© 2024 Cebu City Health Center.
-          All rights reserved. Clinical Precision &amp; Editorial Authority.</span>
-        <div class="flex flex-wrap justify-center gap-x-6 gap-y-2">
-          <a class="text-on-surface-variant text-xs tracking-wide uppercase hover:text-primary underline underline-offset-4 transition-opacity"
-            href="#">Privacy Policy</a>
-          <a class="text-on-surface-variant text-xs tracking-wide uppercase hover:text-primary underline underline-offset-4 transition-opacity"
-            href="#">Terms of Service</a>
-          <a class="text-on-surface-variant text-xs tracking-wide uppercase hover:text-primary underline underline-offset-4 transition-opacity"
-            href="#">Help Desk</a>
-        </div>
-      </div>
-    </footer>
     <!-- Confirmation before clearing the form or submitting it -->
     <div id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle"
       class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm items-center justify-center p-4 opacity-0 transition-opacity duration-200">
@@ -552,6 +537,19 @@
       </div>
     </div>
   </main>
+
+  <!-- Footer -->
+  <footer class="flex flex-col md:flex-row justify-between items-center gap-4 px-6 md:px-8 py-6 w-full border-t border-[#c1c7d3]/15 bg-[#f2f4f6] dark:bg-slate-950 font-['Inter'] text-sm text-center md:text-left">
+    <div class="flex flex-col md:flex-row items-center gap-1 md:gap-4">
+      <span class="font-bold text-[#004a93]">ABTC-Insight</span>
+      <span class="text-[#414751] dark:text-slate-500 text-xs md:text-sm">© 2024 Cebu City Health Center. Clinical Precision System.</span>
+    </div>
+    <div class="flex flex-wrap justify-center gap-x-6 gap-y-2">
+      <a class="text-[#414751] dark:text-slate-500 hover:text-[#004a93] dark:hover:text-blue-300 transition-colors duration-200" href="#">Privacy Policy</a>
+      <a class="text-[#414751] dark:text-slate-500 hover:text-[#004a93] dark:hover:text-blue-300 transition-colors duration-200" href="#">Contact Support</a>
+      <a class="text-[#414751] dark:text-slate-500 hover:text-[#004a93] dark:hover:text-blue-300 transition-colors duration-200" href="#">Terms of Service</a>
+    </div>
+  </footer>
 
   <script>
     // Auto-calculate age from date of birth, and cap at 125 years old

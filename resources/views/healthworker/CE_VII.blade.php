@@ -502,7 +502,7 @@
                                     <div id="doseGrid" data-cols="4">
                                         @foreach([0 => 'Day 0', 3 => 'Day 3', 7 => 'Day 7', 14 => 'Day 14', 28 => 'Day 28'] as $d => $dayLabel)
                                         @php
-                                            $isRegistered = (int) ($case->return_dose_day ?? 0) === $d;
+                                            $isRegistered = !empty($case->return_dose_day) && (int) $case->return_dose_day === $d;   // the dose the patient checked in for (Day 0 is never a check-in)
                                             $isLocked = in_array($d, $lockedDays, true);
                                             $savedDate = $isLocked ? substr((string) $section->{'day' . $d . '_date'}, 0, 10) : null;
                                         @endphp

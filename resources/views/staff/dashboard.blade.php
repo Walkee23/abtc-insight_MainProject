@@ -221,8 +221,9 @@
 
             <!-- [ADDED]: Flash Message for Actions -->
             @if(session('success'))
-            <div class="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg flex items-center gap-3">
-                <span class="material-symbols-outlined">check_circle</span>
+            {{-- an existing patient found at verification is called out: the visit becomes a NEW case under the same Patient ID --}}
+            <div class="mb-6 p-4 rounded-lg flex items-start gap-3 border {{ str_starts_with(session('success'), 'Existing patient') ? 'bg-sky-50 border-sky-200 text-sky-900' : 'bg-green-50 border-green-200 text-green-700' }}">
+                <span class="material-symbols-outlined shrink-0">{{ str_starts_with(session('success'), 'Existing patient') ? 'how_to_reg' : 'check_circle' }}</span>
                 <span class="text-sm font-semibold">{{ session('success') }}</span>
             </div>
             @endif

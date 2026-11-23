@@ -165,6 +165,8 @@ class PepComplianceController extends Controller
                 ->join('patients as p', 'p.patient_id', '=', 'bc.patient_id')
                 ->join('bite_section7_immunization as s7', 's7.bite_case_id', '=', 'bc.bite_case_id')
                 ->whereNotNull('s7.day0_date')
+                // a case closed as Incomplete is a past record that will not continue (e.g. one from 2025): it is not tracked
+                ->where(fn ($w) => $w->whereNull('bc.outcome')->orWhere('bc.outcome', '<>', 'Incomplete'))
                 ->select('bc.bite_case_id', 'bc.case_number', 'bc.category', 'bc.barangay', 'bc.assigned_health_worker_id',
                     'p.patient_id', 'p.patient_name', 's7.dose_type', 's7.day0_date as day0')
                 ->selectRaw("{$day} as day_no, {$doseNo} as dose_no, s7.day{$day}_date as actual");

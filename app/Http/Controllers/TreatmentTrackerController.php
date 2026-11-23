@@ -87,6 +87,8 @@ class TreatmentTrackerController extends Controller
             ->join('patients as p', 'p.patient_id', '=', 'bc.patient_id')
             ->join('bite_section7_immunization as s7', 's7.bite_case_id', '=', 'bc.bite_case_id')
             ->whereNotNull('s7.day0_date')
+            // a case closed as Incomplete is a past record that will not continue (e.g. one from 2025): it is not tracked
+            ->where(fn ($q) => $q->whereNull('bc.outcome')->orWhere('bc.outcome', '<>', 'Incomplete'))
             // only the cases Staff assigned to the logged-in health worker (none for a new account)
             ->where('bc.assigned_health_worker_id', Auth::id() ?? 0)
             // only cases Staff has handed over to the Health Worker

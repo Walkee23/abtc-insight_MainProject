@@ -560,4 +560,18 @@ class StaffController extends Controller
             'patientsDay28'
         ));
     }
+
+    public function removeFromQueue($inflow_record_id)
+    {
+        $updated = \DB::table('inflow_general_particulars')
+            ->where('inflow_record_id', $inflow_record_id)
+            ->where('status', 'Pending')
+            ->update(['status' => 'No Show']);
+
+        if ($updated) {
+            \App\Support\Audit::log('queue_remove', "Marked inflow record #{$inflow_record_id} as No Show");
+        }
+
+        return back()->with('success', 'Patient removed from the queue (no show).');
+    }
 }

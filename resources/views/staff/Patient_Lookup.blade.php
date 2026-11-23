@@ -253,7 +253,10 @@
                         </div>
                         <div>
                             <span class="font-bold text-on-surface block">{{ $patient->patient_name }}</span>
-                            <span class="text-[10px] text-on-surface-variant">{{ $patient->contact_num ?? 'No contact' }}</span>
+                            <span class="text-[10px] text-on-surface-variant block">{{ $patient->contact_num ?? 'No contact' }}</span>
+                            <span class="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide {{ $patient->ph_class }}" title="PhilHealth">
+                                <span class="material-symbols-outlined text-[11px]">health_and_safety</span>{{ $patient->ph_label }}
+                            </span>
                         </div>
                     </div>
                 </td>
@@ -327,8 +330,8 @@
                                         </div>
                                         <div class="p-3 bg-surface-container-low rounded-xl">
                                             <span class="text-slate-500 block font-medium mb-0.5">PhilHealth</span>
-                                            <span class="font-bold text-sm {{ $patient->philhealth_member ? 'text-emerald-600' : 'text-slate-500' }}">
-                                                {{ $patient->philhealth_member ? 'Member' : 'Non-member' }}
+                                            <span class="font-bold text-sm {{ ['Verified member' => 'text-emerald-600', 'Member' => 'text-emerald-600', 'Expired' => 'text-amber-600', 'Pending verification' => 'text-sky-700'][$patient->ph_label] ?? 'text-slate-500' }}">
+                                                {{ $patient->ph_label }}
                                             </span>
                                         </div>
                                         <div class="p-3 bg-surface-container-low rounded-xl">

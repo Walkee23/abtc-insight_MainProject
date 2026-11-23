@@ -614,6 +614,9 @@ class StaffController extends Controller
     {
         $search = $request->input('search');
 
+        // PhilHealth: what the patient said (registration step 3) and what Staff found (PhilHealth Verification on the dashboard)
+        $philhealthChecked = Schema::hasColumn('inflow_general_particulars', 'philhealth_verification');
+
         $query = DB::table('patients')
             ->leftJoin('inflow_general_particulars', 'patients.inflow_record_id', '=', 'inflow_general_particulars.inflow_record_id')
             ->leftJoin('bite_cases', 'patients.patient_id', '=', 'bite_cases.patient_id')
@@ -640,7 +643,11 @@ class StaffController extends Controller
                 DB::raw('MAX(bite_section3_exposure.animal_fate) as animal_fate'),
                 DB::raw('MAX(bite_section9_progress_notes.day3_notes) as day3_notes'),
                 DB::raw('MAX(bite_section9_progress_notes.day7_notes) as day7_notes'),
-                DB::raw('MAX(bite_section9_progress_notes.day28_notes) as day28_notes')
+                DB::raw('MAX(bite_section9_progress_notes.day28_notes) as day28_notes'),
+                DB::raw('MAX(inflow_general_particulars.philhealth_member) as ph_claimed'),
+                $philhealthChecked
+                    ? DB::raw('MAX(inflow_general_particulars.philhealth_verification) as ph_verification')
+                    : DB::raw('NULL as ph_verification')
             )
             ->groupBy(
                 'patients.patient_id',
@@ -671,6 +678,21 @@ class StaffController extends Controller
             ->withQueryString();
 
         $patients->getCollection()->transform(function ($patient) {
+            // PhilHealth status shown on the row and in the case summary
+            if ($patient->ph_verification === 'Verified') {
+                [$patient->ph_label, $patient->ph_class] = ['Verified member', 'bg-emerald-100 text-emerald-800'];
+            } elseif ($patient->ph_verification === 'Expired') {
+                [$patient->ph_label, $patient->ph_class] = ['Expired', 'bg-amber-100 text-amber-800'];
+            } elseif ($patient->ph_verification === 'Not a Member') {
+                [$patient->ph_label, $patient->ph_class] = ['Not a member', 'bg-slate-100 text-slate-600'];
+            } elseif ($patient->ph_claimed) {
+                [$patient->ph_label, $patient->ph_class] = ['Pending verification', 'bg-sky-100 text-sky-800'];   // said "member", not checked yet
+            } elseif ($patient->philhealth_member) {
+                [$patient->ph_label, $patient->ph_class] = ['Member', 'bg-emerald-100 text-emerald-800'];       // no registration record to compare with
+            } else {
+                [$patient->ph_label, $patient->ph_class] = ['Non-member', 'bg-slate-100 text-slate-600'];
+            }
+
             if (!$patient->bite_case_id) {
                 $patient->pep_status = 'No Case';
                 $patient->pep_badge = 'bg-slate-100 text-slate-500';

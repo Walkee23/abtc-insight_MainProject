@@ -50,7 +50,9 @@ class PatientDatabaseController extends Controller
         $verifiable = Schema::hasColumn('inflow_general_particulars', 'philhealth_verification');
 
         $query = DB::table('patients as p')
-            ->leftJoin('inflow_general_particulars as pig', 'pig.inflow_record_id', '=', 'p.inflow_record_id')
+            // the patient's LATEST registration (a person who registers again keeps their Patient ID)
+            ->leftJoin('inflow_general_particulars as pig', 'pig.inflow_record_id', '=',
+                DB::raw('(SELECT MAX(x.inflow_record_id) FROM inflow_general_particulars x WHERE x.patient_id = p.patient_id)'))
             ->select('p.patient_id', 'p.patient_name', 'p.age', 'p.sex', 'p.philhealth_member as ph_flag', 'pig.philhealth_member as ph_claimed')
             ->selectRaw($verifiable ? 'pig.philhealth_verification as ph_verification' : 'NULL as ph_verification')
             ->selectSub(

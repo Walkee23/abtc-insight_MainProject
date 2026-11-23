@@ -349,7 +349,7 @@
                                         <div class="grid grid-cols-3 gap-2">
                                             <div>
                                                 <span class="text-slate-400 block text-[10px]">Case Number</span>
-                                                <span class="font-semibold text-slate-700 dark:text-slate-300">#{{ $patient->case_number ?? 'Pending' }}</span>
+                                                <span class="font-semibold text-slate-700 dark:text-slate-300">#{{ $patient->case_number ?? 'Pending' }}@if(($patient->case_count ?? 0) > 1) <span class="font-medium text-slate-400">(latest of {{ $patient->case_count }} cases)</span>@endif</span>
                                             </div>
                                             <div>
                                                 <span class="text-slate-400 block text-[10px]">Exposure Category</span>

@@ -190,6 +190,19 @@
 </header>
 <!-- Page Canvas -->
 <main class="p-8 space-y-8">
+@if(session('success'))
+{{-- an existing patient found at verification is called out here: the visit becomes a NEW case under the same Patient ID --}}
+<div class="p-4 rounded-lg flex items-start gap-3 border {{ str_starts_with(session('success'), 'Existing patient') ? 'bg-sky-50 border-sky-200 text-sky-900' : 'bg-green-50 border-green-200 text-green-700' }}">
+<span class="material-symbols-outlined shrink-0">{{ str_starts_with(session('success'), 'Existing patient') ? 'how_to_reg' : 'check_circle' }}</span>
+<span class="text-sm font-semibold">{{ session('success') }}</span>
+</div>
+@endif
+@if($errors->any())
+<div class="p-4 rounded-lg flex items-start gap-3 border bg-red-50 border-red-200 text-red-700">
+<span class="material-symbols-outlined shrink-0">error</span>
+<span class="text-sm font-semibold">{{ $errors->first() }}</span>
+</div>
+@endif
 <!-- Page Header -->
 <section class="flex justify-between items-end">
 <div>

@@ -304,6 +304,31 @@
                             </div>
                         </div>
 
+                        @if(!empty($earlierCases) && $earlierCases->count())
+                        {{-- a person who registered before keeps their Patient ID: this visit is a NEW case --}}
+                        <div class="mx-8 mt-6 p-4 rounded-xl bg-sky-50 border border-sky-200 text-sky-900">
+                            <div class="flex items-start gap-3">
+                                <span class="material-symbols-outlined text-sky-600 shrink-0">how_to_reg</span>
+                                <div class="min-w-0 text-xs leading-relaxed">
+                                    <p class="font-bold text-sm">Existing patient: {{ $selectedPatient->patient_id }}</p>
+                                    <p>This visit is saved as a <strong>new case (#{{ $thisCaseNumber }})</strong> under the same Patient ID. The earlier {{ $earlierCases->count() === 1 ? 'case is' : 'cases are' }} not changed.</p>
+                                    <ul class="mt-2 space-y-1">
+                                        @foreach($earlierCases as $ec)
+                                        <li class="flex flex-wrap items-center gap-x-2">
+                                            <span class="font-bold">Case #{{ $ec->case_number }}</span>
+                                            <span class="text-sky-700">{{ $ec->date_verified ? \Carbon\Carbon::parse($ec->date_verified)->format('M j, Y') : '' }}</span>
+                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold {{ $ec->open ? 'bg-amber-100 text-amber-800' : 'bg-white text-sky-800' }}">{{ $ec->status }}</span>
+                                        </li>
+                                        @endforeach
+                                    </ul>
+                                    @if($earlierCases->contains('open', true))
+                                    <p class="mt-2 text-amber-800 font-semibold">An earlier case still has doses due. If the patient only came for that dose, they check in on the Returning Patient page instead of registering again.</p>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
                         <form id="caseEncodingForm" autocomplete="off" action="{{ route('staff.store-case-encoding', $selectedPatient->inflow_record_id ?? 0) }}" method="POST" class="p-8">
                             @csrf
                             <fieldset class="min-w-0 space-y-12 border-0 p-0 m-0 {{ !empty($readOnly) ? 'case-readonly' : '' }}" @if(!empty($readOnly)) disabled @endif>

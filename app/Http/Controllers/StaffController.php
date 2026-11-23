@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Support\Audit;
+use App\Support\PepSchedule;
 use App\Support\PhilhealthStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,6 +24,110 @@ class StaffController extends Controller
         $checked = $inflow->philhealth_verification ?? null;
 
         return ($inflow->philhealth_member && !in_array($checked, ['Not a Member', 'Expired'], true)) ? 1 : 0;
+    }
+
+
+    // ------------------------------------------------------------------------------------------------------------
+    // One Patient ID per person
+    // ------------------------------------------------------------------------------------------------------------
+
+    /** The words of a name that identify a person: lower case, no accents or punctuation, initials left out. */
+    private function nameWords(?string $name): array
+    {
+        $words = preg_split('/[^a-z0-9]+/', strtolower(\Illuminate\Support\Str::ascii((string) $name)), -1, PREG_SPLIT_NO_EMPTY);
+        $words = array_values(array_unique(array_filter($words, fn ($w) => strlen($w) >= 2)));
+        sort($words);
+
+        return $words;
+    }
+
+    /**
+     * The patient who already has a Patient ID: same date of birth AND the same name (word for word, in any order,
+     * ignoring initials). If an old duplicate exists, the oldest record (the original ID) wins.
+     */
+    private function existingPatient(?string $name, $dob): ?object
+    {
+        $words = $this->nameWords($name);
+        if (count($words) < 2 || empty($dob)) {
+            return null;   // too little to tell people apart safely: a new patient
+        }
+
+        return DB::table('patients')
+            ->whereDate('date_of_birth', \Carbon\Carbon::parse($dob)->toDateString())
+            ->orderBy('date_registered')
+            ->get()
+            ->first(fn ($p) => $this->nameWords($p->patient_name) === $words);
+    }
+
+    /**
+     * Registers a verified walk-in with its patient and links the two (inflow_general_particulars.patient_id).
+     *
+     * A person who registers again for a NEW bite keeps their Patient ID: the existing patient is reused (and its
+     * contact details refreshed), and only a new bite case is created later in Case Encoding (case #2, #3, ...), so the
+     * earlier cases and their doses are never touched or mixed in. Anyone else gets a new Patient ID.
+     *
+     * $p keys: name, dob, age, sex, civil_status, contact_num, id_number, philhealth (flag), philhealth_name,
+     * philhealth_dob, illness, allergy. A null value is "not known here" and never overwrites what is on file.
+     *
+     * @return array{0:string,1:bool,2:int} [patient_id, was an existing patient, the case number this visit will get]
+     */
+    private function registerPatient(string $inflowId, array $p): array
+    {
+        $existing = $this->existingPatient($p['name'], $p['dob']);
+
+        if ($existing) {
+            $patientId = $existing->patient_id;
+            $refresh = array_filter([
+                'age'               => $p['age'] ?? null,
+                'civil_status'      => $p['civil_status'] ?? null,
+                'contact_num'       => $p['contact_num'] ?? null,
+                'id_number'         => $p['id_number'] ?? null,
+                'philhealth_member' => $p['philhealth'] ?? null,
+                'philhealth_name'   => $p['philhealth_name'] ?? null,
+                'philhealth_dob'    => $p['philhealth_dob'] ?? null,
+                'illness_history'   => $p['illness'] ?? null,
+                'allergy_history'   => $p['allergy'] ?? null,
+            ], fn ($v) => $v !== null);
+            if ($refresh) {
+                DB::table('patients')->where('patient_id', $patientId)->update($refresh);
+            }
+        } else {
+            $regDate = now()->format('Ymd');
+            $dob = \Carbon\Carbon::parse($p['dob'])->format('Ymd');
+            $count = DB::table('patients')->where('patient_id', 'LIKE', "CEB-{$regDate}-{$dob}-%")->count();
+            $patientId = "CEB-{$regDate}-{$dob}-" . str_pad((string) ($count + 1), 3, '0', STR_PAD_LEFT);
+
+            DB::table('patients')->insert([
+                'patient_id'        => $patientId,
+                'inflow_record_id'  => $inflowId,
+                'date_registered'   => now(),
+                'patient_name'      => $p['name'],
+                'age'               => $p['age'] ?? null,
+                'sex'               => $p['sex'] ?? null,
+                'date_of_birth'     => $p['dob'],
+                'civil_status'      => $p['civil_status'] ?? null,
+                'contact_num'       => $p['contact_num'] ?? null,
+                'id_number'         => $p['id_number'] ?? null,
+                'philhealth_member' => $p['philhealth'] ?? 0,
+                'philhealth_name'   => $p['philhealth_name'] ?? null,
+                'philhealth_dob'    => $p['philhealth_dob'] ?? null,
+                'illness_history'   => $p['illness'] ?? null,
+                'allergy_history'   => $p['allergy'] ?? null,
+            ]);
+        }
+
+        DB::table('inflow_general_particulars')->where('inflow_record_id', $inflowId)->update(['patient_id' => $patientId]);
+        $caseNumber = (int) DB::table('bite_cases')->where('patient_id', $patientId)->max('case_number') + 1;
+
+        return [$patientId, (bool) $existing, $caseNumber];
+    }
+
+    /** The message Staff sees after verifying: a returning patient is called out, and the visit is a NEW case. */
+    private function verifiedMessage(string $patientId, bool $existing, int $caseNumber, string $tail): string
+    {
+        return $existing
+            ? "Existing patient found: {$patientId} keeps the same Patient ID. This visit will be saved as a NEW case (#{$caseNumber}); the earlier cases are not changed. {$tail}"
+            : $tail;
     }
 
     // Patient Verification page — show Pending walk-ins split into Priority/Normal queues
@@ -138,22 +243,14 @@ class StaffController extends Controller
                 'status'            => 'Verified',
             ], 'inflow_record_id');
 
-            $regDate = now()->format('Ymd');
-            $dob = \Carbon\Carbon::parse($referral->date_of_birth)->format('Ymd');
-            $count = DB::table('patients')->where('patient_id', 'LIKE', "CEB-{$regDate}-{$dob}-%")->count();
-            $patientId = "CEB-{$regDate}-{$dob}-" . str_pad((string) ($count + 1), 3, '0', STR_PAD_LEFT);
-
-            DB::table('patients')->insert([
-                'patient_id'        => $patientId,
-                'inflow_record_id'  => $inflowId,
-                'date_registered'   => now(),
-                'patient_name'      => $referral->patient_name,
-                'age'               => $referral->age,
-                'sex'               => ucfirst(strtolower((string) $referral->gender)),
-                'date_of_birth'     => $referral->date_of_birth,
-                'civil_status'      => $referral->civil_status,
-                'contact_num'       => $referral->contact_num,
-                'philhealth_member' => 0,
+            // the referral does not say anything about PhilHealth, so an existing patient's PhilHealth is left as it is
+            [$patientId, $returning, $caseNumber] = $this->registerPatient((string) $inflowId, [
+                'name'         => $referral->patient_name,
+                'dob'          => $referral->date_of_birth,
+                'age'          => $referral->age,
+                'sex'          => ucfirst(strtolower((string) $referral->gender)),
+                'civil_status' => $referral->civil_status,
+                'contact_num'  => $referral->contact_num,
             ]);
 
             DB::table('bhw_referral_info')
@@ -161,7 +258,7 @@ class StaffController extends Controller
                 ->update(['status' => 'Received', 'updated_at' => now()]);
 
             return redirect()->route('staff.patient-verification')
-                ->with('success', 'Referral verified. The patient is now in Case Encoding.');
+                ->with('success', $this->verifiedMessage($patientId, $returning, $caseNumber, 'Referral verified. The patient is now in Case Encoding.'));
         });
     }
 
@@ -175,40 +272,28 @@ class StaffController extends Controller
             return back()->withErrors(['error' => 'Record not found.']);
         }
 
-        // Generate patient_id: CEB-[registration date]-[date of birth]-[sequence]
-        $regDate = \Carbon\Carbon::parse($inflow->reg_date)->format('Ymd');
-        $dob = \Carbon\Carbon::parse($inflow->date_of_birth)->format('Ymd');
-
-        $countSameDay = DB::table('patients')
-            ->where('patient_id', 'LIKE', "CEB-{$regDate}-{$dob}-%")
-            ->count();
-        $sequence = str_pad($countSameDay + 1, 3, '0', STR_PAD_LEFT);
-        $patientId = "CEB-{$regDate}-{$dob}-{$sequence}";
-
-        // Only insert if this inflow record hasn't already been transferred
-        $existing = DB::table('patients')->where('inflow_record_id', $inflow_record_id)->first();
-
-        if (!$existing) {
+        // Only link this registration to a patient once (a second click must not register it again)
+        $returning = false;
+        $caseNumber = 1;
+        $patientId = $inflow->patient_id;
+        if (!$patientId) {
             $otherData = DB::table('inflow_other_personal_data')
                 ->where('inflow_record_id', $inflow_record_id)
                 ->first();
 
-            DB::table('patients')->insert([
-                'patient_id'         => $patientId,
-                'inflow_record_id'   => $inflow_record_id,
-                'date_registered'    => now(),
-                'patient_name'       => $inflow->patient_name,
-                'age'                => $inflow->age,
-                'sex'                => $inflow->sex,
-                'date_of_birth'      => $inflow->date_of_birth,
-                'civil_status'       => $inflow->civil_status,
-                'contact_num'        => $inflow->contact_num,
-                'id_number'          => $inflow->id_number,
-                'philhealth_member'  => $this->philhealthFlag($inflow),
-                'philhealth_name'    => $inflow->philhealth_name,
-                'philhealth_dob'     => $inflow->philhealth_dob,
-                'illness_history'    => $otherData->illness_history ?? null,
-                'allergy_history'    => $otherData->allergy_history ?? null,
+            [$patientId, $returning, $caseNumber] = $this->registerPatient((string) $inflow_record_id, [
+                'name'            => $inflow->patient_name,
+                'dob'             => $inflow->date_of_birth,
+                'age'             => $inflow->age,
+                'sex'             => $inflow->sex,
+                'civil_status'    => $inflow->civil_status,
+                'contact_num'     => $inflow->contact_num,
+                'id_number'       => $inflow->id_number,
+                'philhealth'      => $this->philhealthFlag($inflow),
+                'philhealth_name' => $inflow->philhealth_name,
+                'philhealth_dob'  => $inflow->philhealth_dob,
+                'illness'         => $otherData->illness_history ?? null,
+                'allergy'         => $otherData->allergy_history ?? null,
             ]);
         }
 
@@ -217,7 +302,7 @@ class StaffController extends Controller
             ->update(['status' => 'Verified']);
 
         return redirect()->route('staff.patient-verification')
-            ->with('success', 'Patient verified and moved to Case Encoding.');
+            ->with('success', $this->verifiedMessage($patientId, $returning, $caseNumber, 'Patient verified and moved to Case Encoding.'));
     }
 
     // Case Encoding page — show Verified records awaiting encoding
@@ -226,7 +311,7 @@ class StaffController extends Controller
         $search = $request->input('search');
 
         $query = DB::table('inflow_general_particulars')
-            ->join('patients', 'inflow_general_particulars.inflow_record_id', '=', 'patients.inflow_record_id')
+            ->join('patients', 'inflow_general_particulars.patient_id', '=', 'patients.patient_id')
             ->where('inflow_general_particulars.status', 'Verified')
             ->select('inflow_general_particulars.*', 'patients.patient_id');
 
@@ -253,7 +338,7 @@ class StaffController extends Controller
         $openedRecord = null;
         if ($inflow_record_id && !$selectedPatient) {
             $openedRecord = DB::table('inflow_general_particulars')
-                ->join('patients', 'inflow_general_particulars.inflow_record_id', '=', 'patients.inflow_record_id')
+                ->join('patients', 'inflow_general_particulars.patient_id', '=', 'patients.patient_id')
                 ->where('inflow_general_particulars.inflow_record_id', $inflow_record_id)
                 ->select('inflow_general_particulars.*', 'patients.patient_id')
                 ->first();
@@ -279,6 +364,29 @@ class StaffController extends Controller
             ->get();
 
 
+        // A patient who registered before keeps their Patient ID: say so, and list the earlier cases (this visit is a NEW case)
+        $earlierCases = collect();
+        $thisCaseNumber = null;
+        if ($selectedPatient && !empty($selectedPatient->patient_id)) {
+            $thisCaseNumber = DB::table('bite_cases')->where('inflow_record_id', $selectedPatient->inflow_record_id)->value('case_number')
+                ?? ((int) DB::table('bite_cases')->where('patient_id', $selectedPatient->patient_id)->max('case_number') + 1);
+            $earlierCases = DB::table('bite_cases as bc')
+                ->leftJoin('bite_section7_immunization as s7', 's7.bite_case_id', '=', 'bc.bite_case_id')
+                ->where('bc.patient_id', $selectedPatient->patient_id)
+                ->where(fn ($q) => $q->whereNull('bc.inflow_record_id')->orWhere('bc.inflow_record_id', '<>', $selectedPatient->inflow_record_id))
+                ->orderByDesc('bc.case_number')
+                ->get(['bc.case_number', 'bc.date_verified', 'bc.outcome', 's7.dose_type', 's7.route', 's7.day0_date', 's7.day3_date', 's7.day7_date', 's7.day14_date', 's7.day28_date'])
+                ->map(function ($c) {
+                    $next = $c->day0_date ? PepSchedule::nextDay($c->dose_type, $c->route, $c) : null;
+                    $c->status = ($c->outcome && str_starts_with($c->outcome, 'Discharged')) ? 'Discharged'
+                        : ($c->outcome === 'Incomplete' ? 'Past record'
+                        : (!$c->day0_date ? 'Not vaccinated yet' : ($next === null ? 'Course complete' : 'Day ' . $next . ' dose still due')));
+                    $c->open = in_array($c->status, ['Not vaccinated yet'], true) || str_ends_with($c->status, 'still due');
+
+                    return $c;
+                });
+        }
+
         // Progress saved earlier with "Save Progress", so the form shows it again instead of starting blank
         $saved = null;
         if ($selectedPatient) {
@@ -293,12 +401,13 @@ class StaffController extends Controller
             }
         }
 
-        return view('staff.Case_Encoding', compact('verifiedQueue', 'selectedPatient', 'openedRecord', 'readOnly', 'search', 'bhwExposure', 'healthworkers', 'saved'));
+        return view('staff.Case_Encoding', compact('earlierCases', 'thisCaseNumber', 'verifiedQueue', 'selectedPatient', 'openedRecord', 'readOnly', 'search', 'bhwExposure', 'healthworkers', 'saved'));
     }
 
     public function storeCaseEncoding(Request $request, string $inflow_record_id)
     {
-        $patient = DB::table('patients')->where('inflow_record_id', $inflow_record_id)->first();
+        $registrationPatientId = DB::table('inflow_general_particulars')->where('inflow_record_id', $inflow_record_id)->value('patient_id');
+        $patient = $registrationPatientId ? DB::table('patients')->where('patient_id', $registrationPatientId)->first() : null;
 
         if (!$patient) {
             return back()->withErrors(['error' => 'Patient record not found. Please verify attendance first.']);
@@ -534,7 +643,7 @@ class StaffController extends Controller
         }
 
         $result = $data['result'];
-        DB::transaction(function () use ($inflow_record_id, $result) {
+        DB::transaction(function () use ($inflow_record_id, $result, $inflow) {
             DB::table('inflow_general_particulars')->where('inflow_record_id', $inflow_record_id)->update([
                 'philhealth_verification' => $result,
                 'philhealth_verified_at'  => now(),
@@ -542,8 +651,10 @@ class StaffController extends Controller
             ]);
 
             // the patient and the case, if they already exist
-            DB::table('patients')->where('inflow_record_id', $inflow_record_id)
-                ->update(['philhealth_member' => $result === 'Verified' ? 1 : 0]);
+            if ($inflow->patient_id) {
+                DB::table('patients')->where('patient_id', $inflow->patient_id)
+                    ->update(['philhealth_member' => $result === 'Verified' ? 1 : 0]);
+            }
             DB::table('bite_cases')->where('inflow_record_id', $inflow_record_id)
                 ->update(['philhealth_status' => ['Verified' => 'Member', 'Not a Member' => 'Non-member', 'Expired' => 'Expired'][$result]]);
         });
@@ -564,40 +675,28 @@ class StaffController extends Controller
             return back()->withErrors(['error' => 'Record not found.']);
         }
 
-        // Generate patient_id: CEB-[registration date]-[date of birth]-[sequence]
-        $regDate = \Carbon\Carbon::parse($inflow->reg_date)->format('Ymd');
-        $dob = \Carbon\Carbon::parse($inflow->date_of_birth)->format('Ymd');
-
-        $countSameDay = DB::table('patients')
-            ->where('patient_id', 'LIKE', "CEB-{$regDate}-{$dob}-%")
-            ->count();
-        $sequence = str_pad($countSameDay + 1, 3, '0', STR_PAD_LEFT);
-        $patientId = "CEB-{$regDate}-{$dob}-{$sequence}";
-
-        // I-insert sa patients master table kung wala pa
-        $existing = DB::table('patients')->where('inflow_record_id', $inflow_record_id)->first();
-
-        if (!$existing) {
+        // Link this registration to its patient once (the existing patient is reused when the person registered before)
+        $returning = false;
+        $caseNumber = 1;
+        $patientId = $inflow->patient_id;
+        if (!$patientId) {
             $otherData = DB::table('inflow_other_personal_data')
                 ->where('inflow_record_id', $inflow_record_id)
                 ->first();
 
-            DB::table('patients')->insert([
-                'patient_id'         => $patientId,
-                'inflow_record_id'   => $inflow_record_id,
-                'date_registered'    => now(),
-                'patient_name'       => $inflow->patient_name,
-                'age'                => $inflow->age,
-                'sex'                => $inflow->sex,
-                'date_of_birth'      => $inflow->date_of_birth,
-                'civil_status'       => $inflow->civil_status,
-                'contact_num'        => $inflow->contact_num,
-                'id_number'          => $inflow->id_number,
-                'philhealth_member'  => $this->philhealthFlag($inflow),
-                'philhealth_name'    => $inflow->philhealth_name,
-                'philhealth_dob'     => $inflow->philhealth_dob,
-                'illness_history'    => $otherData->illness_history ?? null,
-                'allergy_history'    => $otherData->allergy_history ?? null,
+            [$patientId, $returning, $caseNumber] = $this->registerPatient((string) $inflow_record_id, [
+                'name'            => $inflow->patient_name,
+                'dob'             => $inflow->date_of_birth,
+                'age'             => $inflow->age,
+                'sex'             => $inflow->sex,
+                'civil_status'    => $inflow->civil_status,
+                'contact_num'     => $inflow->contact_num,
+                'id_number'       => $inflow->id_number,
+                'philhealth'      => $this->philhealthFlag($inflow),
+                'philhealth_name' => $inflow->philhealth_name,
+                'philhealth_dob'  => $inflow->philhealth_dob,
+                'illness'         => $otherData->illness_history ?? null,
+                'allergy'         => $otherData->allergy_history ?? null,
             ]);
         }
 
@@ -605,9 +704,8 @@ class StaffController extends Controller
             ->where('inflow_record_id', $inflow_record_id)
             ->update(['status' => 'Verified']);
 
-
         return redirect()->route('staff.dashboard')
-            ->with('success', "Patient {$inflow->patient_name} verified! Ticket removed from queue and ready for Case Encoding.");
+            ->with('success', $this->verifiedMessage($patientId, $returning, $caseNumber, "Patient {$inflow->patient_name} verified! Ticket removed from queue and ready for Case Encoding."));
     }
 
     // Patient Lookup & Records (Master Database View linked to Section 9 PEP Progress)
@@ -618,9 +716,14 @@ class StaffController extends Controller
         // PhilHealth: what the patient said (registration step 3) and what Staff found (PhilHealth Verification on the dashboard)
         $philhealthChecked = Schema::hasColumn('inflow_general_particulars', 'philhealth_verification');
 
+        // A patient can have several bite cases: Patient Lookup shows the LATEST one (its dates, notes and status), so an
+        // earlier case of the same Patient ID is never mixed in. "View Case" / "Open Full Case Editor" open that case.
         $query = DB::table('patients')
-            ->leftJoin('inflow_general_particulars', 'patients.inflow_record_id', '=', 'inflow_general_particulars.inflow_record_id')
-            ->leftJoin('bite_cases', 'patients.patient_id', '=', 'bite_cases.patient_id')
+            ->leftJoin('bite_cases', function ($j) {
+                $j->on('patients.patient_id', '=', 'bite_cases.patient_id')
+                    ->whereRaw('bite_cases.case_number = (SELECT MAX(lc.case_number) FROM bite_cases lc WHERE lc.patient_id = patients.patient_id)');
+            })
+            ->leftJoin('inflow_general_particulars', 'inflow_general_particulars.inflow_record_id', '=', DB::raw('COALESCE(bite_cases.inflow_record_id, patients.inflow_record_id)'))
             ->leftJoin('bite_section3_exposure', 'bite_cases.bite_case_id', '=', 'bite_section3_exposure.bite_case_id')
             ->leftJoin('bite_section9_progress_notes', 'bite_cases.bite_case_id', '=', 'bite_section9_progress_notes.bite_case_id')
             ->select(
@@ -629,11 +732,12 @@ class StaffController extends Controller
                 'patients.age',
                 'patients.sex',
                 'patients.date_registered',
-                'patients.inflow_record_id',
                 'patients.contact_num',
                 'patients.id_number',
                 'patients.civil_status',
                 'patients.philhealth_member',
+                DB::raw('MAX(COALESCE(bite_cases.inflow_record_id, patients.inflow_record_id)) as inflow_record_id'),
+                DB::raw('(SELECT COUNT(*) FROM bite_cases cc WHERE cc.patient_id = patients.patient_id) as case_count'),
                 DB::raw('COALESCE(MAX(bite_cases.barangay), MAX(inflow_general_particulars.barangay), "N/A") as barangay'),
                 DB::raw('MAX(bite_cases.bite_case_id) as bite_case_id'),
                 DB::raw('MAX(bite_cases.case_number) as case_number'),
@@ -656,7 +760,6 @@ class StaffController extends Controller
                 'patients.age',
                 'patients.sex',
                 'patients.date_registered',
-                'patients.inflow_record_id',
                 'patients.contact_num',
                 'patients.id_number',
                 'patients.civil_status',
@@ -772,7 +875,7 @@ class StaffController extends Controller
                 ->whereNull('ig.philhealth_verification');
             $philhealthTotal = $pendingPhilhealth()->count();
             $philhealthPending = $pendingPhilhealth()
-                ->leftJoin('patients as p', 'p.inflow_record_id', '=', 'ig.inflow_record_id')
+                ->leftJoin('patients as p', 'p.patient_id', '=', 'ig.patient_id')
                 ->orderByDesc('ig.queue_date')->orderByDesc('ig.inflow_record_id')
                 ->limit(5)
                 ->get(['ig.inflow_record_id', 'ig.patient_name', 'ig.queue_id', 'ig.queue_date', 'ig.philhealth_name', 'ig.philhealth_dob', 'p.patient_id']);

@@ -166,11 +166,17 @@
             <div class="relative">
               <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-[20px] pointer-events-none">badge</span>
               <input
-                class="block w-full bg-surface-container-highest border-0 focus:ring-2 focus:ring-primary/25 rounded-xl pl-12 pr-4 py-4 font-semibold uppercase tracking-wide text-[15px] text-on-surface placeholder:text-outline placeholder:font-medium"
-                id="tracking-id" name="tracking_id" placeholder="CEB-20261120-19840910-001" type="text"
+                class="block w-full bg-surface-container-highest border-0 focus:ring-2 focus:ring-primary/25 rounded-xl pl-12 pr-4 py-4 font-semibold uppercase tracking-wide text-[15px] text-on-surface placeholder:text-outline placeholder:font-medium placeholder:text-[13px] sm:placeholder:text-[15px] placeholder:tracking-normal"
+                id="tracking-id" name="tracking_id" placeholder="CEB-XXXXXXXX-XXXXXXXX-XXX" type="text"
                 autocomplete="off" spellcheck="false" autocapitalize="characters" />
             </div>
-            <p class="mt-2 text-xs text-on-surface-variant leading-relaxed">Your Patient ID. It starts with <span class="font-bold">CEB</span> and is the code under your QR.</p>
+            <p class="mt-2 text-xs text-on-surface-variant leading-relaxed">Type your Patient ID, the code printed under your QR. The box above only shows the format.</p>
+            <div class="mt-2.5 flex flex-wrap items-center gap-x-1.5 gap-y-1.5 text-[11px] font-semibold text-on-surface-variant" aria-label="Patient ID format">
+              <span class="px-2 py-1 rounded-md bg-primary/10 text-primary font-bold">CEB</span><span aria-hidden="true">-</span>
+              <span class="px-2 py-1 rounded-md bg-surface-container-low">Date registered <span class="font-normal opacity-70">YYYYMMDD</span></span><span aria-hidden="true">-</span>
+              <span class="px-2 py-1 rounded-md bg-surface-container-low">Birth date <span class="font-normal opacity-70">YYYYMMDD</span></span><span aria-hidden="true">-</span>
+              <span class="px-2 py-1 rounded-md bg-surface-container-low">No.</span>
+            </div>
 
             <!-- Date of birth -->
             <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wide mt-6 mb-2" for="dob">Date of birth</label>
@@ -265,7 +271,7 @@
       const id = $('tracking-id').value.trim().toUpperCase();
       const dob = $('dob').value;
       if (!id) return showError('Please enter your Tracking ID, or scan your QR code.');
-      if (!PatientQr.PATIENT_ID_RE.test(id)) return showError('That Tracking ID is not valid. It looks like CEB-20261120-19840910-001.');
+      if (!PatientQr.PATIENT_ID_RE.test(id)) return showError('That Tracking ID is not valid. It looks like CEB-YYYYMMDD-YYYYMMDD-001.');
       if (!dob) return showError('Please enter your date of birth.');
 
       const btn = $('trackBtn');

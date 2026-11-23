@@ -286,6 +286,7 @@
             'BUOT TAOP': 'BUOT TAUP PARDO',        // typo found in the imported data
             'STA CRUZ': 'SANTA CRUZ',
             'STO NI O': 'CENTRAL',                 // Sto. Niño (Poblacion) is the "Central (Pob.)" polygon of the boundary file
+            'BANAWA': 'GUADALUPE',                 // Banawa is a sitio of Guadalupe (no polygon of its own), in case a new record still says Banawa
         };
         const key = s => { const k = norm(s); return ALIASES[k] || k; };
         // cases from outside Cebu City are recorded as "Others: Mandaue", "Other City (Bohol)", ... - they have no barangay on this map

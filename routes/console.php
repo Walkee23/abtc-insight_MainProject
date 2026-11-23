@@ -28,3 +28,8 @@ Schedule::call(function () {
 Schedule::command('inflow:summarize')
     ->dailyAt('00:05')
     ->timezone('Asia/Manila');
+
+// Process queued SMS messages every minute so we don't need a separate paid queue worker
+Schedule::command('queue:work --stop-when-empty')
+    ->everyMinute()
+    ->withoutOverlapping();

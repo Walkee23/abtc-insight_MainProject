@@ -57,6 +57,7 @@ Route::prefix('admin')->middleware('admin')->group(function () {
     Route::get('/report/export-csv', [visualAnalyticsController::class, 'exportCsv'])->name('report.export.csv');
 
     Route::get('/compliance', [App\Http\Controllers\AdminController::class, 'compliance'])->name('admin.compliance');
+    Route::get('/compliance/export', [App\Http\Controllers\AdminController::class, 'complianceExport'])->name('admin.compliance.export');
 
     Route::get('/forecasting', [ForecastingController::class, 'index'])->name('admin.forecasting');
     Route::post('/forecasting/save', [ForecastingController::class, 'save'])->name('admin.forecasting.save');

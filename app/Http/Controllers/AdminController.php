@@ -178,13 +178,9 @@ class AdminController extends Controller
     ));
 }
 
-   public function compliance()
+   public function compliance(Request $request)
     {
-        // 1. PEP Completion Rate: every PEP course on record (Day 0 given) is scanned in the database.
-        // A course is completed when ALL of its scheduled doses have a recorded date (App\Support\PepSchedule):
-        //   Primary, IM route:  Day 0, Day 3, Day 7 and Day 14  (4 dates)
-        //   Primary, ID route:  Day 0, Day 3, Day 7 and Day 28  (4 dates; also records with no route, e.g. imports)
-        //   Booster:            Day 0 and Day 3                 (2 dates)
+        // ---------- 1. Stat cards (unchanged logic) ----------
         $complete = \App\Support\PepSchedule::completeSql('s7');
         $pep = DB::table('bite_cases as bc')
             ->join('bite_section7_immunization as s7', 's7.bite_case_id', '=', 'bc.bite_case_id')
@@ -201,18 +197,54 @@ class AdminController extends Controller
         $completedPatients = (int) $pep->completed_patients;
         $pepCompletionRate = $totalCourses > 0 ? round(($completedCourses / $totalCourses) * 100, 1) : 0.0;
 
-        // 2. SMS Success Rate gikan sa 'sms' table (Base sa status = 'Sent' o 'Delivered' batok sa total)
         $totalSms = DB::table('sms')->count();
         $sentSms = DB::table('sms')->whereIn('status', ['Sent', 'Delivered'])->count();
         $smsSuccessRate = $totalSms > 0 ? round(($sentSms / $totalSms) * 100, 1) : 100.0;
 
-        // 3. Pending Reminders gikan sa 'sms' table kung asa ang status kay 'Pending'
         $pendingReminders = DB::table('sms')->where('status', 'Pending')->count();
 
-        // 4. Late Follow-ups gikan sa 'sms' table kung asa ang sms_type kay naghisgot og late follow-up
         $lateFollowUps = DB::table('sms')
             ->where('sms_type', 'like', '%Late Follow-up%')
             ->count();
+
+        // ---------- 2. Filters ----------
+        [$from, $to] = $this->complianceDates($request);
+        $pepStatus = $this->complianceOption($request->query('pep_status'), ['Pending', 'Completed On Time', 'Completed Late', 'Missed']);
+        $smsStatus = $this->complianceOption($request->query('sms_status'), ['Sent', 'Failed', 'Pending']);
+        $pepLimit = max(10, min(200, (int) $request->query('pep_limit', 10)));
+        $smsLimit = max(10, min(200, (int) $request->query('sms_limit', 10)));
+
+        // ---------- 3. PEP Compliance Tracking table (dose_schedule) ----------
+        // fetch one extra row to know if a "Load More" button is needed
+        $pepRows = $this->compliancePepQuery($from, $to, $pepStatus)->limit($pepLimit + 1)->get();
+        $pepHasMore = $pepRows->count() > $pepLimit;
+        $pepRows = $pepRows->take($pepLimit);
+
+        // ---------- 4. SMS Outreach Logs (sms) ----------
+        $smsRows = $this->complianceSmsQuery($from, $to, $smsStatus)->limit($smsLimit + 1)->get();
+        $smsHasMore = $smsRows->count() > $smsLimit;
+        $smsRows = $smsRows->take($smsLimit);
+
+        // ---------- 5. Compliance Performance by Barangay ----------
+        // Same "completed" rule as the stat card, grouped by the barangay on the bite case.
+        $barangayStats = DB::table('bite_cases as bc')
+            ->join('bite_section7_immunization as s7', 's7.bite_case_id', '=', 'bc.bite_case_id')
+            ->whereNotNull('s7.day0_date')
+            ->whereNotNull('bc.barangay')
+            ->where('bc.barangay', '!=', '')
+            ->selectRaw("bc.barangay as name, COUNT(*) as courses, COALESCE(SUM(({$complete})), 0) as completed")
+            ->groupBy('bc.barangay')
+            ->get()
+            ->map(function ($b) {
+                $b->rate = $b->courses > 0 ? round(($b->completed / $b->courses) * 100, 1) : 0.0;
+                return $b;
+            })
+            ->sortByDesc('rate')
+            ->values();
+        // show the 3 best and the 3 that need action when there are more than 6
+        if ($barangayStats->count() > 6) {
+            $barangayStats = $barangayStats->take(3)->concat($barangayStats->slice(-3))->values();
+        }
 
         return view('admin.pep_comp', compact(
             'pepCompletionRate',
@@ -223,8 +255,92 @@ class AdminController extends Controller
             'completedPatients',
             'smsSuccessRate',
             'pendingReminders',
-            'lateFollowUps'
+            'lateFollowUps',
+            'from', 'to', 'pepStatus', 'smsStatus', 'pepLimit', 'smsLimit',
+            'pepRows', 'pepHasMore', 'smsRows', 'smsHasMore',
+            'barangayStats'
         ));
+    }
+
+    /** CSV download for the Export Logs button: ?type=sms (default) or ?type=pep, honouring the date filter. */
+    public function complianceExport(Request $request)
+    {
+        [$from, $to] = $this->complianceDates($request);
+        $type = $request->query('type') === 'pep' ? 'pep' : 'sms';
+        $filename = ($type === 'pep' ? 'pep_compliance_' : 'sms_logs_') . now()->format('Ymd_His') . '.csv';
+
+        // stop spreadsheet apps from running a cell that starts with = + - @ as a formula
+        $safe = fn ($v) => is_string($v) && $v !== '' && in_array($v[0], ['=', '+', '-', '@'], true) ? "'" . $v : $v;
+
+        return new StreamedResponse(function () use ($type, $from, $to, $safe) {
+            $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF"); // UTF-8 BOM so Excel reads it correctly
+
+            if ($type === 'pep') {
+                fputcsv($out, ['Patient', 'Barangay', 'Dose', 'Scheduled Date', 'Actual Date', 'Status']);
+                foreach ($this->compliancePepQuery($from, $to, null)->cursor() as $r) {
+                    fputcsv($out, [$safe($r->patient_name), $safe($r->barangay), $r->dose_label, $r->sched_date, $r->actual_date, $r->status]);
+                }
+            } else {
+                fputcsv($out, ['Sent At', 'Patient', 'Phone', 'Type', 'Dose', 'Status', 'Message', 'Error']);
+                foreach ($this->complianceSmsQuery($from, $to, null)->cursor() as $r) {
+                    fputcsv($out, [$r->send_date, $safe($r->patient_name), $safe($r->contact_num), $r->sms_type, $r->dose_label, $r->status, $safe($r->message), $safe($r->error_detail)]);
+                }
+            }
+            fclose($out);
+        }, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    private function compliancePepQuery(?string $from, ?string $to, ?string $status)
+    {
+        return DB::table('dose_schedule as ds')
+            ->join('patients as p', 'p.patient_id', '=', 'ds.patient_id')
+            ->join('bite_cases as bc', 'bc.bite_case_id', '=', 'ds.bite_case_id')
+            ->select('ds.sched_id', 'p.patient_name', 'bc.barangay', 'ds.dose_label', 'ds.sched_date', 'ds.actual_date', 'ds.status')
+            ->when($from, fn ($q) => $q->whereDate('ds.sched_date', '>=', $from))
+            ->when($to, fn ($q) => $q->whereDate('ds.sched_date', '<=', $to))
+            ->when($status, fn ($q) => $q->where('ds.status', $status))
+            ->orderByDesc('ds.sched_date')
+            ->orderByDesc('ds.sched_id');
+    }
+
+    private function complianceSmsQuery(?string $from, ?string $to, ?string $status)
+    {
+        return DB::table('sms as s')
+            ->leftJoin('patients as p', 'p.patient_id', '=', 's.patient_id')
+            ->select('s.sms_id', 's.contact_num', 's.sms_type', 's.dose_label', 's.message', 's.send_date', 's.status', 's.error_detail', 'p.patient_name')
+            ->when($from, fn ($q) => $q->whereDate('s.send_date', '>=', $from))
+            ->when($to, fn ($q) => $q->whereDate('s.send_date', '<=', $to))
+            ->when($status, fn ($q) => $status === 'Sent'
+                ? $q->whereIn('s.status', ['Sent', 'Delivered'])
+                : $q->where('s.status', $status))
+            ->orderByDesc('s.send_date')
+            ->orderByDesc('s.sms_id');
+    }
+
+    private function complianceDates(Request $request): array
+    {
+        $parse = function ($v) {
+            try {
+                return $v ? Carbon::createFromFormat('Y-m-d', $v)->toDateString() : null;
+            } catch (\Throwable $e) {
+                return null;
+            }
+        };
+        $from = $parse($request->query('from'));
+        $to = $parse($request->query('to'));
+        if ($from && $to && $from > $to) {
+            [$from, $to] = [$to, $from];
+        }
+        return [$from, $to];
+    }
+
+    private function complianceOption($value, array $allowed): ?string
+    {
+        return in_array($value, $allowed, true) ? $value : null;
     }
 
 }

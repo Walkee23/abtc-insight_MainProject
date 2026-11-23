@@ -208,10 +208,46 @@
                     <p class="text-on-surface-variant">Real-time monitoring of Post-Exposure Prophylaxis schedules and patient communication outreach.</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-3 lg:flex-nowrap lg:shrink-0">
-                    <button class="bg-surface-container-low p-2.5 rounded-xl hover:bg-surface-container-high transition-colors">
-                        <span class="material-symbols-outlined text-on-surface-variant" data-icon="calendar_month">calendar_month</span>
-                    </button>
-                    <button class="bg-primary px-6 py-2.5 text-on-primary rounded-xl font-bold text-sm shadow-md hover:opacity-90 transition-opacity">Export Logs</button>
+                    <!-- Date filter -->
+                    <details class="relative">
+                        <summary class="list-none cursor-pointer bg-surface-container-low p-2.5 rounded-xl hover:bg-surface-container-high transition-colors flex items-center {{ ($from || $to) ? 'ring-2 ring-primary' : '' }}" title="Filter by date" style="list-style:none;">
+                            <span class="material-symbols-outlined text-on-surface-variant" data-icon="calendar_month">calendar_month</span>
+                        </summary>
+                        <form method="GET" action="{{ route('admin.compliance') }}" class="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-lg border border-slate-100 p-4 space-y-3 z-50">
+                            <input type="hidden" name="pep_status" value="{{ $pepStatus }}">
+                            <input type="hidden" name="sms_status" value="{{ $smsStatus }}">
+                            <div>
+                                <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">From</label>
+                                <input type="date" name="from" value="{{ $from }}" class="w-full rounded-lg border-slate-200 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">To</label>
+                                <input type="date" name="to" value="{{ $to }}" class="w-full rounded-lg border-slate-200 text-sm">
+                            </div>
+                            <div class="flex gap-2 pt-1">
+                                <button type="submit" class="flex-1 bg-primary text-white text-sm font-bold py-2 rounded-lg hover:opacity-90">Apply</button>
+                                <a href="{{ route('admin.compliance') }}" class="flex-1 text-center bg-surface-container-low text-on-surface-variant text-sm font-bold py-2 rounded-lg hover:bg-surface-container-high">Clear</a>
+                            </div>
+                        </form>
+                    </details>
+
+                    <!-- Export -->
+                    <div class="relative group">
+                        <button type="button" class="bg-primary px-6 py-2.5 text-on-primary rounded-xl font-bold text-sm shadow-md hover:opacity-90 transition-opacity inline-flex items-center gap-1">
+                            Export Logs
+                            <span class="material-symbols-outlined text-[18px]">expand_more</span>
+                        </button>
+                        <div class="absolute right-0 top-full pt-2 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-all duration-200 z-50">
+                            <div class="bg-white rounded-xl shadow-lg border border-slate-100 p-2">
+                                <a href="{{ route('admin.compliance.export', array_filter(['type' => 'sms', 'from' => $from, 'to' => $to])) }}" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary rounded-lg">
+                                    <span class="material-symbols-outlined text-[18px]">sms</span> SMS Logs (CSV)
+                                </a>
+                                <a href="{{ route('admin.compliance.export', array_filter(['type' => 'pep', 'from' => $from, 'to' => $to])) }}" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary rounded-lg">
+                                    <span class="material-symbols-outlined text-[18px]">clinical_notes</span> PEP Compliance (CSV)
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <!-- Compliance Overview Stat Cards (Bento Style) -->
@@ -276,13 +312,24 @@
             <!-- Asymmetric Layout: Tracking Table & SMS Logs -->
             <div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
                 <!-- PEP Compliance Tracking Table (Col-Span 7) -->
-                <section class="xl:col-span-7 space-y-4">
-                    <div class="flex items-center justify-between">
+                <section id="pep-table" class="xl:col-span-7 space-y-4">
+                    <div class="flex items-center justify-between gap-3">
                         <h2 class="text-xl font-bold flex items-center gap-2">
                             <span class="material-symbols-outlined text-primary" data-icon="task_alt">task_alt</span>
                             PEP Compliance Tracking
                         </h2>
-                        <a class="text-xs font-bold text-primary hover:underline" href="#">View All Patients</a>
+                        <form method="GET" action="{{ route('admin.compliance') }}" class="flex items-center gap-2">
+                            <input type="hidden" name="from" value="{{ $from }}">
+                            <input type="hidden" name="to" value="{{ $to }}">
+                            <input type="hidden" name="sms_status" value="{{ $smsStatus }}">
+                            <input type="hidden" name="sms_limit" value="{{ $smsLimit }}">
+                            <select name="pep_status" onchange="this.form.submit()" class="text-xs font-bold text-primary border-outline-variant/40 rounded-lg py-1.5 pl-3 pr-8 bg-white">
+                                <option value="">All statuses</option>
+                                @foreach (['Pending', 'Completed On Time', 'Completed Late', 'Missed'] as $opt)
+                                    <option value="{{ $opt }}" @selected($pepStatus === $opt)>{{ $opt }}</option>
+                                @endforeach
+                            </select>
+                        </form>
                     </div>
                     <div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm border border-outline-variant/10">
                         <table class="w-full text-left border-collapse">
@@ -295,83 +342,48 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-outline-variant/10">
-                                <tr class="hover:bg-surface-bright transition-colors">
-                                    <td class="px-4 py-4">
-                                        <div class="flex flex-col">
-                                            <span class="font-bold text-sm">Mariano, Roberto P.</span>
-                                            <span class="text-xs text-on-surface-variant">Guadalupe, Cebu City</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-4 py-4 text-sm font-medium text-on-surface">Oct 24, 2023</td>
-                                    <td class="px-4 py-4">
-                                        <span class="px-2.5 py-1 bg-surface-container-high rounded text-[10px] font-black">D7</span>
-                                    </td>
-                                    <td class="px-4 py-4">
-                                        <span class="bg-tertiary-fixed text-on-tertiary-fixed-variant px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span> Pending
-                                        </span>
-                                    </td>
-                                </tr>
-                                <tr class="hover:bg-surface-bright transition-colors">
-                                    <td class="px-4 py-4">
-                                        <div class="flex flex-col">
-                                            <span class="font-bold text-sm">Gomez, Elena S.</span>
-                                            <span class="text-xs text-on-surface-variant">Lahug, Cebu City</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-4 py-4 text-sm font-medium text-on-surface">Oct 22, 2023</td>
-                                    <td class="px-4 py-4">
-                                        <span class="px-2.5 py-1 bg-surface-container-high rounded text-[10px] font-black">D3</span>
-                                    </td>
-                                    <td class="px-4 py-4">
-                                        <span class="bg-primary-fixed text-on-primary-fixed-variant px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-primary"></span> Completed On Time
-                                        </span>
-                                    </td>
-                                </tr>
-                                <tr class="hover:bg-surface-bright transition-colors">
-                                    <td class="px-4 py-4">
-                                        <div class="flex flex-col">
-                                            <span class="font-bold text-sm">Santos, Danilo K.</span>
-                                            <span class="text-xs text-on-surface-variant">Mabolo, Cebu City</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-4 py-4 text-sm font-medium text-on-surface">Oct 20, 2023</td>
-                                    <td class="px-4 py-4">
-                                        <span class="px-2.5 py-1 bg-surface-container-high rounded text-[10px] font-black">D28</span>
-                                    </td>
-                                    <td class="px-4 py-4">
-                                        <span class="bg-error-container text-on-error-container px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-error"></span> Missed
-                                        </span>
-                                    </td>
-                                </tr>
-                                <tr class="hover:bg-surface-bright transition-colors">
-                                    <td class="px-4 py-4">
-                                        <div class="flex flex-col">
-                                            <span class="font-bold text-sm">Bautista, Maria L.</span>
-                                            <span class="text-xs text-on-surface-variant">Tisa, Cebu City</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-4 py-4 text-sm font-medium text-on-surface">Oct 21, 2023</td>
-                                    <td class="px-4 py-4">
-                                        <span class="px-2.5 py-1 bg-surface-container-high rounded text-[10px] font-black">D0</span>
-                                    </td>
-                                    <td class="px-4 py-4">
-                                        <span class="bg-secondary-fixed text-on-secondary-fixed-variant px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> Completed Late
-                                        </span>
-                                    </td>
-                                </tr>
+                                @forelse ($pepRows as $row)
+                                    @php
+                                        [$badgeBg, $badgeDot] = match ($row->status) {
+                                            'Completed On Time' => ['bg-primary-fixed text-on-primary-fixed-variant', 'bg-primary'],
+                                            'Completed Late'    => ['bg-secondary-fixed text-on-secondary-fixed-variant', 'bg-secondary'],
+                                            'Missed'            => ['bg-error-container text-on-error-container', 'bg-error'],
+                                            default             => ['bg-tertiary-fixed text-on-tertiary-fixed-variant', 'bg-tertiary'],
+                                        };
+                                    @endphp
+                                    <tr class="hover:bg-surface-bright transition-colors">
+                                        <td class="px-4 py-4">
+                                            <div class="flex flex-col">
+                                                <span class="font-bold text-sm">{{ $row->patient_name }}</span>
+                                                <span class="text-xs text-on-surface-variant">{{ $row->barangay ? $row->barangay . ', Cebu City' : '—' }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-4 text-sm font-medium text-on-surface">{{ \Carbon\Carbon::parse($row->sched_date)->format('M d, Y') }}</td>
+                                        <td class="px-4 py-4">
+                                            <span class="px-2.5 py-1 bg-surface-container-high rounded text-[10px] font-black">{{ $row->dose_label }}</span>
+                                        </td>
+                                        <td class="px-4 py-4">
+                                            <span class="{{ $badgeBg }} px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1">
+                                                <span class="w-1.5 h-1.5 rounded-full {{ $badgeDot }}"></span> {{ $row->status }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="px-4 py-10 text-center text-sm text-on-surface-variant">No dose schedule records found.</td>
+                                    </tr>
+                                @endforelse
                             </tbody>
                         </table>
-                        <div class="p-4 bg-surface-container-low/50 text-center">
-                            <button class="text-sm font-bold text-primary hover:opacity-80">Load More compliance data</button>
-                        </div>
+                        @if ($pepHasMore)
+                            <div class="p-4 bg-surface-container-low/50 text-center">
+                                <a href="{{ request()->fullUrlWithQuery(['pep_limit' => $pepLimit + 10]) }}#pep-table" class="text-sm font-bold text-primary hover:opacity-80">Load More compliance data</a>
+                            </div>
+                        @endif
                     </div>
                 </section>
                 <!-- SMS Logs Section (Col-Span 5) -->
-                <section class="xl:col-span-5 space-y-4">
+                <section id="sms-logs" class="xl:col-span-5 space-y-4">
                     <div class="flex items-center justify-between">
                         <h2 class="text-xl font-bold flex items-center gap-2">
                             <span class="material-symbols-outlined text-secondary" data-icon="history">history</span>
@@ -385,85 +397,73 @@
                     <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/10 flex flex-col h-[520px]">
                         <div class="p-4 bg-surface-container-low flex items-center justify-between border-b border-outline-variant/10">
                             <span class="text-[11px] font-black uppercase text-on-surface-variant tracking-widest">Recent Activity</span>
-                            <span class="material-symbols-outlined text-on-surface-variant text-sm cursor-pointer" data-icon="filter_list">filter_list</span>
+                            <form method="GET" action="{{ route('admin.compliance') }}" class="flex items-center gap-1">
+                                <input type="hidden" name="from" value="{{ $from }}">
+                                <input type="hidden" name="to" value="{{ $to }}">
+                                <input type="hidden" name="pep_status" value="{{ $pepStatus }}">
+                                <input type="hidden" name="pep_limit" value="{{ $pepLimit }}">
+                                <span class="material-symbols-outlined text-on-surface-variant text-sm" data-icon="filter_list">filter_list</span>
+                                <select name="sms_status" onchange="this.form.submit()" class="text-[11px] font-bold text-on-surface-variant border-0 bg-transparent py-0.5 pl-1 pr-6 focus:ring-0 cursor-pointer">
+                                    <option value="">All</option>
+                                    @foreach (['Sent', 'Failed', 'Pending'] as $opt)
+                                        <option value="{{ $opt }}" @selected($smsStatus === $opt)>{{ $opt }}</option>
+                                    @endforeach
+                                </select>
+                            </form>
                         </div>
                         <div class="flex-1 overflow-y-auto custom-scrollbar">
                             <div class="divide-y divide-outline-variant/10">
-                                <!-- Log Item 1 -->
-                                <div class="p-5 hover:bg-surface-bright transition-colors flex items-start gap-4">
-                                    <div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center shrink-0">
-                                        <span class="material-symbols-outlined text-primary text-xl" data-icon="chat">chat</span>
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex justify-between items-start mb-1">
-                                            <p class="text-sm font-bold truncate">+63 917 555 0122</p>
-                                            <span class="text-[10px] font-bold text-primary bg-primary-fixed px-2 py-0.5 rounded uppercase">Sent</span>
+                                @forelse ($smsRows as $log)
+                                    @php
+                                        $isFailed  = $log->status === 'Failed';
+                                        $isPending = $log->status === 'Pending';
+                                        [$iconBg, $iconColor, $icon, $pillBg, $pillColor] = $isFailed
+                                            ? ['bg-error-container', 'text-error', 'sms_failed', 'bg-error-container', 'text-error']
+                                            : ($isPending
+                                                ? ['bg-tertiary-fixed', 'text-tertiary', 'hourglass_empty', 'bg-tertiary-fixed', 'text-tertiary']
+                                                : ['bg-primary-fixed', 'text-primary', 'chat', 'bg-primary-fixed', 'text-primary']);
+                                        $sentAt = \Carbon\Carbon::parse($log->send_date);
+                                        $when = $sentAt->isToday() ? 'Today, ' . $sentAt->format('h:i A')
+                                            : ($sentAt->isYesterday() ? 'Yesterday, ' . $sentAt->format('h:i A') : $sentAt->format('M d, h:i A'));
+                                    @endphp
+                                    <div class="p-5 hover:bg-surface-bright transition-colors flex items-start gap-4">
+                                        <div class="w-10 h-10 rounded-full {{ $iconBg }} flex items-center justify-center shrink-0">
+                                            <span class="material-symbols-outlined {{ $iconColor }} text-xl">{{ $icon }}</span>
                                         </div>
-                                        <p class="text-xs text-on-surface-variant mb-2">Reminder: Your PEP Dose 3 is scheduled for tomorrow at Cebu Health Center.</p>
-                                        <div class="flex justify-between items-center text-[10px] text-on-surface-variant/60 font-medium">
-                                            <span>Type: Dose Reminder</span>
-                                            <span>Today, 09:45 AM</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- Log Item 2 -->
-                                <div class="p-5 hover:bg-surface-bright transition-colors flex items-start gap-4">
-                                    <div class="w-10 h-10 rounded-full bg-error-container flex items-center justify-center shrink-0">
-                                        <span class="material-symbols-outlined text-error text-xl" data-icon="sms_failed">sms_failed</span>
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex justify-between items-start mb-1">
-                                            <p class="text-sm font-bold truncate">+63 920 123 4567</p>
-                                            <span class="text-[10px] font-bold text-error bg-error-container px-2 py-0.5 rounded uppercase">Failed</span>
-                                        </div>
-                                        <p class="text-xs text-on-surface-variant mb-2">URGENT: You missed your scheduled PEP follow-up. Please visit the clinic immediately.</p>
-                                        <div class="flex flex-col gap-1">
-                                            <div class="flex items-center gap-1 text-[10px] text-error font-bold italic">
-                                                <span class="material-symbols-outlined text-[12px]" data-icon="error_outline">error_outline</span>
-                                                Error: Network Timeout (Provider Side)
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex justify-between items-start mb-1 gap-2">
+                                                <div class="min-w-0">
+                                                    <p class="text-sm font-bold truncate">{{ $log->contact_num }}</p>
+                                                    @if ($log->patient_name)
+                                                        <p class="text-[11px] text-on-surface-variant truncate">{{ $log->patient_name }}</p>
+                                                    @endif
+                                                </div>
+                                                <span class="text-[10px] font-bold {{ $pillColor }} {{ $pillBg }} px-2 py-0.5 rounded uppercase shrink-0">{{ $log->status }}</span>
                                             </div>
-                                            <div class="flex justify-between items-center text-[10px] text-on-surface-variant/60 font-medium">
-                                                <span>Type: Late Follow-up</span>
-                                                <span>Today, 08:30 AM</span>
+                                            <p class="text-xs text-on-surface-variant mb-2">{{ $log->message }}</p>
+                                            <div class="flex flex-col gap-1">
+                                                @if ($isFailed && $log->error_detail)
+                                                    <div class="flex items-center gap-1 text-[10px] text-error font-bold italic">
+                                                        <span class="material-symbols-outlined text-[12px]" data-icon="error_outline">error_outline</span>
+                                                        Error: {{ \Illuminate\Support\Str::limit($log->error_detail, 90) }}
+                                                    </div>
+                                                @endif
+                                                <div class="flex justify-between items-center text-[10px] text-on-surface-variant/60 font-medium">
+                                                    <span>Type: {{ $log->sms_type }}@if ($log->dose_label) &middot; {{ $log->dose_label }}@endif</span>
+                                                    <span>{{ $isPending ? 'Queued: ' . $sentAt->format('h:i A') : $when }}</span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                                <!-- Log Item 3 -->
-                                <div class="p-5 hover:bg-surface-bright transition-colors flex items-start gap-4">
-                                    <div class="w-10 h-10 rounded-full bg-tertiary-fixed flex items-center justify-center shrink-0">
-                                        <span class="material-symbols-outlined text-tertiary text-xl" data-icon="hourglass_empty">hourglass_empty</span>
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex justify-between items-start mb-1">
-                                            <p class="text-sm font-bold truncate">+63 918 999 8877</p>
-                                            <span class="text-[10px] font-bold text-tertiary bg-tertiary-fixed px-2 py-0.5 rounded uppercase">Pending</span>
-                                        </div>
-                                        <p class="text-xs text-on-surface-variant mb-2">Reminder: PEP Dose 28 scheduled for Oct 25. Please confirm attendance.</p>
-                                        <div class="flex justify-between items-center text-[10px] text-on-surface-variant/60 font-medium">
-                                            <span>Type: Dose Reminder</span>
-                                            <span>Queued: 11:00 AM</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- Log Item 4 -->
-                                <div class="p-5 hover:bg-surface-bright transition-colors flex items-start gap-4">
-                                    <div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center shrink-0">
-                                        <span class="material-symbols-outlined text-primary text-xl" data-icon="chat">chat</span>
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex justify-between items-start mb-1">
-                                            <p class="text-sm font-bold truncate">+63 945 444 3322</p>
-                                            <span class="text-[10px] font-bold text-primary bg-primary-fixed px-2 py-0.5 rounded uppercase">Sent</span>
-                                        </div>
-                                        <p class="text-xs text-on-surface-variant mb-2">Initial PEP protocol successfully initiated. Next visit in 3 days.</p>
-                                        <div class="flex justify-between items-center text-[10px] text-on-surface-variant/60 font-medium">
-                                            <span>Type: Onboarding</span>
-                                            <span>Yesterday, 04:15 PM</span>
-                                        </div>
-                                    </div>
-                                </div>
+                                @empty
+                                    <div class="p-10 text-center text-sm text-on-surface-variant">No SMS logs found.</div>
+                                @endforelse
                             </div>
+                            @if ($smsHasMore)
+                                <div class="p-4 text-center border-t border-outline-variant/10">
+                                    <a href="{{ request()->fullUrlWithQuery(['sms_limit' => $smsLimit + 10]) }}#sms-logs" class="text-sm font-bold text-primary hover:opacity-80">Load more logs</a>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </section>
@@ -477,47 +477,25 @@
                                 <h4 class="text-lg font-bold">Compliance Performance by Barangay</h4>
                                 <p class="text-sm text-on-surface-variant mt-1">Summary of top-performing and action-required areas.</p>
                             </div>
-                            <button class="px-4 py-2 bg-white border border-outline-variant text-primary font-bold text-xs rounded-lg hover:bg-surface-container-high transition-colors">
+                            <a href="{{ route('admin.compliance.export', array_filter(['type' => 'pep', 'from' => $from, 'to' => $to])) }}" class="px-4 py-2 bg-white border border-outline-variant text-primary font-bold text-xs rounded-lg hover:bg-surface-container-high transition-colors">
                                 View Full Compliance Report
-                            </button>
+                            </a>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
-                            <div>
-                                <div class="flex justify-between text-xs font-bold mb-1"><span>Mabolo: 99.2%</span></div>
-                                <div class="h-2 w-full bg-white rounded-full overflow-hidden">
-                                    <div class="h-full bg-primary w-[99%]"></div>
+                            @forelse ($barangayStats as $b)
+                                @php $barColor = $b->rate >= 90 ? 'bg-primary' : ($b->rate >= 85 ? 'bg-secondary' : 'bg-error'); @endphp
+                                <div>
+                                    <div class="flex justify-between text-xs font-bold mb-1">
+                                        <span>{{ $b->name }}: {{ $b->rate }}%</span>
+                                        <span class="font-medium text-on-surface-variant">{{ number_format($b->completed) }}/{{ number_format($b->courses) }} courses</span>
+                                    </div>
+                                    <div class="h-2 w-full bg-white rounded-full overflow-hidden">
+                                        <div class="h-full {{ $barColor }}" @style(['width: ' . min(100, $b->rate) . '%'])></div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div>
-                                <div class="flex justify-between text-xs font-bold mb-1"><span>Banilad: 91.2%</span></div>
-                                <div class="h-2 w-full bg-white rounded-full overflow-hidden">
-                                    <div class="h-full bg-primary w-[91%]"></div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="flex justify-between text-xs font-bold mb-1"><span>Lahug: 94.1%</span></div>
-                                <div class="h-2 w-full bg-white rounded-full overflow-hidden">
-                                    <div class="h-full bg-primary w-[94%]"></div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="flex justify-between text-xs font-bold mb-1"><span>Pardo: 88.7%</span></div>
-                                <div class="h-2 w-full bg-white rounded-full overflow-hidden">
-                                    <div class="h-full bg-secondary w-[88%]"></div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="flex justify-between text-xs font-bold mb-1"><span>Guadalupe: 82.5%</span></div>
-                                <div class="h-2 w-full bg-white rounded-full overflow-hidden">
-                                    <div class="h-full bg-error w-[82%]"></div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="flex justify-between text-xs font-bold mb-1"><span>Tisa: 82.5%</span></div>
-                                <div class="h-2 w-full bg-white rounded-full overflow-hidden">
-                                    <div class="h-full bg-error w-[82%]"></div>
-                                </div>
-                            </div>
+                            @empty
+                                <p class="text-sm text-on-surface-variant md:col-span-2">No PEP courses recorded yet.</p>
+                            @endforelse
                         </div>
                     </div>
                 </div>

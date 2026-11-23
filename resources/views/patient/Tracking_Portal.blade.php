@@ -233,8 +233,8 @@
       </div>
       <!-- Supporting Text -->
       <p class="mt-8 text-center text-xs text-on-surface-variant leading-relaxed px-6" style="">By accessing the portal,
-        you agree to our clinical data privacy standards. Need Help? Please visit <a
-          class="text-primary font-semibold hover:underline" href="#" style="">Information Staff at ABTC</a>.</p>
+        you agree to our clinical data privacy standards. Need Help? Please visit the
+        Information Staff at ABTC.</p>
     </div>
   </main>
   @include('partials.patient-qr-modal')

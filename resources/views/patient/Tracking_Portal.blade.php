@@ -143,98 +143,74 @@
       </div>
     </div>
     <!-- Central Soft UI Card -->
-    <div class="relative w-full max-w-[480px] z-10">
-      <div
-        class="bg-surface-container-lowest rounded-xl p-8 md:p-12 shadow-[0_24px_48px_-12px_rgba(25,28,30,0.04)] ring-1 ring-outline-variant/10">
-        <!-- Editorial Header Section -->
-        <div class="mb-10 text-center md:text-left">
-          <span
-            class="inline-block px-3 py-1 mb-4 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant text-[10px] font-bold uppercase tracking-widest"
-            style="">Patient Portal</span>
-          <h1 class="text-display-md font-headline font-extrabold tracking-tight text-on-surface mb-3 leading-tight"
-            style="">
-            Track Your Health Journey
-          </h1>
-          <p class="text-on-surface-variant text-sm leading-relaxed max-w-[340px]" style="">
-            Enter your Tracking ID and Date of Birth to access your treatment status.
-          </p>
-        </div>
-        <!-- Form Section -->
-        <form id="trackForm" class="space-y-6" novalidate>
-          @csrf
-          <div class="mb-8">
-            <button id="scanQrBtn"
-              class="w-full flex flex-col items-center justify-center p-6 border-2 border-dashed border-primary/30 rounded-xl bg-primary/5 hover:bg-primary/10 transition-colors group"
-              type="button">
-              <div
-                class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                <span class="material-symbols-outlined text-primary text-[32px]">qr_code_scanner</span>
-              </div>
-              <span class="text-sm font-bold text-primary uppercase tracking-wider mb-1">Scan QR Code</span>
-              <span class="text-[11px] text-on-surface-variant text-center">Scan or upload your Patient ID QR code to fill in your Tracking ID</span>
-            </button>
-            <div class="relative flex py-6 items-center">
-              <div class="flex-grow border-t border-outline-variant/30"></div>
-              <span class="flex-shrink mx-4 text-[10px] font-bold text-outline uppercase tracking-widest">OR ENTER
-                MANUALLY</span>
-              <div class="flex-grow border-t border-outline-variant/30"></div>
+    <div class="relative w-full max-w-[520px] z-10">
+      <div class="bg-surface-container-lowest rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.05)] ring-1 ring-outline-variant/10 overflow-hidden">
+        <div class="h-1.5 bg-gradient-to-r from-primary to-primary-container"></div>
+        <div class="p-6 sm:p-8 md:p-10">
+          <!-- Header -->
+          <div class="flex items-start gap-4 mb-8">
+            <div class="shrink-0 w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+              <span class="material-symbols-outlined text-[26px]" style="font-variation-settings: 'FILL' 1;">monitor_heart</span>
+            </div>
+            <div class="min-w-0">
+              <span class="inline-block bg-secondary-fixed text-on-secondary-fixed-variant px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase mb-1.5">Patient portal</span>
+              <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-on-surface leading-tight">Track Your Health Journey</h1>
+              <p class="text-on-surface-variant mt-1 text-sm leading-snug">See your vaccine doses and when your next one is due.</p>
             </div>
           </div>
-          <div class="space-y-2">
-            <label class="text-label-md font-semibold text-on-surface-variant flex items-center gap-2 ml-1"
-              for="tracking-id" style="">
-              <span class="material-symbols-outlined text-[16px]" style="">fingerprint</span>
-              Tracking ID
-            </label>
-            <div class="relative group">
+
+          <form id="trackForm" novalidate>
+            @csrf
+            <!-- Tracking ID -->
+            <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wide mb-2" for="tracking-id">Tracking ID</label>
+            <div class="relative">
+              <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-[20px] pointer-events-none">badge</span>
               <input
-                class="w-full h-14 bg-surface-container-highest border-none rounded-lg px-4 text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all duration-300"
-                id="tracking-id" name="tracking_id" placeholder="e.g., CEB-20261120-19840910-001" type="text"
+                class="block w-full bg-surface-container-highest border-0 focus:ring-2 focus:ring-primary/25 rounded-xl pl-12 pr-4 py-4 font-semibold uppercase tracking-wide text-[15px] text-on-surface placeholder:text-outline placeholder:font-medium"
+                id="tracking-id" name="tracking_id" placeholder="CEB-20261120-19840910-001" type="text"
                 autocomplete="off" spellcheck="false" autocapitalize="characters" />
             </div>
-          </div>
-          <div class="space-y-2">
-            <label class="text-label-md font-semibold text-on-surface-variant flex items-center gap-2 ml-1" for="dob"
-              style="">
-              <span class="material-symbols-outlined text-[16px]" style="">calendar_today</span>
-              Date of Birth
-            </label>
+            <p class="mt-2 text-xs text-on-surface-variant leading-relaxed">Your Patient ID. It starts with <span class="font-bold">CEB</span> and is the code under your QR.</p>
+
+            <!-- Date of birth -->
+            <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wide mt-6 mb-2" for="dob">Date of birth</label>
             <div class="relative">
+              <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-[20px] pointer-events-none">calendar_today</span>
               <input
-                class="w-full h-14 bg-surface-container-highest border-none rounded-lg px-4 text-on-surface focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all duration-300 appearance-none"
+                class="block w-full bg-surface-container-highest border-0 focus:ring-2 focus:ring-primary/25 rounded-xl pl-12 pr-4 py-4 font-semibold text-[15px] text-on-surface appearance-none"
                 id="dob" name="dob" type="date" />
             </div>
-          </div>
-          <p id="trackError" role="alert" class="hidden text-xs text-error font-semibold bg-error-container/50 py-2.5 px-3 rounded-lg"></p>
-          <div class="pt-4">
+
+            <p id="trackError" role="alert" class="hidden mt-5 text-sm text-red-700 font-medium bg-red-50 py-3 px-4 rounded-lg"></p>
+
             <button id="trackBtn"
-              class="w-full h-14 bg-gradient-to-r from-primary to-primary-container text-on-primary font-bold rounded-lg shadow-lg shadow-primary/10 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 group disabled:opacity-60 disabled:cursor-not-allowed"
-              style="" type="submit">
+              class="mt-6 w-full bg-gradient-to-r from-primary to-primary-container text-on-primary font-bold rounded-xl py-4 shadow-lg shadow-primary/15 active:scale-[0.99] transition-all duration-200 flex items-center justify-center gap-2 group disabled:opacity-60 disabled:cursor-not-allowed"
+              type="submit">
               <span id="trackBtnText">Track Status</span>
-              <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform"
-                style="">arrow_forward</span>
+              <span class="material-symbols-outlined text-[20px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
             </button>
-          </div>
-        </form>
-        <!-- Status Alerts Context (As per Status Badges rule) -->
-        <div class="mt-8 flex items-center justify-center gap-4 border-t border-outline-variant/10 pt-8">
-          <div class="flex items-center gap-2">
-            <div class="w-2 h-2 rounded-full bg-error animate-pulse"></div>
-            <span class="text-[11px] font-medium text-on-surface-variant uppercase tracking-wider" style="">Live
-              Processing</span>
-          </div>
-          <div class="w-1 h-1 rounded-full bg-outline-variant"></div>
-          <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-[14px] text-primary" style="">verified_user</span>
-            <span class="text-[11px] font-medium text-on-surface-variant uppercase tracking-wider" style="">Secure
-              Access</span>
+
+            <!-- Other way to fill in the ID -->
+            <div class="mt-6 flex items-center gap-3 text-[11px] font-bold uppercase tracking-widest text-outline">
+              <span class="h-px flex-1 bg-outline-variant/30"></span>or<span class="h-px flex-1 bg-outline-variant/30"></span>
+            </div>
+            <button id="scanQrBtn" type="button"
+              class="mt-4 w-full flex items-center justify-center gap-2 border-2 border-primary/25 bg-primary/5 text-primary hover:bg-primary/10 active:scale-[0.99] font-bold px-5 py-3.5 rounded-xl text-sm transition-all">
+              <span class="material-symbols-outlined text-[20px]">qr_code_scanner</span>
+              Scan or upload your QR code
+            </button>
+            <p class="mt-2 text-center text-[11px] text-on-surface-variant">A scan fills in your Tracking ID. You still enter your date of birth.</p>
+          </form>
+
+          <!-- Safety note -->
+          <div class="mt-8 flex items-start gap-3 rounded-xl bg-surface-container-low px-4 py-3.5">
+            <span class="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5">verified_user</span>
+            <p class="text-xs leading-relaxed text-on-surface-variant">Your ID and date of birth are only used to find your record. After 5 wrong tries, the ID is locked for 15 minutes.</p>
           </div>
         </div>
       </div>
       <!-- Supporting Text -->
-      <p class="mt-8 text-center text-xs text-on-surface-variant leading-relaxed px-6" style="">By accessing the portal,
-        you agree to our clinical data privacy standards. Need Help? Please visit the
-        Information Staff at ABTC.</p>
+      <p class="mt-6 text-center text-xs text-on-surface-variant leading-relaxed px-4">By accessing the portal, you agree to our clinical data privacy standards. Need help? Please visit the Information Staff at ABTC.</p>
     </div>
   </main>
   @include('partials.patient-qr-modal')

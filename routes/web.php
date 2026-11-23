@@ -87,7 +87,7 @@ Route::prefix('admin')->middleware('admin')->group(function () {
         return redirect()->route('admin.usm')->with('success', 'User account created successfully!');
     })->name('admin.store-user');
 
-    // System tools (Admin only, enforced in the controller): backups, auto-backup, audit logs, health
+    // System tools (Admin only, enforced in the controller): backups, auto-backup, audit logs, import
     Route::prefix('system')->group(function () {
         Route::get('/backups', [SystemToolsController::class, 'backups'])->name('admin.system.backups');
         Route::post('/backups', [SystemToolsController::class, 'createBackup'])->name('admin.system.backups.create');
@@ -97,7 +97,6 @@ Route::prefix('admin')->middleware('admin')->group(function () {
         Route::post('/auto-backup', [SystemToolsController::class, 'saveAutoBackup'])->name('admin.system.auto-backup.save');
         Route::get('/audit-logs', [SystemToolsController::class, 'auditLogs'])->name('admin.system.audit-logs');
         Route::get('/audit-logs/export', [SystemToolsController::class, 'exportAuditLogs'])->name('admin.system.audit-logs.export');
-        Route::get('/health', [SystemToolsController::class, 'health'])->name('admin.system.health');
         Route::post('/import-cases/chunk', [SystemToolsController::class, 'importChunk'])->name('admin.system.import-cases.chunk');
         Route::post('/import-cases', [SystemToolsController::class, 'importCases'])->name('admin.system.import-cases');
         Route::get('/import-cases/template', [SystemToolsController::class, 'importTemplate'])->name('admin.system.import-cases.template');
@@ -108,6 +107,7 @@ Route::prefix('admin')->middleware('admin')->group(function () {
 Route::prefix('staff')->middleware(['auth', 'role:Staff'])->group(function () {
     Route::get('/dashboard', [StaffController::class, 'newDashboard'])->name('staff.newdashboard');
     Route::get('/queue', [StaffController::class, 'dashboard'])->name('staff.dashboard');
+    Route::post('/philhealth/{inflow_record_id}/verify', [StaffController::class, 'verifyPhilhealth'])->name('staff.philhealth.verify');
     Route::post('/staff/call-patient/{inflowRecordId}', [App\Http\Controllers\StaffController::class, 'callPatient'])
         ->name('staff.call-patient');
 
@@ -125,6 +125,8 @@ Route::prefix('staff')->middleware(['auth', 'role:Staff'])->group(function () {
 // Healthworker Routes
 Route::prefix('healthworker')->middleware(['auth', 'role:Health Worker'])->group(function () {
     Route::get('/dashboard', [ClinicalEncodingController::class, 'dashboard'])->name('healthworker.dashboard');
+    Route::post('/cases/{bite_case_id}/claim', [ClinicalEncodingController::class, 'claim'])->name('healthworker.case.claim');
+    Route::post('/cases/{bite_case_id}/release', [ClinicalEncodingController::class, 'release'])->name('healthworker.case.release');
 
     // Clinical Encoding (Sections VI-IX), connected to the real bite_cases queue
     Route::get('/clinical-encoding/{bite_case_id?}', [ClinicalEncodingController::class, 'sectionVI'])
@@ -188,9 +190,16 @@ Route::get('/patient/Returning_Patient', function () {
     return view('patient.Returning_Patient_Registration');
 })->name('patient.returning-patient');
 
-Route::get('/patient/tracking-portal', function () {
+Route::get('/patient/tracking-portal', function (Request $request) {
+    $request->session()->forget('tracking');   // opening the form again ends the previous look-up
     return view('patient.Tracking_Portal');
 })->name('patient.tracking.portal');
+
+// Tracking Portal lookup (Tracking ID + date of birth, POST so neither ends up in a URL or a log)
+Route::post('/patient/tracking-portal/lookup', [PatientController::class, 'track'])->middleware('throttle:12,1')->name('patient.tracking.lookup');
+
+// Tracking Portal result page (needs a successful look-up in the last 20 minutes)
+Route::get('/patient/tracking-portal/result', [PatientController::class, 'trackResult'])->name('patient.tracking.result');
 
 // Public map data (counts per barangay only, no patient details)
 Route::get('/public/gis-data', [GisMapController::class, 'data'])->name('public.gis_data');
@@ -269,16 +278,22 @@ Route::post('/patient/new-submit', function (Request $request) {
         ->where('reference_no', $referralId)
         ->update(['status' => 'Arrived']);
 
+    $confirmation = [
+        'queueNumber'  => $queueId,
+        'patientName'  => trim((string) $request->input('full_name')),
+        'registeredAt' => now()->format('M j, Y \\a\\t g:i A'),
+    ];
+
     return $isPriority
-        ? view('patient.PQ_confirmation', ['queueNumber' => $queueId])
-        : view('patient.NQ_confirmation', ['queueNumber' => $queueId]);
+        ? view('patient.PQ_confirmation', $confirmation)
+        : view('patient.NQ_confirmation', $confirmation);
 })->name('patient.new-submit');
 
 // Returning Patient — search for an existing patient record
-Route::get('/patient/search', [PatientController::class, 'search'])->name('patient.search');
+Route::get('/patient/search', [PatientController::class, 'search'])->middleware('throttle:15,1')->name('patient.search');
 
 // Returning Patient — handle the returning patient form submission
-Route::post('/patient/submit-registration-returning', [PatientController::class, 'storeReturning'])->name('patient.submit.returning');
+Route::post('/patient/submit-registration-returning', [PatientController::class, 'storeReturning'])->middleware('throttle:15,1')->name('patient.submit.returning');
 
 // New Patient (via BHW referral) — handle the form submission using the controller
 Route::post('/patient/submit-registration', [PatientController::class, 'registerPatient'])->name('patient.submit');

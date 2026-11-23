@@ -1,0 +1,86 @@
+<?php
+
+namespace App\Support;
+
+/**
+ * The PEP dose schedule of a case, from its Section VII dose type and route:
+ *
+ *   Primary, IM route (intramuscular)  -> Day 0, 3, 7, 14  (4 dates)
+ *   Primary, ID route (intradermal)    -> Day 0, 3, 7, 28  (4 dates)
+ *   Booster                            -> Day 0, 3         (2 dates)
+ *
+ * A case with no route on record (imported records, or a draft) is treated like ID: Day 28.
+ * Every screen and report that needs "which doses does this case have" goes through here.
+ */
+class PepSchedule
+{
+    /** The day numbers of the course, Day 0 first. */
+    public static function days(?string $doseType, ?string $route): array
+    {
+        if ($doseType === 'Booster') {
+            return [0, 3];
+        }
+
+        return $route === 'IM' ? [0, 3, 7, 14] : [0, 3, 7, 28];
+    }
+
+    /** The day of the last dose of the course (what ends it): Day 3 for a Booster, Day 14 for IM, Day 28 for ID. */
+    public static function lastDay(?string $doseType, ?string $route): int
+    {
+        $days = self::days($doseType, $route);
+
+        return end($days);
+    }
+
+    /** The day numbers after Day 0 (the visits a returning patient can check in for). */
+    public static function followUpDays(?string $doseType, ?string $route): array
+    {
+        return array_values(array_diff(self::days($doseType, $route), [0]));
+    }
+
+    /**
+     * The next dose that is due: the first day of the course (after Day 0) that has no date yet, or null when every
+     * dose is recorded. $dates is the bite_section7_immunization row (object or array) with its day{N}_date values.
+     * Doses are taken in order, so this is the only dose a returning patient can check in for.
+     */
+    public static function nextDay(?string $doseType, ?string $route, $dates): ?int
+    {
+        foreach (self::followUpDays($doseType, $route) as $day) {
+            $value = is_array($dates) ? ($dates["day{$day}_date"] ?? null) : ($dates->{"day{$day}_date"} ?? null);
+            if (empty($value)) {
+                return $day;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * SQL (MySQL) condition that is true when Day $day is one of the doses of the case's course
+     * (same rule as days(): Booster = Day 0, 3; Primary IM = Day 0, 3, 7, 14; Primary ID or no route = Day 0, 3, 7, 28).
+     * $s7 is the alias of bite_section7_immunization in the query. $day is a code constant, never user input.
+     */
+    public static function hasDaySql(int $day, string $s7 = 's7'): string
+    {
+        $primary = "({$s7}.dose_type IS NULL OR {$s7}.dose_type <> 'Booster')";
+
+        return match ($day) {
+            0, 3    => '(1 = 1)',
+            7       => $primary,
+            14      => "({$primary} AND {$s7}.route = 'IM')",
+            28      => "({$primary} AND ({$s7}.route IS NULL OR {$s7}.route <> 'IM'))",
+            default => '(1 = 0)',
+        };
+    }
+
+    /**
+     * SQL (MySQL) that is true when every dose of the course has a recorded date.
+     * $s7 is the alias of bite_section7_immunization in the query.
+     */
+    public static function completeSql(string $s7 = 's7'): string
+    {
+        return "CASE WHEN {$s7}.dose_type = 'Booster' THEN {$s7}.day3_date IS NOT NULL
+                     WHEN {$s7}.route = 'IM' THEN ({$s7}.day3_date IS NOT NULL AND {$s7}.day7_date IS NOT NULL AND {$s7}.day14_date IS NOT NULL)
+                     ELSE ({$s7}.day3_date IS NOT NULL AND {$s7}.day7_date IS NOT NULL AND {$s7}.day28_date IS NOT NULL) END";
+    }
+}

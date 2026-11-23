@@ -94,6 +94,9 @@
     </style>
     <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
     <script src="{{ asset('js/custom-select.js') }}" defer></script>
+    <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
+    <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
+    <script src="{{ asset('js/soft-nav.js') }}" defer></script>
 </head>
 
 <body class="bg-surface text-on-surface">
@@ -266,15 +269,15 @@
                     </div>
                 </div>
             </div>
-            <!-- FILTERS & TABLE SECTION -->
-            <div class="bg-surface-container-lowest rounded-2xl shadow-sm overflow-hidden">
+            <!-- FILTERS & TABLE SECTION (updated in place when filtered or paged) -->
+            <div data-soft-region="tracker" class="bg-surface-container-lowest rounded-2xl shadow-sm overflow-hidden">
                 <!-- Filter Row -->
                 <form id="trackerFilters" method="GET" action="{{ route('healthworker.treatment-tracker') }}"
-                    class="p-6 bg-surface-container-low flex flex-wrap gap-4 items-center justify-between">
+                    class="p-4 sm:p-6 bg-surface-container-low flex flex-col sm:flex-row sm:flex-wrap gap-4 sm:items-center sm:justify-between">
                     <input type="hidden" name="q" id="trackerSearch" value="{{ $search }}" />
-                    <div class="flex flex-wrap gap-4 items-center">
-                        <div class="relative min-w-[200px]">
-                            <select name="barangay" onchange="this.form.submit()"
+                    <div class="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-4 sm:items-center">
+                        <div class="relative w-full sm:w-auto sm:min-w-[200px]">
+                            <select name="barangay" onchange="this.form.requestSubmit()"
                                 class="appearance-none w-full bg-white border-none rounded-lg px-4 py-2 pr-10 text-sm font-semibold text-slate-600 focus:ring-2 focus:ring-blue-500/10 shadow-sm cursor-pointer">
                                 <option value="">Filter by Barangay</option>
                                 @foreach($barangays as $b)
@@ -282,8 +285,8 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="relative min-w-[200px]">
-                            <select name="status" onchange="this.form.submit()"
+                        <div class="relative w-full sm:w-auto sm:min-w-[200px]">
+                            <select name="status" onchange="this.form.requestSubmit()"
                                 class="appearance-none w-full bg-white border-none rounded-lg px-4 py-2 pr-10 text-sm font-semibold text-slate-600 focus:ring-2 focus:ring-blue-500/10 shadow-sm cursor-pointer">
                                 <option value="all" {{ $status === 'all' ? 'selected' : '' }}>Dose Status: All</option>
                                 <option value="active" {{ $status === 'active' ? 'selected' : '' }}>Active (On Track)</option>
@@ -311,19 +314,19 @@
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-slate-50/50 border-b border-slate-100">
-                                <th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap">
+                                <th class="sticky left-0 z-[1] bg-slate-50 px-4 sm:px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap">
                                     Patient Details</th>
                                 <th
-                                    class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-400 text-center whitespace-nowrap">
+                                    class="px-4 sm:px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-400 text-center whitespace-nowrap">
                                     Exposure</th>
-                                <th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap">
+                                <th class="px-4 sm:px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap">
                                     Dose Schedule</th>
-                                <th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap">
+                                <th class="px-4 sm:px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap">
                                     Progress</th>
-                                <th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap">
+                                <th class="px-4 sm:px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap">
                                     Status</th>
                                 <th
-                                    class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-400 text-right whitespace-nowrap">
+                                    class="px-4 sm:px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-400 text-right whitespace-nowrap">
                                     Actions</th>
                             </tr>
                         </thead>
@@ -337,15 +340,15 @@
                                 $barColor = $c->state === 'Late' ? 'bg-tertiary' : ($c->state === 'Completed' ? 'bg-emerald-500' : 'bg-blue-600');
                             @endphp
                             <tr class="hover:bg-blue-50/30 transition-colors group">
-                                <td class="px-6 py-5">
+                                <td class="sticky left-0 z-[1] bg-white group-hover:bg-blue-50 px-4 sm:px-6 py-5 shadow-[2px_0_4px_-2px_rgba(15,23,42,0.12)] sm:shadow-none">
                                     <p class="text-sm font-bold text-slate-900 whitespace-nowrap">{{ $c->patient_name }}</p>
                                     <p class="text-[11px] font-mono text-slate-500 whitespace-nowrap">{{ $c->patient_id }}</p>
                                 </td>
-                                <td class="px-6 py-5 text-center">
+                                <td class="px-4 sm:px-6 py-5 text-center">
                                     <span
                                         class="{{ $catStyle }} px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tight whitespace-nowrap">Cat {{ $c->category }}</span>
                                 </td>
-                                <td class="px-6 py-5">
+                                <td class="px-4 sm:px-6 py-5">
                                     <div class="text-xs space-y-1 whitespace-nowrap">
                                         <div class="flex items-center gap-2 text-slate-500">
                                             <span class="material-symbols-outlined text-sm">history</span>
@@ -376,7 +379,7 @@
                                         @endif
                                     </div>
                                 </td>
-                                <td class="px-6 py-5">
+                                <td class="px-4 sm:px-6 py-5">
                                     <div class="w-32">
                                         <div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1">
                                             <span>{{ $c->given_count }}/{{ $c->total }} Doses</span>
@@ -387,7 +390,7 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-6 py-5">
+                                <td class="px-4 sm:px-6 py-5">
                                     @if($c->state === 'Late')
                                     <span
                                         class="inline-flex items-center gap-1.5 bg-error-container text-on-error-container px-3 py-1 rounded-full text-[10px] font-bold whitespace-nowrap">
@@ -408,7 +411,7 @@
                                     </span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-5 text-right">
+                                <td class="px-4 sm:px-6 py-5 text-right">
                                     <button type="button" class="row-menu text-slate-400 hover:text-blue-600 transition-colors"
                                         data-case="{{ route('healthworker.ce-vii', ['bite_case_id' => $c->bite_case_id]) }}"
                                         data-record="{{ route('healthworker.patient-database', ['q' => $c->patient_id]) }}"
@@ -486,21 +489,30 @@
                     @if($compliance->isEmpty())
                     <p class="h-48 flex items-center justify-center text-sm text-slate-500 text-center">No doses have fallen due in the last 30 days yet.</p>
                     @else
-                    <div class="h-48 w-full flex items-end justify-between gap-4 px-2">
+                    <div class="overflow-x-auto pb-2">
+                    <div style="min-width: {{ max(1, $compliance->count()) * 5 }}rem">
+                    <div class="h-48 w-full flex items-end justify-between gap-3 sm:gap-4 px-2 mt-6">
                         @foreach($compliance as $b)
                         <div class="w-full bg-blue-50 rounded-t-lg relative group" style="height: {{ max($b->pct, 4) }}%">
+                            {{-- on a phone the bar is filled and its percentage is always shown (no hover there); on a computer it fills on hover --}}
                             <div
-                                class="absolute inset-0 bg-blue-600 rounded-t-lg scale-y-0 origin-bottom group-hover:scale-y-100 transition-transform duration-500">
+                                class="absolute inset-0 bg-blue-600 rounded-t-lg scale-y-100 sm:scale-y-0 origin-bottom group-hover:scale-y-100 transition-transform duration-500">
                             </div>
+                            <span class="sm:hidden absolute -top-5 left-1/2 -translate-x-1/2 text-xs font-black text-blue-700 whitespace-nowrap">{{ $b->pct }}%</span>
                             <span
-                                class="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-bold text-blue-700 opacity-0 group-hover:opacity-100 whitespace-nowrap">{{ $b->pct }}% · {{ $b->doses }} {{ \Illuminate\Support\Str::plural('dose', $b->doses) }}</span>
+                                class="hidden sm:block absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-bold text-blue-700 opacity-0 group-hover:opacity-100 whitespace-nowrap">{{ $b->pct }}% · {{ $b->doses }} {{ \Illuminate\Support\Str::plural('dose', $b->doses) }}</span>
                         </div>
                         @endforeach
                     </div>
-                    <div class="flex justify-between gap-4 mt-4 px-2">
+                    <div class="flex justify-between gap-3 sm:gap-4 mt-3 sm:mt-4 px-2">
                         @foreach($compliance as $b)
-                        <span class="w-full text-center text-[10px] font-bold text-slate-400 truncate" title="{{ $b->name }}">{{ $b->name }}</span>
+                        <div class="w-full min-w-0 text-center">
+                            <span class="block text-[11px] sm:text-[10px] font-bold text-slate-500 sm:text-slate-400 leading-tight break-words sm:truncate" title="{{ $b->name }}">{{ $b->name }}</span>
+                            <span class="sm:hidden block mt-0.5 text-[10px] font-semibold text-slate-400">{{ $b->doses }} {{ \Illuminate\Support\Str::plural('dose', $b->doses) }}</span>
+                        </div>
                         @endforeach
+                    </div>
+                    </div>
                     </div>
                     @endif
                 </div>
@@ -560,42 +572,44 @@
             const menu = document.getElementById('rowMenu');
             const close = () => menu.classList.add('hidden');
 
-            document.querySelectorAll('.row-menu').forEach((btn) => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    if (!menu.classList.contains('hidden') && menu.dataset.owner === btn.dataset.case) return close();
-                    menu.dataset.owner = btn.dataset.case;
-                    document.getElementById('rowMenuCase').href = btn.dataset.case;
-                    document.getElementById('rowMenuRecord').href = btn.dataset.record;
-                    const tel = document.getElementById('rowMenuTel');
-                    const number = btn.dataset.tel || '';
-                    tel.classList.toggle('hidden', !number);
-                    tel.href = 'tel:' + number.replace(/[^\d+]/g, '');
-                    document.getElementById('rowMenuTelText').textContent = 'Call ' + number;
+            // delegated: the table rows are replaced whenever the list is filtered or paged
+            document.addEventListener('click', (e) => {
+                const btn = e.target.closest ? e.target.closest('.row-menu') : null;
+                if (!btn) { if (!menu.contains(e.target)) close(); return; }
+                if (!menu.classList.contains('hidden') && menu.dataset.owner === btn.dataset.case) return close();
+                menu.dataset.owner = btn.dataset.case;
+                document.getElementById('rowMenuCase').href = btn.dataset.case;
+                document.getElementById('rowMenuRecord').href = btn.dataset.record;
+                const tel = document.getElementById('rowMenuTel');
+                const number = btn.dataset.tel || '';
+                tel.classList.toggle('hidden', !number);
+                tel.href = 'tel:' + number.replace(/[^\d+]/g, '');
+                document.getElementById('rowMenuTelText').textContent = 'Call ' + number;
 
-                    menu.classList.remove('hidden');
-                    const r = btn.getBoundingClientRect();
-                    const h = menu.offsetHeight;
-                    const top = r.bottom + 6 + h > window.innerHeight ? r.top - h - 6 : r.bottom + 6;
-                    menu.style.top = Math.max(8, top) + 'px';
-                    menu.style.left = Math.max(8, r.right - menu.offsetWidth) + 'px';
-                });
+                menu.classList.remove('hidden');
+                const r = btn.getBoundingClientRect();
+                const h = menu.offsetHeight;
+                const top = r.bottom + 6 + h > window.innerHeight ? r.top - h - 6 : r.bottom + 6;
+                menu.style.top = Math.max(8, top) + 'px';
+                menu.style.left = Math.max(8, r.right - menu.offsetWidth) + 'px';
             });
-            document.addEventListener('click', (e) => { if (!menu.contains(e.target)) close(); });
+            // an in-place update replaces the rows the open menu belonged to
+            document.addEventListener('soft:updated', close);
             document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
             window.addEventListener('scroll', close, true);
             window.addEventListener('resize', close);
 
             // The header search box searches the tracker too (Enter to search)
             const headerSearch = document.querySelector('header input[type="text"]');
-            const hidden = document.getElementById('trackerSearch');
-            if (headerSearch && hidden) {
-                headerSearch.value = hidden.value;
+            const hidden = () => document.getElementById('trackerSearch');
+            if (headerSearch && hidden()) {
+                headerSearch.value = hidden().value;
                 headerSearch.addEventListener('keydown', (e) => {
-                    if (e.key !== 'Enter') return;
-                    hidden.value = headerSearch.value;
-                    hidden.form.requestSubmit();
+                    if (e.key !== 'Enter' || !hidden()) return;
+                    hidden().value = headerSearch.value;
+                    hidden().form.requestSubmit();
                 });
+                document.addEventListener('soft:updated', () => { if (hidden()) headerSearch.value = hidden().value; });
             }
         })();
     </script>

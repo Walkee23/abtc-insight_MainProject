@@ -40,6 +40,8 @@
     </style>
     <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
     <script src="{{ asset('js/custom-select.js') }}" defer></script>
+    <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
+    <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
 </head>
 <body class="bg-[#f7f9fb] text-on-surface min-h-screen flex">
 
@@ -249,15 +251,6 @@
                     <button type="button" id="btnAudit" class="w-full flex items-center gap-3 p-3.5 bg-slate-50 text-slate-700 rounded-xl font-bold text-sm transition-all hover:bg-slate-100">
                         <span class="material-symbols-outlined text-[20px] text-blue-700">history_edu</span>
                         <span>System Audit Logs</span>
-                    </button>
-
-                    <!-- Server Health Check -->
-                    <button type="button" id="btnHealth" class="w-full flex items-center justify-between p-3.5 bg-slate-50 text-slate-700 rounded-xl font-bold text-sm transition-all hover:bg-slate-100">
-                        <div class="flex items-center gap-3">
-                            <span class="material-symbols-outlined text-[20px] text-blue-700">monitor_heart</span>
-                            <span>Server Health Check</span>
-                        </div>
-                        <span id="healthIcon" class="material-symbols-outlined text-slate-300 text-[20px]" style="font-variation-settings: 'FILL' 1;">help</span>
                     </button>
                 </div>
             </section>
@@ -482,30 +475,6 @@
             </div>
         </div>
 
-        <!-- Server health -->
-        <div id="healthModal" data-modal class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-            <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-100 overflow-hidden max-h-[88vh] flex flex-col">
-                <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <span class="material-symbols-outlined text-blue-700">monitor_heart</span>
-                        <h3 class="font-bold text-slate-900 text-sm">Server Health Check</h3>
-                    </div>
-                    <button type="button" data-close class="text-slate-400 hover:text-slate-600 rounded-lg p-1"><span class="material-symbols-outlined text-[20px]">close</span></button>
-                </div>
-                <div class="p-6 space-y-3 overflow-y-auto">
-                    <div id="healthBanner" class="rounded-xl px-4 py-3 text-xs font-bold flex items-center gap-2 bg-slate-100 text-slate-600">Checking...</div>
-                    <div id="healthList" class="space-y-1"></div>
-                    <p id="healthTime" class="text-[11px] text-slate-400"></p>
-                </div>
-                <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-2">
-                    <button type="button" data-close class="px-4 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-100 rounded-xl transition-colors">Close</button>
-                    <button type="button" id="rerunHealth" class="px-5 py-2.5 bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-700/20 flex items-center gap-2 disabled:opacity-60">
-                        <span class="material-symbols-outlined text-[16px]">refresh</span> Run Again
-                    </button>
-                </div>
-            </div>
-        </div>
-
         <!-- Import animal bite cases -->
         <div id="importModal" data-modal class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-100 overflow-hidden max-h-[90vh] flex flex-col">
@@ -574,7 +543,7 @@
             }
         }
     </script>
-    <!-- System tools: backup, auto-backup, audit logs, health check -->
+    <!-- System tools: backup, auto-backup, audit logs, import -->
     <script>
         (function () {
             const URLS = {
@@ -582,7 +551,6 @@
                 auto: @json(route('admin.system.auto-backup')),
                 audit: @json(route('admin.system.audit-logs')),
                 auditExport: @json(route('admin.system.audit-logs.export')),
-                health: @json(route('admin.system.health')),
             };
             const CSRF = @json(csrf_token());
             const $ = (id) => document.getElementById(id);
@@ -810,52 +778,6 @@
             $('auditSearch').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { auditPage = 1; loadAudit(); }, 300); });
             $('auditPrev').addEventListener('click', () => { if (auditPage > 1) { auditPage--; loadAudit(); } });
             $('auditNext').addEventListener('click', () => { if (auditPage < auditLast) { auditPage++; loadAudit(); } });
-
-            // ------------------------------------------------------ health check
-            const HEALTH = {
-                ok: ['check_circle', 'text-emerald-500', 'bg-emerald-50 text-emerald-700'],
-                warn: ['warning', 'text-amber-500', 'bg-amber-50 text-amber-700'],
-                fail: ['cancel', 'text-red-500', 'bg-red-50 text-red-700'],
-            };
-            function setHealthIcon(status) {
-                const icon = $('healthIcon');
-                if (!status) { icon.textContent = 'help'; icon.className = 'material-symbols-outlined text-slate-300 text-[20px]'; return; }
-                icon.textContent = HEALTH[status][0];
-                icon.className = 'material-symbols-outlined text-[20px] ' + HEALTH[status][1];
-            }
-
-            async function runHealth(silent) {
-                const btn = $('rerunHealth');
-                if (!silent) {
-                    btn.disabled = true;
-                    $('healthBanner').className = 'rounded-xl px-4 py-3 text-xs font-bold flex items-center gap-2 bg-slate-100 text-slate-600';
-                    $('healthBanner').textContent = 'Checking...';
-                }
-                try {
-                    const data = await api(URLS.health);
-                    setHealthIcon(data.overall);
-                    $('healthBanner').className = 'rounded-xl px-4 py-3 text-xs font-bold flex items-center gap-2 ' + HEALTH[data.overall][2];
-                    $('healthBanner').replaceChildren(el('span', 'material-symbols-outlined text-[18px]', HEALTH[data.overall][0]), el('span', '', data.summary));
-                    const list = $('healthList');
-                    list.replaceChildren();
-                    data.checks.forEach((c) => {
-                        const row = el('div', 'flex items-start gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50');
-                        row.append(el('span', 'material-symbols-outlined text-[20px] mt-0.5 ' + HEALTH[c.status][1], HEALTH[c.status][0]));
-                        const text = el('div', 'min-w-0');
-                        text.append(el('p', 'text-xs font-bold text-slate-800', c.name), el('p', 'text-[11px] text-slate-500 break-words', c.detail));
-                        row.append(text);
-                        list.append(row);
-                    });
-                    $('healthTime').textContent = 'Checked ' + data.checked_at + ' (Asia/Manila)';
-                } catch (e) {
-                    setHealthIcon(null);
-                    if (!silent) { $('healthBanner').className = 'rounded-xl px-4 py-3 text-xs font-bold bg-red-50 text-red-700'; $('healthBanner').textContent = e.message; }
-                }
-                btn.disabled = false;
-            }
-            $('btnHealth').addEventListener('click', () => { openModal('healthModal'); runHealth(false); });
-            $('rerunHealth').addEventListener('click', () => runHealth(false));
-            runHealth(true);   // the card's icon reflects the current status when the page opens
 
             // ------------------------------------------------------ import bite cases
             const IMPORT_URL = @json(route('admin.system.import-cases'));

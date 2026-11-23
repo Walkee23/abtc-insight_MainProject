@@ -14,7 +14,7 @@ Artisan::command('inspire', function () {
 //   php artisan schedule:work        (or a Windows Task Scheduler job: php artisan schedule:run, every minute)
 Schedule::command('backup:database --auto')->everyMinute()->withoutOverlapping();
 
-// 08:00 Manila: remind patients whose D3 / D7 / D28 dose is TOMORROW.
+// 08:00 Manila: remind patients whose next dose is TOMORROW (D3 / D7 / D14 for IM, D3 / D7 / D28 for ID, D3 for a Booster).
 Schedule::call(function () {
     app(SmsService::class)->queueDueReminders(today()->addDay());
 })->name('sms-reminders')->dailyAt('08:00')->timezone('Asia/Manila')->withoutOverlapping();

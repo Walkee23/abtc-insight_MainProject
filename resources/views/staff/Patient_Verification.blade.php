@@ -87,6 +87,9 @@
         }
     </style>
     <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
+    <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
+    <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
+    <script src="{{ asset('js/soft-nav.js') }}" defer></script>
 </head>
 <body class="text-on-surface antialiased">
 <!-- SideNavBar -->
@@ -158,7 +161,7 @@
 <div class="relative group cursor-pointer pl-2">
     <div class="flex items-center gap-3">
         <div class="text-right hidden sm:block">
-            <p class="text-xs font-bold text-on-surface leading-tight">Staff</p>
+            <p class="text-xs font-bold text-on-surface leading-tight">{{ Auth::user()->full_name ?? 'Staff' }}</p>
             <p class="text-[10px] text-on-surface-variant leading-tight">ABTC Staff</p>
         </div>
         <div class="w-9 h-9 rounded-full overflow-hidden ring-2 ring-slate-100 border border-slate-200">
@@ -187,6 +190,19 @@
 </header>
 <!-- Page Canvas -->
 <main class="p-8 space-y-8">
+@if(session('success'))
+{{-- an existing patient found at verification is called out here: the visit becomes a NEW case under the same Patient ID --}}
+<div class="p-4 rounded-lg flex items-start gap-3 border {{ str_starts_with(session('success'), 'Existing patient') ? 'bg-sky-50 border-sky-200 text-sky-900' : 'bg-green-50 border-green-200 text-green-700' }}">
+<span class="material-symbols-outlined shrink-0">{{ str_starts_with(session('success'), 'Existing patient') ? 'how_to_reg' : 'check_circle' }}</span>
+<span class="text-sm font-semibold">{{ session('success') }}</span>
+</div>
+@endif
+@if($errors->any())
+<div class="p-4 rounded-lg flex items-start gap-3 border bg-red-50 border-red-200 text-red-700">
+<span class="material-symbols-outlined shrink-0">error</span>
+<span class="text-sm font-semibold">{{ $errors->first() }}</span>
+</div>
+@endif
 <!-- Page Header -->
 <section class="flex justify-between items-end">
 <div>
@@ -201,20 +217,20 @@
 </div>
 </section>
 <!-- Global Search Bar Section -->
-<section class="bg-surface-container-low p-6 rounded-lg ghost-border">
-<form action="{{ route('staff.patient-verification') }}" method="GET" class="flex gap-4">
+<section data-soft-region="search" class="bg-surface-container-low p-6 rounded-lg ghost-border">
+<form action="{{ route('staff.patient-verification') }}" method="GET" class="flex flex-col sm:flex-row gap-3 sm:gap-4">
 <div class="relative flex-1">
 <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary">person_search</span>
 <input name="search" value="{{ $search ?? '' }}" class="w-full h-14 pl-12 pr-4 bg-surface-container-lowest border-none rounded-lg text-lg placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 transition-all shadow-sm" placeholder="Search by name, tracking ID, or queue number..." type="text"/>
 </div>
-<button type="submit" class="px-8 h-14 bg-primary text-white font-bold rounded-lg flex items-center gap-2 hover:bg-primary-container transition-colors shadow-lg shadow-blue-900/10 active:scale-95">
+<button type="submit" class="px-8 h-14 w-full sm:w-auto justify-center bg-primary text-white font-bold rounded-lg flex items-center gap-2 hover:bg-primary-container transition-colors shadow-lg shadow-blue-900/10 active:scale-95">
 <span class="material-symbols-outlined">search</span>
                         Search Records
                     </button>
 </form>
 </section>
     <!-- BHW Referrals Section -->
-<section class="bg-surface-container-lowest rounded-lg ghost-border overflow-hidden shadow-sm">
+<section data-soft-region="bhw" class="bg-surface-container-lowest rounded-lg ghost-border overflow-hidden shadow-sm">
 <div class="p-5 flex items-center justify-between border-b border-slate-50">
 <div class="flex items-center gap-3">
 <div class="w-2 h-2 rounded-full bg-amber-500"></div>
@@ -261,7 +277,7 @@
 </div>
 </section>
 <!-- Priority Queue Section -->
-<section class="bg-surface-container-lowest rounded-lg ghost-border overflow-hidden shadow-sm">
+<section data-soft-region="priority" class="bg-surface-container-lowest rounded-lg ghost-border overflow-hidden shadow-sm">
 <div class="p-5 flex items-center justify-between border-b border-slate-50">
 <div class="flex items-center gap-3">
 <div class="w-2 h-2 rounded-full bg-green-500"></div>
@@ -306,7 +322,7 @@
 </div>
 </section>
 <!-- Normal Queue Section -->
-<section class="bg-surface-container-lowest rounded-lg ghost-border overflow-hidden shadow-sm">
+<section data-soft-region="normal" class="bg-surface-container-lowest rounded-lg ghost-border overflow-hidden shadow-sm">
 <div class="p-5 flex items-center justify-between border-b border-slate-50">
 <h2 class="text-lg font-bold text-on-surface tracking-tight">Normal Verification Queue (N-Series)</h2>
 <span class="text-xs font-medium text-on-surface-variant bg-surface-container px-3 py-1 rounded-full uppercase tracking-wider">{{ $normalQueue->total() }} Pending</span>

@@ -13,6 +13,8 @@
         .qtr   { background-color: #d9d9d9; font-weight: bold; }
         .year  { background-color: #bfbfbf; font-weight: bold; }
     </style>
+    <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
+    <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
 </head>
 <body>
 <table>

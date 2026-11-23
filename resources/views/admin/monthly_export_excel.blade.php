@@ -38,6 +38,8 @@
         .sub-tot{ font-weight: bold; text-align: center; background-color: #f2f2f2; }
         .grand  { font-weight: bold; text-align: center; background-color: #d9eef3; }
     </style>
+    <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
+    <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
 </head>
 <body>
 <table>

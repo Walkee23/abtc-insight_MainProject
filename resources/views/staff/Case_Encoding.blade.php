@@ -101,6 +101,14 @@
     </style>
     <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
     <script src="{{ asset('js/custom-select.js') }}" defer></script>
+    <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
+    <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
+<style>
+        /* a case that was handed to the Health Worker: shown for viewing only */
+        .case-readonly input, .case-readonly select, .case-readonly textarea { cursor: default; }
+        .case-readonly input:disabled, .case-readonly select:disabled, .case-readonly textarea:disabled { opacity: .75; }
+        .case-readonly label { cursor: default !important; }
+    </style>
 </head>
 
 <body class="bg-surface text-on-surface min-h-screen flex">
@@ -190,23 +198,11 @@
 
         <!-- Content Canvas -->
         <div class="p-8 space-y-6">
-            @if(session('success'))
-            <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg text-sm font-semibold flex items-center gap-2">
-                <span class="material-symbols-outlined text-green-600">check_circle</span>
-                {{ session('success') }}
-            </div>
-            @endif
-            @if($errors->any())
-            <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-sm font-semibold flex items-center gap-2">
-                <span class="material-symbols-outlined text-red-600">error</span>
-                {{ $errors->first() }}
-            </div>
-            @endif
 
             <!-- Page Header & Search -->
             <section class="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h2 class="text-2xl font-extrabold text-blue-900 tracking-tight">Case Encoding</h2>
+                    <h2 class="mn-page-title text-2xl font-extrabold text-blue-900 tracking-tight">Case Encoding</h2>
                     <p class="text-on-surface-variant text-sm mt-1">Complete bite case incident data for verified patients (Sections 3-5)</p>
                 </div>
                 <form action="{{ route('staff.case-encoding') }}" method="GET" class="w-full md:w-1/2 relative">
@@ -218,7 +214,7 @@
             <!-- Main Two-Column Layout -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                 <!-- Left Column: Patient List -->
-                <div class="lg:col-span-3 space-y-4 h-[calc(100vh-280px)] flex flex-col">
+                <div class="lg:col-span-3 space-y-4 h-auto max-h-[22rem] lg:max-h-none lg:h-[calc(100vh-280px)] flex flex-col">
                     <div class="flex items-center justify-between px-2">
                         <h4 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Verified Queue</h4>
                         <span class="text-[10px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full">{{ $verifiedQueue->count() }} Awaiting</span>
@@ -232,6 +228,18 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-outline-variant/10">
+                                @if(!empty($openedRecord))
+                                {{-- opened from Patient Lookup: already encoded, so it is not in the Verified queue --}}
+                                <tr class="bg-primary/5">
+                                    <td class="px-4 py-4 shadow-[inset_4px_0_0_0_#004a93]">
+                                        <p class="font-bold text-on-surface">{{ $openedRecord->patient_name }}</p>
+                                        <p class="text-[10px] text-on-surface-variant">#{{ $openedRecord->inflow_record_id }}</p>
+                                    </td>
+                                    <td class="px-4 py-4">
+                                        <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full text-[9px] font-bold whitespace-nowrap">{{ $openedRecord->status === 'Encoded' ? 'Encoded' : ($openedRecord->status ?: 'Opened') }}</span>
+                                    </td>
+                                </tr>
+                                @endif
                                 @forelse($verifiedQueue as $index => $row)
                                 @php
                                 $rowUrl = route('staff.case-encoding', $row->inflow_record_id);
@@ -247,9 +255,11 @@
                                     </td>
                                 </tr>
                                 @empty
+                                @if(empty($openedRecord))
                                 <tr>
                                     <td colspan="2" class="px-4 py-8 text-center text-on-surface-variant text-xs">No verified patients awaiting encoding.</td>
                                 </tr>
+                                @endif
                                 @endforelse
                             </tbody>
                         </table>
@@ -259,35 +269,78 @@
                 <!-- Right Column: Encoding Form -->
                 <div class="lg:col-span-9">
                     <div class="bg-surface-container-lowest rounded-lg shadow-sm border border-outline-variant/10">
-                        <div class="p-6 border-b border-surface-container-high flex items-center justify-between bg-primary/5 sticky top-16 z-20 backdrop-blur-sm">
-                            <div>
-                                <h3 class="text-lg font-bold text-primary">Animal Bite Case Encoding Form</h3>
-                                <p class="text-xs text-on-surface-variant">
-                                    @if(isset($selectedPatient) && $selectedPatient)
+                        <div class="mn-sticky-actions p-6 border-b border-surface-container-high flex items-center justify-between gap-3 bg-primary/5 sticky top-16 z-20 backdrop-blur-sm">
+                            <div class="min-w-0">
+                                <h3 class="text-lg font-bold text-primary"><span class="hidden md:inline">Animal Bite </span>Case Encoding<span class="hidden md:inline"> Form</span></h3>
+                                <p class="text-xs text-on-surface-variant truncate">
+                                    @if(!empty($readOnly))
+                                    Read-only: <span class="font-bold text-on-surface">{{ $selectedPatient->patient_name }} (#{{ $selectedPatient->inflow_record_id }})</span> &middot; already handed to the Health Worker
+                                    @elseif(isset($selectedPatient) && $selectedPatient)
                                     Currently encoding: <span class="font-bold text-on-surface">{{ $selectedPatient->patient_name }} (#{{ $selectedPatient->inflow_record_id }})</span>
                                     @else
                                     No patient selected — choose one from the Verified Queue.
                                     @endif
                                 </p>
                             </div>
-                            <div class="flex gap-2">
-                                <button type="button" onclick="if(confirm('Discard unsaved changes?')) window.location.reload();" class="px-4 py-2 text-xs font-bold text-secondary bg-surface-container-high rounded-full hover:bg-surface-container-highest transition-colors">Discard</button>
-                                <button type="submit" form="caseEncodingForm" name="action" value="draft" class="px-4 py-2 text-xs font-bold text-white bg-primary rounded-full hover:bg-primary-container transition-all shadow-md active:scale-95">Save Progress</button>
+                            <div class="flex gap-2 shrink-0">
+                                @if(!empty($readOnly))
+                                <span class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-on-surface-variant bg-surface-container-high rounded-full whitespace-nowrap"><span class="material-symbols-outlined text-[15px]">lock</span>Read-only</span>
+                                <a href="{{ route('staff.patient-lookup') }}" class="px-4 py-2 text-xs font-bold text-white bg-primary rounded-full hover:bg-primary-container transition-all shadow-md whitespace-nowrap">Back to Lookup</a>
+                                @else
+                                <button type="button" onclick="discardChanges()" class="px-4 py-2 text-xs font-bold text-secondary bg-surface-container-high rounded-full hover:bg-surface-container-highest transition-colors">Discard</button>
+                                <button type="submit" id="saveProgressBtn" form="caseEncodingForm" name="action" value="draft" formnovalidate class="px-4 py-2 text-xs font-bold text-white bg-primary rounded-full hover:bg-primary-container transition-all shadow-md active:scale-95">Save Progress</button>
+                                @endif
                             </div>
                         </div>
 
-                        <form id="caseEncodingForm" action="{{ route('staff.store-case-encoding', $selectedPatient->inflow_record_id ?? 0) }}" method="POST" class="p-8 space-y-12">
+                        @if(!empty($earlierCases) && $earlierCases->count())
+                        {{-- a person who registered before keeps their Patient ID: this visit is a NEW case --}}
+                        <div class="mx-8 mt-6 p-4 rounded-xl bg-sky-50 border border-sky-200 text-sky-900">
+                            <div class="flex items-start gap-3">
+                                <span class="material-symbols-outlined text-sky-600 shrink-0">how_to_reg</span>
+                                <div class="min-w-0 text-xs leading-relaxed">
+                                    <p class="font-bold text-sm">Existing patient: {{ $selectedPatient->patient_id }}</p>
+                                    <p>This visit is saved as a <strong>new case (#{{ $thisCaseNumber }})</strong> under the same Patient ID. The earlier {{ $earlierCases->count() === 1 ? 'case is' : 'cases are' }} not changed.</p>
+                                    <ul class="mt-2 space-y-1">
+                                        @foreach($earlierCases as $ec)
+                                        <li class="flex flex-wrap items-center gap-x-2">
+                                            <span class="font-bold">Case #{{ $ec->case_number }}</span>
+                                            <span class="text-sky-700">{{ $ec->date_verified ? \Carbon\Carbon::parse($ec->date_verified)->format('M j, Y') : '' }}</span>
+                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold {{ $ec->open ? 'bg-amber-100 text-amber-800' : 'bg-white text-sky-800' }}">{{ $ec->status }}</span>
+                                        </li>
+                                        @endforeach
+                                    </ul>
+                                    @if($earlierCases->contains('open', true))
+                                    <p class="mt-2 text-amber-800 font-semibold">An earlier case still has doses due. If the patient only came for that dose, they check in on the Returning Patient page instead of registering again.</p>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
+                        <form id="caseEncodingForm" autocomplete="off" action="{{ route('staff.store-case-encoding', $selectedPatient->inflow_record_id ?? 0) }}" method="POST" class="p-8">
                             @csrf
+                            <fieldset class="min-w-0 space-y-12 border-0 p-0 m-0 {{ !empty($readOnly) ? 'case-readonly' : '' }}" @if(!empty($readOnly)) disabled @endif>
 
                             @php
-                            $biteDt = !empty($bhwExposure->exposure_datetime) ? \Carbon\Carbon::parse($bhwExposure->exposure_datetime) : null;
+                            // Progress Staff already saved (Save Progress) wins over what the BHW referral pre-fills
+                            $s3 = $saved->s3 ?? null;
+                            $s4 = $saved->s4 ?? null;
+                            $s5 = $saved->s5 ?? null;
+                            $yn = fn ($v, $want) => $v !== null && (int) $v === $want;
+                            $priorDoses = $s5 && $s5->prev_arv_dates ? (json_decode($s5->prev_arv_dates, true) ?: []) : [];
+                            $biteDt = $s3 ? (!empty($s3->bite_date_time) ? \Carbon\Carbon::parse($s3->bite_date_time) : null)
+                                : (!empty($bhwExposure->exposure_datetime) ? \Carbon\Carbon::parse($bhwExposure->exposure_datetime) : null);
                             $biteDateVal = $biteDt ? $biteDt->format('Y-m-d') : '';
                             // The BHW form saves 00:00:00 when no time was entered, so treat that as blank
                             $biteTimeVal = ($biteDt && $biteDt->format('H:i:s') !== '00:00:00') ? $biteDt->format('H:i') : '';
-                            $animal = $bhwExposure->biting_animal ?? '';
-                            $exposureList = array_map('trim', explode(',', $bhwExposure->exposure_type ?? ''));
-                            $animalFate = $bhwExposure->animal_remarks ?? '';
-                            $obsDateVal = !empty($bhwExposure->obs_14_days) ? \Carbon\Carbon::parse($bhwExposure->obs_14_days)->format('Y-m-d') : '';
+                            $animal = $s3 ? ($s3->animal_type ?? '') : ($bhwExposure->biting_animal ?? '');
+                            $animalOther = $s3 ? ($s3->animal_type_other ?? '') : ($bhwExposure->biting_animal_other ?? '');
+                            $exposureList = array_map('trim', explode(',', $s3 ? ($s3->exposure_type ?? '') : ($bhwExposure->exposure_type ?? '')));
+                            $animalFate = $s3 ? ($s3->animal_fate ?? '') : ($bhwExposure->animal_remarks ?? '');
+                            $obsRaw = $s3 ? ($s3->obs_14_days ?? null) : ($bhwExposure->obs_14_days ?? null);
+                            $obsDateVal = !empty($obsRaw) ? \Carbon\Carbon::parse($obsRaw)->format('Y-m-d') : '';
+                            $vaxStatus = $s3->animal_vax_status ?? 'Unknown';
                             @endphp
 
                             <!-- Section 3: Details of Exposure -->
@@ -310,17 +363,17 @@
                                                 <input class="text-primary focus:ring-primary animal-type-radio" name="animal_type" value="Others" type="radio" required {{ $animal === 'Others' ? 'checked' : '' }} /> Others
                                             </label>
                                         </div>
-                                        <input id="animal_type_other_input" class=" {{ $animal === 'Others' ? '' : 'hidden' }} w-full bg-surface-container-highest border-none rounded-lg text-xs px-3 py-2 focus:ring-2 focus:ring-primary/20 transition-all outline-none" name="animal_type_other" value="{{ $bhwExposure->biting_animal_other ?? '' }}" placeholder="Specify animal..." type="text" />
+                                        <input id="animal_type_other_input" class=" {{ $animal === 'Others' ? '' : 'hidden' }} w-full bg-surface-container-highest border-none rounded-lg text-xs px-3 py-2 focus:ring-2 focus:ring-primary/20 transition-all outline-none" name="animal_type_other" value="{{ $animalOther }}" placeholder="Specify animal..." type="text" />
                                     </div>
 
                                     <div class="space-y-4">
                                         <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Pet or Stray <span class="text-error"></label>
                                         <div class="flex gap-4">
                                             <label class="flex items-center gap-2 text-sm cursor-pointer">
-                                                <input class="text-primary focus:ring-primary" name="pet_status" value="Pet" type="radio" /> Pet
+                                                <input class="text-primary focus:ring-primary" name="pet_status" value="Pet" type="radio" {{ ($s3->animal_ownership ?? '') === 'Pet' ? 'checked' : '' }} /> Pet
                                             </label>
                                             <label class="flex items-center gap-2 text-sm cursor-pointer">
-                                                <input class="text-primary focus:ring-primary" name="pet_status" value="Stray" type="radio" /> Stray
+                                                <input class="text-primary focus:ring-primary" name="pet_status" value="Stray" type="radio" {{ ($s3->animal_ownership ?? '') === 'Stray' ? 'checked' : '' }} /> Stray
                                             </label>
                                         </div>
                                     </div>
@@ -354,22 +407,22 @@
                                             <div class="flex flex-col gap-2">
                                                 <span class="text-[10px] text-on-surface-variant">Provoked</span>
                                                 <div class="flex gap-3">
-                                                    <label class="text-[11px]"><input class="text-primary" name="provoked" value="1" type="radio" /> Yes</label>
-                                                    <label class="text-[11px]"><input class="text-primary" name="provoked" value="0" type="radio" /> No</label>
+                                                    <label class="text-[11px]"><input class="text-primary" name="provoked" value="1" type="radio" {{ $yn($s3->is_provoked ?? null, 1) ? 'checked' : '' }} /> Yes</label>
+                                                    <label class="text-[11px]"><input class="text-primary" name="provoked" value="0" type="radio" {{ $yn($s3->is_provoked ?? null, 0) ? 'checked' : '' }} /> No</label>
                                                 </div>
                                             </div>
                                             <div class="flex flex-col gap-2">
                                                 <span class="text-[10px] text-on-surface-variant">On Leash</span>
                                                 <div class="flex gap-3">
-                                                    <label class="text-[11px]"><input class="text-primary" name="leash" value="1" type="radio" /> Yes</label>
-                                                    <label class="text-[11px]"><input class="text-primary" name="leash" value="0" type="radio" /> No</label>
+                                                    <label class="text-[11px]"><input class="text-primary" name="leash" value="1" type="radio" {{ $yn($s3->is_leashed ?? null, 1) ? 'checked' : '' }} /> Yes</label>
+                                                    <label class="text-[11px]"><input class="text-primary" name="leash" value="0" type="radio" {{ $yn($s3->is_leashed ?? null, 0) ? 'checked' : '' }} /> No</label>
                                                 </div>
                                             </div>
                                             <div class="flex flex-col gap-2">
                                                 <span class="text-[10px] text-on-surface-variant">Gate Status</span>
                                                 <div class="flex gap-3">
-                                                    <label class="text-[11px]"><input class="text-primary" name="gate" value="1" type="radio" /> With gate</label>
-                                                    <label class="text-[11px]"><input class="text-primary" name="gate" value="0" type="radio" /> Without gate</label>
+                                                    <label class="text-[11px]"><input class="text-primary" name="gate" value="1" type="radio" {{ $yn($s3->has_gate ?? null, 1) ? 'checked' : '' }} /> With gate</label>
+                                                    <label class="text-[11px]"><input class="text-primary" name="gate" value="0" type="radio" {{ $yn($s3->has_gate ?? null, 0) ? 'checked' : '' }} /> Without gate</label>
                                                 </div>
                                             </div>
                                         </div>
@@ -379,20 +432,20 @@
                                         <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Vax Status &amp; Date</label>
                                         <div class="flex gap-2">
                                             <select id="vax_status_select" class="flex-1 bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20" name="animal_vax_status">
-                                                <option>Unknown</option>
-                                                <option>Vaccinated</option>
-                                                <option>Not Vaccinated</option>
+                                                <option {{ $vaxStatus === 'Unknown' ? 'selected' : '' }}>Unknown</option>
+                                                <option {{ $vaxStatus === 'Vaccinated' ? 'selected' : '' }}>Vaccinated</option>
+                                                <option {{ $vaxStatus === 'Not Vaccinated' ? 'selected' : '' }}>Not Vaccinated</option>
                                             </select>
-                                            <input id="vax_date_input" class="flex-1 bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20 disabled:opacity-50 disabled:cursor-not-allowed" name="animal_vax_date" type="date" min="2000-01-01" max="{{ date('Y-m-d') }}" disabled />
+                                            <input id="vax_date_input" class="flex-1 bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20 disabled:opacity-50 disabled:cursor-not-allowed" name="animal_vax_date" type="date" value="{{ $s3->animal_vax_date ?? '' }}" min="2000-01-01" max="{{ date('Y-m-d') }}" {{ $vaxStatus === 'Vaccinated' ? '' : 'disabled' }} />
                                         </div>
                                     </div>
 
                                     <div class="md:col-span-2 space-y-2">
                                         <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Circumstances of Exposure</label>
-                                        <textarea class="w-full bg-surface-container-highest border-none rounded-lg text-sm px-4 py-3 focus:ring-2 focus:ring-primary/20 transition-all outline-none resize-none" name="circumstances" placeholder="Brief description of the incident..." rows="3"></textarea>
+                                        <textarea class="w-full bg-surface-container-highest border-none rounded-lg text-sm px-4 py-3 focus:ring-2 focus:ring-primary/20 transition-all outline-none resize-none" name="circumstances" placeholder="Brief description of the incident..." rows="3">{{ $s3->circumstances ?? '' }}</textarea>
                                     </div>
 
-                                    <div class="md:col-span-2 grid grid-cols-2 gap-8">
+                                    <div class="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-8">
                                         <div class="space-y-4">
                                             <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Fate of Animal</label>
                                             <div class="grid grid-cols-2 gap-2">
@@ -424,16 +477,16 @@
                                         <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Wound washed with</label>
                                         <div class="flex flex-wrap gap-4 items-center">
                                             <label class="flex items-center gap-2 text-sm cursor-pointer">
-                                                <input class="text-primary focus:ring-primary wound-wash-radio" name="wound_washed" value="Water only" type="radio" /> Water only
+                                                <input class="text-primary focus:ring-primary wound-wash-radio" name="wound_washed" value="Water only" type="radio" {{ ($s4->wound_washed ?? '') === 'Water only' ? 'checked' : '' }} /> Water only
                                             </label>
                                             <label class="flex items-center gap-2 text-sm cursor-pointer">
-                                                <input class="text-primary focus:ring-primary wound-wash-radio" name="wound_washed" value="Soap &amp; Water" type="radio" /> Soap &amp; Water
+                                                <input class="text-primary focus:ring-primary wound-wash-radio" name="wound_washed" value="Soap &amp; Water" type="radio" {{ ($s4->wound_washed ?? '') === 'Soap & Water' ? 'checked' : '' }} /> Soap &amp; Water
                                             </label>
                                             <div class="flex items-center gap-2">
                                                 <label class="flex items-center gap-2 text-sm cursor-pointer">
-                                                    <input class="text-primary focus:ring-primary wound-wash-radio" name="wound_washed" value="Others" type="radio" /> Others
+                                                    <input class="text-primary focus:ring-primary wound-wash-radio" name="wound_washed" value="Others" type="radio" {{ ($s4->wound_washed ?? '') === 'Others' ? 'checked' : '' }} /> Others
                                                 </label>
-                                                <input id="wound_wash_other_input" class="bg-surface-container-highest border-none rounded-lg text-xs px-3 py-1.5 focus:ring-2 focus:ring-primary/20 transition-all outline-none w-40 disabled:opacity-50 disabled:cursor-not-allowed" name="wound_wash_other" placeholder="Specify treatment..." type="text" disabled />
+                                                <input id="wound_wash_other_input" class="bg-surface-container-highest border-none rounded-lg text-xs px-3 py-1.5 focus:ring-2 focus:ring-primary/20 transition-all outline-none w-40 disabled:opacity-50 disabled:cursor-not-allowed" name="wound_wash_other" placeholder="Specify treatment..." type="text" value="{{ $s4->wound_wash_other ?? '' }}" {{ ($s4->wound_washed ?? '') === 'Others' ? '' : 'disabled' }} />
                                             </div>
                                         </div>
                                     </div>
@@ -441,11 +494,11 @@
                                         <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Local irritant applied</label>
                                         <div class="flex flex-col gap-3">
                                             <label class="relative inline-flex items-center cursor-pointer">
-                                                <input id="local_irritant_checkbox" class="sr-only peer" name="local_irritant_applied" value="1" type="checkbox" />
+                                                <input id="local_irritant_checkbox" class="sr-only peer" name="local_irritant_applied" value="1" type="checkbox" {{ !empty($s4->local_irritant_applied) ? 'checked' : '' }} />
                                                 <div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                                                 <span class="ml-3 text-sm font-medium text-on-surface-variant">Yes, applied</span>
                                             </label>
-                                            <input id="local_irritant_input" class="w-full bg-surface-container-highest border-none rounded-lg text-xs px-4 py-2 focus:ring-2 focus:ring-primary/20 outline-none disabled:opacity-50 disabled:cursor-not-allowed" name="local_irritant_detail" placeholder="Specify (e.g., Garlic, Vinegar, etc.)" type="text" disabled />
+                                            <input id="local_irritant_input" class="w-full bg-surface-container-highest border-none rounded-lg text-xs px-4 py-2 focus:ring-2 focus:ring-primary/20 outline-none disabled:opacity-50 disabled:cursor-not-allowed" name="local_irritant_detail" placeholder="Specify (e.g., Garlic, Vinegar, etc.)" type="text" value="{{ $s4->local_irritant_detail ?? '' }}" {{ !empty($s4->local_irritant_applied) ? '' : 'disabled' }} />
                                         </div>
                                     </div>
                                 </div>
@@ -462,29 +515,29 @@
                                         <label class="block text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Previously Vaccinated?</label>
                                         <div class="flex gap-4">
                                             <label class="flex items-center gap-2 text-sm cursor-pointer has-[:checked]:font-bold has-[:checked]:text-primary">
-                                                <input class="text-primary focus:ring-primary" id="prev_arv_yes" name="prev_arv_given" value="1" type="radio" /> Yes
+                                                <input class="text-primary focus:ring-primary" id="prev_arv_yes" name="prev_arv_given" value="1" type="radio" {{ $yn($s5->prev_arv_given ?? null, 1) ? 'checked' : '' }} /> Yes
                                             </label>
                                             <label class="flex items-center gap-2 text-sm cursor-pointer has-[:checked]:font-bold has-[:checked]:text-primary">
-                                                <input class="text-primary focus:ring-primary" id="prev_arv_no" name="prev_arv_given" value="0" type="radio" /> No
+                                                <input class="text-primary focus:ring-primary" id="prev_arv_no" name="prev_arv_given" value="0" type="radio" {{ $yn($s5->prev_arv_given ?? null, 0) ? 'checked' : '' }} /> No
                                             </label>
                                         </div>
                                     </div>
                                     <div id="dose_dates_wrapper" class="grid grid-cols-2 md:grid-cols-4 gap-4 hidden">
                                         <div class="space-y-2">
                                             <label class="block text-[10px] font-bold text-on-surface-variant uppercase">Dose 1 Date</label>
-                                            <input class="w-full bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20" id="dose1_date" name="dose1_date" type="date" min="2000-01-01" max="{{ date('Y-m-d') }}" />
+                                            <input class="w-full bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20" id="dose1_date" name="dose1_date" type="date" value="{{ $priorDoses['dose1'] ?? '' }}" min="2000-01-01" max="{{ date('Y-m-d') }}" />
                                         </div>
                                         <div class="space-y-2">
                                             <label class="block text-[10px] font-bold text-on-surface-variant uppercase">Dose 2 Date</label>
-                                            <input class="w-full bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20" id="dose2_date" name="dose2_date" type="date" min="2000-01-01" max="{{ date('Y-m-d') }}" />
+                                            <input class="w-full bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20" id="dose2_date" name="dose2_date" type="date" value="{{ $priorDoses['dose2'] ?? '' }}" min="2000-01-01" max="{{ date('Y-m-d') }}" />
                                         </div>
                                         <div class="space-y-2">
                                             <label class="block text-[10px] font-bold text-on-surface-variant uppercase">Dose 3 Date</label>
-                                            <input class="w-full bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20" id="dose3_date" name="dose3_date" type="date" min="2000-01-01" max="{{ date('Y-m-d') }}" />
+                                            <input class="w-full bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20" id="dose3_date" name="dose3_date" type="date" value="{{ $priorDoses['dose3'] ?? '' }}" min="2000-01-01" max="{{ date('Y-m-d') }}" />
                                         </div>
                                         <div class="space-y-2">
                                             <label class="block text-[10px] font-bold text-on-surface-variant uppercase">Booster Date</label>
-                                            <input class="w-full bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20" id="booster_date" name="booster_date" type="date" min="2000-01-01" max="{{ date('Y-m-d') }}" />
+                                            <input class="w-full bg-surface-container-highest border-none rounded-lg text-xs py-2 focus:ring-2 focus:ring-primary/20" id="booster_date" name="booster_date" type="date" value="{{ $priorDoses['booster'] ?? '' }}" min="2000-01-01" max="{{ date('Y-m-d') }}" />
                                         </div>
                                     </div>
                                 </div>
@@ -496,13 +549,21 @@
                             </section>
 
                             <!-- Form Submission -->
+                            @if(!empty($readOnly))
+                            <div class="pt-8 border-t border-surface-container-high flex items-start gap-3 text-xs text-on-surface-variant">
+                                <span class="material-symbols-outlined text-[18px] text-primary shrink-0">lock</span>
+                                <p>This case has been encoded and handed to the Health Worker, so it is shown here for viewing only. Changes are made by the Health Worker in Clinical Encoding.</p>
+                            </div>
+                            @else
                             <div class="pt-8 border-t border-surface-container-high flex justify-end gap-4">
-                                <button type="button" class="px-8 py-3 text-sm font-bold text-secondary bg-surface-container-low rounded-full hover:bg-surface-container-high transition-all">Cancel Entry</button>
-                                <button type="submit" name="action" value="complete" class="px-10 py-3 text-sm font-bold text-white bg-primary rounded-full hover:bg-primary-container transition-all shadow-xl active:scale-95 flex items-center gap-2">
+                                <button type="button" onclick="discardChanges()" class="px-8 py-3 text-sm font-bold text-secondary bg-surface-container-low rounded-full hover:bg-surface-container-high transition-all">Cancel Entry</button>
+                                <button type="submit" id="completeEncodingBtn" name="action" value="complete" class="px-10 py-3 text-sm font-bold text-white bg-primary rounded-full hover:bg-primary-container transition-all shadow-xl active:scale-95 flex items-center gap-2">
                                     <span class="material-symbols-outlined text-[18px]">check_circle</span>
                                     Complete Encoding
                                 </button>
                             </div>
+                            @endif
+                            </fieldset>
                         </form>
                     </div>
                 </div>
@@ -510,7 +571,141 @@
         </div>
     </main>
 
+    <!-- Confirmation pop-up (Save Progress / Complete Encoding / Discard) -->
+    <div id="ceConfirmModal" role="dialog" aria-modal="true" aria-labelledby="ceConfirmTitle"
+        class="hidden fixed inset-0 z-[70] bg-slate-900/60 backdrop-blur-sm items-center justify-center p-4 opacity-0 transition-opacity duration-200">
+        <div id="ceConfirmCard" class="bg-white rounded-2xl max-w-sm w-full p-7 text-center shadow-2xl border border-slate-100 scale-95 transition-transform duration-200">
+            <div id="ceConfirmIconWrap" class="mx-auto mb-4 w-14 h-14 rounded-full flex items-center justify-center">
+                <span id="ceConfirmIcon" class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;"></span>
+            </div>
+            <h3 id="ceConfirmTitle" class="text-xl font-extrabold tracking-tight text-on-surface"></h3>
+            <p id="ceConfirmText" class="mt-2 text-sm text-on-surface-variant leading-relaxed"></p>
+            <p id="ceConfirmDetail" class="hidden mt-3 text-sm font-bold text-on-surface bg-slate-50 rounded-xl px-4 py-2.5 break-words"></p>
+            <div class="mt-6 grid grid-cols-2 gap-3">
+                <button type="button" id="ceConfirmCancel" class="px-4 py-3 rounded-full font-bold text-sm text-slate-600 bg-slate-100 hover:bg-slate-200 active:scale-95 transition-all">Go Back</button>
+                <button type="button" id="ceConfirmOk" class="px-4 py-3 rounded-full font-bold text-sm text-white active:scale-95 transition-all shadow-lg disabled:opacity-60 disabled:cursor-wait"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Result pop-up (shown after a save, a completed encoding, or when something needs fixing) -->
+    @if(session('success') || $errors->any())
+    @php $ceOk = !$errors->any(); @endphp
+    <div id="ceResultModal" role="dialog" aria-modal="true" aria-labelledby="ceResultTitle"
+        class="hidden fixed inset-0 z-[70] bg-slate-900/60 backdrop-blur-sm items-center justify-center p-4 opacity-0 transition-opacity duration-200">
+        <div id="ceResultCard" class="bg-white rounded-2xl max-w-sm w-full p-7 text-center shadow-2xl border border-slate-100 scale-95 transition-transform duration-200">
+            <div class="mx-auto mb-4 w-14 h-14 rounded-full flex items-center justify-center {{ $ceOk ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600' }}">
+                <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">{{ $ceOk ? 'check_circle' : 'error' }}</span>
+            </div>
+            <h3 id="ceResultTitle" class="text-xl font-extrabold tracking-tight text-on-surface">{{ $ceOk ? 'Done' : 'Please check this' }}</h3>
+            <p class="mt-2 text-sm text-on-surface-variant leading-relaxed break-words">{{ $ceOk ? session('success') : $errors->first() }}</p>
+            <button type="button" id="ceResultOk" class="mt-6 w-full px-6 py-3 rounded-full font-bold text-sm text-white active:scale-95 transition-all shadow-lg {{ $ceOk ? 'bg-primary shadow-primary/20' : 'bg-red-600 shadow-red-600/20' }}">{{ $ceOk ? 'OK' : 'Back to the form' }}</button>
+        </div>
+    </div>
+    @endif
+
     <script>
+        // ---- pop-ups -----------------------------------------------------------------------------
+        const ceTones = {
+            blue:  { wrap: 'bg-blue-100 text-blue-700',       ok: 'bg-primary shadow-primary/20' },
+            green: { wrap: 'bg-emerald-100 text-emerald-600', ok: 'bg-emerald-600 shadow-emerald-600/20' },
+            amber: { wrap: 'bg-amber-100 text-amber-600',     ok: 'bg-amber-500 shadow-amber-500/20' },
+        };
+        let ceOnYes = null;
+
+        function ceShow(modal, card) {
+            document.body.classList.add('overflow-hidden');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => { modal.classList.remove('opacity-0'); card.classList.remove('scale-95'); }, 10);
+        }
+        function ceHide(modal, card) {
+            modal.classList.add('opacity-0');
+            card.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); document.body.classList.remove('overflow-hidden'); }, 200);
+        }
+
+        const ceModal = document.getElementById('ceConfirmModal');
+        const ceCard = document.getElementById('ceConfirmCard');
+        const ceOk = document.getElementById('ceConfirmOk');
+
+        function ceAsk(opts, onYes) {
+            const t = ceTones[opts.tone] || ceTones.blue;
+            document.getElementById('ceConfirmIconWrap').className = 'mx-auto mb-4 w-14 h-14 rounded-full flex items-center justify-center ' + t.wrap;
+            document.getElementById('ceConfirmIcon').textContent = opts.icon;
+            document.getElementById('ceConfirmTitle').textContent = opts.title;
+            document.getElementById('ceConfirmText').textContent = opts.text;
+            const detail = document.getElementById('ceConfirmDetail');
+            detail.textContent = opts.detail || '';
+            detail.classList.toggle('hidden', !opts.detail);
+            ceOk.className = 'px-4 py-3 rounded-full font-bold text-sm text-white active:scale-95 transition-all shadow-lg disabled:opacity-60 disabled:cursor-wait ' + t.ok;
+            ceOk.textContent = opts.ok;
+            ceOk.disabled = false;
+            ceOnYes = onYes;
+            ceShow(ceModal, ceCard);
+            setTimeout(() => ceOk.focus(), 60);
+        }
+        function ceClose() { ceOnYes = null; ceHide(ceModal, ceCard); }
+
+        document.getElementById('ceConfirmCancel').addEventListener('click', ceClose);
+        ceModal.addEventListener('click', (e) => { if (e.target === ceModal) ceClose(); });
+        ceOk.addEventListener('click', () => {
+            const go = ceOnYes;
+            if (!go) return;
+            ceOk.disabled = true;                 // one click is enough
+            go();
+        });
+
+        const ceResult = document.getElementById('ceResultModal');
+        if (ceResult) {
+            const card = document.getElementById('ceResultCard');
+            const close = () => ceHide(ceResult, card);
+            document.getElementById('ceResultOk').addEventListener('click', close);
+            ceResult.addEventListener('click', (e) => { if (e.target === ceResult) close(); });
+            setTimeout(() => ceShow(ceResult, card), 150);
+        }
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'Escape') return;
+            if (!ceModal.classList.contains('hidden')) ceClose();
+            else if (ceResult && !ceResult.classList.contains('hidden')) document.getElementById('ceResultOk').click();
+        });
+
+        // who the pop-ups talk about
+        const ceWho = @json(trim(($selectedPatient->patient_name ?? '') . (!empty($thisCaseNumber) ? ' · Case #' . $thisCaseNumber : '')));
+
+        // ---- Save Progress / Complete Encoding ask first -------------------------------------------
+        const ceForm = document.getElementById('caseEncodingForm');
+        const ceSaveBtn = document.getElementById('saveProgressBtn');
+        const ceCompleteBtn = document.getElementById('completeEncodingBtn');
+
+        if (ceSaveBtn) ceSaveBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            ceAsk({
+                tone: 'blue', icon: 'save', title: 'Save progress?',
+                text: 'Your answers are saved so you can come back and finish later. The case is not sent to the Health Worker yet.',
+                detail: ceWho, ok: 'Save Progress',
+            }, () => ceForm.requestSubmit(ceSaveBtn));
+        });
+
+        if (ceCompleteBtn) ceCompleteBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (!ceForm.reportValidity()) return;   // let the browser point at the missing field first
+            ceAsk({
+                tone: 'green', icon: 'task_alt', title: 'Complete encoding?',
+                text: 'The case is sent to the Health Worker for Clinical Encoding. After this you can only view it here.',
+                detail: ceWho, ok: 'Complete Encoding',
+            }, () => ceForm.requestSubmit(ceCompleteBtn));
+        });
+
+        // Discard / Cancel Entry: drop what was typed since the last save and reload the saved version
+        function discardChanges() {
+            ceAsk({
+                tone: 'amber', icon: 'delete_sweep', title: 'Discard changes?',
+                text: 'What you typed since the last save is removed. The form goes back to the last saved progress.',
+                detail: '', ok: 'Discard',
+            }, () => window.location.assign(window.location.pathname + window.location.search));
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             // --- Section 3: Animal Type "Others" Logic ---
             const animalTypeRadios = document.querySelectorAll('.animal-type-radio');

@@ -87,19 +87,21 @@
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
     </style>
+    <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
+    <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
 </head>
 
 <body class="bg-surface selection:bg-primary-container selection:text-on-primary-container">
     <!-- Top Navigation Bar -->
     <nav class="fixed top-0 w-full z-50 bg-slate-50/85 backdrop-blur-md shadow-sm">
-        <div class="flex justify-between items-center px-6 py-4 max-w-7xl mx-auto font-sans antialiased text-sm font-medium tracking-tight">
+        <div class="flex flex-wrap sm:flex-nowrap justify-between items-center px-6 py-4 max-w-7xl mx-auto font-sans antialiased text-sm font-medium tracking-tight">
             <!-- Left Side: Brand Logo -->
             <div class="text-xl font-bold tracking-tighter text-blue-900">
                 ABTC-Insight
             </div>
             <!-- Right Side: Navigation Links & Login -->
-            <div class="flex items-center gap-8">
-                <div class="flex items-center gap-6">
+            <div class="flex items-center gap-8 w-full sm:w-auto">
+                <div class="flex items-center gap-6 w-full sm:w-auto justify-between sm:justify-start border-t border-slate-200/70 sm:border-0 pt-3 sm:pt-0 mt-1 sm:mt-0">
                     <a class="text-slate-600 hover:text-blue-600 transition-colors" href="{{ route('patient.register') }}">Patient Registration</a>
                     <a class="text-slate-600 hover:text-blue-600 transition-colors" href="{{ route('patient.tracking.portal') }}">Tracking Portal</a>
                 </div>
@@ -109,7 +111,7 @@
         <div class="bg-slate-200/50 h-[1px] w-full absolute bottom-0"></div>
     </nav>
 
-    <main class="pt-20">
+    <main class="pt-28 sm:pt-20">
         <!-- Hero Section -->
         <section class="relative overflow-hidden bg-surface py-16 lg:py-24">
             <div class="max-w-7xl mx-auto px-6 grid lg:grid-cols-12 gap-12 items-center">
@@ -348,25 +350,25 @@
         <!-- Call to Action Card Section -->
         <section class="py-12 bg-surface">
             <div class="max-w-7xl mx-auto px-6">
-                <div class="p-10 bg-surface-container-low rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-8 shadow-sm">
+                <div class="p-6 sm:p-10 bg-surface-container-low rounded-[1.5rem] sm:rounded-[2rem] flex flex-col md:flex-row md:items-center justify-between gap-5 md:gap-8 shadow-sm">
                     <div class="flex-1">
                         <h3 class="text-2xl font-bold mb-2">Have you been exposed?</h3>
                         <p class="text-on-surface-variant text-sm md:text-base">Don't wait. Proceed to the <strong>Cebu City Health Department Animal Bite Treatment Center (CCHD ABTC)</strong> immediately for professional medical care.</p>
                     </div>
-                    <p class="text-primary font-bold text-base text-right">Please visit the clinic immediately for urgent medical attention.</p>
+                    <p class="text-primary font-bold text-base text-left md:text-right md:max-w-xs">Please visit the clinic immediately for urgent medical attention.</p>
                 </div>
             </div>
         </section>
     </main>
 
     <!-- Footer -->
-    <footer class="bg-slate-100 w-full py-12 px-8 mt-12">
-        <div class="flex flex-col md:flex-row justify-between items-center gap-8 max-w-7xl mx-auto">
-            <div class="flex flex-wrap justify-center gap-8 font-sans text-xs uppercase tracking-widest font-semibold">
+    <footer class="bg-slate-100 w-full py-10 md:py-12 px-6 md:px-8 mt-12">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-6 md:gap-8 max-w-7xl mx-auto text-center">
+            <div class="flex flex-wrap justify-center gap-x-6 gap-y-3 md:gap-8 font-sans text-xs uppercase tracking-widest font-semibold">
             <a class="text-slate-500 hover:text-blue-500 transition-colors" href="https://cebucitytour.com/cebu-city-emergecy-hotline/" target="_blank" rel="noopener noreferrer">Emergency Contacts</a>
             <a class="text-slate-500 hover:text-blue-500 transition-colors" href="https://doh.gov.ph/" target="_blank" rel="noopener noreferrer">Department of Health</a>
         </div>
-            <div class="text-slate-500 text-[10px] uppercase tracking-widest font-bold opacity-60">
+            <div class="text-slate-500 text-[10px] uppercase tracking-widest font-bold opacity-60 text-center">
                 © 2026 Cebu City Health Center. All rights reserved.
             </div>
         </div>

@@ -21,6 +21,10 @@
       font-family: 'Inter', sans-serif;
     }
 
+    /* field labels: a touch bigger and calmer; the hints under the fields are no longer italic */
+    form label.uppercase { font-size: 11px; letter-spacing: 0.05em; }
+    #bhwReferralHint { font-style: normal; font-size: 11.5px; line-height: 1.45; opacity: 1; }
+
     .clinical-gradient {
       background: linear-gradient(135deg, #004a93 0%, #0b61bb 100%);
     }
@@ -89,9 +93,11 @@
       }
     }
   </script>
+    <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
+    <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
 </head>
 
-<body class="bg-surface text-on-surface selection:bg-primary-fixed">
+<body class="bg-surface text-on-surface selection:bg-primary-fixed min-h-screen flex flex-col">
   <!-- TopNavBar (Updated to match Patient Portal style) -->
   <nav class="fixed top-0 w-full z-50 bg-slate-50/85 backdrop-blur-md shadow-sm shadow-blue-900/5 transition-all duration-300 ease-in-out font-sans antialiased tracking-tight">
     <div class="flex justify-between items-center px-8 py-4 max-w-full mx-auto">
@@ -122,62 +128,41 @@
     </div>
     <!-- Registration Form Card -->
     <div
-      class="w-full max-w-[680px] bg-surface-container-lowest rounded-xl shadow-xl border border-outline-variant/30 p-10 overflow-hidden">
+      class="w-full max-w-[680px] bg-surface-container-lowest rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.05)] ring-1 ring-outline-variant/10 overflow-hidden">
+      <div class="h-1.5 clinical-gradient"></div>
+      <div class="p-6 sm:p-8 md:p-10">
       <!-- Card Header -->
-      <div class="flex flex-col gap-1 mb-8">
-        <div class="flex items-center justify-between">
-          <h1 class="text-2xl font-extrabold tracking-tight text-on-surface">New Patient Registration</h1>
-          <span
-            class="bg-secondary-container text-on-secondary-container px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest">New
-            Patient</span>
+      <div class="flex items-start gap-4 mb-6">
+        <div class="shrink-0 w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+          <span class="material-symbols-outlined text-[26px]" style="font-variation-settings: 'FILL' 1;">person_add</span>
         </div>
-        <p class="text-on-surface-variant text-sm font-medium">Cebu City Animal Bite Treatment Center — CCHD</p>
+        <div class="min-w-0">
+          <span class="inline-block bg-secondary-container text-on-secondary-container px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase mb-1.5">New patient</span>
+          <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-on-surface leading-tight">New Patient Registration</h1>
+          <p class="text-on-surface-variant mt-1 text-sm leading-snug">Cebu City Animal Bite Treatment Center — CCHD</p>
+        </div>
       </div>
-      <!-- 4-step Progress Indicator -->
-      <div class="flex items-center mb-12 px-2" id="progressIndicator">
-        <div class="flex flex-col items-center gap-2 shrink-0" id="stepWrap-1">
-          <div
-            class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold shadow-lg shadow-primary/20 transition-all"
-            id="stepCircle-1">1</div>
-          <span class="text-[10px] uppercase font-bold tracking-tighter text-primary transition-colors"
-            id="stepLabel-1">Priority Status</span>
-        </div>
-        <div class="flex-1 h-[2px] bg-surface-container-high mx-1 -mt-6 transition-colors" id="stepLine-1"></div>
-        <div class="flex flex-col items-center gap-2 shrink-0" id="stepWrap-2">
-          <div
-            class="w-8 h-8 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center text-xs font-bold transition-all"
-            id="stepCircle-2">2</div>
-          <span class="text-[10px] uppercase font-bold tracking-tighter text-on-surface-variant transition-colors"
-            id="stepLabel-2">Personal Info</span>
-        </div>
-        <div class="flex-1 h-[2px] bg-surface-container-high mx-1 -mt-6 transition-colors" id="stepLine-2"></div>
-        <div class="flex flex-col items-center gap-2 shrink-0" id="stepWrap-3">
-          <div
-            class="w-8 h-8 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center text-xs font-bold transition-all"
-            id="stepCircle-3">3</div>
-          <span class="text-[10px] uppercase font-bold tracking-tighter text-on-surface-variant transition-colors"
-            id="stepLabel-3">PhilHealth</span>
-        </div>
-        <div class="flex-1 h-[2px] bg-surface-container-high mx-1 -mt-6 transition-colors" id="stepLine-3"></div>
-        <div class="flex flex-col items-center gap-2 shrink-0" id="stepWrap-4">
-          <div
-            class="w-8 h-8 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center text-xs font-bold transition-all"
-            id="stepCircle-4">4</div>
-          <span class="text-[10px] uppercase font-bold tracking-tighter text-on-surface-variant transition-colors"
-            id="stepLabel-4">Medical History</span>
-        </div>
+      <!-- What to have ready -->
+      <div class="mb-8 flex items-start gap-3 rounded-xl bg-primary/5 border border-primary/10 px-4 py-3.5">
+        <span class="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5">info</span>
+        <p class="text-xs sm:text-[13px] text-on-surface-variant leading-relaxed">Have your <span class="font-bold text-on-surface">BHW Referral ID</span> ready. Every new bite needs its own referral from your Barangay Health Worker. You get your <span class="font-bold text-on-surface">queue number</span> after you submit.</p>
       </div>
       <!-- Form Content -->
-      <form action="{{ route('patient.new-submit') }}" method="POST" class="space-y-12">
+      <form action="{{ route('patient.new-submit') }}" method="POST">
         @csrf
 
         <!-- Add this hidden input right below the form tag -->
         <input type="hidden" name="priority_status" id="priorityInput" value="none">
         <!-- Section 1: Priority Status -->
         <section id="section1">
-          <div class="flex items-center gap-2 mb-6">
-            <div class="w-1 h-5 bg-primary rounded-full"></div>
-            <h2 class="text-sm font-bold uppercase tracking-widest text-on-surface">Step 1: Priority Status</h2>
+          <div class="flex items-start gap-3 mb-5">
+            <div class="shrink-0 w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+              <span class="material-symbols-outlined text-[20px]">accessible</span>
+            </div>
+            <div class="min-w-0">
+              <h2 class="text-base font-extrabold tracking-tight text-on-surface leading-tight">Priority Status</h2>
+              <p class="text-xs text-on-surface-variant mt-0.5">Choose one if it applies to you. Priority patients are served in the P-series queue.</p>
+            </div>
           </div>
           <div class="grid grid-cols-2 gap-4">
             <!-- Card: None -->
@@ -242,32 +227,37 @@
           </div>
         </section>
         <!-- Section 2: Personal Info -->
-        <section id="section2">
-          <div class="flex items-center gap-2 mb-6">
-            <div class="w-1 h-5 bg-primary rounded-full"></div>
-            <h2 class="text-sm font-bold uppercase tracking-widest text-on-surface">Step 2: Personal Information</h2>
+        <section id="section2" class="mt-10 pt-10 border-t border-outline-variant/20">
+          <div class="flex items-start gap-3 mb-5">
+            <div class="shrink-0 w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+              <span class="material-symbols-outlined text-[20px]">badge</span>
+            </div>
+            <div class="min-w-0">
+              <h2 class="text-base font-extrabold tracking-tight text-on-surface leading-tight">Personal Information</h2>
+              <p class="text-xs text-on-surface-variant mt-0.5">Type your details, or use your BHW Referral ID and press Autofill.</p>
+            </div>
           </div>
           <div class="grid grid-cols-2 gap-x-6 gap-y-4">
             <div class="col-span-2">
               <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5 ml-1">BHW Referral ID
                 <span class="text-error">*</span></label>
 
-              <div class="flex gap-2">
+              <div class="flex flex-wrap gap-2">
                 <input
-                  class="w-full bg-surface-container-highest border-none rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all @error('bhw_referral_id') ring-2 ring-error @enderror"
+                  class="w-full basis-full sm:basis-0 sm:flex-1 bg-surface-container-highest border-none rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all @error('bhw_referral_id') ring-2 ring-error @enderror"
                   name="bhw_referral_id" id="bhwReferralInput" value="{{ old('bhw_referral_id') }}"
                   pattern="BRY-\d{3}-\d{8}-\d{4}"
                   placeholder="e.g., BRY-001-20260501-0023" required=""
                   type="text" />
 
                 <button type="button" id="scanQrBtn" title="Scan Referral QR Code"
-                  class="bg-secondary-container text-on-secondary-container px-4 py-3 rounded-lg text-sm font-bold hover:opacity-90 transition-opacity flex items-center gap-1.5 whitespace-nowrap">
+                  class="flex-1 sm:flex-none justify-center bg-secondary-container text-on-secondary-container px-4 py-3 rounded-lg text-sm font-bold hover:opacity-90 transition-opacity flex items-center gap-1.5 whitespace-nowrap">
                   <span class="material-symbols-outlined text-[18px]">qr_code_scanner</span>
                   <span>Scan</span>
                 </button>
 
                 <button type="button" id="autofillBtn"
-                  class="bg-primary-container text-white px-5 py-3 rounded-lg text-sm font-bold hover:opacity-90 transition-opacity whitespace-nowrap">
+                  class="flex-1 sm:flex-none bg-primary-container text-white px-5 py-3 rounded-lg text-sm font-bold hover:opacity-90 transition-opacity whitespace-nowrap">
                   Autofill
                 </button>
               </div>
@@ -278,7 +268,7 @@
               <p class="mt-1.5 ml-1 text-[11px] text-error font-semibold">{{ $message }}</p>
               @enderror
             </div>
-            <div class="col-span-2 grid grid-cols-[1fr_1fr_70px] gap-3">
+            <div class="col-span-2 grid grid-cols-1 sm:grid-cols-[1fr_1fr_70px] gap-3">
               <div>
                 <label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-1.5 ml-1">Surname</label>
                 <input
@@ -378,10 +368,15 @@
           </div>
         </section>
         <!-- Section 3: PhilHealth -->
-        <section id="section3">
-          <div class="flex items-center gap-2 mb-6">
-            <div class="w-1 h-5 bg-primary rounded-full"></div>
-            <h2 class="text-sm font-bold uppercase tracking-widest text-on-surface">Step 3: PhilHealth Coverage</h2>
+        <section id="section3" class="mt-10 pt-10 border-t border-outline-variant/20">
+          <div class="flex items-start gap-3 mb-5">
+            <div class="shrink-0 w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+              <span class="material-symbols-outlined text-[20px]">health_and_safety</span>
+            </div>
+            <div class="min-w-0">
+              <h2 class="text-base font-extrabold tracking-tight text-on-surface leading-tight">PhilHealth Coverage</h2>
+              <p class="text-xs text-on-surface-variant mt-0.5">Our staff will check your membership at the center.</p>
+            </div>
           </div>
           <div class="bg-surface-container-low p-6 rounded-lg space-y-6">
             <div class="flex items-center justify-between">
@@ -413,10 +408,15 @@
           </div>
         </section>
         <!-- Section 4: Medical History -->
-        <section id="section4">
-          <div class="flex items-center gap-2 mb-6">
-            <div class="w-1 h-5 bg-primary rounded-full"></div>
-            <h2 class="text-sm font-bold uppercase tracking-widest text-on-surface">Step 4: Medical History</h2>
+        <section id="section4" class="mt-10 pt-10 border-t border-outline-variant/20">
+          <div class="flex items-start gap-3 mb-5">
+            <div class="shrink-0 w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+              <span class="material-symbols-outlined text-[20px]">medical_information</span>
+            </div>
+            <div class="min-w-0">
+              <h2 class="text-base font-extrabold tracking-tight text-on-surface leading-tight">Medical History</h2>
+              <p class="text-xs text-on-surface-variant mt-0.5">Optional: anything the doctor should know before treatment.</p>
+            </div>
           </div>
           <div class="space-y-6">
             <div>
@@ -438,17 +438,19 @@
           </div>
         </section>
         <!-- Form Footer -->
-        <footer class="pt-8 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div class="max-w-[300px]">
-            <p class="text-[10px] leading-relaxed text-on-surface-variant">By submitting this form, you consent to the
-              collection and processing of your personal health data for medical treatment purposes in accordance with
-              the Data Privacy Act of 2012.</p>
+        <footer class="mt-10 pt-8 border-t border-outline-variant/20 space-y-5">
+          <div class="flex items-start gap-3 rounded-xl bg-surface-container-low px-4 py-3.5">
+            <span class="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5">verified_user</span>
+            <p class="text-xs leading-relaxed text-on-surface-variant">By submitting this form, you consent to the collection and processing of your personal health data for medical treatment purposes in accordance with the Data Privacy Act of 2012.</p>
           </div>
-          <div class="flex items-center gap-4">
-            <button class="text-sm font-bold text-on-surface-variant hover:text-on-surface px-4 py-2 transition-colors"
-              type="reset">Clear Form</button>
-            <button
-              class="bg-primary text-white px-8 py-3 rounded-full font-bold text-sm flex items-center gap-2 hover:opacity-90 transition-all shadow-lg shadow-primary/20"
+          <div class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
+            <button id="clearFormBtn" class="inline-flex items-center justify-center gap-1.5 text-sm font-bold text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low active:scale-95 rounded-full px-5 py-3 transition-all"
+              type="reset">
+              <span class="material-symbols-outlined text-[18px]">restart_alt</span>
+              Clear Form
+            </button>
+            <button id="submitRegistrationBtn"
+              class="bg-primary text-white px-8 py-3.5 rounded-full font-bold text-sm flex items-center justify-center gap-2 whitespace-nowrap hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/20 disabled:opacity-60 disabled:cursor-not-allowed"
               type="submit">
               Submit and Get Queue Number
               <span class="material-symbols-outlined text-base">arrow_forward</span>
@@ -456,22 +458,36 @@
           </div>
         </footer>
       </form>
+      </div>
     </div>
-    <!-- Global Footer -->
-    <footer class="w-full mt-20 border-t border-outline-variant/30 bg-transparent text-center">
-      <div class="flex flex-col md:flex-row justify-between items-center gap-4 px-8 py-10 max-w-7xl mx-auto">
-        <span class="text-on-surface-variant font-inter text-xs tracking-wide uppercase">© 2024 Cebu City Health Center.
-          All rights reserved. Clinical Precision &amp; Editorial Authority.</span>
-        <div class="flex gap-6">
-          <a class="text-on-surface-variant text-xs tracking-wide uppercase hover:text-primary underline underline-offset-4 transition-opacity"
-            href="#">Privacy Policy</a>
-          <a class="text-on-surface-variant text-xs tracking-wide uppercase hover:text-primary underline underline-offset-4 transition-opacity"
-            href="#">Terms of Service</a>
-          <a class="text-on-surface-variant text-xs tracking-wide uppercase hover:text-primary underline underline-offset-4 transition-opacity"
-            href="#">Help Desk</a>
+    <!-- Confirmation before clearing the form or submitting it -->
+    <div id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle"
+      class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm items-center justify-center p-4 opacity-0 transition-opacity duration-200">
+      <div id="confirmCard" class="bg-surface-container-lowest rounded-2xl max-w-sm w-full p-8 text-center shadow-2xl border border-outline-variant/30 scale-95 transition-transform duration-200">
+        <div id="confirmIconWrap" class="mx-auto mb-4 w-14 h-14 rounded-full flex items-center justify-center">
+          <span id="confirmIcon" class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;"></span>
+        </div>
+        <h3 id="confirmTitle" class="text-xl font-extrabold tracking-tight text-on-surface"></h3>
+        <p id="confirmText" class="mt-2 text-sm text-on-surface-variant leading-relaxed"></p>
+        <p id="confirmDetail" class="hidden mt-3 text-sm font-bold text-on-surface bg-surface-container-low rounded-xl px-4 py-2.5 break-words"></p>
+        <div class="mt-6 grid grid-cols-2 gap-3">
+          <button type="button" id="confirmCancelBtn" class="px-4 py-3 rounded-full font-bold text-sm text-on-surface-variant bg-surface-container hover:bg-surface-container-high active:scale-95 transition-all">Cancel</button>
+          <button type="button" id="confirmOkBtn" class="px-4 py-3 rounded-full font-bold text-sm text-white active:scale-95 transition-all shadow-lg"></button>
         </div>
       </div>
-    </footer>
+    </div>
+    <!-- Form cleared: confirms that Clear Form removed everything -->
+    <div id="clearedModal" role="dialog" aria-modal="true" aria-labelledby="clearedTitle"
+      class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm items-center justify-center p-4 opacity-0 transition-opacity duration-200">
+      <div id="clearedCard" class="bg-surface-container-lowest rounded-2xl max-w-sm w-full p-8 text-center shadow-2xl border border-outline-variant/30 scale-95 transition-transform duration-200">
+        <div class="mx-auto mb-4 w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+          <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+        </div>
+        <h3 id="clearedTitle" class="text-xl font-extrabold tracking-tight text-on-surface">Form cleared</h3>
+        <p class="mt-2 text-sm text-on-surface-variant leading-relaxed">Everything you entered has been removed and the form is back to the start. You can start again.</p>
+        <button type="button" id="clearedOkBtn" class="mt-6 w-full bg-primary text-white px-6 py-3 rounded-full font-bold text-sm hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/20">Start Again</button>
+      </div>
+    </div>
     <!-- QR Scanner & Upload Modal -->
     <div id="qrScannerModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
       <div class="bg-surface-container-lowest rounded-2xl max-w-md w-full p-6 shadow-2xl border border-outline-variant/30 space-y-4">
@@ -521,6 +537,19 @@
       </div>
     </div>
   </main>
+
+  <!-- Footer -->
+  <footer class="flex flex-col md:flex-row justify-between items-center gap-4 px-6 md:px-8 py-6 w-full border-t border-[#c1c7d3]/15 bg-[#f2f4f6] dark:bg-slate-950 font-['Inter'] text-sm text-center md:text-left">
+    <div class="flex flex-col md:flex-row items-center gap-1 md:gap-4">
+      <span class="font-bold text-[#004a93]">ABTC-Insight</span>
+      <span class="text-[#414751] dark:text-slate-500 text-xs md:text-sm">© 2024 Cebu City Health Center. Clinical Precision System.</span>
+    </div>
+    <div class="flex flex-wrap justify-center gap-x-6 gap-y-2">
+      <a class="text-[#414751] dark:text-slate-500 hover:text-[#004a93] dark:hover:text-blue-300 transition-colors duration-200" href="#">Privacy Policy</a>
+      <a class="text-[#414751] dark:text-slate-500 hover:text-[#004a93] dark:hover:text-blue-300 transition-colors duration-200" href="#">Contact Support</a>
+      <a class="text-[#414751] dark:text-slate-500 hover:text-[#004a93] dark:hover:text-blue-300 transition-colors duration-200" href="#">Terms of Service</a>
+    </div>
+  </footer>
 
   <script>
     // Auto-calculate age from date of birth, and cap at 125 years old
@@ -625,92 +654,6 @@
         bhwReferralInput.focus();
       }
     });
-
-    // Interactive progress indicator: a step is only checked off once every
-    // required field within that step is actually filled in.
-    const totalSteps = 4;
-    const stepDone = {
-      1: false,
-      2: false,
-      3: false,
-      4: false
-    };
-
-    const ACTIVE_CIRCLE = 'w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold shadow-lg shadow-primary/20 transition-all';
-    const DONE_CIRCLE = 'w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold transition-all';
-    const UPCOMING_CIRCLE = 'w-8 h-8 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center text-xs font-bold transition-all';
-
-    function setStepState(stepNum, state) {
-      const circle = document.getElementById(`stepCircle-${stepNum}`);
-      const label = document.getElementById(`stepLabel-${stepNum}`);
-      const line = document.getElementById(`stepLine-${stepNum}`);
-
-      if (state === 'done') {
-        circle.className = DONE_CIRCLE;
-        circle.innerHTML = '<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: \'FILL\' 1;">check</span>';
-        label.className = 'text-[10px] uppercase font-bold tracking-tighter text-primary transition-colors';
-        if (line) line.className = 'flex-1 h-[2px] bg-primary/40 mx-1 -mt-6 transition-colors';
-      } else if (state === 'active') {
-        circle.className = ACTIVE_CIRCLE;
-        circle.textContent = stepNum;
-        label.className = 'text-[10px] uppercase font-bold tracking-tighter text-primary transition-colors';
-        if (line) line.className = 'flex-1 h-[2px] bg-surface-container-high mx-1 -mt-6 transition-colors';
-      } else {
-        circle.className = UPCOMING_CIRCLE;
-        circle.textContent = stepNum;
-        label.className = 'text-[10px] uppercase font-bold tracking-tighter text-on-surface-variant transition-colors';
-        if (line) line.className = 'flex-1 h-[2px] bg-surface-container-high mx-1 -mt-6 transition-colors';
-      }
-    }
-
-    // Step 2 (Personal Info) is complete only when every required field has a value
-    function isStep2Complete() {
-      return isBhwReferralFormatValid(bhwReferralInput.value) &&
-        surnameInput.value.trim() !== '' &&
-        givenNameInput.value.trim() !== '' &&
-        dobInput.value !== '' &&
-        sexInput.value !== '' &&
-        civilStatusInput.value !== '' &&
-        contactNumberInput.value.trim() !== '' &&
-        barangayInput.value.trim() !== '';
-    }
-
-    // Step 3 (PhilHealth) is complete once a Yes/No choice is made -
-    // and if Yes, the member name and DOB must be filled too
-    function isStep3Complete() {
-      const selected = document.querySelector('input[name="philhealth_member"]:checked');
-      if (!selected) return false;
-      if (selected.value === 'yes') {
-        return philhealthMemberNameInput.value.trim() !== '' && philhealthMemberDobInput.value !== '';
-      }
-      return true;
-    }
-
-    // Step 1 (Priority Status) is a single click, tracked directly
-    function isStep1Complete() {
-      return stepDone[1] === true;
-    }
-
-    // Recalculate all 4 steps from scratch every time something relevant changes,
-    // so a step can un-check itself if a required field gets cleared afterward
-    function recalcSteps() {
-      const completions = [isStep1Complete(), isStep2Complete(), isStep3Complete(), false];
-      let activeAssigned = false;
-
-      for (let i = 1; i <= totalSteps; i++) {
-        const done = completions[i - 1];
-        stepDone[i] = done;
-
-        if (done) {
-          setStepState(i, 'done');
-        } else if (!activeAssigned) {
-          setStepState(i, 'active');
-          activeAssigned = true;
-        } else {
-          setStepState(i, 'upcoming');
-        }
-      }
-    }
 
     // Full Name split: Surname, Given Name, Middle Initial -> combined into one hidden field
     const surnameInput = document.getElementById('surnameInput');
@@ -898,23 +841,8 @@
         this.classList.remove('border-surface-container-high');
         this.classList.add('border-primary', 'bg-primary/5', 'ring-2', 'ring-primary/20');
 
-        // Step 1 is done once a priority option is picked
-        stepDone[1] = true;
-        recalcSteps();
       });
     });
-
-    // Step 2 fields: recalculate completion every time any of them change
-    const contactNumberInput = document.getElementById('contactNumberInput');
-    [bhwReferralInput, surnameInput, givenNameInput, dobInput, contactNumberInput, barangayInput].forEach(field => {
-      if (field) {
-        field.addEventListener('input', recalcSteps);
-      }
-    });
-    // Sex and Civil Status are hidden inputs updated by the custom dropdowns above,
-    // so recalcSteps() also needs to run whenever their dropdown option is picked
-    document.getElementById('sexDropdown').addEventListener('click', recalcSteps);
-    document.getElementById('civilStatusDropdown').addEventListener('click', recalcSteps);
 
     const philhealthRadios = document.querySelectorAll('input[name="philhealth_member"]');
     const philhealthDetails = document.getElementById('philhealthDetails');
@@ -930,32 +858,111 @@
           philhealthMemberNameInput.value = '';
           philhealthMemberDobInput.value = '';
         }
-        recalcSteps();
       });
     });
 
-    // Step 3 fields: recalculate whenever the member name/DOB change (only relevant when Yes is picked)
-    [philhealthMemberNameInput, philhealthMemberDobInput].forEach(field => {
-      if (field) {
-        field.addEventListener('input', recalcSteps);
-      }
+    // Confirmation pop-up shared by "Clear Form" and "Submit and Get Queue Number"
+    const confirmModal = document.getElementById('confirmModal');
+    const confirmCard = document.getElementById('confirmCard');
+    const confirmOkBtn = document.getElementById('confirmOkBtn');
+    const confirmCancelBtn = document.getElementById('confirmCancelBtn');
+    const confirmDetail = document.getElementById('confirmDetail');
+    const CONFIRMS = {
+      clear: {
+        icon: 'delete_sweep', iconWrap: 'bg-amber-100 text-amber-600',
+        title: 'Clear the form?',
+        text: 'Everything you have entered will be removed and you will start again with a blank form. This cannot be undone.',
+        ok: 'Yes, clear form', okClass: 'bg-error shadow-error/20', focus: 'cancel',
+      },
+      submit: {
+        icon: 'help', iconWrap: 'bg-blue-100 text-primary',
+        title: 'Submit your registration?',
+        text: 'Please check that your details are correct. After you submit, you will get your queue number.',
+        ok: 'Yes, submit', okClass: 'bg-primary shadow-primary/20', focus: 'ok',
+      },
+    };
+    let confirmAction = null;
+    let confirmOnYes = null;
+    function openConfirm(kind, detail, onYes) {
+      const c = CONFIRMS[kind];
+      confirmAction = kind;
+      confirmOnYes = onYes;
+      document.getElementById('confirmIconWrap').className = 'mx-auto mb-4 w-14 h-14 rounded-full flex items-center justify-center ' + c.iconWrap;
+      document.getElementById('confirmIcon').textContent = c.icon;
+      document.getElementById('confirmTitle').textContent = c.title;
+      document.getElementById('confirmText').textContent = c.text;
+      confirmDetail.textContent = detail || '';
+      confirmDetail.classList.toggle('hidden', !detail);
+      confirmOkBtn.textContent = c.ok;
+      confirmOkBtn.className = 'px-4 py-3 rounded-full font-bold text-sm text-white active:scale-95 transition-all shadow-lg ' + c.okClass;
+      confirmModal.classList.remove('hidden');
+      confirmModal.classList.add('flex');
+      setTimeout(() => {   // next tick, so the fade-in runs
+        confirmModal.classList.remove('opacity-0');
+        confirmCard.classList.remove('scale-95');
+      }, 20);
+      (c.focus === 'ok' ? confirmOkBtn : confirmCancelBtn).focus({ preventScroll: true });
+    }
+    function closeConfirm() {
+      confirmAction = null;
+      confirmModal.classList.add('opacity-0');
+      confirmCard.classList.add('scale-95');
+      setTimeout(() => {
+        if (confirmAction === null) {
+          confirmModal.classList.add('hidden');
+          confirmModal.classList.remove('flex');
+        }
+      }, 200);
+    }
+    confirmCancelBtn.addEventListener('click', closeConfirm);
+    confirmModal.addEventListener('click', (e) => { if (e.target === confirmModal) closeConfirm(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && confirmAction) closeConfirm(); });
+    confirmOkBtn.addEventListener('click', () => {
+      const yes = confirmOnYes;
+      closeConfirm();
+      if (yes) yes();
     });
 
+    // Clear Form: ask first, then clear (the reset handler below then shows "Form cleared")
+    document.getElementById('clearFormBtn').addEventListener('click', function (e) {
+      e.preventDefault();
+      openConfirm('clear', '', () => document.querySelector('form').reset());
+    });
+
+    // "Form cleared" pop-up: closes with the button, a click outside, Escape, or by itself after a few seconds
+    const clearedModal = document.getElementById('clearedModal');
+    const clearedCard = document.getElementById('clearedCard');
+    const clearedOkBtn = document.getElementById('clearedOkBtn');
+    let clearedTimer = null;
+    function showClearedModal() {
+      clearTimeout(clearedTimer);
+      clearedModal.classList.remove('hidden');
+      clearedModal.classList.add('flex');
+      setTimeout(() => {   // next tick, so the fade-in runs
+        clearedModal.classList.remove('opacity-0');
+        clearedCard.classList.remove('scale-95');
+      }, 20);
+      clearedOkBtn.focus({ preventScroll: true });
+      clearedTimer = setTimeout(hideClearedModal, 4000);
+    }
+    function hideClearedModal() {
+      clearTimeout(clearedTimer);
+      clearedModal.classList.add('opacity-0');
+      clearedCard.classList.add('scale-95');
+      setTimeout(() => {
+        clearedModal.classList.add('hidden');
+        clearedModal.classList.remove('flex');
+      }, 200);
+    }
+    clearedOkBtn.addEventListener('click', hideClearedModal);
+    clearedModal.addEventListener('click', (e) => { if (e.target === clearedModal) hideClearedModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !clearedModal.classList.contains('hidden')) hideClearedModal(); });
+
     // Clear Form: native reset only clears input/select values, so this cleans up
-    // everything else that JS controls (progress steps, dropdown display text,
+    // everything else that JS controls (dropdown display text,
     // PhilHealth toggle, and highlighted priority cards)
     document.querySelector('form').addEventListener('reset', function() {
       setTimeout(function() {
-        // Reset progress indicator back to step 1
-        stepDone[1] = false;
-        stepDone[2] = false;
-        stepDone[3] = false;
-        stepDone[4] = false;
-        setStepState(1, 'active');
-        setStepState(2, 'upcoming');
-        setStepState(3, 'upcoming');
-        setStepState(4, 'upcoming');
-
         // Reset Sex and Civil Status dropdown display text
         const sexDisplayText = document.getElementById('sexDisplayText');
         sexDisplayText.textContent = 'Select';
@@ -978,6 +985,10 @@
 
         // Clear any BHW referral format error
         clearBhwReferralError();
+
+        // Back to the top of the form, and tell the user it worked
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        showClearedModal();
       }, 0);
 
       // A manual Clear Form click should also wipe the saved draft
@@ -1097,7 +1108,6 @@
         const chosen = priorityOptions[draft.priorityIndex];
         chosen.classList.remove('border-surface-container-high');
         chosen.classList.add('border-primary', 'bg-primary/5', 'ring-2', 'ring-primary/20');
-        stepDone[1] = true;
       }
 
       // Restore PhilHealth Yes/No selection, and show/hide details to match
@@ -1115,7 +1125,6 @@
 
       // Re-sync everything that depends on the restored values
       updateFullNameHidden();
-      recalcSteps();
     }
 
     // Restore whatever was saved, as soon as the page loads
@@ -1131,9 +1140,30 @@
     // listener (age cap, BHW format, Sex/Civil Status/PhilHealth) has already
     // had a chance to call preventDefault() - just check the outcome instead
     // of re-running those checks (which would re-trigger their alert() calls).
+    let submitConfirmed = false;
     registrationForm.addEventListener('submit', function(e) {
-      if (!e.defaultPrevented) {
-        clearDraft();
+      if (e.defaultPrevented) return;   // a check above failed: nothing to confirm yet
+
+      if (!submitConfirmed) {
+        // every check passed: ask before sending, naming who is being registered
+        e.preventDefault();
+        const who = [document.getElementById('givenNameInput')?.value, document.getElementById('surnameInput')?.value]
+          .map(v => (v || '').trim()).filter(Boolean).join(' ');
+        openConfirm('submit', who ? 'Registering: ' + who : '', () => {
+          submitConfirmed = true;
+          const btn = document.getElementById('submitRegistrationBtn');
+          btn.disabled = true;   // no double submit
+          registrationForm.requestSubmit();
+        });
+        return;
+      }
+      clearDraft();
+    });
+    // coming back to this page with the Back button: the form can be submitted again
+    window.addEventListener('pageshow', function(e) {
+      if (e.persisted) {
+        submitConfirmed = false;
+        document.getElementById('submitRegistrationBtn').disabled = false;
       }
     });
     // --- BHW Referral Autofill Logic ---
@@ -1208,11 +1238,6 @@
               // Trigger blur on DOB to calculate the age
               if (document.getElementById('dobInput').value) {
                 document.getElementById('dobInput').dispatchEvent(new Event('blur'));
-              }
-
-              // Recalculate progress steps to reflect new data
-              if (typeof recalcSteps === 'function') {
-                recalcSteps();
               }
 
               clearBhwReferralError();

@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\PhilhealthStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class PatientDatabaseController extends Controller
 {
@@ -44,8 +46,15 @@ class PatientDatabaseController extends Controller
                 });
         };
 
+        // PhilHealth: what the patient said (registration step 3) and what Staff found (PhilHealth Verification)
+        $verifiable = Schema::hasColumn('inflow_general_particulars', 'philhealth_verification');
+
         $query = DB::table('patients as p')
-            ->select('p.patient_id', 'p.patient_name', 'p.age', 'p.sex')
+            // the patient's LATEST registration (a person who registers again keeps their Patient ID)
+            ->leftJoin('inflow_general_particulars as pig', 'pig.inflow_record_id', '=',
+                DB::raw('(SELECT MAX(x.inflow_record_id) FROM inflow_general_particulars x WHERE x.patient_id = p.patient_id)'))
+            ->select('p.patient_id', 'p.patient_name', 'p.age', 'p.sex', 'p.philhealth_member as ph_flag', 'pig.philhealth_member as ph_claimed')
+            ->selectRaw($verifiable ? 'pig.philhealth_verification as ph_verification' : 'NULL as ph_verification')
             ->selectSub(
                 $this->handedOff(DB::table('bite_cases as lc'), 'lc')->select('lc.barangay')
                     ->whereColumn('lc.patient_id', 'p.patient_id')
@@ -129,6 +138,8 @@ class PatientDatabaseController extends Controller
                 ];
             })->values();
 
+            [$patient->ph_label, $patient->ph_class] = PhilhealthStatus::badge($patient->ph_claimed, $patient->ph_verification, $patient->ph_flag);
+
             // Patient-level status: any unfinished case wins
             $open = $patientCases->firstWhere('finished', false);
             $patient->pep_status = $patientCases->isEmpty() ? 'No Case' : ($open ? $open['status'] : $patientCases->first()['status']);
@@ -141,7 +152,10 @@ class PatientDatabaseController extends Controller
                 'dob' => $d->date_of_birth ? \Carbon\Carbon::parse($d->date_of_birth)->format('M d, Y') : null,
                 'civil_status' => $d->civil_status,
                 'contact' => $d->contact_num,
-                'philhealth' => $d->philhealth_member ? ($d->philhealth_name ?: 'Member') : 'Not a member',
+                'philhealth' => $patient->ph_label,
+                'philhealth_class' => $patient->ph_class,
+                // the member named in the registration form (it can be someone else, e.g. a parent)
+                'philhealth_member_name' => ($patient->ph_claimed && $patient->ph_verification !== 'Not a Member' && $d->philhealth_name) ? $d->philhealth_name : null,
                 'illness' => $d->illness_history,
                 'allergy' => $d->allergy_history,
                 'cases' => $patientCases,

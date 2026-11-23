@@ -1,0 +1,308 @@
+/*
+ * ABTC-Insight: phone and tablet layout, shared by every page.
+ *
+ * Pages are written desktop-first with a fixed 16rem sidebar (w-64) and a content margin
+ * (ml-64 / ml-72 / pl-72). Below the lg breakpoint (1024px) this file turns the sidebar into a
+ * slide-in drawer (opened by the hamburger that mobile-nav.js adds), removes the content margin,
+ * tightens padding, and lets wide tables scroll inside their own box instead of the whole page.
+ * Nothing here applies on desktop.
+ */
+
+.mn-toggle,
+.mn-fab,
+.mn-overlay,
+.mn-chart-hint,
+.mn-swipe-hint,
+.mn-search-close { display: none; }   /* the search close button only exists on phones, while the search is open */
+
+@media (max-width: 1023.98px) {
+
+  /* never let one wide element make the whole page scroll sideways */
+  html, body { overflow-x: clip; }
+
+  /* ---- sidebar becomes an off-canvas drawer ------------------------------------------- */
+  aside.fixed.left-0 {
+    width: 17rem !important;
+    max-width: 85vw;
+    height: 100vh;
+    height: 100dvh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    transform: translateX(-100%);
+    transition: transform .25s ease, box-shadow .25s ease;
+    z-index: 80 !important;
+    box-shadow: none;
+  }
+  body.mn-open aside.fixed.left-0 {
+    transform: translateX(0);
+    box-shadow: 0 0 48px rgba(15, 23, 42, .35);
+  }
+  /* the desktop collapse button has no job here: the drawer opens and closes instead */
+  aside .sb-toggle { display: none !important; }
+
+  .mn-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, .45);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s ease;
+    z-index: 70;
+  }
+  body.mn-open .mn-overlay { opacity: 1; pointer-events: auto; }
+  body.mn-open { overflow: hidden; }
+
+  /* ---- hamburger buttons -------------------------------------------------------------- */
+  .mn-toggle {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    margin-right: .5rem;
+    border: 0;
+    border-radius: .625rem;
+    background: transparent;
+    color: #475569;
+    cursor: pointer;
+  }
+  .mn-toggle:hover, .mn-toggle:active { background: rgba(148, 163, 184, .25); color: #004a93; }
+  .mn-toggle svg { width: 1.5rem; height: 1.5rem; }
+
+  /* pages with no top bar get a floating button instead */
+  .mn-fab {
+    display: inline-flex;
+    position: fixed;
+    top: .75rem;
+    left: .75rem;
+    z-index: 60;
+    margin: 0;
+    background: #fff;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, .18);
+  }
+  body.mn-has-fab main { padding-top: 3.75rem; }
+
+  /* ---- content area: no sidebar margin ------------------------------------------------ */
+  [class*="ml-64"], [class*="ml-72"] { margin-left: 0 !important; }
+  [class*="pl-72"] { padding-left: 0 !important; }
+
+  /* the content column of a side-by-side page may shrink below its widest child instead of widening the page */
+  main { min-width: 0; max-width: 100%; }
+
+  /* every role shows the signed-in name and role beside the avatar, like the Admin top bar (some pages hid it on small screens) */
+  header div.text-right[class*="hidden"] { display: block !important; }
+
+  /* bars pinned to the screen edge were offset by the sidebar width */
+  [class*="left-72"], [class*="left-64"] { left: 0 !important; }
+
+  /* the BHW header is sized to "everything right of the sidebar" */
+  header.fixed.right-0 { left: 0 !important; width: 100% !important; }
+
+  /* ---- tables scroll inside their own box --------------------------------------------- */
+  .mn-table-scroll {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .mn-table-scroll > table { min-width: 36rem; }
+
+  .mn-chart-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .mn-chart-scroll > * { min-width: 640px; }
+  /* a finger may pan the chart sideways (the page's own sideways scroll too) and still tap a point for its details */
+  .mn-chart-scroll svg { touch-action: pan-x pan-y !important; }
+  .mn-chart-hint { display: flex; align-items: center; gap: .375rem; margin: .375rem 0 0; font-size: 11px; font-weight: 600; color: #717782; }
+  /* a box that really does scroll sideways (mobile-nav.js marks it) shows a slim scrollbar, even where the page
+     hid it with .no-scrollbar, plus a swipe hint, so nobody has to guess that more is off to the right */
+  .mn-scrollable { scrollbar-width: thin !important; scrollbar-color: #94a3b8 #e2e8f0; }
+  .mn-scrollable::-webkit-scrollbar { display: block !important; height: 6px; }
+  .mn-scrollable::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 3px; }
+  .mn-scrollable::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; }
+  .mn-swipe-hint {
+    display: flex;
+    align-items: center;
+    gap: .375rem;
+    position: sticky;
+    left: 0;
+    box-sizing: border-box;
+    padding: .375rem .75rem .25rem;
+    font-size: 11px;
+    font-weight: 600;
+    color: #717782;
+  }
+
+  /* every sideways-scrolling box lets a finger swipe it without dragging the whole page */
+  .overflow-x-auto, .mn-table-scroll, .mn-chart-scroll { touch-action: pan-x pan-y; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
+
+  /* some top bars repeat the brand and are hidden under the desktop sidebar: show it on a phone */
+  header [style*="visibility: hidden"] { visibility: visible !important; }
+
+  /* images, svgs and charts never push the page wider than the screen */
+  main img, main canvas { max-width: 100%; height: auto; }
+}
+
+/* date / time boxes have a built-in minimum width: let them shrink to the space they are given, at every width */
+main input[type="date"], main input[type="time"], main input[type="datetime-local"], main input[type="month"] { min-width: 0; max-width: 100%; }
+
+/* ---- phones --------------------------------------------------------------------------- */
+@media (max-width: 767.98px) {
+
+  /* roomy desktop paddings shrink to a phone gutter (16px) */
+  main[class*="px-"], main[class*="p-8"], main[class*="p-10"], main[class*="p-12"] {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+  header[class*="px-8"], header[class*="px-10"], header[class*="px-12"],
+  header > div[class*="px-8"], header > div[class*="px-10"], header > div[class*="px-12"] {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+  main[class*="pb-12"], main[class*="pb-20"] { padding-bottom: 2rem !important; }
+
+  /* generous desktop padding inside pages and cards */
+  .p-8:not(aside *), .p-10:not(aside *), .p-12:not(aside *) { padding: 1.25rem !important; }
+  .px-8:not(aside *), .px-10:not(aside *), .px-12:not(aside *) { padding-left: 1rem !important; padding-right: 1rem !important; }
+
+  /* rows with something on the left and something on the right wrap instead of overflowing
+     (the top bar and the sidebar keep their single line, and so do buttons, e.g. an accordion header with its chevron, and rows of equal-width columns such as bar charts) */
+  .flex.justify-between:not(.flex-col):not(.flex-nowrap):not(:has(> .w-full)):not(button):not(header):not(header *):not(aside *) { flex-wrap: wrap; row-gap: .75rem; }
+
+  /* a label with a small value / button beside it (marked by mobile-nav.js) stays on one row; the label wraps instead */
+  .mn-keep-row { flex-wrap: nowrap !important; column-gap: .75rem; }
+  .mn-keep-row > :first-child { min-width: 0; flex: 1 1 auto; }
+  .mn-keep-row > :last-child { flex-shrink: 0; }
+
+  /* ---- one spacing rhythm on phones ------------------------------------------------------------------
+     page gutter 16px, cards 20px inside, 20-24px between sections, compact table rows --------------------- */
+  .mn-gutter { padding-left: 1rem !important; padding-right: 1rem !important; }
+  body.mn-sticky-header main .pt-24, body.mn-sticky-header main .pt-20 { padding-top: 1.25rem !important; }
+
+  .space-y-8 > :not([hidden]) ~ :not([hidden]),
+  .space-y-10 > :not([hidden]) ~ :not([hidden]),
+  .space-y-12 > :not([hidden]) ~ :not([hidden]) { margin-top: 1.25rem !important; }
+  .space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: 1rem !important; }
+  .gap-8:not(aside *), .gap-10:not(aside *), .gap-12:not(aside *) { gap: 1.25rem !important; }
+  .mb-12 { margin-bottom: 1.75rem !important; }
+  .mb-10 { margin-bottom: 1.5rem !important; }
+  .mb-8  { margin-bottom: 1.25rem !important; }
+  .mt-12 { margin-top: 1.75rem !important; }
+  .mt-10 { margin-top: 1.5rem !important; }
+  .p-6:not(aside *) { padding: 1.25rem !important; }
+
+  /* table rows: tighter cells, and ids / reference numbers stay on one line instead of breaking into pieces */
+  main table td[class*="py-"], main table th[class*="py-"] { padding-top: .75rem !important; padding-bottom: .75rem !important; }
+  main table td[class*="px-6"], main table th[class*="px-6"] { padding-left: .875rem !important; padding-right: .875rem !important; }
+  main table .font-mono, main table code { white-space: nowrap; }
+  main table th { white-space: nowrap; }
+  main table td span[class*="rounded"] { white-space: nowrap; }   /* badges and id pills never break in the middle */
+
+  /* a table with only its "nothing to show" row is just a short message, not a wide table */
+  table.mn-empty-table { min-width: 0 !important; width: 100% !important; }
+  table.mn-empty-table thead { display: none; }
+  table.mn-empty-table td { white-space: normal !important; text-align: center !important; padding: 1.5rem 1rem !important; }
+
+  /* 12-column desktop grids stack, 3-6 column ones become 2 */
+  .grid.grid-cols-12 > * { grid-column: 1 / -1 !important; }
+  .grid.grid-cols-3, .grid.grid-cols-4, .grid.grid-cols-5, .grid.grid-cols-6 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* form sections indented for the step badge on desktop use the full width on a phone */
+  main div[class~="pl-11"] { padding-left: 0 !important; }
+
+  /* headline sizes */
+  main h1[class*="text-4xl"], main h1[class*="text-5xl"], main h2[class*="text-4xl"] { font-size: 1.75rem; line-height: 2rem; }
+  main h1[class*="text-3xl"], main h2[class*="text-3xl"] { font-size: 1.5rem; line-height: 2rem; }
+
+  /* the page title (marked by mobile-nav.js): larger, wraps onto a second line instead of shrinking, with room before its
+     description and before whatever sits beside it on desktop (a date, a button), which moves underneath */
+  main h1.mn-page-title, main h2.mn-page-title { font-size: 2rem; line-height: 2.25rem; letter-spacing: -.02em; margin-bottom: 0 !important; overflow-wrap: anywhere; }
+  main .mn-page-desc { margin-top: .625rem !important; font-size: .9375rem; line-height: 1.5rem; }
+  .mn-page-head { flex-direction: column !important; align-items: flex-start !important; flex-wrap: nowrap !important; gap: 1rem !important; }
+  .mn-page-head > * { max-width: 100%; }
+  /* breathing room at the sides of the title block (title, description and what sits under them), so the text does not
+     run flush with the card edges below it */
+  main .mn-page-head { padding-left: .5rem; padding-right: .5rem; }
+  main .mn-page-title:not(.mn-page-head *), main .mn-page-desc:not(.mn-page-head *) { padding-left: .5rem; padding-right: .5rem; }
+
+  /* fixed-width search boxes and filters fit the screen */
+  header [class*="w-96"], header [class*="w-80"], header [class*="max-w-xl"] { max-width: 100%; }
+  header form[class*="w-"], header .relative[class*="w-"] { min-width: 0; }
+
+  /* top bar: brand name is dropped (the logo stays) and spacing tightens so the profile always fits */
+  header .mn-hide-sm { display: none; }
+  header [class*="gap-4"], header [class*="gap-6"], header [class*="gap-8"] { gap: .5rem !important; }
+  header [class*="ml-12"], header [class*="ml-8"] { margin-left: .5rem !important; }
+
+  /* search boxes in the top bar take the space that is left instead of a fixed width */
+  header > div:first-child { min-width: 0; flex: 1 1 auto; }
+  header form.relative, header form[class*="max-w"], header div.relative.flex-1 { flex: 1 1 auto; min-width: 0; max-width: 100%; }
+  header input[class*="w-72"], header input[class*="w-64"], header input[class*="w-80"], header input[class*="w-96"] { width: 100% !important; min-width: 0; }
+
+  /* the profile name/role beside the avatar stays on one line (cut with ...) so the avatar is never pushed off */
+  header .text-right { max-width: 7.5rem; min-width: 0; flex-shrink: 0; }   /* the search box gives way, never the name */
+  header .text-right > * { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  header [class*="flex-1"] { min-width: 0; }
+
+  /* the avatar is never squeezed away by a long name or search box */
+  header img, header .relative:has(> img) { flex-shrink: 0; }
+  header img[class*="rounded-full"] { min-width: 2.25rem; }
+
+  /* the header's text blocks give way before the buttons do */
+  header .truncate, header p { min-width: 0; }
+
+  /* ---- top bar search: a round button that opens a full-width bar (see mobile-nav.js) ---------------- */
+  .mn-search {
+    position: relative;
+    flex: none !important;
+    width: 2.5rem !important;
+    min-width: 2.5rem !important;
+    max-width: 2.5rem !important;
+    height: 2.5rem;
+    margin: 0 !important;
+    padding: 0 !important;
+    gap: 0 !important;
+    border-radius: 9999px;
+    overflow: hidden;
+    cursor: pointer;
+    background: rgba(148, 163, 184, .2) !important;
+  }
+  .mn-search input { position: absolute; inset: 0; width: 100% !important; opacity: 0; pointer-events: none; }
+  .mn-search .mn-search-ico { position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; margin: 0 !important; font-size: 22px !important; color: #475569; }
+  .mn-search.mn-search-has-value::after { content: ""; position: absolute; top: .5rem; right: .5rem; width: .5rem; height: .5rem; border-radius: 50%; background: #004a93; }
+  .mn-search-close { display: none; }
+
+  /* open: the search takes the whole top bar, everything else in it steps aside */
+  header.mn-searching .mn-so { display: none !important; }
+  header.mn-searching .mn-sp { flex: 1 1 auto !important; min-width: 0 !important; width: 100% !important; max-width: none !important; margin: 0 !important; }
+  header.mn-searching .mn-search { height: 2.75rem; overflow: visible; cursor: text; background: #fff !important; box-shadow: 0 0 0 2px rgba(0, 74, 147, .25), 0 2px 8px rgba(15, 23, 42, .1); }
+  header.mn-searching .mn-search::after { display: none; }
+  header.mn-searching .mn-search input { position: static; opacity: 1; pointer-events: auto; height: 100%; padding: 0 2.75rem 0 2.75rem !important; font-size: 16px; background: transparent !important; border: 0; box-shadow: none; }
+  header.mn-searching .mn-search .mn-search-ico { left: 1rem !important; transform: translateY(-50%) !important; }
+  header.mn-searching .mn-search-close { display: flex; position: absolute; right: .375rem; top: 50%; transform: translateY(-50%); width: 2rem; height: 2rem; align-items: center; justify-content: center; border: 0; border-radius: 50%; background: transparent; color: #475569; cursor: pointer; }
+  header.mn-searching .mn-search-close:active { background: rgba(148, 163, 184, .3); }
+
+  /* modals and floating panels stay inside the screen */
+  [class*="fixed"][class*="inset-0"] > div[class*="max-w-"] { max-width: calc(100vw - 1.5rem); }
+
+  /* a form's Discard / Save Progress bar follows the scroll just under the top bar: compact, and solid so the form
+     does not show through it */
+  .mn-sticky-actions { padding: .625rem .75rem !important; gap: .5rem !important; background: #eef3fa !important; box-shadow: 0 2px 8px rgba(15, 23, 42, .08); }
+  .mn-sticky-actions { flex-wrap: nowrap !important; }   /* title on the left (cut with ...), buttons stay on the same row */
+  .mn-sticky-actions h3 { font-size: .8125rem; line-height: 1.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mn-sticky-actions p { max-width: 100%; }
+  .mn-sticky-actions p { font-size: 11px; }
+  .mn-sticky-actions .flex.shrink-0 { gap: .375rem; }
+  .mn-sticky-actions button { padding: .5rem .625rem !important; white-space: nowrap; }
+
+  /* toasts sit above the bottom edge but never wider than the screen */
+  #statusToast, #claimErrorToast { left: 1rem; right: 1rem; max-width: none; }
+
+  /* date / time boxes have a built-in minimum width: let them shrink to the space they are given (small phones) */
+  main input[type="date"], main input[type="time"], main input[type="datetime-local"], main input[type="month"] { min-width: 0; max-width: 100%; }
+
+  /* touch-sized controls */
+  main select, main input:not([type="checkbox"]):not([type="radio"]) { min-height: 2.5rem; }
+}

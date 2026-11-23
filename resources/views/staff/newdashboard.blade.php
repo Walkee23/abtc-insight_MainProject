@@ -94,6 +94,8 @@
         }
     </style>
     <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
+    <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
+    <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
 </head>
 
 <body class="text-on-surface select-none flex min-h-screen">
@@ -147,7 +149,9 @@
     <!-- Main Content Area -->
     <main class="flex-1 flex flex-col ml-64">
                 <!-- TopNavBar -->
-            <div class="flex justify-end items-center w-full h-16 px-8 sticky top-0 z-40 bg-slate-50/85 dark:bg-slate-900/85 backdrop-blur-md shadow-sm shadow-blue-900/5">
+            <header class="flex justify-between items-center w-full h-16 px-8 sticky top-0 z-40 bg-slate-50/85 dark:bg-slate-900/85 backdrop-blur-md shadow-sm shadow-blue-900/5">
+            <div class="flex items-center gap-8">
+            </div>
             <div class="flex items-center gap-4">
                 <div class="flex items-center gap-1 border-r border-outline-variant/20 pr-4">
                 </div>
@@ -187,16 +191,28 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </header>
 
         <div class="p-8">
+        @if(session('success'))
+        <div class="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg flex items-center gap-3">
+            <span class="material-symbols-outlined">check_circle</span>
+            <span class="text-sm font-semibold">{{ session('success') }}</span>
+        </div>
+        @endif
+        @if($errors->any())
+        <div class="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center gap-3">
+            <span class="material-symbols-outlined">error</span>
+            <span class="text-sm font-semibold">{{ $errors->first() }}</span>
+        </div>
+        @endif
         <!-- Header Section -->
-        <header class="flex justify-between items-center mb-8">
+        <header class="flex flex-col items-start gap-3 sm:flex-row sm:justify-between sm:items-center mb-8">
             <div>
-                <h1 class="text-3xl font-black text-on-surface tracking-tight">Clinic Operational Dashboard</h1>
+                <h1 class="mn-page-title text-3xl font-black text-on-surface tracking-tight">Clinic Operational Dashboard</h1>
                 <p class="text-xs text-on-surface-variant mt-1 font-medium">Real-time walk-in volume, verification throughput, and rabies clinical protocols.</p>
             </div>
-            <div class="px-4 py-2 bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm text-xs font-bold text-secondary flex items-center gap-2">
+            <div class="shrink-0 whitespace-nowrap px-4 py-2 bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm text-xs font-bold text-secondary flex items-center gap-2">
                 <span class="material-symbols-outlined text-[16px] text-primary">calendar_today</span>
                 <span>{{ now()->format('F d, Y') }}</span>
             </div>
@@ -283,6 +299,127 @@
                     </a>
                 </div>
             </div>
+            <!-- PhilHealth Verification -->
+            @if(!empty($philhealthReady))
+            <div class="lg:col-span-2 min-w-0 bg-surface-container-lowest p-5 sm:p-6 rounded-xl border border-outline-variant/20 shadow-sm">
+                <div class="flex flex-wrap justify-between items-start gap-x-4 gap-y-2 mb-4">
+                    <div>
+                        <h3 class="font-bold text-sm text-on-surface flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary text-[18px]">verified_user</span>
+                            PhilHealth Verification
+                        </h3>
+                        <p class="text-xs text-on-surface-variant mt-1">Patients who said they are a PhilHealth member in the registration form. Check their membership, then record the result.</p>
+                    </div>
+                    <span class="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full whitespace-nowrap {{ $philhealthTotal ? 'bg-amber-100 text-amber-800' : 'bg-emerald-50 text-emerald-700' }}">
+                        {{ $philhealthTotal ? $philhealthTotal . ' to verify' : 'All checked' }}
+                    </span>
+                </div>
+
+                @if($philhealthPending->count())
+                <ul class="divide-y divide-outline-variant/15 border border-outline-variant/20 rounded-xl overflow-hidden">
+                    @foreach($philhealthPending as $row)
+                    <li class="flex flex-col sm:flex-row sm:items-center gap-3 px-4 py-3 bg-white">
+                        <div class="min-w-0 flex-1">
+                            <p class="text-sm font-bold text-on-surface truncate">{{ $row->patient_name }}</p>
+                            <p class="text-[11px] text-on-surface-variant mt-0.5 truncate">
+                                {{ $row->queue_id ? 'Queue ' . $row->queue_id . ' · ' : '' }}{{ $row->patient_id ?: 'Patient ID not issued yet' }}
+                            </p>
+                            <p class="text-[11px] text-on-surface-variant break-words">
+                                PhilHealth member: <span class="font-semibold text-on-surface">{{ $row->philhealth_name ?: 'Same as patient' }}</span>@if($row->philhealth_dob) · DOB {{ \Carbon\Carbon::parse($row->philhealth_dob)->format('M j, Y') }}@endif
+                            </p>
+                        </div>
+                        <button type="button" data-popup-open="philModal"
+                            data-phil-url="{{ route('staff.philhealth.verify', $row->inflow_record_id) }}"
+                            data-phil-name="{{ $row->patient_name }}"
+                            data-phil-id="{{ $row->patient_id ?: ($row->queue_id ? 'Queue ' . $row->queue_id : '') }}"
+                            data-phil-member="{{ $row->philhealth_name ?: 'Same as patient' }}"
+                            data-phil-dob="{{ $row->philhealth_dob ? \Carbon\Carbon::parse($row->philhealth_dob)->format('M j, Y') : '' }}"
+                            class="philhealth-verify-btn shrink-0 inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary/90 active:scale-95 transition-all shadow-sm">
+                            <span class="material-symbols-outlined text-[16px]">fact_check</span>
+                            Verify
+                        </button>
+                    </li>
+                    @endforeach
+                </ul>
+                @if($philhealthTotal > $philhealthPending->count())
+                <p class="mt-3 text-[11px] text-on-surface-variant text-center">Showing the latest {{ $philhealthPending->count() }} of {{ $philhealthTotal }} waiting for a PhilHealth check.</p>
+                @endif
+                @else
+                <p class="py-6 text-center text-xs text-slate-400 font-medium">No patients are waiting for a PhilHealth check.</p>
+                @endif
+            </div>
+
+            <!-- PhilHealth result pop-up (one pop-up, filled in for the patient whose Verify button was pressed) -->
+            <div id="philModal" role="dialog" aria-modal="true" aria-labelledby="philTitle"
+                class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm whitespace-normal font-normal">
+                <form id="philForm" method="POST" action="#" class="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden text-left max-h-[92vh] flex flex-col">
+                    @csrf
+                    <div class="bg-gradient-to-r from-primary to-primary-container p-5 text-white flex items-start justify-between gap-3 shrink-0">
+                        <div class="min-w-0">
+                            <p class="text-[10px] font-extrabold tracking-widest uppercase opacity-80">PhilHealth Verification</p>
+                            <h3 id="philTitle" class="text-lg font-bold leading-tight mt-0.5 break-words"></h3>
+                            <p id="philSub" class="text-[11px] opacity-90 mt-1 break-words"></p>
+                        </div>
+                        <button type="button" data-popup-close aria-label="Close" class="shrink-0 text-white/70 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10">
+                            <span class="material-symbols-outlined text-[22px]">close</span>
+                        </button>
+                    </div>
+
+                    <div class="p-5 space-y-3 overflow-y-auto">
+                        <div class="rounded-xl bg-surface-container-low p-3 text-xs space-y-1">
+                            <p><span class="text-on-surface-variant">Member named in the form:</span> <span id="philMember" class="font-bold text-on-surface"></span></p>
+                            <p id="philDobRow"><span class="text-on-surface-variant">Member's date of birth:</span> <span id="philDob" class="font-bold text-on-surface"></span></p>
+                        </div>
+
+                        <p class="text-xs font-bold text-on-surface-variant uppercase tracking-wider pt-1">What did you find?</p>
+                        @foreach([
+                            ['Verified',     'Verified member',     'Membership confirmed and active.',                 'verified',  'emerald'],
+                            ['Not a Member', 'Not a member',        'No PhilHealth membership was found for this patient.', 'person_off', 'slate'],
+                            ['Expired',      'Expired membership',  'A membership exists but it is no longer active.',  'event_busy', 'amber'],
+                        ] as [$value, $label, $hint, $icon, $tone])
+                        <label class="phil-option flex items-start gap-3 p-3.5 rounded-xl border-2 border-outline-variant/30 cursor-pointer transition-all hover:border-primary/40 has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+                            <input type="radio" name="result" value="{{ $value }}" class="mt-1 text-primary focus:ring-primary/30" required>
+                            <span class="material-symbols-outlined text-[22px] shrink-0 {{ ['emerald' => 'text-emerald-600', 'slate' => 'text-slate-500', 'amber' => 'text-amber-600'][$tone] }}">{{ $icon }}</span>
+                            <span class="min-w-0">
+                                <span class="block text-sm font-bold text-on-surface">{{ $label }}</span>
+                                <span class="block text-[11px] text-on-surface-variant mt-0.5">{{ $hint }}</span>
+                            </span>
+                        </label>
+                        @endforeach
+                    </div>
+
+                    <div class="p-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3 shrink-0">
+                        <button type="button" data-popup-close class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-200 rounded-xl transition-colors">Cancel</button>
+                        <button type="submit" id="philSave" disabled class="px-5 py-2.5 bg-primary hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl shadow-md flex items-center gap-2 transition-all">
+                            <span class="material-symbols-outlined text-[16px]">save</span>
+                            Save result
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <script>
+            // Fill the pop-up for the patient whose Verify button was pressed (the pop-up itself is opened by js/mobile-nav.js)
+            document.addEventListener('click', function (e) {
+                var btn = e.target.closest('.philhealth-verify-btn');
+                if (!btn) return;
+                var form = document.getElementById('philForm');
+                form.action = btn.getAttribute('data-phil-url');
+                document.getElementById('philTitle').textContent = btn.getAttribute('data-phil-name');
+                document.getElementById('philSub').textContent = btn.getAttribute('data-phil-id');
+                document.getElementById('philMember').textContent = btn.getAttribute('data-phil-member');
+                var dob = btn.getAttribute('data-phil-dob');
+                document.getElementById('philDob').textContent = dob;
+                document.getElementById('philDobRow').classList.toggle('hidden', !dob);
+                form.querySelectorAll('input[name="result"]').forEach(function (r) { r.checked = false; });
+                document.getElementById('philSave').disabled = true;
+            });
+            document.getElementById('philForm').addEventListener('change', function () {
+                document.getElementById('philSave').disabled = !this.querySelector('input[name="result"]:checked');
+            });
+            </script>
+            @endif
+        </div>{{-- (closes the dashboard grid) --}}
         </main>
                     <!-- My Profile Modal -->
 @php

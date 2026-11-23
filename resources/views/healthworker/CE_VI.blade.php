@@ -93,6 +93,8 @@
         }
     </style>
     <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
+    <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
+    <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
 </head>
     
     <aside class="h-screen w-64 fixed left-0 top-0 bg-slate-50 dark:bg-slate-900 flex flex-col border-r border-slate-200/50 dark:border-slate-800/50 z-50">
@@ -107,229 +109,226 @@
                 </div>
             </div>
         </div>
-    </div>
 
     <!-- Navigation sits right beneath it -->
     <nav class="space-y-1 px-4 dark:bg-slate-900">
         <!-- Dashboard (Inactive) -->
         <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50"
             href="{{ route('healthworker.dashboard') }}">
-            <span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
-            <span class="font-['Inter'] text-sm tracking-wide">Dashboard</span>
-        </a>
+                <span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                <span class="font-['Inter'] text-sm tracking-wide">Dashboard</span>
+            </a>
 
-        <!-- Clinical Encoding (Active - Admin Style) -->
-        <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-blue-700 dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600 translate-x-1 duration-150"
+            <!-- Clinical Encoding (Active - Admin Style) -->
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-blue-700 dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600 translate-x-1 duration-150" 
             href="{{ route('healthworker.clinical-encoding') }}">
-            <span class="material-symbols-outlined" data-icon="medical_services">medical_services</span>
-            <span class="font-['Inter'] text-sm tracking-wide">Clinical Encoding</span>
-        </a>
+                <span class="material-symbols-outlined" data-icon="medical_services">medical_services</span>
+                <span class="font-['Inter'] text-sm tracking-wide">Clinical Encoding</span>
+            </a>
 
-        <!-- Treatment Tracker -->
-        <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50"
+            <!-- Treatment Tracker -->
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
             href="{{ route('healthworker.treatment-tracker') }}">
-            <span class="material-symbols-outlined" data-icon="monitor_heart">monitor_heart</span>
-            <span class="font-['Inter'] text-sm tracking-wide">Treatment Tracker</span>
-        </a>
+                <span class="material-symbols-outlined" data-icon="monitor_heart">monitor_heart</span>
+                <span class="font-['Inter'] text-sm tracking-wide">Treatment Tracker</span>
+            </a>
 
-        <!-- Patient Database -->
-        <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50"
+            <!-- Patient Database -->
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
             href="{{ route('healthworker.patient-database') }}">
-            <span class="material-symbols-outlined" data-icon="database">database</span>
-            <span class="font-['Inter'] text-sm tracking-wide">Patient Database</span>
-        </a>
+                <span class="material-symbols-outlined" data-icon="database">database</span>
+                <span class="font-['Inter'] text-sm tracking-wide">Patient Database</span>
+            </a>
 
-        <!-- Compliance -->
-        <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50"
+            <!-- Compliance -->
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50" 
             href="{{ route('healthworker.compliance') }}">
-            <span class="material-symbols-outlined" data-icon="verified_user">verified_user</span>
-            <span class="font-['Inter'] text-sm tracking-wide">Compliance</span>
-        </a>
-    </nav>
-</aside>
+                <span class="material-symbols-outlined" data-icon="verified_user">verified_user</span>
+                <span class="font-['Inter'] text-sm tracking-wide">Compliance</span>
+            </a>
+        </nav>
+    </aside>
 
-<!-- TopNavBar -->
-<header
-    class="fixed top-0 w-full h-16 bg-slate-50/85 dark:bg-slate-900/85 backdrop-blur-md shadow-sm shadow-blue-900/5 z-40">
-    <div class="flex justify-between items-center px-8 h-16 w-full">
-        <!-- Logo on the far left -->
-        <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white shadow-md">
-                <span class="material-symbols-outlined text-[18px]"
-                    style="font-variation-settings: 'FILL' 1;">health_and_safety</span>
-            </div>
-            <h1 class="text-blue-900 dark:text-blue-50 font-bold text-sm tracking-tight leading-none">ABTC-Insight
-            </h1>
-        </div>
-        
-        <!-- Right Side Actions (Notifications, Help, Vertical Divider, Profile) -->
-        <div class="flex items-center gap-4">
-            
-            <div class="h-8 w-[1px] bg-slate-200 dark:bg-slate-800 mx-2"></div>
-            <div class="flex items-center gap-3 cursor-pointer group relative">
-                <div class="text-right hidden lg:block">
-                    <p class="text-xs font-bold text-on-surface leading-tight font-['Inter']">{{ Auth::user()->full_name ?? 'Dr. Elena Santos' }}</p>
-                    <p class="text-[10px] text-on-surface-variant font-['Inter']">{{ Auth::user()->role ?? 'Senior Health Worker' }}</p>
+    <!-- TopNavBar -->
+    <header
+        class="fixed top-0 w-full h-16 bg-slate-50/85 dark:bg-slate-900/85 backdrop-blur-md shadow-sm shadow-blue-900/5 z-40">
+        <div class="flex justify-between items-center px-8 h-16 w-full">
+            <!-- Logo on the far left -->
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white shadow-md">
+                    <span class="material-symbols-outlined text-[18px]"
+                        style="font-variation-settings: 'FILL' 1;">health_and_safety</span>
                 </div>
-                <img alt="Health Worker Profile"
-                    class="w-9 h-9 rounded-full object-cover ring-2 ring-primary/10 group-hover:ring-primary/30 transition-all"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuAzuEzGuKhuDJKI44bu6U1YzFdI7z5disX1FjUVLwgq07xpkF1vi2q1RQg1lWnbbzx-97qaEaUE0wHwrsBEDnQdIf8whoLOPKyx4AYqvvB-lfqq-SS3OBugICvjWAE_JcAHe0Vi0CwgldGbMzdKqqq-JDxrvKkK7FcZlxsnNKgOhrLZQUJ0ev2rjCkC13g53yP7Tgqv7JJmgsQFbx1nOvxapzia3kkgWKs_FBVNJ7u5msUyUkju3OqnpM2i3ofnQDyojEEc-LEA3xlD" />
-                <div
-                    class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                    <div class="p-2">
+                <h1 class="text-blue-900 dark:text-blue-50 font-bold text-sm tracking-tight leading-none">ABTC-Insight
+                </h1>
+            </div>
+            <!-- Right Side Actions (Notifications, Help, Vertical Divider, Profile) -->
+            <div class="flex items-center gap-4">
+                <div class="h-8 w-[1px] bg-slate-200 dark:bg-slate-800 mx-2"></div>
+                <div class="flex items-center gap-3 cursor-pointer group relative">
+                    <div class="text-right hidden lg:block">
+                        <p class="text-xs font-bold text-on-surface leading-tight font-['Inter']">{{ Auth::user()->full_name ?? 'Dr. Elena Santos' }}</p>
+                        <p class="text-[10px] text-on-surface-variant font-['Inter']">{{ Auth::user()->role ?? 'Senior Health Worker' }}</p>
+                    </div>
+                    <img alt="Health Worker Profile"
+                        class="w-9 h-9 rounded-full object-cover ring-2 ring-primary/10 group-hover:ring-primary/30 transition-all"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuAzuEzGuKhuDJKI44bu6U1YzFdI7z5disX1FjUVLwgq07xpkF1vi2q1RQg1lWnbbzx-97qaEaUE0wHwrsBEDnQdIf8whoLOPKyx4AYqvvB-lfqq-SS3OBugICvjWAE_JcAHe0Vi0CwgldGbMzdKqqq-JDxrvKkK7FcZlxsnNKgOhrLZQUJ0ev2rjCkC13g53yP7Tgqv7JJmgsQFbx1nOvxapzia3kkgWKs_FBVNJ7u5msUyUkju3OqnpM2i3ofnQDyojEEc-LEA3xlD" />
+                    <div
+                        class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                        <div class="p-2">
                        <button type="button" onclick="openProfileModal()" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary rounded-lg transition-colors text-left cursor-pointer">
                                 <span class="material-symbols-outlined text-[18px]">person</span>
                                 My Profile
                         </button>
-                        <div class="h-px bg-slate-100 my-1"></div>
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit"
-                                class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors text-left">
-                                <span class="material-symbols-outlined text-[18px]">logout</span>
-                                Log Out
-                            </button>
-                        </form>
+                            <div class="h-px bg-slate-100 my-1"></div>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit"
+                                    class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors text-left">
+                                    <span class="material-symbols-outlined text-[18px]">logout</span>
+                                    Log Out
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</header>
-<main class="ml-64 pt-16 min-h-screen bg-surface">
-    <div class="max-w-[1600px] mx-auto p-8 flex gap-8">
-        <section class="w-1/3 flex flex-col gap-6">
-            <div class="bg-surface-container-low rounded-xl p-6 flex flex-col h-[calc(100vh-12rem)]">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-lg font-bold tracking-tight text-on-surface leading-tight">Pending Encoding<br>Queue</h2>
-                    <span class="px-2.5 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full">{{ $queue->count() }}
-                        Active</span>
-                </div>
-                <div class="mb-4">
-                    <div
-                        class="flex items-center bg-white rounded-lg px-3 py-2 border border-outline-variant/20 focus-within:border-primary/40 transition-all">
-                        <span class="material-symbols-outlined text-outline text-[18px]">filter_list</span>
-                        <input class="bg-transparent border-none focus:ring-0 text-sm w-full py-0" id="queueFilterInput"
-                            placeholder="Filter queue..." type="text" />
+    </header>
+    <main class="ml-64 pt-16 min-h-screen bg-surface">
+        <div class="max-w-[1600px] mx-auto p-8 flex flex-col xl:flex-row gap-8">
+            <section class="w-full xl:w-1/3 flex flex-col gap-6">
+                <div class="bg-surface-container-low rounded-xl p-6 flex flex-col h-80 xl:h-[calc(100vh-12rem)]">
+                    <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 mb-6">
+                        <h2 class="text-lg font-bold tracking-tight text-on-surface leading-tight">Pending Encoding<br>Queue</h2>
+                        <span class="whitespace-nowrap px-2.5 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full">{{ $queue->count() }}
+                            Active</span>
                     </div>
-                </div>
-                <div class="flex-1 overflow-y-auto space-y-3 pr-2" id="queueList">
-                    @forelse($queue as $item)
-                    <a href="{{ route('healthworker.clinical-encoding', ['bite_case_id' => $item->bite_case_id]) }}"
-                        class="queue-item block {{ isset($case) && $case->bite_case_id === $item->bite_case_id ? 'bg-surface-container-lowest p-4 rounded-lg border-l-4 border-primary shadow-sm' : 'bg-surface-container-lowest/50 p-4 rounded-lg border border-transparent hover:border-outline-variant/30 transition-all' }}">
-                        <div class="flex justify-between items-start mb-2">
-                            <span class="text-[10px] font-bold {{ isset($case) && $case->bite_case_id === $item->bite_case_id ? 'text-primary' : 'text-outline' }} tracking-widest uppercase">CASE NO. {{ $item->case_number }}</span>
-                            <span class="text-[10px] font-medium text-outline">{{ \Carbon\Carbon::parse($item->date_verified)->diffForHumans() }}</span>
-                        </div>
-                        <h3 class="font-bold text-on-surface">{{ $item->patient_name }}</h3>
-                        <p class="text-xs text-on-surface-variant mb-3 flex items-center gap-1">
-                            <span class="material-symbols-outlined text-[14px]">calendar_today</span>
-                            Incident: {{ \Carbon\Carbon::parse($item->date_verified)->format('M d, Y') }}
-                        </p>
-                        <div class="flex gap-2">
-                            <span
-                                class="px-2 py-0.5 {{ $item->encoding_status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : ($item->encoding_status === 'In Progress' ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface-container-high text-on-surface-variant') }} text-[10px] font-bold rounded-full">{{ $item->encoding_status }}</span>
-                        </div>
-                    </a>
-                    @empty
-                    <p class="text-sm text-on-surface-variant text-center py-8">No cases in the queue yet. Cases
-                        appear here once Staff finishes Case Encoding.</p>
-                    @endforelse
-                    <p id="queueNoMatch" class="hidden text-sm text-on-surface-variant text-center py-8">No cases match your filter.</p>
-                </div>
-            </div>
-        </section>
-        <section class="w-2/3 min-w-0 flex flex-col gap-6">
-            @if(session('status'))
-            {{-- Toast: fixed bottom-right (below the form card, so it never overlaps the footer buttons), auto-dismisses after 4s --}}
-            <div id="statusToast" role="status"
-                class="fixed bottom-6 right-8 z-50 max-w-sm flex items-center gap-3 bg-emerald-50 text-emerald-700 text-sm font-semibold pl-4 pr-2 py-3 rounded-lg shadow-lg shadow-blue-900/10 border border-emerald-200 transition-opacity duration-300">
-                <span class="material-symbols-outlined text-[18px]">check_circle</span>
-                <span class="flex-1">{{ session('status') }}</span>
-                <button type="button" id="statusToastClose" aria-label="Dismiss"
-                    class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-emerald-100 transition-colors">
-                    <span class="material-symbols-outlined text-[18px]">close</span>
-                </button>
-            </div>
-            @endif
-            @if($case)
-            <!-- Form Card -->
-            <div
-                class="bg-surface-container-lowest rounded-xl shadow-lg shadow-blue-900/5 overflow-hidden border border-outline-variant/10 flex flex-col h-[calc(100vh-12rem)]">
-                <!-- Form Header & Step Indicator -->
-                <div class="bg-surface-container-low border-b border-outline-variant/20">
-                    <div class="px-8 py-6 flex justify-between items-center">
-                        <div>
-                            <p class="text-[10px] font-bold text-primary tracking-widest uppercase mb-1">Active
-                                Encoding Session</p>
-                            <h2 class="text-2xl font-extrabold tracking-tight text-on-surface">{{ $case->patient_name ?? 'No case selected' }}</h2>
-                        </div>
-                        <div class="flex gap-4">
-                            <div class="text-right">
-                                <p class="text-[10px] font-semibold text-outline uppercase tracking-wider">Patient
-                                    ID</p>
-                                <p class="text-sm font-bold">{{ $case->patient_id ?? '—' }}</p>
-                            </div>
+                    <div class="mb-4">
+                        <div
+                            class="flex items-center bg-white rounded-lg px-3 py-2 border border-outline-variant/20 focus-within:border-primary/40 transition-all">
+                            <span class="material-symbols-outlined text-outline text-[18px]">filter_list</span>
+                            <input class="bg-transparent border-none focus:ring-0 text-sm w-full py-0" id="queueFilterInput"
+                                placeholder="Filter queue..." type="text" />
                         </div>
                     </div>
-                    <!-- Horizontal Wizard Steps -->
-                    <div class="px-8 pb-4">
-                        <div class="flex items-center w-full">
-                            <!-- Step 1 -->
-                            <div class="flex flex-col items-center flex-1 relative group">
-                                <div
-                                    class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold z-10 shadow-lg shadow-primary/20">
-                                    VI</div>
-                                <span class="text-[10px] font-bold text-primary mt-2 absolute -bottom-6 w-max">Wound
-                                    Desc.</span>
+                    <div class="flex-1 overflow-y-auto space-y-3 pr-2" id="queueList">
+                        @forelse($queue as $item)
+                        <a href="{{ route('healthworker.clinical-encoding', ['bite_case_id' => $item->bite_case_id]) }}"
+                            class="queue-item block {{ isset($case) && $case->bite_case_id === $item->bite_case_id ? 'bg-surface-container-lowest p-4 rounded-lg border-l-4 border-primary shadow-sm' : 'bg-surface-container-lowest/50 p-4 rounded-lg border border-transparent hover:border-outline-variant/30 transition-all' }}">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="text-[10px] font-bold {{ isset($case) && $case->bite_case_id === $item->bite_case_id ? 'text-primary' : 'text-outline' }} tracking-widest uppercase">CASE NO. {{ $item->case_number }}</span>
+                                <span class="text-[10px] font-medium text-outline">{{ \Carbon\Carbon::parse($item->date_verified)->diffForHumans() }}</span>
                             </div>
-                            <div class="flex-1 h-0.5 bg-primary/20 -mt-4"></div>
-                            <!-- Step 2 -->
-                            <div class="flex flex-col items-center flex-1 relative group">
-                                <div
-                                    class="w-8 h-8 rounded-full bg-white border-2 border-outline-variant/50 text-outline flex items-center justify-center text-xs font-bold z-10">
-                                    VII</div>
+                            <h3 class="font-bold text-on-surface">{{ $item->patient_name }}</h3>
+                            <p class="text-xs text-on-surface-variant mb-3 flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[14px]">calendar_today</span>
+                                Incident: {{ \Carbon\Carbon::parse($item->date_verified)->format('M d, Y') }}
+                            </p>
+                            <div class="flex gap-2">
                                 <span
-                                    class="text-[10px] font-bold text-outline mt-2 absolute -bottom-6 w-max opacity-0">Immunization</span>
+                                    class="px-2 py-0.5 {{ $item->encoding_status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : ($item->encoding_status === 'In Progress' ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface-container-high text-on-surface-variant') }} text-[10px] font-bold rounded-full">{{ $item->encoding_status }}</span>
                             </div>
-                            <div class="flex-1 h-0.5 bg-slate-200 -mt-4"></div>
-                            <!-- Step 3 -->
-                            <div class="flex flex-col items-center flex-1 relative group">
-                                <div
-                                    class="w-8 h-8 rounded-full bg-white border-2 border-outline-variant/50 text-outline flex items-center justify-center text-xs font-bold z-10">
-                                    VIII</div>
-                                <span
-                                    class="text-[10px] font-bold text-outline mt-2 absolute -bottom-6 w-max opacity-0">Remarks</span>
-                            </div>
-                            <div class="flex-1 h-0.5 bg-slate-200 -mt-4"></div>
-                            <!-- Step 4 -->
-                            <div class="flex flex-col items-center flex-1 relative group">
-                                <div
-                                    class="w-8 h-8 rounded-full bg-white border-2 border-outline-variant/50 text-outline flex items-center justify-center text-xs font-bold z-10">
-                                    IX</div>
-                                <span
-                                    class="text-[10px] font-bold text-outline mt-2 absolute -bottom-6 w-max opacity-0">Progress</span>
-                            </div>
-                        </div>
+                        </a>
+                        @empty
+                        <p class="text-sm text-on-surface-variant text-center py-8">No cases in the queue yet. Cases
+                            appear here once Staff finishes Case Encoding.</p>
+                        @endforelse
+                        <p id="queueNoMatch" class="hidden text-sm text-on-surface-variant text-center py-8">No cases match your filter.</p>
                     </div>
-                    <div class="h-6"></div> <!-- Spacer for absolute text labels -->
                 </div>
-                <!-- Wizard Body -->
-                <div class="flex-1 p-8 overflow-y-auto">
-                    <form id="section6Form" method="POST"
-                        action="{{ $case ? route('healthworker.clinical-encoding', ['bite_case_id' => $case->bite_case_id]) : '#' }}">
-                        @csrf
-                        <input type="hidden" name="action" id="formActionInput" value="next" />
-                        {{-- Toast: fixed bottom-right, auto-dismisses after 4s (same look as the draft-saved toast) --}}
-                        <div id="formErrorBanner" role="alert"
-                            class="{{ $errors->any() ? '' : 'hidden opacity-0' }} fixed bottom-6 right-8 z-50 max-w-sm flex items-center gap-3 bg-error-container text-on-error-container text-sm font-semibold pl-4 pr-2 py-3 rounded-lg shadow-lg shadow-blue-900/10 border border-error/20 transition-opacity duration-300">
-                            <span class="material-symbols-outlined text-[18px]">error</span>
-                            <span class="flex-1">Please fill in all required fields before continuing.</span>
-                            <button type="button" id="formErrorToastClose" aria-label="Dismiss"
-                                class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-black/5 transition-colors">
-                                <span class="material-symbols-outlined text-[18px]">close</span>
-                            </button>
+            </section>
+            <section class="w-full xl:w-2/3 min-w-0 flex flex-col gap-6">
+                @if(session('status'))
+                {{-- Toast: fixed bottom-right (below the form card, so it never overlaps the footer buttons), auto-dismisses after 4s --}}
+                <div id="statusToast" role="status"
+                    class="fixed bottom-6 right-8 z-50 max-w-sm flex items-center gap-3 bg-emerald-50 text-emerald-700 text-sm font-semibold pl-4 pr-2 py-3 rounded-lg shadow-lg shadow-blue-900/10 border border-emerald-200 transition-opacity duration-300">
+                    <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                    <span class="flex-1">{{ session('status') }}</span>
+                    <button type="button" id="statusToastClose" aria-label="Dismiss"
+                        class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-emerald-100 transition-colors">
+                        <span class="material-symbols-outlined text-[18px]">close</span>
+                    </button>
+                </div>
+                @endif
+                @if($case)
+                <!-- Form Card -->
+                <div data-arrival-anchor="/healthworker/clinical-encoding"
+                    class="bg-surface-container-lowest rounded-xl shadow-lg shadow-blue-900/5 overflow-hidden border border-outline-variant/10 flex flex-col min-h-[14rem] h-auto xl:h-[calc(100vh-12rem)]">
+                    <!-- Form Header & Step Indicator -->
+                    <div class="bg-surface-container-low border-b border-outline-variant/20">
+                        <div class="px-8 py-6 flex justify-between items-center">
+                            <div>
+                                <p class="text-[10px] font-bold text-primary tracking-widest uppercase mb-1">Active
+                                    Encoding Session</p>
+                                <h2 class="text-2xl font-extrabold tracking-tight text-on-surface">{{ $case->patient_name ?? 'No case selected' }}</h2>
+                            </div>
+                            <div class="flex gap-4">
+                                <div class="text-left sm:text-right">
+                                    <p class="text-[10px] font-semibold text-outline uppercase tracking-wider">Patient
+                                        ID</p>
+                                    <p class="text-sm font-bold">{{ $case->patient_id ?? '—' }}</p>
+                                </div>
+                            </div>
                         </div>
+                        <!-- Horizontal Wizard Steps -->
+                        <div class="px-8 pb-4">
+                            <div class="flex items-center w-full">
+                                <!-- Step 1 -->
+                                <div class="flex flex-col items-center flex-1 relative group">
+                                    <div
+                                        class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold z-10 shadow-lg shadow-primary/20">
+                                        VI</div>
+                                    <span class="text-[10px] font-bold text-primary mt-2 absolute -bottom-6 w-max">Wound
+                                        Desc.</span>
+                                </div>
+                                <div class="flex-1 h-0.5 bg-primary/20"></div>
+                                <!-- Step 2 -->
+                                <div class="flex flex-col items-center flex-1 relative group">
+                                    <div
+                                        class="w-8 h-8 rounded-full bg-white border-2 border-outline-variant/50 text-outline flex items-center justify-center text-xs font-bold z-10">
+                                        VII</div>
+                                    <span
+                                        class="text-[10px] font-bold text-outline mt-2 absolute -bottom-6 w-max opacity-0">Immunization</span>
+                                </div>
+                                <div class="flex-1 h-0.5 bg-slate-200"></div>
+                                <!-- Step 3 -->
+                                <div class="flex flex-col items-center flex-1 relative group">
+                                    <div
+                                        class="w-8 h-8 rounded-full bg-white border-2 border-outline-variant/50 text-outline flex items-center justify-center text-xs font-bold z-10">
+                                        VIII</div>
+                                    <span
+                                        class="text-[10px] font-bold text-outline mt-2 absolute -bottom-6 w-max opacity-0">Remarks</span>
+                                </div>
+                                <div class="flex-1 h-0.5 bg-slate-200"></div>
+                                <!-- Step 4 -->
+                                <div class="flex flex-col items-center flex-1 relative group">
+                                    <div
+                                        class="w-8 h-8 rounded-full bg-white border-2 border-outline-variant/50 text-outline flex items-center justify-center text-xs font-bold z-10">
+                                        IX</div>
+                                    <span
+                                        class="text-[10px] font-bold text-outline mt-2 absolute -bottom-6 w-max opacity-0">Progress</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="h-6"></div> <!-- Spacer for absolute text labels -->
+                    </div>
+                    <!-- Wizard Body -->
+                    <div class="flex-1 p-8 overflow-y-auto">
+                        <form id="section6Form" method="POST"
+                            action="{{ $case ? route('healthworker.clinical-encoding', ['bite_case_id' => $case->bite_case_id]) : '#' }}">
+                            @csrf
+                            <input type="hidden" name="action" id="formActionInput" value="next" />
+                            {{-- Toast: fixed bottom-right, auto-dismisses after 4s (same look as the draft-saved toast) --}}
+                            <div id="formErrorBanner" role="alert"
+                                class="{{ $errors->any() ? '' : 'hidden opacity-0' }} fixed bottom-6 right-8 z-50 max-w-sm flex items-center gap-3 bg-error-container text-on-error-container text-sm font-semibold pl-4 pr-2 py-3 rounded-lg shadow-lg shadow-blue-900/10 border border-error/20 transition-opacity duration-300">
+                                <span class="material-symbols-outlined text-[18px]">error</span>
+                                <span class="flex-1">Please fill in all required fields before continuing.</span>
+                                <button type="button" id="formErrorToastClose" aria-label="Dismiss"
+                                    class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-black/5 transition-colors">
+                                    <span class="material-symbols-outlined text-[18px]">close</span>
+                                </button>
+                            </div>
                         <div class="step-content active" id="step1">
                             <div class="flex items-center gap-3 mb-8">
                                 <span
@@ -337,8 +336,8 @@
                                 <h3 class="text-sm font-extrabold uppercase tracking-widest text-on-surface-variant">
                                     Wound Description &amp; Category</h3>
                             </div>
-                            <div class="grid grid-cols-2 gap-8">
-                                <div class="col-span-2">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
+                                <div class="col-span-1 sm:col-span-2">
                                     <label
                                         class="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Site
                                         of Bite / Exposure <span class="text-error">*</span></label>
@@ -353,8 +352,8 @@
                                         Category <span class="text-error">*</span></label>
                                     <div class="flex gap-4">
                                         @php
-                                        $selectedDeep = old('is_deep', isset($section->is_deep) ? (string) (int) $section->is_deep : null);
-                                        $selectedCategory = $selectedDeep === '1' ? 'III' : ($section->category_of_exposure ?? $case->category ?? '');
+                                            $selectedDeep = old('is_deep', isset($section->is_deep) ? (string) (int) $section->is_deep : null);
+                                            $selectedCategory = $selectedDeep === '1' ? 'III' : ($section->category_of_exposure ?? $case->category ?? '');
                                         @endphp
                                         @foreach(['I', 'II', 'III'] as $cat)
                                         <label class="flex-1 cursor-pointer">
@@ -411,9 +410,9 @@
                                         </label>
                                     </div>
                                 </div>
-                                <div class="col-span-2">
+                                <div class="col-span-1 sm:col-span-2">
                                     @php
-                                    $selectedTypes = old('wound_types', array_map('trim', explode(',', $section->wound_description ?? '')));
+                                        $selectedTypes = old('wound_types', array_map('trim', explode(',', $section->wound_description ?? '')));
                                     @endphp
                                     <label
                                         class="block text-xs font-bold text-outline uppercase tracking-wider mb-3">Wound
@@ -465,7 +464,13 @@
                         </div>
                     </div>
                 </div>
-               
+                @else
+                <!-- No case selected -->
+                <div
+                    class="bg-surface-container-lowest rounded-xl shadow-lg shadow-blue-900/5 border border-outline-variant/10 flex flex-col items-center justify-center min-h-[14rem] h-auto xl:h-[calc(100vh-12rem)] gap-3">
+                    <span class="material-symbols-outlined text-5xl text-outline-variant">folder_open</span>
+                    <p class="text-sm font-bold text-on-surface-variant">Please select a case.</p>
+                </div>
                 @endif
             </section>
         </div>
@@ -504,135 +509,120 @@
         </p>
     </div>
     -->
-<script>
-    // Simple Wizard Logic for Demo Purposes
-    // The whole form card (and these buttons) only exist in the DOM when
-    // a case is selected, so none of this runs otherwise.
-    const backBtn = document.getElementById('backBtn');
+    <script>
+        // Simple Wizard Logic for Demo Purposes
+        // The whole form card (and these buttons) only exist in the DOM when
+        // a case is selected, so none of this runs otherwise.
+        const backBtn = document.getElementById('backBtn');
 
-    if (backBtn) {
-        let currentStep = 1;
-        const totalSteps = 4;
+        if (backBtn) {
+            let currentStep = 1;
+            const totalSteps = 4;
 
-        const nextBtn = document.getElementById('nextBtn');
-        const finalizeBtn = document.getElementById('finalizeBtn');
-        const draftBtn = document.getElementById('draftBtn');
-        const formActionInput = document.getElementById('formActionInput');
+            const nextBtn = document.getElementById('nextBtn');
+            const finalizeBtn = document.getElementById('finalizeBtn');
+            const draftBtn = document.getElementById('draftBtn');
+            const formActionInput = document.getElementById('formActionInput');
 
-        function updateWizard(step) {
-            // Hide all steps
-            document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
-            // Show current
-            document.getElementById(`step${step}`).classList.add('active');
+            function updateWizard(step) {
+                // Hide all steps
+                document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+                // Show current
+                document.getElementById(`step${step}`).classList.add('active');
 
-            // Update Buttons
-            if (step === 1) {
-                backBtn.classList.add('hidden');
-            } else {
-                backBtn.classList.remove('hidden');
+                // Update Buttons
+                if (step === 1) {
+                    backBtn.classList.add('hidden');
+                } else {
+                    backBtn.classList.remove('hidden');
+                }
+
+                if (step === totalSteps) {
+                    nextBtn.classList.add('hidden');
+                    finalizeBtn.classList.remove('hidden');
+                } else {
+                    nextBtn.classList.remove('hidden');
+                    finalizeBtn.classList.add('hidden');
+                }
+
+                // Logic for updating header indicators would go here in a real app
             }
 
-            if (step === totalSteps) {
-                nextBtn.classList.add('hidden');
-                finalizeBtn.classList.remove('hidden');
-            } else {
-                nextBtn.classList.remove('hidden');
-                finalizeBtn.classList.add('hidden');
+            const siteInput = document.getElementById('siteOfBiteInput');
+            const siteError = document.getElementById('siteOfBiteError');
+            const banner = document.getElementById('formErrorBanner');
+            // Required-fields toast: closes on the X button or by itself after 4 seconds
+            const errorToast = (() => {
+                let timer;
+                const hide = () => {
+                    clearTimeout(timer);
+                    banner.classList.add('opacity-0');
+                    setTimeout(() => {
+                        if (banner.classList.contains('opacity-0')) banner.classList.add('hidden');
+                    }, 300);
+                };
+                const show = () => {
+                    clearTimeout(timer);
+                    banner.classList.remove('hidden');
+                    void banner.offsetWidth; // let the fade-in transition run
+                    banner.classList.remove('opacity-0');
+                    timer = setTimeout(hide, 4000);
+                };
+                document.getElementById('formErrorToastClose').addEventListener('click', hide);
+                if (!banner.classList.contains('hidden')) show(); // errors rendered by the server
+                return { show, hide };
+            })();
+
+            const form = document.getElementById('section6Form');
+            const woundError = document.getElementById('woundTypesError');
+            const deepError = document.getElementById('deepError');
+            const woundBox = document.getElementById('woundTypesBox');
+            const deepBox = document.getElementById('deepBox');
+
+            // Red ring + message for one field; the toast is handled by refreshToast()
+            function setError(errorEl, ringEl, message) {
+                errorEl.textContent = message || errorEl.textContent;
+                errorEl.classList.toggle('hidden', !message);
+                ringEl.classList.toggle('ring-2', !!message);
+                ringEl.classList.toggle('ring-error', !!message);
+                ringEl.classList.toggle('ring-transparent', !message);
             }
+            const anyError = () => !!form.querySelector('#siteOfBiteError:not(.hidden), #woundTypesError:not(.hidden), #deepError:not(.hidden)');
+            const refreshToast = () => { if (anyError()) errorToast.show(); else errorToast.hide(); };
 
-            // Logic for updating header indicators would go here in a real app
-        }
-
-        const siteInput = document.getElementById('siteOfBiteInput');
-        const siteError = document.getElementById('siteOfBiteError');
-        const banner = document.getElementById('formErrorBanner');
-        // Required-fields toast: closes on the X button or by itself after 4 seconds
-        const errorToast = (() => {
-            let timer;
-            const hide = () => {
-                clearTimeout(timer);
-                banner.classList.add('opacity-0');
-                setTimeout(() => {
-                    if (banner.classList.contains('opacity-0')) banner.classList.add('hidden');
-                }, 300);
+            const checks = {
+                site: () => siteInput.value.trim() !== '',
+                wound: () => !!form.querySelector('input[name="wound_types[]"]:checked'),
+                deep: () => !!form.querySelector('input[name="is_deep"]:checked'),
             };
-            const show = () => {
-                clearTimeout(timer);
-                banner.classList.remove('hidden');
-                void banner.offsetWidth; // let the fade-in transition run
-                banner.classList.remove('opacity-0');
-                timer = setTimeout(hide, 4000);
-            };
-            document.getElementById('formErrorToastClose').addEventListener('click', hide);
-            if (!banner.classList.contains('hidden')) show(); // errors rendered by the server
-            return {
-                show,
-                hide
-            };
-        })();
 
-        const form = document.getElementById('section6Form');
-        const woundError = document.getElementById('woundTypesError');
-        const deepError = document.getElementById('deepError');
-        const woundBox = document.getElementById('woundTypesBox');
-        const deepBox = document.getElementById('deepBox');
-
-        // Red ring + message for one field; the toast is handled by refreshToast()
-        function setError(errorEl, ringEl, message) {
-            errorEl.textContent = message || errorEl.textContent;
-            errorEl.classList.toggle('hidden', !message);
-            ringEl.classList.toggle('ring-2', !!message);
-            ringEl.classList.toggle('ring-error', !!message);
-            ringEl.classList.toggle('ring-transparent', !message);
-        }
-        const anyError = () => !!form.querySelector('#siteOfBiteError:not(.hidden), #woundTypesError:not(.hidden), #deepError:not(.hidden)');
-        const refreshToast = () => {
+            // Re-apply red rings for errors rendered by the server
+            [[siteError, siteInput], [woundError, woundBox], [deepError, deepBox]].forEach(([el, ring]) => {
+                if (!el.classList.contains('hidden')) setError(el, ring, el.textContent.trim());
+            });
             if (anyError()) errorToast.show();
-            else errorToast.hide();
-        };
 
-        const checks = {
-            site: () => siteInput.value.trim() !== '',
-            wound: () => !!form.querySelector('input[name="wound_types[]"]:checked'),
-            deep: () => !!form.querySelector('input[name="is_deep"]:checked'),
-        };
+            // Clear each error as soon as the field is fixed
+            siteInput.addEventListener('input', () => {
+                if (checks.site()) { setError(siteError, siteInput, ''); refreshToast(); }
+            });
+            form.querySelectorAll('input[name="wound_types[]"]').forEach((box) => box.addEventListener('change', () => {
+                if (checks.wound()) { setError(woundError, woundBox, ''); refreshToast(); }
+            }));
 
-        // Re-apply red rings for errors rendered by the server
-        [
-            [siteError, siteInput],
-            [woundError, woundBox],
-            [deepError, deepBox]
-        ].forEach(([el, ring]) => {
-            if (!el.classList.contains('hidden')) setError(el, ring, el.textContent.trim());
-        });
-        if (anyError()) errorToast.show();
-
-        // Clear each error as soon as the field is fixed
-        siteInput.addEventListener('input', () => {
-            if (checks.site()) {
-                setError(siteError, siteInput, '');
+            // A deep wound is Category III: picking "deep" selects Cat III, and Cat III stays selected while deep
+            const categoryRadios = form.querySelectorAll('input[name="category_of_exposure"]');
+            const catIII = form.querySelector('input[name="category_of_exposure"][value="III"]');
+            form.querySelectorAll('input[name="is_deep"]').forEach((radio) => radio.addEventListener('change', () => {
+                if (radio.value === '1' && catIII) catIII.checked = true;
+                setError(deepError, deepBox, '');
                 refreshToast();
-            }
-        });
-        form.querySelectorAll('input[name="wound_types[]"]').forEach((box) => box.addEventListener('change', () => {
-            if (checks.wound()) {
-                setError(woundError, woundBox, '');
-                refreshToast();
-            }
-        }));
+            }));
+            categoryRadios.forEach((radio) => radio.addEventListener('change', () => {
+                const deep = form.querySelector('input[name="is_deep"]:checked');
+                if (deep && deep.value === '1' && catIII) catIII.checked = true;
+            }));
 
-        // A deep wound is Category III: picking "deep" selects Cat III, and Cat III stays selected while deep
-        const categoryRadios = form.querySelectorAll('input[name="category_of_exposure"]');
-        const catIII = form.querySelector('input[name="category_of_exposure"][value="III"]');
-        form.querySelectorAll('input[name="is_deep"]').forEach((radio) => radio.addEventListener('change', () => {
-            if (radio.value === '1' && catIII) catIII.checked = true;
-            setError(deepError, deepBox, '');
-            refreshToast();
-        }));
-        categoryRadios.forEach((radio) => radio.addEventListener('change', () => {
-            const deep = form.querySelector('input[name="is_deep"]:checked');
-            if (deep && deep.value === '1' && catIII) catIII.checked = true;
-        }));
             // Required-field checks shared by Next and Discharge; true when everything is filled in
             function runChecks() {
                 const results = {
@@ -678,93 +668,66 @@
             dischargeModal.addEventListener('click', (e) => { if (e.target === dischargeModal) dischargeModal.classList.add('hidden'); });
             document.getElementById('dischargeConfirm').addEventListener('click', () => {
                 formActionInput.value = 'discharge';
+                form.dataset.ceSkip = '1';   // the discharge pop-up above already asked
                 form.submit();
             });
 
-        nextBtn.addEventListener('click', () => {
-            formActionInput.value = 'next';
-            const results = {
-                site: [checks.site(), siteError, siteInput, 'Please enter the site of bite / exposure.'],
-                wound: [checks.wound(), woundError, woundBox, 'Please select at least one wound description.'],
-                deep: [checks.deep(), deepError, deepBox, 'Please tell whether the wound is deep.'],
-            };
-            let first = null;
-            Object.values(results).forEach(([ok, errorEl, ringEl, message]) => {
-                setError(errorEl, ringEl, ok ? '' : message);
-                if (!ok && !first) first = ringEl;
-            });
-            if (first) {
-                errorToast.show();
-                first.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'center'
+            if (draftBtn) {
+                draftBtn.addEventListener('click', () => {
+                    formActionInput.value = 'draft';
                 });
-                return;
             }
-            form.submit();
-        });
 
-        if (draftBtn) {
-            draftBtn.addEventListener('click', () => {
-                formActionInput.value = 'draft';
+            backBtn.addEventListener('click', () => {
+                if (currentStep > 1) {
+                    currentStep--;
+                    updateWizard(currentStep);
+                }
             });
         }
+    </script>
+    <script>
+        // Draft-saved toast: closes on the X button or by itself after 4 seconds
+        (function () {
+            const toast = document.getElementById('statusToast');
+            if (!toast) return;
+            const dismiss = () => {
+                toast.classList.add('opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            };
+            document.getElementById('statusToastClose').addEventListener('click', dismiss);
+            setTimeout(dismiss, 4000);
+        })();
+    </script>
+    <script>
+        // Queue filter: every word typed must match somewhere in the case card
+        // (patient name, case no., category, status, incident date)
+        (function () {
+            const input = document.getElementById('queueFilterInput');
+            const items = document.querySelectorAll('#queueList .queue-item');
+            const noMatch = document.getElementById('queueNoMatch');
+            if (!input) return;
 
-        backBtn.addEventListener('click', () => {
-            if (currentStep > 1) {
-                currentStep--;
-                updateWizard(currentStep);
-            }
-        });
-    }
-</script>
-<script>
-    // Draft-saved toast: closes on the X button or by itself after 4 seconds
-    (function() {
-        const toast = document.getElementById('statusToast');
-        if (!toast) return;
-        const dismiss = () => {
-            toast.classList.add('opacity-0');
-            setTimeout(() => toast.remove(), 300);
-        };
-        document.getElementById('statusToastClose').addEventListener('click', dismiss);
-        setTimeout(dismiss, 4000);
-    })();
-</script>
-<script>
-    // Queue filter: every word typed must match somewhere in the case card
-    // (patient name, case no., category, status, incident date)
-    (function() {
-        const input = document.getElementById('queueFilterInput');
-        const items = document.querySelectorAll('#queueList .queue-item');
-        const noMatch = document.getElementById('queueNoMatch');
-        if (!input) return;
+            const KEY = 'ceQueueFilter';
+            const apply = () => {
+                const terms = input.value.toLowerCase().split(/\s+/).filter(Boolean);
+                let shown = 0;
+                items.forEach((item) => {
+                    const text = item.textContent.toLowerCase().replace(/\s+/g, ' ');
+                    const match = terms.every((t) => text.includes(t));
+                    item.classList.toggle('hidden', !match);
+                    if (match) shown++;
+                });
+                if (noMatch) noMatch.classList.toggle('hidden', shown > 0 || items.length === 0);
+                try { sessionStorage.setItem(KEY, input.value); } catch (e) {}
+            };
 
-        const KEY = 'ceQueueFilter';
-        const apply = () => {
-            const terms = input.value.toLowerCase().split(/\s+/).filter(Boolean);
-            let shown = 0;
-            items.forEach((item) => {
-                const text = item.textContent.toLowerCase().replace(/\s+/g, ' ');
-                const match = terms.every((t) => text.includes(t));
-                item.classList.toggle('hidden', !match);
-                if (match) shown++;
-            });
-            if (noMatch) noMatch.classList.toggle('hidden', shown > 0 || items.length === 0);
-            try {
-                sessionStorage.setItem(KEY, input.value);
-            } catch (e) {}
-        };
-
-        input.addEventListener('input', apply);
-        // Keep the filter when moving between sections / selecting a case
-        try {
-            input.value = sessionStorage.getItem(KEY) || '';
-        } catch (e) {}
-        apply();
-    })();
-</script>
-
+            input.addEventListener('input', apply);
+            // Keep the filter when moving between sections / selecting a case
+            try { input.value = sessionStorage.getItem(KEY) || ''; } catch (e) {}
+            apply();
+        })();
+    </script>
 @if(session('qr_popup'))
 <div id="qrModal" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-8 text-center">
@@ -797,8 +760,7 @@
 </script>
 @endif
 
-        
-            @php
+        @php
             $user = Auth::user();
 
             // Shared placeholder descriptions (edit these)
@@ -921,6 +883,11 @@
             });
         </script>
         @include('partials.idle-timeout')
-    </body>
+    @include('partials.clinical-popups', [
+        'ceFormId'  => 'section6Form',
+        'ceSection' => 'Section VI',
+        'ceNext'    => ['tone' => 'blue', 'icon' => 'arrow_forward', 'title' => 'Save and continue?', 'text' => 'Section VI is saved and you move on to Section VII (immunization).', 'ok' => 'Save and Continue'],
+    ])
+</body>
 
 </html>

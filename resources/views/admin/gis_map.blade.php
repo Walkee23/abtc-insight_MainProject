@@ -42,6 +42,8 @@
     </style>
     <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
     <script src="{{ asset('js/custom-select.js') }}" defer></script>
+    <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
+    <script src="{{ asset('js/mobile-nav.js') }}" defer></script>
 </head>
 
 <body class="bg-surface text-on-surface">
@@ -133,7 +135,7 @@
         <div class="max-w-[1600px] mx-auto space-y-5">
             <div class="flex items-end justify-between flex-wrap gap-2">
                 <div>
-                    <h2 class="text-2xl font-extrabold tracking-tight text-on-surface">Barangay Spatial Distribution</h2>
+                    <h2 class="mn-page-title text-2xl font-extrabold tracking-tight text-on-surface">Barangay Spatial Distribution</h2>
                     <p class="text-sm text-slate-500">Confirmed bite cases per barangay, Cebu City. Bubble size = number of cases.</p>
                 </div>
                 <span id="status" class="text-xs text-slate-500"></span>
@@ -215,6 +217,7 @@
             </div>
 
             <div id="unmapped" class="hidden rounded-lg bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 text-sm"></div>
+            <div id="outside" class="hidden rounded-lg bg-slate-50 border border-slate-200 text-slate-600 px-4 py-3 text-sm"></div>
 
             <div class="grid lg:grid-cols-[1fr_300px] gap-5">
                 <div class="bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/10 p-4">
@@ -263,6 +266,28 @@
         const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
         // "Lahug (Pob.)" and "Lahug" both become "LAHUG", so small spelling differences still match
         const norm = s => (s || '').toUpperCase().replace(/\(.*?\)/g, ' ').replace(/\bPOB\b\.?/g, ' ').replace(/[^A-Z0-9]+/g, ' ').trim();
+        // The cases use the project's barangay names (config/barangays.php); the boundary file uses the government (PSA) names.
+        // Where the two spell the same barangay differently, this maps the cleaned-up case name to the cleaned-up boundary name.
+        const ALIASES = {
+            'QUIOT': 'QUIOT PARDO',
+            'KAMPUTHAW': 'CAMPUTHAW',
+            'BO LUZ': 'LUZ',
+            'KINASANG AN': 'KINASANG AN PARDO',
+            'HIPODROMO': 'HIPPODROMO',
+            'BUDLAAN': 'BUDLA AN',
+            'CAPITOL': 'CAPITOL SITE',
+            'SAN NICOLAS PROPER': 'SAN NICOLAS CENTRAL',
+            'SAN NICOLAS PAHINA': 'PAHINA SAN NICOLAS',
+            'TOONG': 'TO ONG PARDO',
+            'PUNG OL': 'PUNG OL SIBUGAY',
+            'BOUT TAUP': 'BUOT TAUP PARDO',
+            'BUOT TAOP': 'BUOT TAUP PARDO',        // typo found in the imported data
+            'STA CRUZ': 'SANTA CRUZ',
+            'STO NI O': 'CENTRAL',                 // Sto. Niño (Poblacion) is the "Central (Pob.)" polygon of the boundary file
+        };
+        const key = s => { const k = norm(s); return ALIASES[k] || k; };
+        // cases from outside Cebu City are recorded as "Others: Mandaue", "Other City (Bohol)", ... - they have no barangay on this map
+        const isOutside = s => /^\s*other/i.test(s || '');
         const iso  = d => new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
 
         const map = L.map('gisMap').setView([10.3157, 123.8854], 12);
@@ -341,9 +366,14 @@
 
         function render(rows) {
             const agg = {}, unmapped = {};
+            let outside = 0;
             rows.forEach(r => {
-                const k = norm(r.barangay), n = +r.n;
-                if (!layers[k]) { unmapped[r.barangay] = (unmapped[r.barangay] || 0) + n; return; }
+                const k = key(r.barangay), n = +r.n;
+                if (!layers[k]) {
+                    if (isOutside(r.barangay)) outside += n;                                 // outside Cebu City: expected, not an error
+                    else unmapped[r.barangay] = (unmapped[r.barangay] || 0) + n;             // a name nobody recognises
+                    return;
+                }
                 const a = agg[k] || (agg[k] = { total: 0, cat: {}, animal: {}, own: {} });
                 a.total += n;
                 a.own[r.ownership] = (a.own[r.ownership] || 0) + n;
@@ -379,7 +409,7 @@
             const sorted = Object.entries(agg).sort((x, y) => y[1].total - x[1].total);
             const total = sorted.reduce((s, [, a]) => s + a.total, 0);
             const cat3 = sorted.reduce((s, [, a]) => s + (a.cat['III'] || 0), 0);
-            $('sTotal').textContent = total + Object.values(unmapped).reduce((s, n) => s + n, 0);
+            $('sTotal').textContent = total + outside + Object.values(unmapped).reduce((s, n) => s + n, 0);
             $('sBrgy').textContent = sorted.length;
             $('sTop').textContent = sorted.length ? layers[sorted[0][0]].name + ' (' + sorted[0][1].total + ')' : '-';
             $('sCat3').textContent = cat3;
@@ -390,7 +420,9 @@
 
             const u = Object.entries(unmapped);
             $('unmapped').classList.toggle('hidden', !u.length);
-            $('unmapped').innerHTML = u.length ? '<b>' + u.reduce((s, [, n]) => s + n, 0) + ' case(s) are not on the map</b> because the barangay name was not found in the boundary file: ' + u.map(([n, c]) => esc(n) + ' (' + c + ')').join(', ') + '. Fix the spelling in the data or tell me and I will add an alias.' : '';
+            $('unmapped').innerHTML = u.length ? '<b>' + u.reduce((s, [, n]) => s + n, 0) + ' case(s) are not on the map</b> because the barangay name was not found in the boundary file: ' + u.sort((x, y) => y[1] - x[1]).map(([n, c]) => esc(n) + ' (' + c + ')').join(', ') + '. Fix the spelling in the data, or add the name to ALIASES in this page.' : '';
+            $('outside').classList.toggle('hidden', !outside);
+            $('outside').innerHTML = outside ? '<b>' + outside + ' case(s)</b> are from outside Cebu City (recorded as "Others" / "Other City"), so they are counted in the total but not shown on the map.' : '';
 
             const step = f => Math.max(1, Math.ceil(max * f));
             $('legend').innerHTML = '<b>Cases per barangay</b>' + [0.25, 0.5, 0.75, 1].map((f, i) =>

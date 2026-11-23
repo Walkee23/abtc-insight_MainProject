@@ -245,8 +245,18 @@ class PatientController extends Controller
             })
             ->values();
 
+        // The case shown in the detailed view: the one picked (?case=N), else the first one still in progress, else the newest
+        $wanted = (int) $request->query('case', 0);
+        $selected = $cases->firstWhere('case_number', $wanted)
+            ?? $cases->first(fn ($x) => in_array($x->status, ['ongoing', 'checked_in', 'registered'], true))
+            ?? $cases->first();
+
+        // "Surname, Given, M." -> the given name for the greeting
+        $parts = array_values(array_filter(array_map('trim', explode(',', (string) $patient->patient_name))));
+        $firstName = count($parts) >= 2 ? $parts[1] : ($parts[0] ?? 'Patient');
+
         return response()
-            ->view('patient.Tracking_Result', ['patient' => $patient, 'cases' => $cases, 'today' => $today])
+            ->view('patient.Track_Record', ['patient' => $patient, 'cases' => $cases, 'selected' => $selected, 'firstName' => $firstName, 'today' => $today])
             ->header('Cache-Control', 'no-store, private');
     }
 

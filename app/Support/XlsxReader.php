@@ -139,7 +139,7 @@ class XlsxReader
                 }
             }
 
-            if ($cells && array_filter($cells, fn ($v) => $v !== '')) {
+            if ($cells && array_filter($cells, fn($v) => $v !== '')) {
                 $max = max(array_keys($cells));
                 $filled = [];
                 for ($i = 0; $i <= $max; $i++) {
@@ -169,8 +169,8 @@ class XlsxReader
         $n = 0;
         while (($row = fgetcsv($fh, 0, ',', '"', '\\')) !== false) {
             $n++;
-            $row = array_map(fn ($v) => trim((string) $v), $row);
-            if (array_filter($row, fn ($v) => $v !== '')) {
+            $row = array_map(fn($v) => trim((string) $v), $row);
+            if (array_filter($row, fn($v) => $v !== '')) {
                 yield $n => $row;
             }
         }
@@ -424,10 +424,16 @@ class XlsxReader
 
     private function columnIndex(string $ref): int
     {
-        $letters = preg_replace('/[^A-Za-z]/', '', $ref);
         $n = 0;
-        foreach (str_split(strtoupper($letters)) as $ch) {
-            $n = $n * 26 + (ord($ch) - 64);
+        for ($i = 0, $len = strlen($ref); $i < $len; $i++) {
+            $ord = ord($ref[$i]);
+            if ($ord >= 65 && $ord <= 90) {
+                $n = $n * 26 + ($ord - 64);
+            } elseif ($ord >= 97 && $ord <= 122) {
+                $n = $n * 26 + ($ord - 96);
+            } else {
+                break;
+            }
         }
         return max(0, $n - 1);
     }

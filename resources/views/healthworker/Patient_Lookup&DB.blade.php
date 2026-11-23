@@ -258,13 +258,14 @@
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="bg-surface-container-low/50">
-                <th class="px-4 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Patient Name</th>
-                <th class="px-4 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Patient ID</th>
-                <th class="px-4 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Age/Sex</th>
-                <th class="px-4 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Barangay</th>
-                <th class="px-4 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Last Visit</th>
-                <th class="px-4 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Active PEP</th>
-                <th class="px-4 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant text-right whitespace-nowrap">Action</th>
+                <th class="px-3 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Patient Name</th>
+                <th class="px-3 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Patient ID</th>
+                <th class="px-3 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Age/Sex</th>
+                <th class="px-3 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Barangay</th>
+                <th class="px-3 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Last Visit</th>
+                <th class="px-3 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">PhilHealth</th>
+                <th class="px-3 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Active PEP</th>
+                <th class="px-3 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant text-right whitespace-nowrap">Action</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-surface-container-high">
@@ -279,18 +280,21 @@
                 ][$patient->pep_status];
               @endphp
               <tr class="hover:bg-surface-container-low transition-colors group">
-                <td class="px-4 py-5">
+                <td class="px-3 py-5">
                   <span class="font-semibold text-on-surface whitespace-nowrap">{{ $patient->patient_name }}</span>
                 </td>
-                <td class="px-4 py-5 text-sm text-on-surface-variant font-mono whitespace-nowrap">{{ $patient->patient_id }}</td>
-                <td class="px-4 py-5 text-sm text-on-surface-variant whitespace-nowrap">{{ $patient->age }} / {{ strtoupper(substr($patient->sex, 0, 1)) }}</td>
-                <td class="px-4 py-5 text-sm text-on-surface-variant whitespace-nowrap">{{ $patient->barangay ?? '—' }}</td>
-                <td class="px-4 py-5 text-sm text-on-surface-variant whitespace-nowrap">{{ $patient->last_visit ? \Carbon\Carbon::parse($patient->last_visit)->format('M d, Y') : '—' }}</td>
-                <td class="px-4 py-5">
+                <td class="px-3 py-5 text-sm text-on-surface-variant font-mono whitespace-nowrap">{{ $patient->patient_id }}</td>
+                <td class="px-3 py-5 text-sm text-on-surface-variant whitespace-nowrap">{{ $patient->age }} / {{ strtoupper(substr($patient->sex, 0, 1)) }}</td>
+                <td class="px-3 py-5 text-sm text-on-surface-variant whitespace-nowrap">{{ $patient->barangay ?? '—' }}</td>
+                <td class="px-3 py-5 text-sm text-on-surface-variant whitespace-nowrap">{{ $patient->last_visit ? \Carbon\Carbon::parse($patient->last_visit)->format('M d, Y') : '—' }}</td>
+                <td class="px-3 py-5">
+                  <span class="inline-block whitespace-nowrap px-3 py-1 rounded-full {{ $patient->ph_class }} text-[10px] font-bold uppercase tracking-wider">{{ $patient->ph_label }}</span>
+                </td>
+                <td class="px-3 py-5">
                   <span
                     class="inline-block whitespace-nowrap px-3 py-1 rounded-full {{ $pill }} text-[10px] font-bold uppercase tracking-wider">{{ $patient->pep_status }}</span>
                 </td>
-                <td class="px-4 py-5 text-right">
+                <td class="px-3 py-5 text-right">
                   <button type="button" data-view-record="{{ $patient->patient_id }}"
                     class="whitespace-nowrap text-primary font-bold text-xs hover:underline decoration-2 underline-offset-4">View
                     Record</button>
@@ -298,7 +302,7 @@
               </tr>
               @empty
               <tr>
-                <td colspan="7" class="px-6 py-14 text-center text-sm text-on-surface-variant">
+                <td colspan="8" class="px-6 py-14 text-center text-sm text-on-surface-variant">
                   @if($scope === 'mine' && $search === '' && $status === 'all')
                   No patients assigned to you yet. Switch off "My Patients" to browse everyone.
                   @elseif($search !== '' || $status !== 'all' || $scope === 'mine')
@@ -441,8 +445,15 @@
          ['Civil Status', r.civil_status || '—'], ['Contact No.', r.contact || '—'],
          ['PhilHealth', r.philhealth || '—']].forEach(([label, value]) => {
           const wrap = el('div');
-          wrap.append(el('dt', 'text-[10px] font-bold text-outline uppercase tracking-wider mb-1', label),
-                      el('dd', 'text-sm font-semibold text-on-surface', value));
+          const dd = el('dd', 'text-sm font-semibold text-on-surface');
+          if (label === 'PhilHealth') {
+            // a coloured status, then the member named in the registration form
+            dd.append(el('span', 'inline-block whitespace-nowrap px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ' + (r.philhealth_class || ''), value));
+            if (r.philhealth_member_name) dd.append(el('span', 'block text-xs font-medium text-on-surface-variant mt-1 break-words', 'Member: ' + r.philhealth_member_name));
+          } else {
+            dd.textContent = value;
+          }
+          wrap.append(el('dt', 'text-[10px] font-bold text-outline uppercase tracking-wider mb-1', label), dd);
           details.append(wrap);
         });
 

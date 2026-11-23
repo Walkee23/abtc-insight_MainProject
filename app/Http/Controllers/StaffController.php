@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Support\Audit;
+use App\Support\PhilhealthStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -679,19 +680,7 @@ class StaffController extends Controller
 
         $patients->getCollection()->transform(function ($patient) {
             // PhilHealth status shown on the row and in the case summary
-            if ($patient->ph_verification === 'Verified') {
-                [$patient->ph_label, $patient->ph_class] = ['Verified member', 'bg-emerald-100 text-emerald-800'];
-            } elseif ($patient->ph_verification === 'Expired') {
-                [$patient->ph_label, $patient->ph_class] = ['Expired', 'bg-amber-100 text-amber-800'];
-            } elseif ($patient->ph_verification === 'Not a Member') {
-                [$patient->ph_label, $patient->ph_class] = ['Not a member', 'bg-slate-100 text-slate-600'];
-            } elseif ($patient->ph_claimed) {
-                [$patient->ph_label, $patient->ph_class] = ['Pending verification', 'bg-sky-100 text-sky-800'];   // said "member", not checked yet
-            } elseif ($patient->philhealth_member) {
-                [$patient->ph_label, $patient->ph_class] = ['Member', 'bg-emerald-100 text-emerald-800'];       // no registration record to compare with
-            } else {
-                [$patient->ph_label, $patient->ph_class] = ['Non-member', 'bg-slate-100 text-slate-600'];
-            }
+            [$patient->ph_label, $patient->ph_class] = PhilhealthStatus::badge($patient->ph_claimed, $patient->ph_verification, $patient->philhealth_member);
 
             if (!$patient->bite_case_id) {
                 $patient->pep_status = 'No Case';

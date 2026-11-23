@@ -131,11 +131,12 @@ class PatientController extends Controller
     }
 
     /**
-     * Tracking Portal: the patient's own treatment status.
+     * Tracking Portal, step 1: check the Tracking ID (the unique Patient ID, CEB-..., also the content of the patient's
+     * QR code) AND the exact date of birth. A wrong ID and a wrong birth date look the same, and after 5 wrong tries for
+     * one ID the lookup is locked for 15 minutes, so the birth date cannot be guessed.
      *
-     * Needs BOTH the Tracking ID (the unique Patient ID, CEB-..., also the content of the patient's QR code) and the
-     * exact date of birth. A wrong ID and a wrong birth date look the same, and after 5 wrong tries for one ID the
-     * lookup is locked for 15 minutes, so the birth date cannot be guessed.
+     * On success only the patient's ID is kept in the session (for 20 minutes) and the browser is sent to the result
+     * page, so the ID and birth date never appear in a URL.
      */
     public function track(Request $request)
     {
@@ -164,6 +165,28 @@ class PatientController extends Controller
         }
         RateLimiter::clear($key);
 
+        $request->session()->put('tracking', ['patient_id' => $patient->patient_id, 'exp' => now()->addMinutes(20)->timestamp]);
+
+        return response()->json(['found' => true, 'redirect' => route('patient.tracking.result')]);
+    }
+
+    /** Tracking Portal, step 2: the result page (its own page). Without a recent successful lookup it goes back to the form. */
+    public function trackResult(Request $request)
+    {
+        $proof = $request->session()->get('tracking');
+        if (!$proof || ($proof['exp'] ?? 0) < now()->timestamp) {
+            $request->session()->forget('tracking');
+
+            return redirect()->route('patient.tracking.portal');
+        }
+
+        $patient = DB::table('patients')->where('patient_id', $proof['patient_id'])->first();
+        if (!$patient) {
+            $request->session()->forget('tracking');
+
+            return redirect()->route('patient.tracking.portal');
+        }
+
         $today = now()->toDateString();
         $cases = DB::table('bite_cases as bc')
             ->leftJoin('bite_section7_immunization as s7', 's7.bite_case_id', '=', 'bc.bite_case_id')
@@ -171,7 +194,6 @@ class PatientController extends Controller
             ->where('bc.patient_id', $patient->patient_id)
             ->orderByDesc('bc.case_number')
             ->get(['bc.bite_case_id', 'bc.case_number', 'bc.category', 'bc.outcome', 'bc.date_verified', 'bc.return_dose_day',
-                'bc.visit_completed_at', 'bc.assigned_health_worker_id',
                 's3.animal_type', 's3.bite_date_time',
                 's7.dose_type', 's7.route', 's7.day0_date', 's7.day3_date', 's7.day7_date', 's7.day14_date', 's7.day28_date',
                 's7.day0_brand', 's7.day3_brand', 's7.day7_brand', 's7.day14_brand', 's7.day28_brand'])
@@ -185,7 +207,7 @@ class PatientController extends Controller
                     $date = $c->{'day' . $d . '_date'} ? substr((string) $c->{'day' . $d . '_date'}, 0, 10) : null;
                     $due  = (!$date && $day0) ? \Carbon\Carbon::parse($day0)->addDays($d)->toDateString() : null;
                     $state = $date ? 'done' : ($d === $next ? 'next' : 'pending');
-                    $doses[] = [
+                    $doses[] = (object) [
                         'day'     => $d,
                         'state'   => $state,
                         'date'    => $date,
@@ -210,29 +232,22 @@ class PatientController extends Controller
                     $status = 'registered';
                 }
 
-                return [
-                    'case_number'  => $c->case_number,
-                    'category'     => $c->category,
-                    'animal'       => $c->animal_type,
-                    'reported'     => $c->bite_date_time ? substr((string) $c->bite_date_time, 0, 10) : ($c->date_verified ? substr((string) $c->date_verified, 0, 10) : null),
-                    'dose_type'    => $c->dose_type ?: 'Primary',
-                    'status'       => $status,
-                    'next_day'     => $status === 'ongoing' || $status === 'checked_in' ? $next : null,
+                return (object) [
+                    'case_number'    => $c->case_number,
+                    'category'       => $c->category,
+                    'animal'         => $c->animal_type,
+                    'reported'       => $c->bite_date_time ? substr((string) $c->bite_date_time, 0, 10) : ($c->date_verified ? substr((string) $c->date_verified, 0, 10) : null),
+                    'dose_type'      => $c->dose_type ?: 'Primary',
+                    'status'         => $status,
                     'checked_in_for' => $c->return_dose_day,
-                    'doses'        => $discharged ? [] : $doses,   // a discharged (Category I) case has no vaccine course
+                    'doses'          => $discharged ? [] : $doses,   // a discharged (Category I) case has no vaccine course
                 ];
             })
             ->values();
 
-        return response()->json([
-            'found'   => true,
-            'patient' => [
-                'name'        => $patient->patient_name,
-                'tracking_id' => $patient->patient_id,
-            ],
-            'today'   => $today,
-            'cases'   => $cases,
-        ]);
+        return response()
+            ->view('patient.Tracking_Result', ['patient' => $patient, 'cases' => $cases, 'today' => $today])
+            ->header('Cache-Control', 'no-store, private');
     }
 
     /**

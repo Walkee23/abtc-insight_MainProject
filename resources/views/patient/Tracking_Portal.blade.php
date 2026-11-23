@@ -135,7 +135,7 @@
       </div>
     </div>
   </nav>
-  <main class="flex-grow flex flex-col items-center justify-center gap-8 px-4 pt-24 pb-12">
+  <main class="flex-grow flex items-center justify-center px-4 pt-24 pb-12">
     <!-- Background Ethereal Elements -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
       <div class="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-primary-fixed/20 rounded-full blur-[120px]"></div>
@@ -236,25 +236,6 @@
         you agree to our clinical data privacy standards. Need Help? Please visit <a
           class="text-primary font-semibold hover:underline" href="#" style="">Information Staff at ABTC</a>.</p>
     </div>
-
-    <!-- Treatment status (filled in by the script below once the record is found) -->
-    <section id="trackResults" class="hidden relative z-10 w-full max-w-[720px] space-y-5" aria-live="polite">
-      <div class="bg-surface-container-lowest rounded-xl p-6 md:p-8 shadow-[0_24px_48px_-12px_rgba(25,28,30,0.04)] ring-1 ring-outline-variant/10">
-        <div class="flex flex-wrap items-start justify-between gap-3">
-          <div class="min-w-0">
-            <p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Treatment status for</p>
-            <h2 id="trackName" class="text-2xl font-extrabold tracking-tight text-on-surface break-words"></h2>
-            <p class="mt-1 text-xs text-on-surface-variant">Tracking ID: <span id="trackId" class="font-mono font-bold text-primary break-all"></span></p>
-          </div>
-          <button type="button" id="trackAgainBtn" class="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold text-primary bg-primary/10 hover:bg-primary/15 active:scale-95 transition-all">
-            <span class="material-symbols-outlined text-[16px]">search</span>
-            Look up another
-          </button>
-        </div>
-      </div>
-      <div id="trackCases" class="space-y-5"></div>
-      <p id="trackNoCases" class="hidden text-center text-sm text-on-surface-variant bg-surface-container-lowest rounded-xl p-6 ring-1 ring-outline-variant/10">No bite case is on record for this patient yet.</p>
-    </section>
   </main>
   @include('partials.patient-qr-modal')
   <!-- Footer Execution -->
@@ -285,10 +266,6 @@
 
   <script>
     const $ = (id) => document.getElementById(id);
-    const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-    const fmt = (iso) => { if (!iso) return ''; const [y, m, d] = String(iso).slice(0, 10).split('-').map(Number); return MONTHS[m - 1] + ' ' + d + ', ' + y; };
-    const longFmt = (iso) => { const [y, m, d] = String(iso).slice(0, 10).split('-').map(Number); return new Date(y, m - 1, d).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }); };
 
     $('dob').max = (() => { const n = new Date(); return n.getFullYear() + '-' + String(n.getMonth() + 1).padStart(2, '0') + '-' + String(n.getDate()).padStart(2, '0'); })();
 
@@ -316,6 +293,7 @@
       if (!dob) return showError('Please enter your date of birth.');
 
       const btn = $('trackBtn');
+      let leaving = false;
       btn.disabled = true; $('trackBtnText').textContent = 'Checking...';
       try {
         const res = await fetch(@json(route('patient.tracking.lookup')), {
@@ -328,103 +306,18 @@
         if (res.status === 419) return showError('Your session expired. Please reload the page and try again.');
         if (res.status === 429 && !data.message) return showError('Too many searches. Please wait a minute and try again.');
         if (!data.found) return showError(data.message || 'No record matches that Tracking ID and date of birth. Please check them and try again.');
-        render(data);
+        leaving = true;   // the result opens on its own page; the button stays on "Checking..." until it does
+        window.location.href = data.redirect;
       } catch (err) {
         showError('Something went wrong. Please try again.');
       } finally {
-        btn.disabled = false; $('trackBtnText').textContent = 'Track Status';
+        if (!leaving) { btn.disabled = false; $('trackBtnText').textContent = 'Track Status'; }
       }
     });
-
-    $('trackAgainBtn').addEventListener('click', function () {
-      $('trackResults').classList.add('hidden');
-      $('trackCases').innerHTML = '';
-      $('tracking-id').value = ''; $('dob').value = '';
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      $('tracking-id').focus({ preventScroll: true });
+    // coming back with the Back button: the form is ready again
+    window.addEventListener('pageshow', function (e) {
+      if (e.persisted) { $('trackBtn').disabled = false; $('trackBtnText').textContent = 'Track Status'; }
     });
-
-    // ---- show the result
-    const STATUS = {
-      ongoing:    ['Treatment ongoing',        'bg-primary-fixed text-primary'],
-      checked_in: ['Checked in at the clinic', 'bg-amber-100 text-amber-800'],
-      completed:  ['Treatment complete',       'bg-emerald-100 text-emerald-800'],
-      registered: ['Registered',               'bg-surface-container-high text-on-surface-variant'],
-      discharged: ['No vaccine needed',        'bg-emerald-100 text-emerald-800'],
-      past:       ['Past record',              'bg-surface-container-high text-on-surface-variant'],
-    };
-
-    function doseCell(d, today) {
-      const base = 'rounded-xl border-2 px-2 py-3 text-center min-w-0 ';
-      const label = '<div class="text-[11px] font-black uppercase tracking-wide">Day ' + d.day + '</div>';
-      if (d.state === 'done') {
-        return '<div class="' + base + 'border-emerald-200 bg-emerald-50 text-emerald-800">' + label +
-          '<div class="text-[11px] font-semibold mt-1">' + esc(fmt(d.date)) + '</div>' +
-          '<div class="text-[10px] font-bold text-emerald-600 mt-0.5">Given</div>' +
-          (d.brand ? '<div class="text-[9px] text-emerald-700/80 mt-1 break-words">' + esc(d.brand) + '</div>' : '') + '</div>';
-      }
-      if (d.state === 'next') {
-        const tone = d.overdue ? 'border-amber-300 bg-amber-50 text-amber-900' : 'border-primary bg-primary-fixed/40 text-primary';
-        return '<div class="' + base + tone + ' ring-2 ' + (d.overdue ? 'ring-amber-200' : 'ring-primary/15') + '">' + label +
-          '<div class="text-[11px] font-semibold mt-1">' + (d.due ? esc(fmt(d.due)) : 'At your visit') + '</div>' +
-          '<div class="text-[10px] font-bold mt-0.5">' + (d.overdue ? 'Overdue' : 'Next dose') + '</div></div>';
-      }
-      return '<div class="' + base + 'border-dashed border-surface-container-high bg-surface-container-low text-on-surface-variant">' + label +
-        '<div class="text-[11px] font-semibold mt-1">' + (d.due ? esc(fmt(d.due)) : '-') + '</div>' +
-        '<div class="text-[10px] font-semibold mt-0.5 text-on-surface-variant/70">Upcoming</div></div>';
-    }
-
-    function instruction(c, today) {
-      const next = c.doses.find((d) => d.state === 'next');
-      if (c.status === 'checked_in') {
-        return ['info', 'You are checked in for your Day ' + c.checked_in_for + ' dose. Please wait at the Health Worker station to be called.'];
-      }
-      if (c.status === 'completed') return ['ok', 'You have received every dose of your course. Keep your vaccination card safe.'];
-      if (c.status === 'discharged') return ['ok', 'This was a Category I exposure. No vaccine was needed.'];
-      if (c.status === 'past') return ['muted', 'This is a past record that was not completed at the center.'];
-      if (c.status === 'registered') return ['info', 'Your visit is registered. Please wait to be called by the Health Worker for your first dose.'];
-      if (next && next.overdue) return ['warn', 'Your Day ' + next.day + ' dose was due on ' + longFmt(next.due) + '. Please visit the clinic as soon as possible and bring your vaccination card.'];
-      if (next && next.due) {
-        const when = next.due === today ? 'today' : 'on ' + longFmt(next.due);
-        return ['info', 'Please visit the clinic ' + when + ' for your Day ' + next.day + ' dose. Bring your vaccination card.'];
-      }
-      return ['info', 'Please follow the schedule above and visit the clinic for your next dose.'];
-    }
-    const TONES = {
-      info: ['info', 'bg-primary/5 text-primary'], ok: ['verified', 'bg-emerald-50 text-emerald-800'],
-      warn: ['schedule', 'bg-amber-50 text-amber-900'], muted: ['history', 'bg-surface-container-low text-on-surface-variant'],
-    };
-
-    function render(data) {
-      $('trackName').textContent = data.patient.name;
-      $('trackId').textContent = data.patient.tracking_id;
-      const box = $('trackCases');
-      box.innerHTML = data.cases.map((c) => {
-        const [statusText, statusClass] = STATUS[c.status] || STATUS.registered;
-        const [tone, text] = instruction(c, data.today);
-        const [icon, toneClass] = TONES[tone];
-        const reported = c.reported ? 'Reported ' + fmt(c.reported) : '';
-        const meta = [reported, c.animal ? esc(c.animal) + ' bite' : '', c.dose_type === 'Booster' ? 'Booster course' : ''].filter(Boolean).join(' &middot; ');
-        const doses = c.doses.length
-          ? '<h4 class="mt-5 mb-3 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Immunization schedule</h4>' +
-            '<div class="grid grid-cols-2 sm:grid-cols-' + Math.min(c.doses.length, 4) + ' gap-3">' + c.doses.map((d) => doseCell(d, data.today)).join('') + '</div>'
-          : '';
-        return '<article class="bg-surface-container-lowest rounded-xl p-6 md:p-8 shadow-[0_24px_48px_-12px_rgba(25,28,30,0.04)] ring-1 ring-outline-variant/10">' +
-          '<div class="flex flex-wrap items-start justify-between gap-3">' +
-            '<div class="min-w-0"><h3 class="text-lg font-bold tracking-tight text-on-surface">Case #' + esc(c.case_number) + '</h3>' +
-            '<p class="text-xs text-on-surface-variant mt-0.5">' + meta + '</p></div>' +
-            '<div class="flex flex-wrap gap-2">' +
-              (c.category ? '<span class="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-surface-container-high text-on-surface-variant">Category ' + esc(c.category) + '</span>' : '') +
-              '<span class="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ' + statusClass + '">' + statusText + '</span>' +
-            '</div></div>' + doses +
-          '<div class="mt-5 rounded-xl p-4 flex items-start gap-3 ' + toneClass + '"><span class="material-symbols-outlined text-[20px] shrink-0">' + icon + '</span>' +
-          '<p class="text-sm leading-relaxed">' + esc(text) + '</p></div>' +
-          '</article>';
-      }).join('');
-      $('trackNoCases').classList.toggle('hidden', data.cases.length > 0);
-      $('trackResults').classList.remove('hidden');
-      $('trackResults').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
   </script>
 </body>
 

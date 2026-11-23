@@ -187,12 +187,16 @@ Route::get('/patient/Returning_Patient', function () {
     return view('patient.Returning_Patient_Registration');
 })->name('patient.returning-patient');
 
-Route::get('/patient/tracking-portal', function () {
+Route::get('/patient/tracking-portal', function (Request $request) {
+    $request->session()->forget('tracking');   // opening the form again ends the previous look-up
     return view('patient.Tracking_Portal');
 })->name('patient.tracking.portal');
 
 // Tracking Portal lookup (Tracking ID + date of birth, POST so neither ends up in a URL or a log)
 Route::post('/patient/tracking-portal/lookup', [PatientController::class, 'track'])->middleware('throttle:12,1')->name('patient.tracking.lookup');
+
+// Tracking Portal result page (needs a successful look-up in the last 20 minutes)
+Route::get('/patient/tracking-portal/result', [PatientController::class, 'trackResult'])->name('patient.tracking.result');
 
 // Public map data (counts per barangay only, no patient details)
 Route::get('/public/gis-data', [GisMapController::class, 'data'])->name('public.gis_data');

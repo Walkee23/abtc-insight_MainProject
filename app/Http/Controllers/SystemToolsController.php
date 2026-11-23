@@ -11,8 +11,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Admin > User & System Management tools: database backups, the auto-backup schedule,
@@ -32,7 +32,7 @@ class SystemToolsController extends Controller
 
     private function backupRows(): array
     {
-        return array_map(fn($f) => [
+        return array_map(fn ($f) => [
             'name' => $f['name'],
             'size' => DatabaseBackup::humanSize($f['size']),
             'modified' => $f['modified']->format('M d, Y g:i A'),
@@ -76,7 +76,7 @@ class SystemToolsController extends Controller
 
         Audit::log('backup_downloaded', "Downloaded backup {$file}");
 
-        return response()->download($path, $file, ['Content-Type' => 'application/sql']);
+        return Storage::download($path, $file, ['Content-Type' => 'application/sql']);
     }
 
     public function deleteBackup(string $file): JsonResponse
@@ -85,7 +85,7 @@ class SystemToolsController extends Controller
         $path = DatabaseBackup::resolve($file);
         abort_unless($path, 404);
 
-        File::delete($path);
+        Storage::delete($path);
         Audit::log('backup_deleted', "Deleted backup {$file}");
 
         return response()->json(['message' => 'Backup deleted.', 'backups' => $this->backupRows()]);
@@ -165,7 +165,7 @@ class SystemToolsController extends Controller
 
         foreach (preg_split('/\s+/', trim((string) $request->query('q', '')), -1, PREG_SPLIT_NO_EMPTY) as $term) {
             $like = '%' . addcslashes($term, '%_\\') . '%';
-            $query->where(fn($q) => $q->where('username', 'like', $like)->orWhere('description', 'like', $like)->orWhere('action', 'like', $like)->orWhere('ip_address', 'like', $like));
+            $query->where(fn ($q) => $q->where('username', 'like', $like)->orWhere('description', 'like', $like)->orWhere('action', 'like', $like)->orWhere('ip_address', 'like', $like));
         }
 
         return $query;
@@ -189,7 +189,7 @@ class SystemToolsController extends Controller
         $page = $this->auditQuery($request)->paginate(10)->withQueryString();
 
         return response()->json([
-            'logs' => collect($page->items())->map(fn($r) => $this->auditRow($r))->all(),
+            'logs' => collect($page->items())->map(fn ($r) => $this->auditRow($r))->all(),
             'page' => $page->currentPage(),
             'last_page' => $page->lastPage(),
             'total' => $page->total(),
@@ -199,7 +199,7 @@ class SystemToolsController extends Controller
     public function exportAuditLogs(Request $request)
     {
         $this->admin();
-        $rows = $this->auditQuery($request)->limit(5000)->get()->map(fn($r) => $this->auditRow($r));
+        $rows = $this->auditQuery($request)->limit(5000)->get()->map(fn ($r) => $this->auditRow($r));
 
         return response()->streamDownload(function () use ($rows) {
             $out = fopen('php://output', 'w');
@@ -301,7 +301,7 @@ class SystemToolsController extends Controller
             $result = (new BiteCaseImporter($checkOnly))
                 ->forYear(BiteCaseImporter::yearFromFilename($name))
                 ->import(new XlsxReader($path, $ext));
-        } catch (\InvalidArgumentException | \RuntimeException $e) {
+        } catch (\InvalidArgumentException|\RuntimeException $e) {
             @unlink($path);
             return response()->json(['message' => $e->getMessage()], 422);
         } catch (\Throwable $e) {

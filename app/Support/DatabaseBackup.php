@@ -4,23 +4,16 @@ namespace App\Support;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 /**
- * Database backups as plain .sql files in storage/app/backups, written in PHP (no
- * mysqldump needed), plus the auto-backup schedule kept in system_settings.
+ * Database backups as plain .sql files stored on the configured Storage disk
+ * (Object Storage in production, local disk in dev), written in PHP without mysqldump.
  */
 class DatabaseBackup
 {
     private const TZ = 'Asia/Manila';
-
-    public static function directory(): string
-    {
-        $dir = storage_path('app/backups');
-        if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
-        }
-        return $dir;
-    }
+    private const FOLDER = 'backups';
 
     // ------------------------------------------------------------------ files
 
@@ -28,11 +21,16 @@ class DatabaseBackup
     public static function create(string $type = 'manual'): array
     {
         $name = DB::getDatabaseName() . '_' . now(self::TZ)->format('Ymd_His') . ($type === 'auto' ? '_auto' : '') . '.sql';
-        $path = self::directory() . DIRECTORY_SEPARATOR . $name;
+        $tmpPath = tempnam(sys_get_temp_dir(), 'abtc_bak_');
 
-        $handle = fopen($path, 'wb');
+        if ($tmpPath === false) {
+            throw new \RuntimeException('Could not create temporary backup file.');
+        }
+
+        $handle = fopen($tmpPath, 'wb');
         if (!$handle) {
-            throw new \RuntimeException('Could not write to the backup folder.');
+            @unlink($tmpPath);
+            throw new \RuntimeException('Could not write to temporary backup file.');
         }
 
         $pdo = DB::connection()->getPdo();
@@ -70,14 +68,24 @@ class DatabaseBackup
             }
 
             fwrite($handle, "SET FOREIGN_KEY_CHECKS=1;\n");
-        } catch (\Throwable $e) {
             fclose($handle);
-            @unlink($path);
+
+            $size = filesize($tmpPath);
+            $stream = fopen($tmpPath, 'rb');
+            Storage::put(self::FOLDER . '/' . $name, $stream);
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
+            @unlink($tmpPath);
+        } catch (\Throwable $e) {
+            if (is_resource($handle)) {
+                fclose($handle);
+            }
+            @unlink($tmpPath);
             throw $e;
         }
-        fclose($handle);
 
-        return ['name' => $name, 'size' => filesize($path), 'tables' => count($tables), 'rows' => $rowCount];
+        return ['name' => $name, 'size' => $size, 'tables' => count($tables), 'rows' => $rowCount];
     }
 
     private static function literal(\PDO $pdo, mixed $value): string
@@ -97,25 +105,31 @@ class DatabaseBackup
     /** Backups, newest first. */
     public static function list(): array
     {
-        $files = glob(self::directory() . DIRECTORY_SEPARATOR . '*.sql') ?: [];
-        usort($files, fn ($a, $b) => filemtime($b) <=> filemtime($a));
+        $files = array_filter(
+            Storage::files(self::FOLDER),
+            fn ($path) => str_ends_with($path, '.sql')
+        );
 
-        return array_map(fn ($file) => [
-            'name' => basename($file),
-            'size' => filesize($file),
-            'modified' => Carbon::createFromTimestamp(filemtime($file), self::TZ),
-            'type' => str_ends_with($file, '_auto.sql') ? 'auto' : 'manual',
+        $items = array_map(fn ($path) => [
+            'name' => basename($path),
+            'size' => Storage::size($path),
+            'modified' => Carbon::createFromTimestamp(Storage::lastModified($path), self::TZ),
+            'type' => str_ends_with($path, '_auto.sql') ? 'auto' : 'manual',
         ], $files);
+
+        usort($items, fn ($a, $b) => $b['modified']->timestamp <=> $a['modified']->timestamp);
+
+        return $items;
     }
 
-    /** Full path for a backup file name, or null if the name is not one of ours. */
+    /** Storage path for a valid backup file name, or null if not found. */
     public static function resolve(string $name): ?string
     {
         if (!preg_match('/^[A-Za-z0-9_\-]+\.sql$/', $name)) {
             return null;
         }
-        $path = self::directory() . DIRECTORY_SEPARATOR . $name;
-        return is_file($path) ? $path : null;
+        $path = self::FOLDER . '/' . $name;
+        return Storage::exists($path) ? $path : null;
     }
 
     /** Keeps the newest $keep automatic backups; manual ones are never removed. */
@@ -124,7 +138,7 @@ class DatabaseBackup
         $auto = array_values(array_filter(self::list(), fn ($f) => $f['type'] === 'auto'));
         $removed = 0;
         foreach (array_slice($auto, max(1, $keep)) as $file) {
-            if (@unlink(self::directory() . DIRECTORY_SEPARATOR . $file['name'])) {
+            if (Storage::delete(self::FOLDER . '/' . $file['name'])) {
                 $removed++;
             }
         }

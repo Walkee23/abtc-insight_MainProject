@@ -79,7 +79,7 @@
     {{-- Upcoming preview --}}
     <section class="bg-white rounded-xl border border-slate-200 p-5">
         <h2 class="font-bold mb-1">Due tomorrow ({{ today()->addDay()->format('M d, Y') }})</h2>
-        <p class="text-xs text-slate-500 mb-3">D3 / D7 / D28 doses the scheduler will pick up, worked out from each case's Day 0 date in Section VII.</p>
+        <p class="text-xs text-slate-500 mb-3">Doses the scheduler will pick up, worked out from each case's Day 0 date and its schedule in Section VII (IM: D3, D7, D14; ID: D3, D7, D28; Booster: D3).</p>
         @if($upcoming->isEmpty())
             <p class="text-sm text-slate-500">Nothing due.</p>
         @else

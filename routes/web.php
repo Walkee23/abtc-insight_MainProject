@@ -33,7 +33,7 @@ Route::post('/logout', [AuthController::class, 'logout'])
     ->name('logout');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/keep-alive', fn () => response()->noContent())->name('keep-alive');
+    Route::get('/keep-alive', fn() => response()->noContent())->name('keep-alive');
 });
 
 // Role Dashboards
@@ -91,7 +91,7 @@ Route::prefix('admin')->middleware('admin')->group(function () {
     Route::prefix('system')->group(function () {
         Route::get('/backups', [SystemToolsController::class, 'backups'])->name('admin.system.backups');
         Route::post('/backups', [SystemToolsController::class, 'createBackup'])->name('admin.system.backups.create');
-        Route::get('/backups/{file}', [SystemToolsController::class, 'downloadBackup'])->name('admin.system.backups.download');
+        Route::get('/backups/download', [SystemToolsController::class, 'downloadBackup'])->name('admin.system.backups.download');
         Route::delete('/backups/{file}', [SystemToolsController::class, 'deleteBackup'])->name('admin.system.backups.delete');
         Route::get('/auto-backup', [SystemToolsController::class, 'autoBackup'])->name('admin.system.auto-backup');
         Route::post('/auto-backup', [SystemToolsController::class, 'saveAutoBackup'])->name('admin.system.auto-backup.save');

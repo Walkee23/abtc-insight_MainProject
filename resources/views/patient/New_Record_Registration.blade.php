@@ -21,6 +21,10 @@
       font-family: 'Inter', sans-serif;
     }
 
+    /* field labels: a touch bigger and calmer; the hints under the fields are no longer italic */
+    form label.uppercase { font-size: 11px; letter-spacing: 0.05em; }
+    #bhwReferralHint { font-style: normal; font-size: 11.5px; line-height: 1.45; opacity: 1; }
+
     .clinical-gradient {
       background: linear-gradient(135deg, #004a93 0%, #0b61bb 100%);
     }
@@ -124,28 +128,41 @@
     </div>
     <!-- Registration Form Card -->
     <div
-      class="w-full max-w-[680px] bg-surface-container-lowest rounded-xl shadow-xl border border-outline-variant/30 p-5 sm:p-10 overflow-hidden">
+      class="w-full max-w-[680px] bg-surface-container-lowest rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.05)] ring-1 ring-outline-variant/10 overflow-hidden">
+      <div class="h-1.5 clinical-gradient"></div>
+      <div class="p-6 sm:p-8 md:p-10">
       <!-- Card Header -->
-      <div class="flex flex-col gap-1 mb-8">
-        <div class="flex items-center justify-between">
-          <h1 class="text-2xl font-extrabold tracking-tight text-on-surface">New Patient Registration</h1>
-          <span
-            class="bg-secondary-container text-on-secondary-container px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest">New
-            Patient</span>
+      <div class="flex items-start gap-4 mb-6">
+        <div class="shrink-0 w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+          <span class="material-symbols-outlined text-[26px]" style="font-variation-settings: 'FILL' 1;">person_add</span>
         </div>
-        <p class="text-on-surface-variant text-sm font-medium">Cebu City Animal Bite Treatment Center — CCHD</p>
+        <div class="min-w-0">
+          <span class="inline-block bg-secondary-container text-on-secondary-container px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase mb-1.5">New patient</span>
+          <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-on-surface leading-tight">New Patient Registration</h1>
+          <p class="text-on-surface-variant mt-1 text-sm leading-snug">Cebu City Animal Bite Treatment Center — CCHD</p>
+        </div>
+      </div>
+      <!-- What to have ready -->
+      <div class="mb-8 flex items-start gap-3 rounded-xl bg-primary/5 border border-primary/10 px-4 py-3.5">
+        <span class="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5">info</span>
+        <p class="text-xs sm:text-[13px] text-on-surface-variant leading-relaxed">Have your <span class="font-bold text-on-surface">BHW Referral ID</span> ready. Every new bite needs its own referral from your Barangay Health Worker. You get your <span class="font-bold text-on-surface">queue number</span> after you submit.</p>
       </div>
       <!-- Form Content -->
-      <form action="{{ route('patient.new-submit') }}" method="POST" class="space-y-12">
+      <form action="{{ route('patient.new-submit') }}" method="POST">
         @csrf
 
         <!-- Add this hidden input right below the form tag -->
         <input type="hidden" name="priority_status" id="priorityInput" value="none">
         <!-- Section 1: Priority Status -->
         <section id="section1">
-          <div class="flex items-center gap-2 mb-6">
-            <div class="w-1 h-5 bg-primary rounded-full"></div>
-            <h2 class="text-sm font-bold uppercase tracking-widest text-on-surface">Priority Status</h2>
+          <div class="flex items-start gap-3 mb-5">
+            <div class="shrink-0 w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+              <span class="material-symbols-outlined text-[20px]">accessible</span>
+            </div>
+            <div class="min-w-0">
+              <h2 class="text-base font-extrabold tracking-tight text-on-surface leading-tight">Priority Status</h2>
+              <p class="text-xs text-on-surface-variant mt-0.5">Choose one if it applies to you. Priority patients are served in the P-series queue.</p>
+            </div>
           </div>
           <div class="grid grid-cols-2 gap-4">
             <!-- Card: None -->
@@ -210,10 +227,15 @@
           </div>
         </section>
         <!-- Section 2: Personal Info -->
-        <section id="section2">
-          <div class="flex items-center gap-2 mb-6">
-            <div class="w-1 h-5 bg-primary rounded-full"></div>
-            <h2 class="text-sm font-bold uppercase tracking-widest text-on-surface">Personal Information</h2>
+        <section id="section2" class="mt-10 pt-10 border-t border-outline-variant/20">
+          <div class="flex items-start gap-3 mb-5">
+            <div class="shrink-0 w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+              <span class="material-symbols-outlined text-[20px]">badge</span>
+            </div>
+            <div class="min-w-0">
+              <h2 class="text-base font-extrabold tracking-tight text-on-surface leading-tight">Personal Information</h2>
+              <p class="text-xs text-on-surface-variant mt-0.5">Type your details, or use your BHW Referral ID and press Autofill.</p>
+            </div>
           </div>
           <div class="grid grid-cols-2 gap-x-6 gap-y-4">
             <div class="col-span-2">
@@ -346,10 +368,15 @@
           </div>
         </section>
         <!-- Section 3: PhilHealth -->
-        <section id="section3">
-          <div class="flex items-center gap-2 mb-6">
-            <div class="w-1 h-5 bg-primary rounded-full"></div>
-            <h2 class="text-sm font-bold uppercase tracking-widest text-on-surface">PhilHealth Coverage</h2>
+        <section id="section3" class="mt-10 pt-10 border-t border-outline-variant/20">
+          <div class="flex items-start gap-3 mb-5">
+            <div class="shrink-0 w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+              <span class="material-symbols-outlined text-[20px]">health_and_safety</span>
+            </div>
+            <div class="min-w-0">
+              <h2 class="text-base font-extrabold tracking-tight text-on-surface leading-tight">PhilHealth Coverage</h2>
+              <p class="text-xs text-on-surface-variant mt-0.5">Our staff will check your membership at the center.</p>
+            </div>
           </div>
           <div class="bg-surface-container-low p-6 rounded-lg space-y-6">
             <div class="flex items-center justify-between">
@@ -381,10 +408,15 @@
           </div>
         </section>
         <!-- Section 4: Medical History -->
-        <section id="section4">
-          <div class="flex items-center gap-2 mb-6">
-            <div class="w-1 h-5 bg-primary rounded-full"></div>
-            <h2 class="text-sm font-bold uppercase tracking-widest text-on-surface">Medical History</h2>
+        <section id="section4" class="mt-10 pt-10 border-t border-outline-variant/20">
+          <div class="flex items-start gap-3 mb-5">
+            <div class="shrink-0 w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+              <span class="material-symbols-outlined text-[20px]">medical_information</span>
+            </div>
+            <div class="min-w-0">
+              <h2 class="text-base font-extrabold tracking-tight text-on-surface leading-tight">Medical History</h2>
+              <p class="text-xs text-on-surface-variant mt-0.5">Optional: anything the doctor should know before treatment.</p>
+            </div>
           </div>
           <div class="space-y-6">
             <div>
@@ -406,17 +438,19 @@
           </div>
         </section>
         <!-- Form Footer -->
-        <footer class="pt-8 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div class="max-w-[300px]">
-            <p class="text-[10px] leading-relaxed text-on-surface-variant">By submitting this form, you consent to the
-              collection and processing of your personal health data for medical treatment purposes in accordance with
-              the Data Privacy Act of 2012.</p>
+        <footer class="mt-10 pt-8 border-t border-outline-variant/20 space-y-5">
+          <div class="flex items-start gap-3 rounded-xl bg-surface-container-low px-4 py-3.5">
+            <span class="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5">verified_user</span>
+            <p class="text-xs leading-relaxed text-on-surface-variant">By submitting this form, you consent to the collection and processing of your personal health data for medical treatment purposes in accordance with the Data Privacy Act of 2012.</p>
           </div>
-          <div class="flex items-center gap-4">
-            <button id="clearFormBtn" class="text-sm font-bold text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low active:scale-95 rounded-full px-4 py-2 transition-all"
-              type="reset">Clear Form</button>
+          <div class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
+            <button id="clearFormBtn" class="inline-flex items-center justify-center gap-1.5 text-sm font-bold text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low active:scale-95 rounded-full px-5 py-3 transition-all"
+              type="reset">
+              <span class="material-symbols-outlined text-[18px]">restart_alt</span>
+              Clear Form
+            </button>
             <button id="submitRegistrationBtn"
-              class="bg-primary text-white px-8 py-3 rounded-full font-bold text-sm flex items-center gap-2 hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/20 disabled:opacity-60 disabled:cursor-not-allowed"
+              class="bg-primary text-white px-8 py-3.5 rounded-full font-bold text-sm flex items-center justify-center gap-2 whitespace-nowrap hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/20 disabled:opacity-60 disabled:cursor-not-allowed"
               type="submit">
               Submit and Get Queue Number
               <span class="material-symbols-outlined text-base">arrow_forward</span>
@@ -424,6 +458,7 @@
           </div>
         </footer>
       </form>
+      </div>
     </div>
     <!-- Global Footer -->
     <footer class="w-full mt-20 border-t border-outline-variant/30 bg-transparent text-center">

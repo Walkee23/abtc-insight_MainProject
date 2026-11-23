@@ -130,25 +130,29 @@
   </nav>
   <main class="min-h-screen flex flex-col items-center px-4 pt-24 pb-12">
     <!-- Breadcrumb -->
-    <div class="w-full max-w-[680px] mb-6 flex items-center gap-2 group cursor-pointer"
+    <div class="w-full max-w-[560px] mb-5 flex items-center gap-2 group cursor-pointer"
       onclick="window.location.href='{{ route('patient.register') }}'">
       <span class="material-symbols-outlined text-on-surface-variant text-sm">arrow_back</span>
       <span class="text-on-surface-variant text-sm font-medium group-hover:text-primary transition-colors">Back to
         selection</span>
     </div>
     <!-- Main Form Card -->
-    <div class="w-full max-w-[680px] bg-surface-container-lowest rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.04)] overflow-hidden">
-      <div class="p-5 sm:p-8 md:p-12">
+    <div class="w-full max-w-[560px] bg-surface-container-lowest rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.05)] ring-1 ring-outline-variant/10 overflow-hidden">
+      <div class="h-1.5 clinical-gradient"></div>
+      <div class="p-6 sm:p-8 md:p-10">
         <!-- Header -->
-        <div class="flex flex-wrap justify-between items-start gap-3 mb-10">
-          <div>
-            <h1 class="text-3xl font-extrabold tracking-tight text-on-surface">Returning Patient</h1>
-            <p class="text-on-surface-variant mt-2 text-lg">Check in for your next anti-rabies vaccine dose</p>
+        <div class="flex items-start gap-4 mb-8">
+          <div class="shrink-0 w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+            <span class="material-symbols-outlined text-[26px]" style="font-variation-settings: 'FILL' 1;">vaccines</span>
           </div>
-          <span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-[12px] font-bold tracking-wide uppercase whitespace-nowrap shrink-0">Existing Record</span>
+          <div class="min-w-0">
+            <span class="inline-block bg-emerald-100 text-emerald-700 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase mb-1.5">Existing record</span>
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-on-surface leading-tight">Returning Patient</h1>
+            <p class="text-on-surface-variant mt-1 text-sm sm:text-base leading-snug">Check in for your next anti-rabies vaccine dose.</p>
+          </div>
         </div>
         @if($errors->any())
-        <div class="bg-red-50 text-red-700 px-6 py-4 rounded-lg text-sm font-medium mb-6">{{ $errors->first() }}</div>
+        <div class="bg-red-50 text-red-700 px-4 py-3 rounded-lg text-sm font-medium mb-6">{{ $errors->first() }}</div>
         @endif
 
         <form action="{{ route('patient.submit.returning') }}" method="POST" id="returningForm">
@@ -158,39 +162,51 @@
           <input type="hidden" name="dose_day" id="doseInput" value="">
 
           <!-- Section 1: Find the record with the unique Patient ID (CEB-...); full name + date of birth is the fallback -->
-          <div class="mb-10" id="lookupSection">
-            <div id="idLookup" class="mb-4">
-              <div class="space-y-1.5">
-                <label class="text-xs font-bold text-on-surface-variant uppercase ml-1" for="searchPatientId">Patient ID</label>
-                <div class="flex flex-wrap gap-2">
-                  <input type="text" id="searchPatientId" autocomplete="off" spellcheck="false" placeholder="CEB-20261120-19840910-001" class="w-full basis-full sm:basis-0 sm:flex-1 min-w-0 bg-surface-container-highest border-0 focus:ring-2 focus:ring-primary/20 rounded-lg px-4 py-3.5 font-medium uppercase tracking-wide" />
-                  <button type="button" id="scanQrBtn" title="Scan your Patient ID QR code"
-                    class="w-full sm:w-auto justify-center bg-secondary-container text-on-secondary-container px-5 py-3.5 rounded-lg text-sm font-bold hover:opacity-90 active:scale-95 transition-all flex items-center gap-1.5 whitespace-nowrap">
-                    <span class="material-symbols-outlined text-[18px]">qr_code_scanner</span>
-                    <span>Scan QR</span>
-                  </button>
-                </div>
-                <p class="text-xs text-on-surface-variant ml-1">The ID you were given at your first visit. It starts with CEB. You can also scan or upload the QR code from your last visit.</p>
+          <div class="mb-8" id="lookupSection">
+            <div id="idLookup">
+              <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wide mb-2" for="searchPatientId">Patient ID</label>
+              <div class="relative">
+                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-[20px] pointer-events-none">badge</span>
+                <input type="text" id="searchPatientId" autocomplete="off" spellcheck="false" placeholder="CEB-20261120-19840910-001" class="block w-full bg-surface-container-highest border-0 focus:ring-2 focus:ring-primary/25 rounded-xl pl-12 pr-4 py-4 font-semibold uppercase tracking-wide text-[15px]" />
+              </div>
+              <p class="mt-2 text-xs text-on-surface-variant leading-relaxed">The ID you were given at your first visit. It starts with <span class="font-bold">CEB</span>.</p>
+            </div>
+
+            <div id="nameLookup" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wide mb-2" for="searchName">Full name</label>
+                <input type="text" id="searchName" autocomplete="off" placeholder="e.g. Juan Dela Cruz" class="block w-full bg-surface-container-highest border-0 focus:ring-2 focus:ring-primary/25 rounded-xl px-4 py-4 font-semibold" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wide mb-2" for="searchDob">Date of birth</label>
+                <input type="date" id="searchDob" class="block w-full bg-surface-container-highest border-0 focus:ring-2 focus:ring-primary/25 rounded-xl px-4 py-4 font-semibold" />
               </div>
             </div>
-            <button type="button" id="toggleLookup" class="text-sm font-bold text-primary hover:underline mb-4">I don't have my Patient ID</button>
-            <div id="nameLookup" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div class="space-y-1.5">
-                <label class="text-xs font-bold text-on-surface-variant uppercase ml-1" for="searchName">Full Name</label>
-                <input type="text" id="searchName" autocomplete="off" placeholder="e.g. Juan Dela Cruz" class="w-full bg-surface-container-highest border-0 focus:ring-2 focus:ring-primary/20 rounded-lg px-4 py-3.5 font-medium" />
-              </div>
-              <div class="space-y-1.5">
-                <label class="text-xs font-bold text-on-surface-variant uppercase ml-1" for="searchDob">Date of Birth</label>
-                <input type="date" id="searchDob" class="w-full bg-surface-container-highest border-0 focus:ring-2 focus:ring-primary/20 rounded-lg px-4 py-3.5 font-medium" />
-              </div>
-            </div>
-            <button type="button" id="searchBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3.5 rounded-lg transition-all">Find My Record</button>
-            <div id="notFoundMsg" class="hidden mt-4 bg-red-50 text-red-700 px-6 py-4 rounded-lg text-sm font-medium">
+
+            <button type="button" id="searchBtn" class="mt-5 w-full bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold px-6 py-4 rounded-xl shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 transition-all">
+              <span class="material-symbols-outlined text-[20px]">search</span>
+              Find My Record
+            </button>
+
+            <div id="notFoundMsg" class="hidden mt-4 bg-red-50 text-red-700 px-4 py-3 rounded-lg text-sm font-medium">
               No matching record found. Please check your Patient ID, or approach the registration desk.
             </div>
-            <div id="recordFoundBox" class="hidden mt-4 bg-emerald-600 text-white px-6 py-4 rounded-lg items-center gap-3 shadow-md">
+            <div id="recordFoundBox" class="hidden mt-4 bg-emerald-600 text-white px-4 py-3.5 rounded-xl items-center gap-3 shadow-md">
               <span class="material-symbols-outlined">person_check</span>
-              <div class="text-sm"><span class="font-bold">Record found:</span> <span id="foundName"></span></div>
+              <div class="text-sm min-w-0 break-words"><span class="font-bold">Record found:</span> <span id="foundName"></span></div>
+            </div>
+
+            <!-- other ways to find the record -->
+            <div id="otherWays" class="mt-6">
+              <div class="flex items-center gap-3 text-[11px] font-bold uppercase tracking-widest text-outline">
+                <span class="h-px flex-1 bg-outline-variant/30"></span>or<span class="h-px flex-1 bg-outline-variant/30"></span>
+              </div>
+              <button type="button" id="scanQrBtn" title="Scan your Patient ID QR code"
+                class="mt-4 w-full flex items-center justify-center gap-2 border-2 border-primary/25 bg-primary/5 text-primary hover:bg-primary/10 active:scale-[0.99] font-bold px-5 py-3.5 rounded-xl text-sm transition-all">
+                <span class="material-symbols-outlined text-[20px]">qr_code_scanner</span>
+                Scan or upload your QR code
+              </button>
+              <button type="button" id="toggleLookup" class="mt-3 w-full text-center text-sm font-bold text-primary hover:underline py-1.5">I don't have my Patient ID</button>
             </div>
           </div>
 
@@ -212,7 +228,7 @@
                 <label class="text-xs font-bold text-emerald-700 uppercase ml-1" for="returningContactNumberInput">Contact Number (update if changed)</label>
                 <input name="contact_num" id="returningContactNumberInput" class="w-full bg-emerald-50/30 border-0 border-b-2 border-emerald-500/30 focus:border-emerald-500 focus:ring-0 text-on-surface font-medium px-4 py-3.5 rounded-t-lg transition-all" type="text" placeholder="09XX XXX XXXX" />
               </div>
-              <div class="pt-6 border-t border-outline-variant/15 flex flex-col md:flex-row items-center justify-between gap-4">
+              <div class="pt-6 border-t border-outline-variant/15 flex flex-col-reverse md:flex-row items-stretch md:items-center justify-between gap-3 md:gap-4">
                 <button type="button" id="clearBtn" class="text-on-surface-variant font-bold text-sm px-6 py-3 rounded-lg hover:bg-surface-container-low transition-colors">Start Over</button>
                 <button type="submit" id="submitBtn" disabled class="w-full md:w-auto bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold px-8 py-4 rounded-xl shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-3 transition-transform active:scale-[0.98]">
                   Confirm Check-in
@@ -333,6 +349,7 @@
       $('recordFoundBox').classList.remove('flex');
       $('noCaseMsg').classList.add('hidden');
       $('confirmArea').classList.add('hidden');
+      $('otherWays').classList.remove('hidden');
       $('casesList').innerHTML = '';
       ['tokenInput', 'caseInput', 'doseInput', 'searchPatientId', 'searchName', 'searchDob', 'returningContactNumberInput'].forEach((id) => { $(id).value = ''; });
       $('submitBtn').disabled = true;
@@ -396,6 +413,7 @@
         $('recordFoundBox').classList.remove('hidden');
         $('recordFoundBox').classList.add('flex');
         $('foundName').textContent = data.patient.patient_name;
+        $('otherWays').classList.add('hidden');   // the record is found: the scan / "no ID" options are not needed now
         $('tokenInput').value = data.token;
         $('returningContactNumberInput').value = data.patient.contact_num || '';
         $('caseInput').value = '';

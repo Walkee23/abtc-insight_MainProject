@@ -158,7 +158,7 @@
                     </div>
 
                     @if(request('timeout'))
-                    <div class="flex items-center gap-2 text-amber-700 bg-amber-50 border border-amber-200 text-sm font-semibold px-3 py-2 rounded-lg">
+                    <div id="timeoutNotice" role="status" class="flex items-center gap-2 text-amber-700 bg-amber-50 border border-amber-200 text-sm font-semibold px-3 py-2 rounded-lg overflow-hidden transition-all duration-500 ease-out" style="max-height: 6rem;">
                         <span class="material-symbols-outlined text-[18px]">schedule</span>
                         You were logged out due to inactivity. Please sign in again.
                     </div>
@@ -236,6 +236,27 @@
             passwordInput.type = isHidden ? 'text' : 'password';
             togglePasswordIcon.textContent = isHidden ? 'visibility_off' : 'visibility';
         });
+
+        // The "logged out due to inactivity" notice stays for 10 seconds, then fades away and gives its space back.
+        // The ?timeout flag is also dropped from the address, so refreshing the page does not bring it back.
+        (function () {
+            var notice = document.getElementById('timeoutNotice');
+            if (!notice) return;
+            try {
+                var url = new URL(window.location.href);
+                url.searchParams.delete('timeout');
+                window.history.replaceState({}, '', url.pathname + url.search + url.hash);
+            } catch (e) { /* the notice still goes away below */ }
+            setTimeout(function () {
+                notice.style.opacity = '0';
+                notice.style.maxHeight = '0';
+                notice.style.paddingTop = '0';
+                notice.style.paddingBottom = '0';
+                notice.style.borderWidth = '0';
+                notice.style.marginTop = '0';
+                setTimeout(function () { notice.remove(); }, 600);
+            }, 10000);
+        })();
     </script>
 </body>
 

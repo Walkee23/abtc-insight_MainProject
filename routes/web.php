@@ -107,6 +107,7 @@ Route::prefix('admin')->middleware('admin')->group(function () {
 Route::prefix('staff')->middleware(['auth', 'role:Staff'])->group(function () {
     Route::get('/dashboard', [StaffController::class, 'newDashboard'])->name('staff.newdashboard');
     Route::get('/queue', [StaffController::class, 'dashboard'])->name('staff.dashboard');
+    Route::post('/philhealth/{inflow_record_id}/verify', [StaffController::class, 'verifyPhilhealth'])->name('staff.philhealth.verify');
     Route::post('/staff/call-patient/{inflowRecordId}', [App\Http\Controllers\StaffController::class, 'callPatient'])
         ->name('staff.call-patient');
 

@@ -2,11 +2,28 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\Audit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class StaffController extends Controller
 {
+    /** The results Staff can record for a PhilHealth check (inflow_general_particulars.philhealth_verification). */
+    public const PHILHEALTH_RESULTS = ['Verified', 'Not a Member', 'Expired'];
+
+    /**
+     * The PhilHealth flag stored on the patient: the patient said "member" AND Staff did not find them to be a
+     * non-member or expired.
+     */
+    private function philhealthFlag(object $inflow): int
+    {
+        $checked = $inflow->philhealth_verification ?? null;
+
+        return ($inflow->philhealth_member && !in_array($checked, ['Not a Member', 'Expired'], true)) ? 1 : 0;
+    }
+
     // Patient Verification page — show Pending walk-ins split into Priority/Normal queues
     public function patientVerification(Request $request)
     {
@@ -186,7 +203,7 @@ class StaffController extends Controller
                 'civil_status'       => $inflow->civil_status,
                 'contact_num'        => $inflow->contact_num,
                 'id_number'          => $inflow->id_number,
-                'philhealth_member'  => $inflow->philhealth_member,
+                'philhealth_member'  => $this->philhealthFlag($inflow),
                 'philhealth_name'    => $inflow->philhealth_name,
                 'philhealth_dob'     => $inflow->philhealth_dob,
                 'illness_history'    => $otherData->illness_history ?? null,
@@ -352,7 +369,7 @@ class StaffController extends Controller
                     'date_verified'     => now(),
                     'barangay'          => $inflow->barangay ?? 'Unknown',
                     'category'          => $category,
-                    'philhealth_status' => $patient->philhealth_member ? 'Member' : 'Non-member',
+                    'philhealth_status' => ($inflow->philhealth_verification ?? null) === 'Expired' ? 'Expired' : ($patient->philhealth_member ? 'Member' : 'Non-member'),
                 ], 'bite_case_id');
 
                 if ($bhwReferralId) {
@@ -499,6 +516,43 @@ class StaffController extends Controller
         ));
     }
 
+    /**
+     * PhilHealth Verification: Staff records what they found for a patient who said they are a PhilHealth member.
+     * The result is kept on the registration (inflow) record, and the patient's PhilHealth flag and the case's status
+     * follow it, so Patient Lookup and the Health Worker's database show the checked answer.
+     */
+    public function verifyPhilhealth(Request $request, string $inflow_record_id)
+    {
+        $data = $request->validate([
+            'result' => 'required|in:' . implode(',', self::PHILHEALTH_RESULTS),
+        ], ['result.required' => 'Please choose a result.', 'result.in' => 'Please choose a valid result.']);
+
+        $inflow = DB::table('inflow_general_particulars')->where('inflow_record_id', $inflow_record_id)->first();
+        if (!$inflow || !$inflow->philhealth_member) {
+            return back()->withErrors(['error' => 'That patient did not say they are a PhilHealth member.']);
+        }
+
+        $result = $data['result'];
+        DB::transaction(function () use ($inflow_record_id, $result) {
+            DB::table('inflow_general_particulars')->where('inflow_record_id', $inflow_record_id)->update([
+                'philhealth_verification' => $result,
+                'philhealth_verified_at'  => now(),
+                'philhealth_verified_by'  => Auth::user()->full_name ?? null,
+            ]);
+
+            // the patient and the case, if they already exist
+            DB::table('patients')->where('inflow_record_id', $inflow_record_id)
+                ->update(['philhealth_member' => $result === 'Verified' ? 1 : 0]);
+            DB::table('bite_cases')->where('inflow_record_id', $inflow_record_id)
+                ->update(['philhealth_status' => ['Verified' => 'Member', 'Not a Member' => 'Non-member', 'Expired' => 'Expired'][$result]]);
+        });
+
+        Audit::log('philhealth_verified', "PhilHealth check for {$inflow->patient_name} (record #{$inflow_record_id}): {$result}");
+
+        return redirect()->route('staff.newdashboard')
+            ->with('success', "PhilHealth recorded for {$inflow->patient_name}: " . ['Verified' => 'verified member', 'Not a Member' => 'not a member', 'Expired' => 'membership expired'][$result] . '.');
+    }
+
     public function callPatient(string $inflow_record_id)
     {
         $inflow = DB::table('inflow_general_particulars')
@@ -538,7 +592,7 @@ class StaffController extends Controller
                 'civil_status'       => $inflow->civil_status,
                 'contact_num'        => $inflow->contact_num,
                 'id_number'          => $inflow->id_number,
-                'philhealth_member'  => $inflow->philhealth_member,
+                'philhealth_member'  => $this->philhealthFlag($inflow),
                 'philhealth_name'    => $inflow->philhealth_name,
                 'philhealth_dob'     => $inflow->philhealth_dob,
                 'illness_history'    => $otherData->illness_history ?? null,
@@ -696,8 +750,28 @@ class StaffController extends Controller
         $dueDay7Count  = $patientsDay7->count();
         $dueDay28Count = $patientsDay28->count();
 
+        // 3b. PhilHealth Verification: patients who said (registration form, step 3) that they are a PhilHealth member and
+        // have not been checked yet. (Skipped until the migration that adds the verification columns has been run.)
+        $philhealthReady = Schema::hasColumn('inflow_general_particulars', 'philhealth_verification');
+        $philhealthTotal = 0;
+        $philhealthPending = collect();
+        if ($philhealthReady) {
+            $pendingPhilhealth = fn () => DB::table('inflow_general_particulars as ig')
+                ->where('ig.philhealth_member', 1)
+                ->whereNull('ig.philhealth_verification');
+            $philhealthTotal = $pendingPhilhealth()->count();
+            $philhealthPending = $pendingPhilhealth()
+                ->leftJoin('patients as p', 'p.inflow_record_id', '=', 'ig.inflow_record_id')
+                ->orderByDesc('ig.queue_date')->orderByDesc('ig.inflow_record_id')
+                ->limit(5)
+                ->get(['ig.inflow_record_id', 'ig.patient_name', 'ig.queue_id', 'ig.queue_date', 'ig.philhealth_name', 'ig.philhealth_dob', 'p.patient_id']);
+        }
+
         // 4. I-compact ang tanang kinahanglanon sa view
         return view('staff.newdashboard', compact(
+            'philhealthReady',
+            'philhealthTotal',
+            'philhealthPending',
             'totalRegistered',
             'verifiedCount',
             'pendingCount',

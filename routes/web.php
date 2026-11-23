@@ -276,9 +276,15 @@ Route::post('/patient/new-submit', function (Request $request) {
         ->where('reference_no', $referralId)
         ->update(['status' => 'Arrived']);
 
+    $confirmation = [
+        'queueNumber'  => $queueId,
+        'patientName'  => trim((string) $request->input('full_name')),
+        'registeredAt' => now()->format('M j, Y \\a\\t g:i A'),
+    ];
+
     return $isPriority
-        ? view('patient.PQ_confirmation', ['queueNumber' => $queueId])
-        : view('patient.NQ_confirmation', ['queueNumber' => $queueId]);
+        ? view('patient.PQ_confirmation', $confirmation)
+        : view('patient.NQ_confirmation', $confirmation);
 })->name('patient.new-submit');
 
 // Returning Patient — search for an existing patient record

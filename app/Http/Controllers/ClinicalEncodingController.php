@@ -696,8 +696,10 @@ class ClinicalEncodingController extends Controller
 
         // Recent activity, from the dates the system records: newly verified cases
         // and PEP doses that were given
+        // (a case closed as Incomplete is a past record that will not continue: it is left out)
         $activity = [];
-        $verified = $this->handedOff(DB::table('bite_cases as bc'))
+        $notPast = fn ($q) => $q->where(fn ($w) => $w->whereNull('bc.outcome')->orWhere('bc.outcome', '<>', 'Incomplete'));
+        $verified = $notPast($this->handedOff(DB::table('bite_cases as bc')))
             ->join('patients as p', 'p.patient_id', '=', 'bc.patient_id')
             ->orderByDesc('bc.date_verified')->limit(5)
             ->get(['bc.bite_case_id', 'bc.category', 'bc.date_verified', 'p.patient_name']);
@@ -709,8 +711,8 @@ class ClinicalEncodingController extends Controller
                 'text' => $v->patient_name . ' (Cat ' . $v->category . ') is ready for clinical encoding.',
             ];
         }
-        $doses = $this->handedOff(DB::table('bite_section7_immunization as s7')
-            ->join('bite_cases as bc', 'bc.bite_case_id', '=', 's7.bite_case_id'))
+        $doses = $notPast($this->handedOff(DB::table('bite_section7_immunization as s7')
+            ->join('bite_cases as bc', 'bc.bite_case_id', '=', 's7.bite_case_id')))
             ->join('patients as p', 'p.patient_id', '=', 'bc.patient_id')
             ->get(['p.patient_name', 's7.day0_date', 's7.day3_date', 's7.day7_date', 's7.day14_date', 's7.day28_date']);
         foreach ($doses as $d) {

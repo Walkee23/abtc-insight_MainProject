@@ -22,7 +22,6 @@ use InvalidArgumentException;
  *
  * Columns are found by their header text (not position) - see HEADERS. Rows that were imported before
  * (same name + birthdate + bite date) are skipped, so the same file can safely be imported twice.
- * Each row runs in its own savepoint: a bad row is reported and skipped, never half-saved.
  */
 class BiteCaseImporter
 {
@@ -49,17 +48,8 @@ class BiteCaseImporter
         'outcome'   => ['TREATMENTOUTCOME', 'OUTCOME'],
         'wound'     => ['TYPEOFWOUND', 'WOUNDTYPE', 'WOUND', 'TYPEOFBITE'],
         'site'      => ['SITEOFBITE', 'BITESITE', 'SITE'],
-        'bitedate'  => [
-            'DATEANDTIMEOFBITE',
-            'DATEOFBITE',
-            'BITEDATE',
-            'DATEOFINCIDENT',
-            'DATEOFEXPOSURE',
-            'DATEANDTIMEOFBITTINGINCIDENT',
-            'DATEANDTIMEOFBITINGINCIDENT',
-            'DATEOFBITTINGINCIDENT',
-            'DATEOFBITINGINCIDENT'
-        ],
+        'bitedate'  => ['DATEANDTIMEOFBITE', 'DATEOFBITE', 'BITEDATE', 'DATEOFINCIDENT', 'DATEOFEXPOSURE',
+                        'DATEANDTIMEOFBITTINGINCIDENT', 'DATEANDTIMEOFBITINGINCIDENT', 'DATEOFBITTINGINCIDENT', 'DATEOFBITINGINCIDENT'],
         'animalvax' => ['VACCINATIONSTATUSOFBITTINGANIMAL', 'VACCINATIONSTATUSOFBITINGANIMAL', 'ANIMALVACCINATIONSTATUS', 'ANIMALVAXSTATUS'],
         'circ'      => ['CIRCUMSTANCESOFBITE', 'CIRCUMSTANCES', 'CIRCUMSTANCE', 'PROVOKED', 'PROVOKEDUNPROVOKED'],
         'contact'   => ['CONTACTNUMBER', 'CONTACTNO', 'CONTACT', 'MOBILE', 'MOBILENUMBER', 'PHONE'],
@@ -72,35 +62,17 @@ class BiteCaseImporter
     private const OUTCOME_CODES = ['0' => 'Completed', '1' => 'Incomplete', '2' => 'Incomplete'];
 
     private const VACCINES = [
-        'VAXIRAB' => 'VAXIRAB (PCEC)',
-        'SPEEDA' => 'SPEEDA (PVRV)',
-        'VERORAB' => 'VERORAB (PVRV)',
+        'VAXIRAB' => 'VAXIRAB (PCEC)', 'SPEEDA' => 'SPEEDA (PVRV)', 'VERORAB' => 'VERORAB (PVRV)',
     ];
 
     /** Spellings used in the sheets that differ from config/barangays.php (normalised key => official name). */
     private const BARANGAY_ALIASES = [
-        'SAMBAG1' => 'Sambag I',
-        'SAMBAG2' => 'Sambag II',
-        'SUDLON1' => 'Sudlon I',
-        'SUDLON2' => 'Sudlon II',
-        'POBPARDO' => 'Pardo',
-        'POBLACIONPARDO' => 'Pardo',
-        'PARDOPOBLACION' => 'Pardo',
-        'PUNGOLSIBUGAY' => 'Pung-ol',
-        'PUNGOL' => 'Pung-ol',
-        'PAHINASANNICOLAS' => 'San Nicolas Pahina',
-        'CAPITOLSITE' => 'Capitol',
-        'DULJOFATIMA' => 'Duljo',
-        'BUOT' => 'Bout-Taup',
-        'BUOTTAUP' => 'Bout-Taup',
-        'STACRUZ' => 'Sta. Cruz',
-        'SANTACRUZ' => 'Sta. Cruz',
-        'STONINO' => 'Sto. Niño',
-        'SANTONINO' => 'Sto. Niño',
-        'KINASANGAN' => 'Kinasang-an',
-        'TPADILLA' => 'T.Padilla',
-        'BOLUZ' => 'Bo.Luz',
-        'TAPTAP' => 'TapTap',
+        'SAMBAG1' => 'Sambag I', 'SAMBAG2' => 'Sambag II', 'SUDLON1' => 'Sudlon I', 'SUDLON2' => 'Sudlon II',
+        'POBPARDO' => 'Pardo', 'POBLACIONPARDO' => 'Pardo', 'PARDOPOBLACION' => 'Pardo',
+        'PUNGOLSIBUGAY' => 'Pung-ol', 'PUNGOL' => 'Pung-ol', 'PAHINASANNICOLAS' => 'San Nicolas Pahina',
+        'CAPITOLSITE' => 'Capitol', 'DULJOFATIMA' => 'Duljo', 'BUOT' => 'Bout-Taup', 'BUOTTAUP' => 'Bout-Taup',
+        'STACRUZ' => 'Sta. Cruz', 'SANTACRUZ' => 'Sta. Cruz', 'STONINO' => 'Sto. Niño', 'SANTONINO' => 'Sto. Niño',
+        'KINASANGAN' => 'Kinasang-an', 'TPADILLA' => 'T.Padilla', 'BOLUZ' => 'Bo.Luz', 'TAPTAP' => 'TapTap',
     ];
 
     private bool $dryRun;
@@ -120,6 +92,15 @@ class BiteCaseImporter
     private array $queueSeq = [];
     /** @var array<string,int> "CEB-reg-dob" => patients using that prefix */
     private array $patientSeq = [];
+
+    /** @var array<int, array<string, mixed>> */
+    private array $bufSec3 = [];
+    /** @var array<int, array<string, mixed>> */
+    private array $bufSec6 = [];
+    /** @var array<int, array<string, mixed>> */
+    private array $bufSec7 = [];
+    /** @var array<int, array<string, mixed>> */
+    private array $bufSec8 = [];
 
     public function __construct(bool $dryRun = false)
     {
@@ -156,61 +137,16 @@ class BiteCaseImporter
     /** Official sheet headers, for the downloadable template. */
     public static function templateHeaders(): array
     {
-        return [
-            'NAME OF PATIENT',
-            'AGE',
-            'GENDER',
-            'BIRTHDATE',
-            'BARANGAY',
-            'BITING ANIMAL',
-            'CATEGORY',
-            '1ST DOSE',
-            '2ND DOSE',
-            '3RD DOSE',
-            'VACCINE',
-            'BOOSTER',
-            'ERIG',
-            'HRIG',
-            'STRAY',
-            'REMARKS',
-            'TREATMENT OUTCOME',
-            'TYPE OF WOUND',
-            'SITE OF BITE',
-            'DATE AND TIME OF BITE',
-            'VACCINATION STATUS OF BITING ANIMAL',
-            'CIRCUMSTANCES OF BITE',
-            'CONTACT NUMBER'
-        ];
+        return ['NAME OF PATIENT', 'AGE', 'GENDER', 'BIRTHDATE', 'BARANGAY', 'BITING ANIMAL', 'CATEGORY', '1ST DOSE', '2ND DOSE', '3RD DOSE',
+            'VACCINE', 'BOOSTER', 'ERIG', 'HRIG', 'STRAY', 'REMARKS', 'TREATMENT OUTCOME', 'TYPE OF WOUND', 'SITE OF BITE',
+            'DATE AND TIME OF BITE', 'VACCINATION STATUS OF BITING ANIMAL', 'CIRCUMSTANCES OF BITE', 'CONTACT NUMBER'];
     }
 
     /** One fictional example row for the template. */
     public static function templateExample(): array
     {
-        return [
-            'DELA CRUZ, JUAN A.',
-            '25',
-            'M',
-            '2000-03-15',
-            'LAHUG',
-            'D',
-            'II',
-            '2025-01-10',
-            '2025-01-13',
-            '2025-01-17',
-            'VAXIRAB',
-            '',
-            '',
-            '',
-            'S',
-            '',
-            '0',
-            'S-AB',
-            'L FOREARM',
-            '1/9/2025 2:30PM',
-            'U',
-            'P',
-            '09171234567'
-        ];
+        return ['DELA CRUZ, JUAN A.', '25', 'M', '2000-03-15', 'LAHUG', 'D', 'II', '2025-01-10', '2025-01-13', '2025-01-17',
+            'VAXIRAB', '', '', '', 'S', '', '0', 'S-AB', 'L FOREARM', '1/9/2025 2:30PM', 'U', 'P', '09171234567'];
     }
 
     // ------------------------------------------------------------------ main entry
@@ -225,21 +161,9 @@ class BiteCaseImporter
         @set_time_limit(0);
         @ini_set('memory_limit', '768M');
 
-        $stats = [
-            'total' => 0,
-            'imported' => 0,
-            'duplicates' => 0,
-            'failed' => 0,
-            'new_patients' => 0,
-            'repeat_patients' => 0,
-            'date_from' => null,
-            'date_to' => null,
-            'errors' => [],
-            'warnings' => [],
-            'sheets' => [],
-            'skipped_sheets' => [],
-            'dry_run' => $this->dryRun
-        ];
+        $stats = ['total' => 0, 'imported' => 0, 'duplicates' => 0, 'failed' => 0, 'new_patients' => 0, 'repeat_patients' => 0,
+            'date_from' => null, 'date_to' => null, 'errors' => [], 'warnings' => [], 'sheets' => [], 'skipped_sheets' => [],
+            'dry_run' => $this->dryRun];
         $unknownBarangays = [];
         $multi = count($reader->sheetNames()) > 1;
         $sheetProblem = null;
@@ -298,22 +222,15 @@ class BiteCaseImporter
                             $isNewPatient = !isset($this->patients[$personKey]);
                             $this->patients[$personKey] ??= 'dry-run';
                         } else {
-                            $isNewPatient = null;
-                            DB::transaction(function () use ($row, &$isNewPatient) {
-                                $isNewPatient = $this->store($row);
-                            });
+                            $isNewPatient = $this->store($row);
                         }
 
                         $this->seen[$key] = true;
                         $stats['imported']++;
                         $isNewPatient ? $stats['new_patients']++ : $stats['repeat_patients']++;
                         $day = substr($row['bite_at'], 0, 10);
-                        if ($stats['date_from'] === null || $day < $stats['date_from']) {
-                            $stats['date_from'] = $day;
-                        }
-                        if ($stats['date_to'] === null || $day > $stats['date_to']) {
-                            $stats['date_to'] = $day;
-                        }
+                        if ($stats['date_from'] === null || $day < $stats['date_from']) { $stats['date_from'] = $day; }
+                        if ($stats['date_to'] === null || $day > $stats['date_to']) { $stats['date_to'] = $day; }
                     } catch (InvalidArgumentException $e) {
                         $stats['failed']++;
                         $this->addError($stats, $rowNo, $e->getMessage(), $multi ? $sheetName : null);
@@ -339,6 +256,10 @@ class BiteCaseImporter
 
             if (!$stats['sheets']) {
                 throw $sheetProblem ? new InvalidArgumentException($sheetProblem) : $this->missingColumns([]);
+            }
+
+            if (!$this->dryRun) {
+                $this->flushBuffers();
             }
 
             $this->dryRun ? DB::rollBack() : DB::commit();
@@ -410,7 +331,7 @@ class BiteCaseImporter
         $missing = array_values(array_diff_key(self::REQUIRED, $found));
         return new InvalidArgumentException(
             'The header row could not be found. The first rows of the sheet must contain these columns: ' . implode(', ', self::REQUIRED)
-                . '. Use "Download template" for the expected layout.'
+            . '. Use "Download template" for the expected layout.'
         );
     }
 
@@ -423,7 +344,7 @@ class BiteCaseImporter
 
     private function parseRow(array $c, array $map, array &$unknownBarangays): array
     {
-        $get = fn(string $f) => isset($map[$f]) ? trim((string) ($c[$map[$f]] ?? '')) : '';
+        $get = fn (string $f) => isset($map[$f]) ? trim((string) ($c[$map[$f]] ?? '')) : '';
 
         // --- identity
         $name = $this->cleanName($get('name'));
@@ -468,8 +389,7 @@ class BiteCaseImporter
 
         // --- demographics
         $sex = match (strtoupper(substr($get('sex'), 0, 1))) {
-            'M' => 'Male',
-            'F' => 'Female',
+            'M' => 'Male', 'F' => 'Female',
             default => throw new InvalidArgumentException('Gender must be M or F.'),
         };
         $ageText = $get('age');
@@ -514,13 +434,9 @@ class BiteCaseImporter
         // P = provoked; U / UP = unprovoked (the monthly sheets switch between the two spellings)
         $provoked = $circ === 'P' || str_starts_with($circ, 'PROV') ? 1 : (in_array($circ, ['U', 'UP'], true) || str_starts_with($circ, 'UNPROV') ? 0 : null);
         $circParts = [];
-        if ($provoked !== null) {
-            $circParts[] = $provoked ? 'Provoked' : 'Unprovoked';
-        }
+        if ($provoked !== null) { $circParts[] = $provoked ? 'Provoked' : 'Unprovoked'; }
         $strayText = $get('stray');
-        if ($strayText !== '') {
-            $circParts[] = 'Stray animal' . (strtoupper($strayText) !== 'S' ? ' (' . $strayText . ')' : '');
-        }
+        if ($strayText !== '') { $circParts[] = 'Stray animal' . (strtoupper($strayText) !== 'S' ? ' (' . $strayText . ')' : ''); }
 
         // --- treatment
         $doses = [
@@ -553,10 +469,7 @@ class BiteCaseImporter
         $brandRaw = strtoupper($get('vaccine'));
         $brand = null;
         foreach (self::VACCINES as $k => $v) {
-            if ($brandRaw !== '' && str_contains($brandRaw, $k)) {
-                $brand = $v;
-                break;
-            }
+            if ($brandRaw !== '' && str_contains($brandRaw, $k)) { $brand = $v; break; }
         }
         $vaccineNote = null;
         if ($brand === null && $brandRaw !== '') {
@@ -583,26 +496,13 @@ class BiteCaseImporter
 
         return [
             'dedupe'   => mb_strtolower($name) . '|' . $dob . '|' . $biteDate,
-            'name'     => $name,
-            'dob' => $dob,
-            'age' => $age,
-            'sex' => $sex,
-            'barangay' => $brgy,
+            'name'     => $name, 'dob' => $dob, 'age' => $age, 'sex' => $sex, 'barangay' => $brgy,
             'contact'  => mb_substr($contact, 0, 20),
-            'bite_at'  => $biteAt,
-            'category' => $category,
-            'outcome' => $outcome,
-            'animal'   => $animal,
-            'animal_other' => $animalOther,
-            'animal_vax' => $animalVax,
-            'provoked' => $provoked,
-            'circumstances' => $circParts ? implode('. ', $circParts) : null,
-            'doses'    => $doses,
-            'brand' => $brand,
-            'dose_type' => $get('booster') !== '' ? 'Booster' : 'Primary',
-            'passive'  => $passive,
-            'total_wounds' => $totalWounds,
-            'wound_text' => $woundText,
+            'bite_at'  => $biteAt, 'category' => $category, 'outcome' => $outcome,
+            'animal'   => $animal, 'animal_other' => $animalOther, 'animal_vax' => $animalVax,
+            'provoked' => $provoked, 'circumstances' => $circParts ? implode('. ', $circParts) : null,
+            'doses'    => $doses, 'brand' => $brand, 'dose_type' => $get('booster') !== '' ? 'Booster' : 'Primary',
+            'passive'  => $passive, 'total_wounds' => $totalWounds, 'wound_text' => $woundText,
             'site'     => mb_substr($get('site'), 0, 100) ?: null,
             'remarks'  => implode(' | ', array_filter([$get('remarks'), $vaccineNote])) ?: null,
         ];
@@ -639,26 +539,12 @@ class BiteCaseImporter
             $total = $m[1] === 'S' ? 'Single' : 'Multiple';
             $rest = $m[2];
         }
-        $words = [
-            'P' => 'puncture',
-            'AB' => 'abrasion',
-            'L' => 'laceration',
-            'LAC' => 'laceration',
-            'C' => 'contusion',
-            'A' => 'avulsion',
-            'S' => 'scratch',
-            'SC' => 'scratch',
-            'B' => 'bruise'
-        ];
+        $words = ['P' => 'puncture', 'AB' => 'abrasion', 'L' => 'laceration', 'LAC' => 'laceration', 'C' => 'contusion',
+            'A' => 'avulsion', 'S' => 'scratch', 'SC' => 'scratch', 'B' => 'bruise'];
         $parts = [];
         foreach (preg_split('/[\s,&\/+-]+/', $rest) as $tok) {
-            if ($tok === '') {
-                continue;
-            }
-            if (!isset($words[$tok])) {
-                $parts = null;
-                break;
-            }
+            if ($tok === '') { continue; }
+            if (!isset($words[$tok])) { $parts = null; break; }
             $parts[] = $words[$tok];
         }
         if ($total && $parts) {
@@ -680,7 +566,7 @@ class BiteCaseImporter
         $y = $mo = $d = null;
         $guessed = false;
         // an impossible time typed in the sheet ("21:60") is dropped; the date is still used
-        $clock = fn(int $h, int $min): ?string => $h <= 23 && $min <= 59 ? sprintf('%02d:%02d:00', $h, $min) : null;
+        $clock = fn (int $h, int $min): ?string => $h <= 23 && $min <= 59 ? sprintf('%02d:%02d:00', $h, $min) : null;
         $timeOf = function (string $rest) use ($clock): ?string {
             if (preg_match('/(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m?\.?/i', $rest, $t)) {
                 return $clock((int) $t[1] % 12 + (strtolower($t[3]) === 'p' ? 12 : 0), (int) ($t[2] ?? 0));
@@ -696,9 +582,7 @@ class BiteCaseImporter
         } elseif (preg_match('/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})(.*)$/', $s, $m)) {
             [$a, $b, $y] = [(int) $m[1], (int) $m[2], (int) $m[3]];
             [$mo, $d] = $a > 12 && $b <= 12 ? [$b, $a] : [$a, $b];   // 25/12/24 can only be day/month
-            if ($y < 100) {
-                $y += 2000;
-            }
+            if ($y < 100) { $y += 2000; }
             $time = $timeOf($m[4]);
         } elseif ($yearHint && preg_match('/^(\d{1,2})[\/\-.](\d{1,2})(?![\d\/\-.])(.*)$/', $s, $m)) {
             // month/day without a year, e.g. "10/5, 3PM"
@@ -746,22 +630,55 @@ class BiteCaseImporter
     private function preload(): void
     {
         DB::table('inflow_general_particulars')
-            ->select('patient_name', 'date_of_birth', 'queue_date')
+            ->select('patient_name', 'date_of_birth', 'queue_date', 'queue_id')
             ->orderBy('inflow_record_id')
             ->chunk(5000, function ($rows) {
                 foreach ($rows as $r) {
                     $this->seen[mb_strtolower($r->patient_name) . '|' . $r->date_of_birth . '|' . $r->queue_date] = true;
+                    if (str_starts_with((string) $r->queue_id, 'H')) {
+                        $seq = (int) substr((string) $r->queue_id, 1);
+                        if ($seq > ($this->queueSeq[$r->queue_date] ?? 0)) {
+                            $this->queueSeq[$r->queue_date] = $seq;
+                        }
+                    }
                 }
             });
+
         DB::table('patients')->select('patient_id', 'patient_name', 'date_of_birth')
             ->orderBy('patient_id')
             ->chunk(5000, function ($rows) {
                 foreach ($rows as $r) {
                     $this->patients[mb_strtolower($r->patient_name) . '|' . $r->date_of_birth] = $r->patient_id;
+                    $pos = strrpos((string) $r->patient_id, '-');
+                    if ($pos !== false) {
+                        $prefix = substr((string) $r->patient_id, 0, $pos);
+                        $this->patientSeq[$prefix] = ($this->patientSeq[$prefix] ?? 0) + 1;
+                    }
                 }
             });
+
         foreach (DB::table('bite_cases')->select('patient_id', DB::raw('MAX(case_number) as n'))->groupBy('patient_id')->get() as $r) {
             $this->caseNo[$r->patient_id] = (int) $r->n;
+        }
+    }
+
+    private function flushBuffers(): void
+    {
+        if ($this->bufSec3) {
+            DB::table('bite_section3_exposure')->insert($this->bufSec3);
+            $this->bufSec3 = [];
+        }
+        if ($this->bufSec6) {
+            DB::table('bite_section6_wound_description')->insert($this->bufSec6);
+            $this->bufSec6 = [];
+        }
+        if ($this->bufSec7) {
+            DB::table('bite_section7_immunization')->insert($this->bufSec7);
+            $this->bufSec7 = [];
+        }
+        if ($this->bufSec8) {
+            DB::table('bite_section8_remarks')->insert($this->bufSec8);
+            $this->bufSec8 = [];
         }
     }
 
@@ -769,69 +686,61 @@ class BiteCaseImporter
     private function store(array $r): bool
     {
         $day = substr($r['bite_at'], 0, 10);
-
-        if (!isset($this->queueSeq[$day])) {
-            $this->queueSeq[$day] = (int) DB::table('inflow_general_particulars')
-                ->where('queue_date', $day)->where('queue_id', 'like', 'H%')
-                ->max(DB::raw('CAST(SUBSTRING(queue_id, 2) AS UNSIGNED)'));
-        }
-        $queueId = 'H' . ($this->queueSeq[$day] + 1);
-        $cache = [];   // in-memory lookups are updated at the very end, once every insert of this row has worked
+        $nextQueue = ($this->queueSeq[$day] ?? 0) + 1;
+        $queueId = 'H' . $nextQueue;
 
         $inflowId = DB::table('inflow_general_particulars')->insertGetId([
-            'queue_id'       => $queueId,
-            'queue_date'     => $day,
-            'patient_name'   => $r['name'],
-            'age'            => $r['age'],
-            'sex'            => $r['sex'],
-            'date_of_birth'  => $r['dob'],
-            'civil_status'   => 'Single',
-            'contact_num'    => $r['contact'],
-            'barangay'       => $r['barangay'],
+            'queue_id'          => $queueId,
+            'queue_date'        => $day,
+            'patient_name'      => $r['name'],
+            'age'               => $r['age'],
+            'sex'               => $r['sex'],
+            'date_of_birth'     => $r['dob'],
+            'civil_status'      => 'Single',
+            'contact_num'       => $r['contact'],
+            'barangay'          => $r['barangay'],
             'philhealth_member' => 0,
-            'reg_date'       => $r['bite_at'],
-            'status'         => 'Encoded',
+            'reg_date'          => $r['bite_at'],
+            'status'            => 'Encoded',
         ]);
 
         $personKey = mb_strtolower($r['name']) . '|' . $r['dob'];
         $isNew = !isset($this->patients[$personKey]);
         if ($isNew) {
             $prefix = 'CEB-' . str_replace('-', '', $day) . '-' . str_replace('-', '', $r['dob']);
-            if (!isset($this->patientSeq[$prefix])) {
-                $this->patientSeq[$prefix] = DB::table('patients')->where('patient_id', 'like', $prefix . '-%')->count();
-            }
-            $patientId = $prefix . '-' . str_pad((string) ($this->patientSeq[$prefix] + 1), 3, '0', STR_PAD_LEFT);
+            $nextPatientSeq = ($this->patientSeq[$prefix] ?? 0) + 1;
+            $patientId = $prefix . '-' . str_pad((string) $nextPatientSeq, 3, '0', STR_PAD_LEFT);
             DB::table('patients')->insert([
-                'patient_id'      => $patientId,
-                'inflow_record_id' => $inflowId,
-                'date_registered' => $r['bite_at'],
-                'patient_name'    => $r['name'],
-                'age'             => $r['age'],
-                'sex'             => $r['sex'],
-                'date_of_birth'   => $r['dob'],
-                'civil_status'    => 'Single',
-                'contact_num'     => $r['contact'],
+                'patient_id'        => $patientId,
+                'inflow_record_id'  => $inflowId,
+                'date_registered'   => $r['bite_at'],
+                'patient_name'      => $r['name'],
+                'age'               => $r['age'],
+                'sex'               => $r['sex'],
+                'date_of_birth'     => $r['dob'],
+                'civil_status'      => 'Single',
+                'contact_num'       => $r['contact'],
                 'philhealth_member' => 0,
             ]);
-            $cache['patientSeq'] = [$prefix, $this->patientSeq[$prefix] + 1];
-            $cache['patient'] = [$personKey, $patientId];
+            $this->patientSeq[$prefix] = $nextPatientSeq;
+            $this->patients[$personKey] = $patientId;
         } else {
             $patientId = $this->patients[$personKey];
         }
 
         $caseNumber = ($this->caseNo[$patientId] ?? 0) + 1;
         $caseId = DB::table('bite_cases')->insertGetId([
-            'patient_id'       => $patientId,
-            'inflow_record_id' => $inflowId,
-            'case_number'      => $caseNumber,
-            'date_verified'    => $r['bite_at'],
-            'barangay'         => $r['barangay'],
-            'category'         => $r['category'],
+            'patient_id'        => $patientId,
+            'inflow_record_id'  => $inflowId,
+            'case_number'       => $caseNumber,
+            'date_verified'     => $r['bite_at'],
+            'barangay'          => $r['barangay'],
+            'category'          => $r['category'],
             'philhealth_status' => 'Not a Member',
-            'outcome'          => $r['outcome'],
+            'outcome'           => $r['outcome'],
         ]);
 
-        DB::table('bite_section3_exposure')->insert([
+        $this->bufSec3[] = [
             'bite_case_id'      => $caseId,
             'animal_type'       => $r['animal'],
             'animal_type_other' => $r['animal_other'],
@@ -840,43 +749,41 @@ class BiteCaseImporter
             'exposure_type'     => 'Bite',
             'is_provoked'       => $r['provoked'],
             'circumstances'     => $r['circumstances'],
-        ]);
+        ];
 
-        DB::table('bite_section6_wound_description')->insert([
+        $this->bufSec6[] = [
             'bite_case_id'         => $caseId,
             'total_wounds'         => $r['total_wounds'],
             'wound_description'    => $r['wound_text'],
             'site_of_bite'         => $r['site'],
             'category_of_exposure' => $r['category'],
-        ]);
+        ];
 
-        // Category I needs no vaccine course; for the others a row is stored whenever the sheet shows any treatment
         $d = $r['doses'];
         if ($r['category'] !== 'I' || array_filter($d) || $r['passive']) {
-            DB::table('bite_section7_immunization')->insert([
+            $this->bufSec7[] = [
                 'bite_case_id'  => $caseId,
                 'vaccine_brand' => $r['brand'],
                 'dose_type'     => $r['dose_type'],
                 'day0_date'     => $d['day0'],
-                'day3_date' => $d['day3'],
-                'day7_date' => $d['day7'],
+                'day3_date'     => $d['day3'],
+                'day7_date'     => $d['day7'],
                 'day28_date'    => $d['day28'],
                 'passive_given' => $r['passive'] ? 1 : 0,
                 'passive_type'  => $r['passive'],
-            ]);
+            ];
         }
 
         if ($r['remarks']) {
-            DB::table('bite_section8_remarks')->insert(['bite_case_id' => $caseId, 'advice' => $r['remarks']]);
+            $this->bufSec8[] = ['bite_case_id' => $caseId, 'advice' => $r['remarks']];
         }
 
-        // everything for this row is saved: now the lookups may change
-        $this->queueSeq[$day]++;
-        $this->caseNo[$patientId] = $caseNumber;
-        if (isset($cache['patientSeq'])) {
-            $this->patientSeq[$cache['patientSeq'][0]] = $cache['patientSeq'][1];
-            $this->patients[$cache['patient'][0]] = $cache['patient'][1];
+        if (count($this->bufSec3) >= 250) {
+            $this->flushBuffers();
         }
+
+        $this->queueSeq[$day] = $nextQueue;
+        $this->caseNo[$patientId] = $caseNumber;
 
         return $isNew;
     }

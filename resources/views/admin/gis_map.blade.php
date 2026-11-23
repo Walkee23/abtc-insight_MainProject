@@ -136,7 +136,7 @@
             <div class="flex items-end justify-between flex-wrap gap-2">
                 <div>
                     <h2 class="mn-page-title text-2xl font-extrabold tracking-tight text-on-surface">Barangay Spatial Distribution</h2>
-                    <p class="text-sm text-slate-500">Confirmed bite cases per barangay, Cebu City. Bubble size = number of cases.</p>
+                    <p class="text-sm text-slate-500">Confirmed bite cases per barangay, Cebu City. Bubble color indicates case volume tier.</p>
                 </div>
                 <span id="status" class="text-xs text-slate-500"></span>
             </div>
@@ -153,17 +153,17 @@
                         <select name="animal" class="mt-1 w-full rounded-lg border-slate-300 text-sm">
                             <option value="">All</option><option value="dog">Dogs</option><option value="cat">Cats</option><option value="others">Others</option>
                         </select></label>
-                        <label class="block">Ownership
-                            <select name="ownership" class="mt-1 w-full rounded-lg border-slate-300 text-sm">
-                                <option value="">All</option><option value="pet">Pet</option><option value="stray">Stray</option>
-                            </select></label>
-                        <label class="block">Health area
-                            <select name="health_area" id="healthArea" class="mt-1 w-full rounded-lg border-slate-300 text-sm">
-                                <option value="">All</option>
-                                <option value="central">Central</option><option value="east">East</option>
-                                <option value="north">North</option><option value="south">South</option>
-                                <option value="west">West</option>
-                            </select></label>
+                    <label class="block">Ownership
+                        <select name="ownership" id="ownershipFilter" class="mt-1 w-full rounded-lg border-slate-300 text-sm">
+                            <option value="">All</option><option value="pet">Pet</option><option value="stray">Stray</option>
+                        </select></label>
+                    <label class="block">Health area
+                        <select name="health_area" id="healthArea" class="mt-1 w-full rounded-lg border-slate-300 text-sm">
+                            <option value="">All</option>
+                            <option value="central">Central</option><option value="east">East</option>
+                            <option value="north">North</option><option value="south">South</option>
+                            <option value="west">West</option>
+                        </select></label>
                     <label class="block">Find barangay
                         <select id="brgySelect" class="mt-1 w-full rounded-lg border-slate-300 text-sm"><option value="">Whole city</option></select></label>
                 </div>
@@ -200,8 +200,10 @@
             </form>
 
             <!-- Summary -->
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="grid grid-cols-2 lg:grid-cols-6 gap-4">
                 <div class="bg-white rounded-xl border border-outline-variant/30 p-4"><p class="text-xs uppercase text-slate-500">Cases</p><p id="sTotal" class="text-2xl font-extrabold text-primary">0</p></div>
+                <div class="bg-white rounded-xl border border-outline-variant/30 p-4"><p class="text-xs uppercase text-slate-500">Pet Incidents</p><p id="sPet" class="text-2xl font-extrabold text-sky-700">0</p></div>
+                <div class="bg-white rounded-xl border border-outline-variant/30 p-4"><p class="text-xs uppercase text-slate-500">Stray Incidents</p><p id="sStray" class="text-2xl font-extrabold text-amber-700">0</p></div>
                 <div class="bg-white rounded-xl border border-outline-variant/30 p-4"><p class="text-xs uppercase text-slate-500">Barangays affected</p><p id="sBrgy" class="text-2xl font-extrabold">0</p></div>
                 <div class="bg-white rounded-xl border border-outline-variant/30 p-4"><p class="text-xs uppercase text-slate-500">Highest</p><p id="sTop" class="text-lg font-extrabold truncate">-</p></div>
                 <div class="bg-white rounded-xl border border-outline-variant/30 p-4"><p class="text-xs uppercase text-slate-500">Category III</p><p id="sCat3" class="text-2xl font-extrabold text-red-700">0</p></div>
@@ -288,13 +290,38 @@
         const key = s => { const k = norm(s); return ALIASES[k] || k; };
         // cases from outside Cebu City are recorded as "Others: Mandaue", "Other City (Bohol)", ... - they have no barangay on this map
         const isOutside = s => /^\s*other/i.test(s || '');
-        const iso  = d => new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
 
-        const map = L.map('gisMap').setView([10.3157, 123.8854], 12);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(map);
+        function bubbleCenter(layer) {
+            const geom = layer.feature && layer.feature.geometry;
+            if (!geom || geom.type !== 'MultiPolygon') {
+                return layer.getBounds().getCenter();
+            }
+            let bestBounds = null, maxArea = -1;
+            geom.coordinates.forEach(poly => {
+                const ring = poly[0];
+                const latLngs = ring.map(([lng, lat]) => [lat, lng]);
+                const b = L.latLngBounds(latLngs);
+                const area = (b.getNorth() - b.getSouth()) * (b.getEast() - b.getWest());
+                if (area > maxArea) {
+                    maxArea = area;
+                    bestBounds = b;
+                }
+            });
+            return bestBounds ? bestBounds.getCenter() : layer.getBounds().getCenter();
+        }
+
+        const map = L.map('gisMap', {
+            maxBoundsViscosity: 1.0
+        }).setView([10.3157, 123.8854], 12);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
         const bubbles = L.layerGroup().addTo(map);
-        const layers = {};   // normalized name -> { name, layer }
-        let timer, lastAgg = {}, selectedKey = null;
+        const layers = {};   // normalized name -> { name, layer, baseFillOpacity }
+        const markers = {};  // normalized name -> circleMarker
+        let timer, lastAgg = {}, selectedKey = null, hoveredKey = null, cebuBounds = null;
         const BUBBLE_RADIUS = 8;
         const AREA_KEY = { central: 'CENTRAL HEALTH AREA', east: 'EAST HEALTH AREA', north: 'NORTH HEALTH AREA', south: 'SOUTH HEALTH AREA', west: 'WEST HEALTH AREA' };
 
@@ -312,15 +339,79 @@
         legend.onAdd = () => { const d = L.DomUtil.create('div', 'bg-white/90 rounded-lg shadow p-3 text-xs'); d.id = 'legend'; return d; };
         legend.addTo(map);
 
+        function applyStyle(k) {
+            const entry = layers[k];
+            if (!entry) return;
+            const { layer, baseFillOpacity = 0.03 } = entry;
+            const m = markers[k];
+            const isSelected = selectedKey === k;
+            const isHovered = hoveredKey === k;
+            const active = isSelected || isHovered;
+
+            if (active) {
+                layer.setStyle({ weight: 3, fillOpacity: 0.45 });
+                if (m) {
+                    m.setStyle({ weight: 3, fillOpacity: 0.95 });
+                    m.setRadius(BUBBLE_RADIUS + 3);
+                    m.bringToFront();
+                }
+            } else {
+                layer.setStyle({ weight: 1, fillOpacity: baseFillOpacity });
+                if (m) {
+                    m.setStyle({ weight: 1, fillOpacity: 0.75 });
+                    m.setRadius(BUBBLE_RADIUS);
+                }
+            }
+        }
+
+        function highlight(k, on) {
+            if (on) {
+                const prevHover = hoveredKey;
+                hoveredKey = k;
+                if (prevHover && prevHover !== k) applyStyle(prevHover);
+                applyStyle(k);
+            } else {
+                if (hoveredKey === k) hoveredKey = null;
+                applyStyle(k);
+            }
+            document.querySelectorAll('#topList button').forEach(b =>
+                b.classList.toggle('bg-amber-100', (hoveredKey === b.dataset.k) || (selectedKey === b.dataset.k)));
+        }
+
+        function selectBarangay(k) {
+            const prev = selectedKey;
+            showBarangay(k);
+            if (prev && prev !== k) applyStyle(prev);
+            applyStyle(k);
+            document.querySelectorAll('#topList button').forEach(b =>
+                b.classList.toggle('bg-amber-100', (hoveredKey === b.dataset.k) || (selectedKey === b.dataset.k)));
+        }
+
+        map.on('mouseout', () => {
+            if (hoveredKey) {
+                const prev = hoveredKey;
+                hoveredKey = null;
+                applyStyle(prev);
+            }
+        });
+
         fetch(GEO_URL).then(r => r.json()).then(geo => {
-            L.geoJSON(geo, {
+            const geoLayer = L.geoJSON(geo, {
                 style: { color: '#0b61bb', weight: 1, fillOpacity: 0.03 },
                 onEachFeature: (f, layer) => {
                     const n = f.properties.BGY_NAME || 'Unknown';
-                    layers[norm(n)] = { name: n, layer };
-                    layer.on('click', () => showBarangay(norm(n)));
+                    const k = norm(n);
+                    layers[k] = { name: n, layer, baseFillOpacity: 0.03 };
+                    layer.on('click', () => selectBarangay(k));
                 }
             }).addTo(map);
+
+            // Lock map viewport and zoom strictly to Cebu City boundaries
+            cebuBounds = geoLayer.getBounds().pad(0.05);
+            map.fitBounds(cebuBounds);
+            map.setMaxBounds(cebuBounds);
+            map.setMinZoom(map.getBoundsZoom(cebuBounds));
+
             Object.values(layers).map(l => l.name).sort().forEach(n => $('brgySelect').add(new Option(n, norm(n))));
             load();
         }).catch(() => { $('status').textContent = 'Could not load the barangay boundaries file (public/geojson/cebu_city_barangays.geojson).'; });
@@ -366,9 +457,12 @@
 
         function render(rows) {
             const agg = {}, unmapped = {};
-            let outside = 0;
+            let outside = 0, petTotal = 0, strayTotal = 0;
             rows.forEach(r => {
                 const k = key(r.barangay), n = +r.n;
+                if (/^pet/i.test(r.ownership || '')) petTotal += n;
+                if (/^stray/i.test(r.ownership || '')) strayTotal += n;
+
                 if (!layers[k]) {
                     if (isOutside(r.barangay)) outside += n;                                 // outside Cebu City: expected, not an error
                     else unmapped[r.barangay] = (unmapped[r.barangay] || 0) + n;             // a name nobody recognises
@@ -385,37 +479,60 @@
             const max = Math.max(1, ...Object.values(agg).map(a => a.total));
             const tier = n => { const q = n / max; return q > 0.75 ? 3 : q > 0.5 ? 2 : q > 0.25 ? 1 : 0; };
             bubbles.clearLayers();
+            Object.keys(markers).forEach(k => delete markers[k]);
 
             const sel = $('healthArea').value;
             $('areaLegend').classList.toggle('hidden', !sel);
 
-            Object.entries(layers).forEach(([k, { name, layer }]) => {
+            Object.entries(layers).forEach(([k, entry]) => {
+                const { name, layer } = entry;
                 const a = agg[k];
                 const ar = areaByKey[k];
                 const inArea = sel && ar && ar.name === AREA_KEY[sel];
-                layer.setStyle(inArea ? { fillColor: ar.color, fillOpacity: 0.3 }
-                            : a ? { fillColor: COLORS[tier(a.total)], fillOpacity: 0.2 } : { fillOpacity: 0.03 });
+                entry.baseFillOpacity = inArea ? 0.3 : a ? 0.2 : 0.03;
+
+                layer.setStyle(inArea
+                    ? { color: '#0b61bb', weight: 1, fillColor: ar.color, fillOpacity: 0.3 }
+                    : a
+                        ? { color: '#0b61bb', weight: 1, fillColor: COLORS[tier(a.total)], fillOpacity: 0.2 }
+                        : { color: '#0b61bb', weight: 1, fillColor: '#0b61bb', fillOpacity: 0.03 });
                 layer.bindPopup(popup(name, a));
+
                 if (!a) return;
-                L.circleMarker(layer.getBounds().getCenter(), {
+                const m = L.circleMarker(bubbleCenter(layer), {
                     radius: BUBBLE_RADIUS,
-                    fillColor: COLORS[tier(a.total)], color: '#7f1d1d', weight: 1, fillOpacity: 0.65
-                    }).addTo(bubbles).bindTooltip(esc(name) + ': ' + a.total).bindPopup(popup(name, a))
-                    .on('click', () => showBarangay(k));
-                    });
-                    if (selectedKey) showBarangay(selectedKey);
+                    fillColor: COLORS[tier(a.total)],
+                    color: '#7f1d1d',
+                    weight: 1,
+                    fillOpacity: 0.75
+                }).addTo(bubbles)
+                  .bindTooltip(esc(name) + ': ' + a.total, { direction: 'top' })
+                  .bindPopup(popup(name, a));
+
+                m.on('mouseover', () => highlight(k, true));
+                m.on('mouseout',  () => highlight(k, false));
+                m.on('click',     () => selectBarangay(k));
+                markers[k] = m;
+            });
+
+            if (selectedKey) {
+                showBarangay(selectedKey);
+                applyStyle(selectedKey);
+            }
 
             // Summary cards
             const sorted = Object.entries(agg).sort((x, y) => y[1].total - x[1].total);
             const total = sorted.reduce((s, [, a]) => s + a.total, 0);
             const cat3 = sorted.reduce((s, [, a]) => s + (a.cat['III'] || 0), 0);
             $('sTotal').textContent = total + outside + Object.values(unmapped).reduce((s, n) => s + n, 0);
+            $('sPet').textContent = petTotal;
+            $('sStray').textContent = strayTotal;
             $('sBrgy').textContent = sorted.length;
             $('sTop').textContent = sorted.length ? layers[sorted[0][0]].name + ' (' + sorted[0][1].total + ')' : '-';
             $('sCat3').textContent = cat3;
 
             $('topList').innerHTML = sorted.slice(0, 10).map(([k, a], i) =>
-                '<li><button data-k="' + esc(k) + '" class="w-full flex justify-between hover:bg-slate-50 rounded px-1 py-0.5 text-left"><span>' + (i + 1) + '. ' + esc(layers[k].name) + '</span><b>' + a.total + '</b></button></li>'
+                '<li><button data-k="' + esc(k) + '" class="w-full flex justify-between hover:bg-amber-100 rounded px-1 py-0.5 text-left transition-colors' + (selectedKey === k ? ' bg-amber-100' : '') + '"><span>' + (i + 1) + '. ' + esc(layers[k].name) + '</span><b>' + a.total + '</b></button></li>'
             ).join('') || '<li class="text-slate-500">No cases for these filters.</li>';
 
             const u = Object.entries(unmapped);
@@ -429,8 +546,37 @@
                 '<div class="flex items-center gap-2 mt-1"><span style="background:' + COLORS[i] + '" class="inline-block w-3 h-3 rounded-full"></span>' + (i ? step([0.25, 0.5, 0.75][i - 1]) + 1 : 1) + ' - ' + step(f) + '</div>').join('');
         }
 
-        $('bdClose').addEventListener('click', () => { selectedKey = null; $('brgyDetail').classList.add('hidden'); });
-        $('brgySelect').addEventListener('change', e => e.target.value ? focusBrgy(e.target.value) : map.setView([10.3157, 123.8854], 12));
+        $('bdClose').addEventListener('click', () => {
+            const prev = selectedKey;
+            selectedKey = null;
+            $('brgyDetail').classList.add('hidden');
+            if (prev) applyStyle(prev);
+            document.querySelectorAll('#topList button').forEach(b =>
+                b.classList.toggle('bg-amber-100', hoveredKey === b.dataset.k));
+        });
+
+        $('topList').addEventListener('mouseover', e => { const b = e.target.closest('button[data-k]'); if (b) highlight(b.dataset.k, true); });
+        $('topList').addEventListener('mouseout',  e => { const b = e.target.closest('button[data-k]'); if (b) highlight(b.dataset.k, false); });
+        $('topList').addEventListener('click',     e => {
+            const b = e.target.closest('button[data-k]');
+            if (!b) return;
+            focusBrgy(b.dataset.k);
+            selectBarangay(b.dataset.k);
+        });
+
+        $('brgySelect').addEventListener('change', e => {
+            if (e.target.value) {
+                focusBrgy(e.target.value);
+                selectBarangay(e.target.value);
+            } else {
+                const prev = selectedKey;
+                selectedKey = null;
+                $('brgyDetail').classList.add('hidden');
+                if (prev) applyStyle(prev);
+                if (cebuBounds) map.fitBounds(cebuBounds);
+            }
+        });
+
         // ---- Period filter: Daily / Weekly / Monthly / Yearly turn into a from-to date range ----
         let period = 'all';
         const utc = d => d.toISOString().slice(0, 10);

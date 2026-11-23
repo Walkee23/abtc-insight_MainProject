@@ -250,11 +250,10 @@
             </div>
         </section>
 
-        <!-- GIS BUbble Map -->
-
-       <section class="max-w-7xl mx-auto px-6 pt-0 pb-12">
+        <!-- GIS Bubble Map -->
+        <section class="max-w-7xl mx-auto px-6 pt-0 pb-12">
             <h2 class="text-2xl font-extrabold tracking-tight mb-1">Animal Bite Cases Across Cebu City</h2>
-            <p class="text-sm text-slate-500 mb-4">Bubble size shows the number of cases in each barangay. Hover a bubble or click a barangay in the list to highlight it.</p>
+            <p class="text-sm text-slate-500 mb-4">Bubble color shows case intensity in each barangay. Hover a bubble or click a barangay in the list to highlight it.</p>
 
             <div class="grid lg:grid-cols-[1fr_300px] gap-5">
                 <div id="publicMap" style="height:520px;border-radius:12px;position:relative;z-index:0"></div>
@@ -266,49 +265,104 @@
             </div>
         </section>
 
-
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
         <script>
         document.addEventListener('DOMContentLoaded', async () => {
             const COLORS = ['#fbbf24', '#f97316', '#ef4444', '#991b1b'];
+            const BUBBLE_RADIUS = 8;
             const norm = s => (s || '').toUpperCase().replace(/\(.*?\)/g, ' ').replace(/\bPOB\b\.?/g, ' ').replace(/[^A-Z0-9]+/g, ' ').trim();
-            const esc  = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+            const ALIASES = {
+                'QUIOT': 'QUIOT PARDO',
+                'KAMPUTHAW': 'CAMPUTHAW',
+                'BO LUZ': 'LUZ',
+                'KINASANG AN': 'KINASANG AN PARDO',
+                'HIPODROMO': 'HIPPODROMO',
+                'BUDLAAN': 'BUDLA AN',
+                'CAPITOL': 'CAPITOL SITE',
+                'SAN NICOLAS PROPER': 'SAN NICOLAS CENTRAL',
+                'SAN NICOLAS PAHINA': 'PAHINA SAN NICOLAS',
+                'TOONG': 'TO ONG PARDO',
+                'PUNG OL': 'PUNG OL SIBUGAY',
+                'BOUT TAUP': 'BUOT TAUP PARDO',
+                'BUOT TAOP': 'BUOT TAUP PARDO',
+                'STA CRUZ': 'SANTA CRUZ',
+                'STO NI O': 'CENTRAL',
+            };
+            const key = s => { const k = norm(s); return ALIASES[k] || k; };
+            const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-            const map = L.map('publicMap', { scrollWheelZoom: false }).setView([10.3157, 123.8854], 12);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(map);
+            function bubbleCenter(layer) {
+                const geom = layer.feature && layer.feature.geometry;
+                if (!geom || geom.type !== 'MultiPolygon') {
+                    return layer.getBounds().getCenter();
+                }
+                let bestBounds = null, maxArea = -1;
+                geom.coordinates.forEach(poly => {
+                    const ring = poly[0];
+                    const latLngs = ring.map(([lng, lat]) => [lat, lng]);
+                    const b = L.latLngBounds(latLngs);
+                    const area = (b.getNorth() - b.getSouth()) * (b.getEast() - b.getWest());
+                    if (area > maxArea) {
+                        maxArea = area;
+                        bestBounds = b;
+                    }
+                });
+                return bestBounds ? bestBounds.getCenter() : layer.getBounds().getCenter();
+            }
 
-            const layers = {}, markers = {}, base = {};
+            const map = L.map('publicMap', {
+                scrollWheelZoom: false,
+                maxBoundsViscosity: 1.0
+            }).setView([10.3157, 123.8854], 12);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            const layers = {}, markers = {};
             const [geo, rows] = await Promise.all([
                 fetch("{{ asset('geojson/cebu_city_barangays.geojson') }}").then(r => r.json()),
                 fetch("{{ route('public.gis_data') }}", { headers: { 'Accept': 'application/json' } }).then(r => r.json()),
             ]);
 
-            L.geoJSON(geo, {
+            const geoLayer = L.geoJSON(geo, {
                 style: { color: '#0b61bb', weight: 1, fillOpacity: 0.03 },
-                onEachFeature: (f, layer) => { const n = f.properties.BGY_NAME || 'Unknown'; layers[norm(n)] = { name: n, layer }; }
+                onEachFeature: (f, layer) => {
+                    const n = f.properties.BGY_NAME || 'Unknown';
+                    layers[norm(n)] = { name: n, layer };
+                }
             }).addTo(map);
 
+            // Lock map viewport and zoom strictly to Cebu City boundaries
+            const cebuBounds = geoLayer.getBounds().pad(0.05);
+            map.fitBounds(cebuBounds);
+            map.setMaxBounds(cebuBounds);
+            map.setMinZoom(map.getBoundsZoom(cebuBounds));
+
             const agg = {};
-            rows.forEach(r => { const k = norm(r.barangay); if (layers[k]) agg[k] = (agg[k] || 0) + (+r.n); });
+            rows.forEach(r => {
+                const k = key(r.barangay);
+                if (layers[k]) agg[k] = (agg[k] || 0) + (+r.n);
+            });
 
             const max = Math.max(1, ...Object.values(agg));
             const tier = n => { const q = n / max; return q > 0.75 ? 3 : q > 0.5 ? 2 : q > 0.25 ? 1 : 0; };
             const label = (name, n) => esc(name) + ': ' + n + (n === 1 ? ' case' : ' cases');
 
-            // highlight on/off for one barangay (used by both the bubble and the list)
+            // Highlight on/off for one barangay (used by both the bubble and the list)
             function highlight(k, on) {
                 const m = markers[k], l = layers[k].layer;
                 if (!m) return;
                 if (on) {
                     m.setStyle({ weight: 3, fillOpacity: 0.95 });
-                    m.setRadius(base[k].radius * 1.3);
+                    m.setRadius(BUBBLE_RADIUS + 3);
                     m.bringToFront();
                     l.setStyle({ weight: 3, fillOpacity: 0.45 });
                     m.openTooltip();
                 } else {
-                    m.setStyle({ weight: 1, fillOpacity: 0.65 });
-                    m.setRadius(base[k].radius);
+                    m.setStyle({ weight: 1, fillOpacity: 0.75 });
+                    m.setRadius(BUBBLE_RADIUS);
                     l.setStyle({ weight: 1, fillOpacity: 0.2 });
                     m.closeTooltip();
                 }
@@ -319,11 +373,13 @@
             Object.entries(agg).forEach(([k, n]) => {
                 const { name, layer } = layers[k];
                 layer.setStyle({ fillColor: COLORS[tier(n)], fillOpacity: 0.2 });
-                const radius = 6 + 26 * Math.sqrt(n / max);
-                base[k] = { radius };
 
-                const m = L.circleMarker(layer.getBounds().getCenter(), {
-                    radius, fillColor: COLORS[tier(n)], color: '#7f1d1d', weight: 1, fillOpacity: 0.65
+                const m = L.circleMarker(bubbleCenter(layer), {
+                    radius: BUBBLE_RADIUS,
+                    fillColor: COLORS[tier(n)],
+                    color: '#7f1d1d',
+                    weight: 1,
+                    fillOpacity: 0.75
                 }).addTo(map).bindTooltip(label(name, n), { direction: 'top' });
 
                 m.on('mouseover', () => highlight(k, true));

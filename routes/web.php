@@ -119,6 +119,7 @@ Route::prefix('staff')->middleware(['auth', 'role:Staff'])->group(function () {
     Route::get('/patient-verification', [StaffController::class, 'patientVerification'])->name('staff.patient-verification');
     Route::post('/verify-attendance/{inflow_record_id}', [StaffController::class, 'verifyAttendance'])->name('staff.verify-attendance');
     Route::post('/staff/bhw-referral/{referral_id}/verify', [StaffController::class, 'verifyBhwReferral'])->name('staff.verify-bhw-referral');
+    Route::post('/queue/remove/{inflow_record_id}', [StaffController::class, 'removeFromQueue'])->name('staff.remove-from-queue');
 });
 
 // Healthworker Routes

@@ -56,6 +56,24 @@ class PepSchedule
     }
 
     /**
+     * SQL (MySQL) condition that is true when Day $day is one of the doses of the case's course
+     * (same rule as days(): Booster = Day 0, 3; Primary IM = Day 0, 3, 7, 14; Primary ID or no route = Day 0, 3, 7, 28).
+     * $s7 is the alias of bite_section7_immunization in the query. $day is a code constant, never user input.
+     */
+    public static function hasDaySql(int $day, string $s7 = 's7'): string
+    {
+        $primary = "({$s7}.dose_type IS NULL OR {$s7}.dose_type <> 'Booster')";
+
+        return match ($day) {
+            0, 3    => '(1 = 1)',
+            7       => $primary,
+            14      => "({$primary} AND {$s7}.route = 'IM')",
+            28      => "({$primary} AND ({$s7}.route IS NULL OR {$s7}.route <> 'IM'))",
+            default => '(1 = 0)',
+        };
+    }
+
+    /**
      * SQL (MySQL) that is true when every dose of the course has a recorded date.
      * $s7 is the alias of bite_section7_immunization in the query.
      */

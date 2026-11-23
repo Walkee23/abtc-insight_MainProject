@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Jobs\SendSmsReminderJob;
+use App\Support\PepSchedule;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -13,8 +14,12 @@ class SmsService
     /** Gap between queued texts. 20 seconds = 3 texts per minute. Change it here. */
     public const SECONDS_BETWEEN_SMS = 20;
 
-    /** Day offsets after Day 0 that get a reminder. D0 is given at the clinic, so it is skipped. */
-    public const REMINDER_OFFSETS = ['D3' => 3, 'D7' => 7, 'D28' => 28];
+    /**
+     * Every day that can get a reminder. D0 is given at the clinic, so it is skipped. Which of these a case really has
+     * depends on its schedule (App\Support\PepSchedule::hasDaySql):
+     *   Primary IM -> D3, D7, D14   Primary ID (or no route) -> D3, D7, D28   Booster -> D3
+     */
+    public const REMINDER_OFFSETS = ['D3' => 3, 'D7' => 7, 'D14' => 14, 'D28' => 28];
 
     /**
      * Doses due on $date, worked out from bite_section7_immunization (no dose_schedule needed).
@@ -33,6 +38,7 @@ class SmsService
                 ->join('patients as p', 'p.patient_id', '=', 'bc.patient_id')
                 ->whereNotNull('i.day0_date')
                 ->where('bc.category', '!=', 'I') // Category I needs no vaccine course
+                ->whereRaw(PepSchedule::hasDaySql($n, 'i')) // only a dose that is part of this case's schedule
                 ->whereRaw("COALESCE(i.day{$n}_date, DATE_ADD(i.day0_date, INTERVAL {$n} DAY)) = ?", [$date])
                 ->select('bc.bite_case_id', 'bc.patient_id', 'p.patient_name', 'p.contact_num')
                 ->get()
@@ -68,6 +74,7 @@ class SmsService
                 ->where('bc.category', '!=', 'I')
                 ->where(fn ($w) => $w->whereNull('bc.outcome')
                     ->orWhereNotIn('bc.outcome', ['Completed', 'Lost to Follow-up', 'Discharged (Cat. I)']))
+                ->whereRaw(PepSchedule::hasDaySql($n, 'i')) // only a dose that is part of this case's schedule
                 ->whereRaw("DATE_ADD(i.day0_date, INTERVAL {$n} DAY) = ?", [$dueDate])
                 ->whereNull("i.day{$n}_date")
                 ->whereNotExists(fn ($x) => $x->select(DB::raw(1))->from('dose_schedule as ds')
@@ -75,8 +82,9 @@ class SmsService
                     ->where('ds.dose_label', $label)
                     ->whereNotNull('ds.actual_date'));
 
+            // a later dose of THIS case's course already given means the patient is still attending
             foreach (self::REMINDER_OFFSETS as $m) {
-                if ($m > $n) $q->whereNull("i.day{$m}_date");
+                if ($m > $n) $q->whereRaw('(NOT ' . PepSchedule::hasDaySql($m, 'i') . " OR i.day{$m}_date IS NULL)");
             }
 
             $rows = $q->select('bc.bite_case_id', 'bc.patient_id', 'p.patient_name', 'p.contact_num')->get()

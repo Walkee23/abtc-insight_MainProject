@@ -227,9 +227,24 @@ class AdminController extends Controller
 
         // ---------- 5. Compliance Performance by Barangay ----------
         // Same "completed" rule as the stat card, grouped by the barangay on the bite case.
+        // Period (by the date Day 0 was given): this year (default, resets every Jan 1), this month, or all time.
+        $barPeriod = $this->complianceOption($request->query('bar_period'), ['year', 'month', 'all']) ?? 'year';
+        $barFrom = match ($barPeriod) {
+            'year'  => now()->startOfYear()->toDateString(),
+            'month' => now()->startOfMonth()->toDateString(),
+            default => null,
+        };
+        $barLabel = match ($barPeriod) {
+            'year'  => now()->startOfYear()->format('M j, Y') . ' – today',
+            'month' => now()->startOfMonth()->format('M j, Y') . ' – today',
+            default => 'All time',
+        };
+
         $barangayStats = DB::table('bite_cases as bc')
             ->join('bite_section7_immunization as s7', 's7.bite_case_id', '=', 'bc.bite_case_id')
             ->whereNotNull('s7.day0_date')
+            ->when($barFrom, fn ($q) => $q->whereDate('s7.day0_date', '>=', $barFrom))
+            ->whereDate('s7.day0_date', '<=', now()->toDateString())
             ->whereNotNull('bc.barangay')
             ->where('bc.barangay', '!=', '')
             ->selectRaw("bc.barangay as name, COUNT(*) as courses, COALESCE(SUM(({$complete})), 0) as completed")
@@ -258,7 +273,7 @@ class AdminController extends Controller
             'lateFollowUps',
             'from', 'to', 'pepStatus', 'smsStatus', 'pepLimit', 'smsLimit',
             'pepRows', 'pepHasMore', 'smsRows', 'smsHasMore',
-            'barangayStats'
+            'barangayStats', 'barPeriod', 'barLabel'
         ));
     }
 

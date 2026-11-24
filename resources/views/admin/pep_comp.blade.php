@@ -214,6 +214,7 @@
                             <span class="material-symbols-outlined text-on-surface-variant" data-icon="calendar_month">calendar_month</span>
                         </summary>
                         <form method="GET" action="{{ route('admin.compliance') }}" class="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-lg border border-slate-100 p-4 space-y-3 z-50">
+                            <input type="hidden" name="bar_period" value="{{ $barPeriod }}">
                             <input type="hidden" name="pep_status" value="{{ $pepStatus }}">
                             <input type="hidden" name="sms_status" value="{{ $smsStatus }}">
                             <div>
@@ -322,6 +323,7 @@
                             <input type="hidden" name="from" value="{{ $from }}">
                             <input type="hidden" name="to" value="{{ $to }}">
                             <input type="hidden" name="sms_status" value="{{ $smsStatus }}">
+                            <input type="hidden" name="bar_period" value="{{ $barPeriod }}">
                             <input type="hidden" name="sms_limit" value="{{ $smsLimit }}">
                             <select name="pep_status" onchange="this.form.submit()" class="text-xs font-bold text-primary border-outline-variant/40 rounded-lg py-1.5 pl-3 pr-8 bg-white">
                                 <option value="">All statuses</option>
@@ -401,7 +403,8 @@
                                 <input type="hidden" name="from" value="{{ $from }}">
                                 <input type="hidden" name="to" value="{{ $to }}">
                                 <input type="hidden" name="pep_status" value="{{ $pepStatus }}">
-                                <input type="hidden" name="pep_limit" value="{{ $pepLimit }}">
+                                <input type="hidden" name="bar_period" value="{{ $barPeriod }}">
+                            <input type="hidden" name="pep_limit" value="{{ $pepLimit }}">
                                 <span class="material-symbols-outlined text-on-surface-variant text-sm" data-icon="filter_list">filter_list</span>
                                 <select name="sms_status" onchange="this.form.submit()" class="text-[11px] font-bold text-on-surface-variant border-0 bg-transparent py-0.5 pl-1 pr-6 focus:ring-0 cursor-pointer">
                                     <option value="">All</option>
@@ -475,7 +478,17 @@
                         <div class="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
                             <div>
                                 <h4 class="text-lg font-bold">Compliance Performance by Barangay</h4>
-                                <p class="text-sm text-on-surface-variant mt-1">Summary of top-performing and action-required areas.</p>
+                                <p class="text-sm text-on-surface-variant mt-1">Summary of top-performing and action-required areas &middot; <span class="font-semibold">{{ $barLabel }}</span></p>
+                                <form method="GET" action="{{ route('admin.compliance') }}" class="mt-3 inline-block">
+                                    @foreach (['from' => $from, 'to' => $to, 'pep_status' => $pepStatus, 'sms_status' => $smsStatus, 'pep_limit' => $pepLimit, 'sms_limit' => $smsLimit] as $k => $v)
+                                        <input type="hidden" name="{{ $k }}" value="{{ $v }}">
+                                    @endforeach
+                                    <select name="bar_period" onchange="this.form.submit()" class="text-xs font-bold text-primary border-outline-variant/40 rounded-lg py-1.5 pl-3 pr-8 bg-white">
+                                        <option value="year" @selected($barPeriod === 'year')>This year</option>
+                                        <option value="month" @selected($barPeriod === 'month')>This month</option>
+                                        <option value="all" @selected($barPeriod === 'all')>All time</option>
+                                    </select>
+                                </form>
                             </div>
                             <a href="{{ route('admin.compliance.export', array_filter(['type' => 'pep', 'from' => $from, 'to' => $to])) }}" class="px-4 py-2 bg-white border border-outline-variant text-primary font-bold text-xs rounded-lg hover:bg-surface-container-high transition-colors">
                                 View Full Compliance Report
@@ -494,7 +507,7 @@
                                     </div>
                                 </div>
                             @empty
-                                <p class="text-sm text-on-surface-variant md:col-span-2">No PEP courses recorded yet.</p>
+                                <p class="text-sm text-on-surface-variant md:col-span-2">No PEP courses recorded for this period.</p>
                             @endforelse
                         </div>
                     </div>

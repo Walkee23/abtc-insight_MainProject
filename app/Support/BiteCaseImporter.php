@@ -15,7 +15,7 @@ use InvalidArgumentException;
  *   inflow_general_particulars  (status = Encoded, queue id "H<n>" so it never mixes with N/P queues)
  *   patients                    (one per person; a repeat bite of the same name + birthdate becomes case #2, #3 ...)
  *   bite_cases                  (+ category, outcome)
- *   bite_section3_exposure      (animal, ownership, bite date, circumstances)
+ *   bite_section3_exposure      (animal, bite date, circumstances)
  *   bite_section6_wound_description
  *   bite_section7_immunization  (dose dates, vaccine brand, passive immunization)
  *   bite_section8_remarks       (only when the sheet has remarks)
@@ -435,14 +435,8 @@ class BiteCaseImporter
         $provoked = $circ === 'P' || str_starts_with($circ, 'PROV') ? 1 : (in_array($circ, ['U', 'UP'], true) || str_starts_with($circ, 'UNPROV') ? 0 : null);
         $circParts = [];
         if ($provoked !== null) { $circParts[] = $provoked ? 'Provoked' : 'Unprovoked'; }
-        $strayRaw = strtoupper($get('stray'));
-        $ownership = match (true) {
-            $strayRaw === 'S', str_starts_with($strayRaw, 'STRAY'), $strayRaw === 'Y', $strayRaw === 'YES', $strayRaw === '1' => 'Stray',
-            default => 'Pet',
-        };
-        if ($ownership === 'Stray') {
-            $circParts[] = 'Stray animal' . (!in_array($strayRaw, ['S', 'STRAY', 'Y', 'YES', '1'], true) ? ' (' . $get('stray') . ')' : '');
-        }
+        $strayText = $get('stray');
+        if ($strayText !== '') { $circParts[] = 'Stray animal' . (strtoupper($strayText) !== 'S' ? ' (' . $strayText . ')' : ''); }
 
         // --- treatment
         $doses = [
@@ -505,7 +499,7 @@ class BiteCaseImporter
             'name'     => $name, 'dob' => $dob, 'age' => $age, 'sex' => $sex, 'barangay' => $brgy,
             'contact'  => mb_substr($contact, 0, 20),
             'bite_at'  => $biteAt, 'category' => $category, 'outcome' => $outcome,
-            'animal'   => $animal, 'animal_other' => $animalOther, 'ownership' => $ownership, 'animal_vax' => $animalVax,
+            'animal'   => $animal, 'animal_other' => $animalOther, 'animal_vax' => $animalVax,
             'provoked' => $provoked, 'circumstances' => $circParts ? implode('. ', $circParts) : null,
             'doses'    => $doses, 'brand' => $brand, 'dose_type' => $get('booster') !== '' ? 'Booster' : 'Primary',
             'passive'  => $passive, 'total_wounds' => $totalWounds, 'wound_text' => $woundText,
@@ -750,7 +744,6 @@ class BiteCaseImporter
             'bite_case_id'      => $caseId,
             'animal_type'       => $r['animal'],
             'animal_type_other' => $r['animal_other'],
-            'animal_ownership'  => $r['ownership'],
             'bite_date_time'    => $r['bite_at'],
             'animal_vax_status' => $r['animal_vax'],
             'exposure_type'     => 'Bite',

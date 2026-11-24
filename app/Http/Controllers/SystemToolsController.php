@@ -12,7 +12,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
@@ -329,19 +328,7 @@ class SystemToolsController extends Controller
         }
 
         if (!$checkOnly && ($result['imported'] ?? 0) > 0) {
-            // The daily-summary backfill can take minutes on a large date range, which made the gateway
-            // return 504 even though the rows were already saved. Run it after the response is sent instead.
-            dispatch(function () {
-                @set_time_limit(0);
-                $t = microtime(true);
-                try {
-                    Artisan::call('inflow:summarize', ['--backfill' => true]);
-                    Log::info('inflow:summarize --backfill finished in ' . round(microtime(true) - $t, 1) . 's after import');
-                } catch (\Throwable $e) {
-                    report($e);
-                }
-            })->afterResponse();
-            $result['summary_in_background'] = true;
+            Artisan::call('inflow:summarize', ['--backfill' => true]);
         }
 
         $result['error_count'] = count($result['errors']);
